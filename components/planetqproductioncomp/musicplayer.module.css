@@ -1,0 +1,71 @@
+.heartbeat {
+  animation: heartbeat 1s infinite;
+  background-color: transparent;
+  margin-top: 3.5rem;
+}
+
+@keyframes heartbeat {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+
+/* .rotateicon {
+  
+  animation: rotate 2s linear infinite;
+  background-color: transparent;
+  margin-top: 3.5rem;
+} */
+
+
+/* @keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+} */
+
+
+@media screen and (min-width: 481px) and (max-width: 768px) {
+  .heartbeat {
+    margin-top: 7rem;
+  }
+}
+
+
+
+
+/* @media screen and (min-width: 769px) and (max-width: 1024px) {
+    .rotateicon {
+       
+        margin-top: 18rem;
+       
+      }
+   
+  } */
+
+/* @media screen and (min-width: 1025px) and (max-width: 1200px) {
+    .rotateicon {
+       
+        margin-top: 10rem;
+       
+      }
+    
+  } */
+
+@media screen and (min-width: 1201px) {
+  .heartbeat {
+    margin-top: 7rem;
+  }
+}
+
+
