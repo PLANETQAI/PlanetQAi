@@ -37,7 +37,7 @@ export default function AuthForm() {
     });
 
     if (!result.error) {
-      router.push("/planetqproductions");
+      router.push("/");
       toast.success("Success!", {
         position: "top-right",
         autoClose: 1500,
@@ -83,15 +83,13 @@ export default function AuthForm() {
       <ToastContainer autoClose={1500} draggable closeOnClick />
       <div className="h-screen w-screen flex min-h-full flex-1  flex-col justify-center px-6 py-12 lg:px-8 bg-[#333A44]">
         <div className=" flex justify-center items-center flex-col sm:mx-auto sm:w-full sm:max-w-sm">
-          <Link href={"/"}>
-            <Image
-              src="/images/small.webp"
-              alt="Your Logo"
-              width={135}
-              height={150}
-              className="rounded-2xl"
-            ></Image>
-          </Link>
+          <Image
+            src="/images/small.webp"
+            alt="Your Logo"
+            width={135}
+            height={150}
+            className="rounded-2xl"
+          ></Image>
 
           <h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-300">
             Sign in to your account

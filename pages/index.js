@@ -27,15 +27,15 @@ export default function Home(initialVideoLink) {
         <div className=" w-full lg:w-3/4 px-8 m-auto py-14 ">
           <div className=" lg:flex lg:gap-5 ">
             <button className="bg-gradient-to-t from-slate-600 to-slate-500 text-white flex justify-between items-center p-4 rounded mb-5 w-full hover:from-slate-500 hover:to-slate-600 transition-colors duration-300 shadow-lg text-sm gap-2">
-              Futuristic hip hop song About life in the future
+              Futuristic hip hop song about life in the future
               <FaArrowDown className="text-purple-500" />
             </button>
             <button className="bg-gradient-to-t from-slate-600 to-slate-500 text-white flex justify-between items-center p-4 rounded mb-5 w-full hover:from-slate-500 hover:to-slate-600 transition-colors duration-300 text-sm gap-2">
-              Futuristic r&b song about the future
+              r&b song about the future
               <FaArrowDown className="text-purple-500" />
             </button>
             <button className="bg-gradient-to-t from-slate-600 to-slate-500 text-white flex justify-between items-center p-4 rounded mb-5 w-full hover:from-slate-500 hover:to-slate-600 transition-colors duration-300 text-sm gap-2">
-            Futuristic Rock song about a rainy Day in the future
+              Folk song about a rainy day in the future
               <FaArrowDown className="text-purple-500" />
             </button>
           </div>
@@ -45,7 +45,7 @@ export default function Home(initialVideoLink) {
             <input
               className="w-full bg-[#333A44] border-2 border-white shadow-lg p-5 text-xl text-white rounded "
               type="text"
-              placeholder="Type Your Thoughts"
+              placeholder="A solo music"
             />
             <button className=" bg-purple-500 text-white p-2 rounded absolute right-5 transform -translate-y-1/2 top-1/2 flex items-center ">
               Create <CiMusicNote1 />
