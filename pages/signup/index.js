@@ -1,5 +1,5 @@
 import Head from "next/head";
-import AuthForm from "@/components/auth/authForm";
+import SignupForm from "@/components/auth/signupForm";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
@@ -21,7 +21,7 @@ export default function Login() {
         <meta name="description" content="planet q productions music player" />
         <link rel="icon" href="/images/small.webp" />
       </Head>
-      <AuthForm />
+      <SignupForm />
     </>
   );
 }

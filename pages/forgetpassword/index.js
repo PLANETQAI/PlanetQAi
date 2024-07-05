@@ -72,8 +72,8 @@ export default function ForgetPassword() {
   return (
     <Fragment>
       <Head>
-        <title>Planet-Q-Production</title>
-        <meta name="description" content="planet q production music player" />
+        <title>PlanetQProductions</title>
+        <meta name="description" content="planet q productions music player" />
         <link rel="icon" href="/images/small.webp" />
       </Head>
       <ToastContainer autoClose={1500} draggable closeOnClick />

@@ -11,8 +11,6 @@ export default function GlobalHeader() {
   const [isOpen, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  console.log(session);
-
   async function fetchUserData(userId) {
     try {
       const res = await fetch(`/api/singleuser/${userId}`);
@@ -20,7 +18,6 @@ export default function GlobalHeader() {
         throw new Error("Network response was not ok");
       }
       const data = await res.json();
-      console.log("data", data);
 
       update({
         userType: data.userType,
@@ -40,7 +37,6 @@ export default function GlobalHeader() {
     }
 
     setLoading(false);
-    console.log("ffffffffff")
   }, [session?.user?.id]);
 
   async function logoutHandler(event) {
@@ -75,7 +71,14 @@ export default function GlobalHeader() {
             </h1>
           </div>
         </Link>
-
+        {!session && (
+            <button
+              className="text-white text-md font-bold ring-white ring-1 rounded-lg px-2 hover:underline hover:ring-2 sm:text-2xl"
+              onClick={() => router.push("/signup")}
+            >
+              Create account
+            </button>
+          )}
         <div className="bg-transparent flex gap-4 justify-center items-center">
           {session && (
             <Link
@@ -127,12 +130,23 @@ export default function GlobalHeader() {
           )}
 
           {!session && (
-            <button
-              className="text-white text-md font-bold ring-white ring-1 rounded-lg px-2 hover:underline hover:ring-2 sm:text-2xl"
-              onClick={() => router.push("/login")}
+            <Link
+              href="/login"
+              className="bg-transparent flex justify-center items-center"
             >
-              Login
-            </button>
+              <div className="bg-transparent flex flex-col gap-2 justify-center items-center">
+                <Image
+                  src="/images/client.png"
+                  alt="Your Logo"
+                  width={50}
+                  height={120}
+                  className="rounded-2xl bg-transparent"
+                ></Image>
+                <h1 className="animate-text bg-gradient-to-r text-center from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-sm font-black">
+                  AI Studio
+                </h1>
+              </div>
+            </Link>
           )}
         </div>
         {isOpen && <UpgradePlusModal close={close} />}

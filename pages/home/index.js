@@ -26,8 +26,8 @@ export default function HomePage() {
   return (
     <>
       <Head>
-        <title>Planet-Q-Production</title>
-        <meta name="description" content="planet q production music player" />
+        <title>PlanetQProductions</title>
+        <meta name="description" content="planet q productions music player" />
         <link rel="icon" href="/images/small.webp" />
       </Head>
       <div style={backgroundImageStyle}>

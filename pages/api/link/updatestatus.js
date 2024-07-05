@@ -4,7 +4,7 @@ import { authOptions } from "@/pages/api/auth/[...nextauth]";
 import { getServerSession } from "next-auth/next";
 
 async function handler(req, res) {
-  if (req.method !== "DELETE") {
+  if (req.method !== "PUT") {
     res.status(405).json({ message: "Method Not Allowed" });
     return;
   }
@@ -24,10 +24,10 @@ async function handler(req, res) {
     return;
   }
 
-  const { songId } = req.body;
+  const { songId, newStatus } = req.body;
 
-  if (!songId) {
-    res.status(400).json({ message: "Bad Request: songId is required" });
+  if (!songId || !newStatus) {
+    res.status(400).json({ message: "Bad Request: songId and newStatus are required" });
     return;
   }
 
@@ -35,20 +35,23 @@ async function handler(req, res) {
     const client = await connectToDatabase();
     const linkCollection = client.db().collection("videolinks");
 
-    const result = await linkCollection.deleteOne({ _id: new ObjectId(songId) });
+    const result = await linkCollection.updateOne(
+      { _id: new ObjectId(songId) },
+      { $set: { status: newStatus } }
+    );
 
-    if (result.deletedCount === 0) {
+    if (result.modifiedCount === 0) {
       res.status(404).json({ message: "Song not found" });
       return;
     }
 
     res.status(200).json({
-      message: "Successfully deleted the song",
+      message: "Successfully updated the song status",
     });
   } catch (error) {
     console.error("Error:", error);
     res.status(500).json({
-      message: "Internal Server Error: Unable to delete the song",
+      message: "Internal Server Error: Unable to update the song status",
     });
   }
 }
