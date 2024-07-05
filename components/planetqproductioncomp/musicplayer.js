@@ -138,7 +138,7 @@ export default function MusicPlayer() {
 
   const handlePause = () => {
     if (playerRef.current) {
-      //playerRef.current.showPreview();
+      playerRef.current.showPreview();
       setIsCurrent(playerRef.current.getCurrentTime());
     }
   };
