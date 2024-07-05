@@ -137,24 +137,24 @@ export default function MusicPlayer() {
   };
 
   const handlePause = () => {
-    // if (playerRef.current) {
-    //   //playerRef.current.showPreview();
-    //   setIsCurrent(playerRef.current.getCurrentTime());
-    // }
+    if (playerRef.current) {
+      //playerRef.current.showPreview();
+      setIsCurrent(playerRef.current.getCurrentTime());
+    }
   };
 
   const playhandler = () => {
-  //   if (!iscurrent || iscurrent === null) {
-  //     playerRef.current.seekTo(playerRef.current.getCurrentTime());
-  //   }
+    if (!iscurrent || iscurrent === null) {
+      playerRef.current.seekTo(playerRef.current.getCurrentTime());
+    }
 
-  //   playerRef.current.seekTo(iscurrent);
+    playerRef.current.seekTo(iscurrent);
    };
 
   const handleSeeking = () => {
-    // if (playerRef.current) {
-    //   playerRef.current.seekTo(playerRef.current.getCurrentTime());
-    // }
+    if (playerRef.current) {
+      playerRef.current.seekTo(playerRef.current.getCurrentTime());
+    }
   };
 
   return (
