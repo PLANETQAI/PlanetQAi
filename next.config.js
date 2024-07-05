@@ -13,7 +13,7 @@ module.exports = (phase) => {
         NEXTAUTH_URL: "http://localhost:3000",
 
         LOCALAPP_URL: "http://localhost:3000",
-        DEPLOYEDAPP_URL: "https://www.",
+        DEPLOYEDAPP_URL: "https://www.planetqai.com",
       },
     };
   }
@@ -29,7 +29,7 @@ module.exports = (phase) => {
       NEXTAUTH_URL: "http://localhost:3000",
 
       LOCALAPP_URL: "http://localhost:3000",
-      DEPLOYEDAPP_URL: "https://www.",
+      DEPLOYEDAPP_URL: "https://www.planetqai.com",
     },
   };
 };

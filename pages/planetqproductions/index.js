@@ -80,7 +80,7 @@ export default function HomePage() {
     setUpdateLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:3000/api/link/updatestatus",
+        "/api/link/updatestatus",
         {
           method: "PUT",
           headers: {
