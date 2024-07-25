@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 const MusicGenerator = () => {
@@ -10,9 +10,20 @@ const MusicGenerator = () => {
   const [description, setDescription] = useState('');
   const [duration, setDuration] = useState(30);
   const [generatedPrompt, setGeneratedPrompt] = useState('');
-  const [audioUrl, setAudioUrl] = useState('');
+  const [audioBuffer, setAudioBuffer] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  const audioContext = useRef(null);
+
+  useEffect(() => {
+    audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+    return () => {
+      if (audioContext.current) {
+        audioContext.current.close();
+      }
+    };
+  }, []);
 
   const getConfig = () => {
     return {
@@ -43,10 +54,17 @@ const MusicGenerator = () => {
     }
   };
 
+  const processAudio = async (audioData, sampleRate) => {
+    const audioArray = new Float32Array(audioData);
+    const newAudioBuffer = audioContext.current.createBuffer(1, audioArray.length, sampleRate);
+    newAudioBuffer.getChannelData(0).set(audioArray);
+    setAudioBuffer(newAudioBuffer);
+  };
+
   const generateAudio = async () => {
     setLoading(true);
     setError('');
-    setAudioUrl('');
+    setAudioBuffer(null);
 
     const config = getConfig();
     const prompt = createPrompt();
@@ -65,8 +83,10 @@ const MusicGenerator = () => {
           });
         }
 
-        // Assuming the API returns an audio URL
-        setAudioUrl(response.data.audio_url);
+        // Process the audio data
+        const audioData = response.data[0].generated_audio;
+        const sampleRate = response.data[0].sample_rate;
+        await processAudio(audioData, sampleRate);
       } catch (error) {
         setError(`Error generating audio: ${error.message}`);
       }
@@ -75,6 +95,15 @@ const MusicGenerator = () => {
     }
 
     setLoading(false);
+  };
+
+  const playAudio = () => {
+    if (audioBuffer) {
+      const source = audioContext.current.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(audioContext.current.destination);
+      source.start();
+    }
   };
 
   return (
@@ -156,11 +185,14 @@ const MusicGenerator = () => {
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
 
-      {audioUrl && (
+      {audioBuffer && (
         <div className="mt-4">
-          <audio controls src={audioUrl}>
-            Your browser does not support the audio element.
-          </audio>
+          <button
+            onClick={playAudio}
+            className="bg-green-500 text-white p-2 rounded hover:bg-green-600"
+          >
+            Play Generated Audio
+          </button>
         </div>
       )}
     </div>
