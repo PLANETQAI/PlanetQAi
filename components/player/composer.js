@@ -17,7 +17,7 @@ const MusicGenerator = () => {
   const audioContext = useRef(null);
 
   useEffect(() => {
-    audioContext.current = new (window.AudioContext || window.webkitAudioContext)();
+    audioContext.current = new window.AudioContext();
     return () => {
       if (audioContext.current) {
         audioContext.current.close();
