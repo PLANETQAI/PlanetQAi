@@ -1,5 +1,6 @@
 import MusicPlayer from "@/components/planetqproductioncomp/musicplayer";
 import GlobalHeader from "@/components/planetqproductioncomp/GlobalHeader";
+import MusicGenerator from "@/components/player/composer";
 import Head from "next/head";
 import { CiMusicNote1 } from "react-icons/ci";
 import { FaArrowDown } from "react-icons/fa6";
@@ -39,8 +40,8 @@ export default function Home(initialVideoLink) {
               <FaArrowDown className="text-purple-500" />
             </button>
           </div>
-
-          <span className=" text-yellow-400 ">Comming soon</span>
+          <MusicGenerator/>
+          {/* <span className=" text-yellow-400 ">Comming soon</span>
           <div className="relative">
             <input
               className="w-full bg-[#333A44] border-2 border-white shadow-lg p-5 text-xl text-white rounded "
@@ -50,7 +51,7 @@ export default function Home(initialVideoLink) {
             <button className=" bg-purple-500 text-white p-2 rounded absolute right-5 transform -translate-y-1/2 top-1/2 flex items-center ">
               Create <CiMusicNote1 />
             </button>
-          </div>
+          </div> */}
         </div>
 
         <h1 className="animate-text text-center bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-2xl font-black md:text-4xl pb-10">
