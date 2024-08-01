@@ -108,7 +108,7 @@ const MusicGenerator = () => {
 
   return (
     <div className="max-w-2xl mx-auto p-4">
-      <h1 className="text-2xl font-bold mb-4">PlanetQ Music Generator</h1>
+      <h3 className="text-2xl font-bold mb-4 text-white">Enter Music Info</h3>
 
       <div className="grid grid-cols-2 gap-4 mb-4">
         <input
@@ -116,61 +116,61 @@ const MusicGenerator = () => {
           placeholder="Genre (e.g., Pop, Jazz, Classical)"
           value={genre}
           onChange={(e) => setGenre(e.target.value)}
-          className="p-2 border rounded"
+          className="bg-gradient-to-t from-slate-600 to-slate-500 p-2 border text-white"
         />
         <input
           type="text"
           placeholder="Main Instrument"
           value={instrument}
           onChange={(e) => setInstrument(e.target.value)}
-          className="p-2 border rounded"
+          className="bg-gradient-to-t from-slate-600 to-slate-500 p-2 border text-white"
         />
         <input
           type="text"
           placeholder="Mood"
           value={mood}
           onChange={(e) => setMood(e.target.value)}
-          className="p-2 border rounded"
+          className="bg-gradient-to-t from-slate-600 to-slate-500 p-2 border text-white"
         />
         <input
           type="text"
           placeholder="Energy Level"
           value={energy}
           onChange={(e) => setEnergy(e.target.value)}
-          className="p-2 border rounded"
+          className="bg-gradient-to-t from-slate-600 to-slate-500 p-2 border text-white"
         />
         <input
           type="text"
           placeholder="Tempo"
           value={tempo}
           onChange={(e) => setTempo(e.target.value)}
-          className="p-2 border rounded"
+          className="bg-gradient-to-t from-slate-600 to-slate-500 p-2 border text-white"
         />
         <input
           type="text"
           placeholder="Additional Description"
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="p-2 border rounded"
+          className="bg-gradient-to-t from-slate-600 to-slate-500 p-2 border text-white"
         />
       </div>
 
       <div className="mb-4">
-        <label className="block mb-2">Duration (in seconds)</label>
+        <label className="block mb-2 text-white">Duration (in seconds)</label>
         <input
           type="number"
           min="10"
           max="60"
           value={duration}
           onChange={(e) => setDuration(e.target.value)}
-          className="p-2 border rounded w-full"
+          className="bg-gradient-to-t from-slate-600 to-slate-500 p-2 border text-white w-full"
         />
       </div>
 
       <textarea
         value={generatedPrompt}
         readOnly
-        className="p-2 border rounded w-full mb-4"
+        className="bg-gradient-to-t from-slate-600 to-slate-500 p-5 border  w-full mb-4"
         rows="3"
         placeholder="Generated Prompt"
       />
@@ -178,7 +178,7 @@ const MusicGenerator = () => {
       <button
         onClick={generateAudio}
         disabled={loading}
-        className="bg-blue-500 text-white p-2 rounded hover:bg-blue-600"
+        className="bg-purple-500 text-white p-2 rounded hover:bg-purple-600"
       >
         {loading ? 'Generating...' : 'Generate Audio'}
       </button>
