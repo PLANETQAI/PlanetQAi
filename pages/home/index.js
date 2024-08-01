@@ -1,5 +1,6 @@
 import HeadContent from "@/components/Home/HeaderContent";
 import AdminLink from "@/components/Home/adminlink";
+import MusicGenerator from "@/components/player/composer";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
 import { useRouter } from "next/router";
@@ -32,6 +33,7 @@ export default function HomePage() {
       </Head>
       <div style={backgroundImageStyle}>
         <HeadContent />
+        <MusicGenerator/>
         <AdminLink />
       </div>
     </>
