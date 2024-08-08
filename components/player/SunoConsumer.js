@@ -10,8 +10,6 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
   const audioRef = useRef(null);
 
   useEffect(() => {
-    // This effect will run whenever selectedPrompt changes
-    // It's not strictly necessary but can be useful for debugging
     console.log('Selected prompt updated:', selectedPrompt);
   }, [selectedPrompt]);
 
@@ -57,30 +55,47 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
       <h3 className="text-2xl font-bold mb-4 text-white">Generate Custom Music</h3>
 
       <div className="mb-4">
+        <label htmlFor="prompt" className="block text-sm font-medium text-gray-300 mb-1">
+          Music Description or Lyrics
+        </label>
         <textarea
-          placeholder="Enter prompt (use [Verse], [Chorus], [Bridge] for lyrics)"
+          id="prompt"
+          placeholder="Describe your desired music or enter lyrics. Use [Verse], [Chorus], [Bridge] for structure."
           value={selectedPrompt.text}
           onChange={(e) => handleInputChange('text', e.target.value)}
           className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           rows="6"
         />
+       
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        <input
-          type="text"
-          placeholder="Tags (e.g., dance, energetic)"
-          value={selectedPrompt.tags}
-          onChange={(e) => handleInputChange('tags', e.target.value)}
-          className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-        />
-        <input
-          type="text"
-          placeholder="Title"
-          value={selectedPrompt.title}
-          onChange={(e) => handleInputChange('title', e.target.value)}
-          className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
-        />
+        <div>
+          <label htmlFor="tags" className="block text-sm font-medium text-gray-300 mb-1">
+            Tags (Genre, Style, Mood)
+          </label>
+          <input
+            id="tags"
+            type="text"
+            placeholder="e.g., dance, energetic, futuristic"
+            value={selectedPrompt.tags}
+            onChange={(e) => handleInputChange('tags', e.target.value)}
+            className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+          />
+        </div>
+        <div>
+          <label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
+            Song Title
+          </label>
+          <input
+            id="title"
+            type="text"
+            placeholder="Enter a title for your song"
+            value={selectedPrompt.title}
+            onChange={(e) => handleInputChange('title', e.target.value)}
+            className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
+          />
+        </div>
       </div>
 
       <div className="mb-6">
@@ -91,7 +106,7 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
             onChange={(e) => setMakeInstrumental(e.target.checked)}
             className="mr-2 form-checkbox h-5 w-5 text-purple-500 rounded focus:ring-purple-500"
           />
-          Make Instrumental
+          Make Instrumental (No Vocals)
         </label>
       </div>
 
