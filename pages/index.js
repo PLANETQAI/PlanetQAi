@@ -1,6 +1,7 @@
 import MusicPlayer from "@/components/planetqproductioncomp/musicplayer";
 import GlobalHeader from "@/components/planetqproductioncomp/GlobalHeader";
-import MusicGenerator from "@/components/player/composer";
+// import MusicGenerator from "@/components/player/composer";
+import MusicGenerator from "@/components/player/SunoConsumer";
 import Head from "next/head";
 import { CiMusicNote1 } from "react-icons/ci";
 import { FaArrowDown } from "react-icons/fa6";
