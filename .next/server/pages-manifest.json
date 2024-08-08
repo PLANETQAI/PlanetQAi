@@ -2,8 +2,5 @@
   "/_app": "pages/_app.js",
   "/_error": "pages/_error.js",
   "/_document": "pages/_document.js",
-  "/": "pages/index.js",
-  "/api/link/getlink": "pages/api/link/getlink.js",
-  "/api/thumbnail/modifythumbnail": "pages/api/thumbnail/modifythumbnail.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js"
+  "/": "pages/index.js"
 }
