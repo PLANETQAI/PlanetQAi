@@ -27,7 +27,7 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
 
     const url = 'https://api.aimlapi.com/generate/custom-mode';
     const headers = {
-      'Authorization': 'Bearer YOUR_API_KEY', // Replace with your actual API key
+      'Authorization': `Bearer ${process.env.SUNO_API_KEY}`,
       'Content-Type': 'application/json'
     };
     const payload = {
