@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
@@ -7,6 +7,10 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
   const [loading, setLoading] = useState(false);
 
   const audioRef = useRef(null);
+
+  useEffect(() => {
+    console.log('Selected prompt updated:', selectedPrompt);
+  }, [selectedPrompt]);
 
   const handleInputChange = (field, value) => {
     onPromptChange({
@@ -22,9 +26,10 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
 
     const url = "https://api.goapi.ai/api/suno/v1/music";
     const headers = {
-      'X-API-Key': process.env.GOAPI_KEY,
+      'X-API-Key': "2b85924fa2e14640f5bde332f6ac43df64aa535810a3a9923772b21d8a413015",
       'Content-Type': 'application/json'
     };
+    
     const payload = {
       custom_mode: true,
       input: {
@@ -37,14 +42,29 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
     };
 
     try {
+      console.log('Sending payload:', payload);
       const response = await axios.post(url, payload, { headers });
+      console.log('API Response:', response.data);
+
       if (response.data && response.data.data && response.data.data.audio_url) {
         setGeneratedAudio(response.data.data.audio_url);
       } else {
         throw new Error('No audio URL in response');
       }
     } catch (error) {
-      setError(`Error generating audio: ${error.message}`);
+      console.error('Full error object:', error);
+      if (error.response) {
+        console.error('Error data:', error.response.data);
+        console.error('Error status:', error.response.status);
+        console.error('Error headers:', error.response.headers);
+        setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
+      } else if (error.request) {
+        console.error('Error request:', error.request);
+        setError('No response received from server');
+      } else {
+        console.error('Error message:', error.message);
+        setError(`Error: ${error.message}`);
+      }
     }
 
     setLoading(false);
