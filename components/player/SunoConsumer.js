@@ -5,12 +5,16 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
   const [generatedAudio, setGeneratedAudio] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [taskId, setTaskId] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
 
   const audioRef = useRef(null);
 
   useEffect(() => {
-    console.log('Selected prompt updated:', selectedPrompt);
-  }, [selectedPrompt]);
+    return () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+    };
+  }, [pollingInterval]);
 
   const handleInputChange = (field, value) => {
     onPromptChange({
@@ -23,13 +27,13 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
     setLoading(true);
     setError('');
     setGeneratedAudio(null);
+    setTaskId(null);
 
     const url = "https://api.goapi.ai/api/suno/v1/music";
     const headers = {
       'X-API-Key': "2b85924fa2e14640f5bde332f6ac43df64aa535810a3a9923772b21d8a413015",
       'Content-Type': 'application/json'
     };
-    
     const payload = {
       custom_mode: true,
       input: {
@@ -44,30 +48,68 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
     try {
       console.log('Sending payload:', payload);
       const response = await axios.post(url, payload, { headers });
-      console.log('API Response:', response.data);
+      console.log('Initial API Response:', response.data);
 
-      if (response.data && response.data.data && response.data.data.audio_url) {
-        setGeneratedAudio(response.data.data.audio_url);
+      if (response.data && response.data.data && response.data.data.task_id) {
+        setTaskId(response.data.data.task_id);
+        startPolling(response.data.data.task_id);
       } else {
-        throw new Error('No audio URL in response');
+        throw new Error('No task ID in response');
       }
     } catch (error) {
-      console.error('Full error object:', error);
-      if (error.response) {
-        console.error('Error data:', error.response.data);
-        console.error('Error status:', error.response.status);
-        console.error('Error headers:', error.response.headers);
-        setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
-      } else if (error.request) {
-        console.error('Error request:', error.request);
-        setError('No response received from server');
-      } else {
-        console.error('Error message:', error.message);
-        setError(`Error: ${error.message}`);
-      }
+      handleError(error);
+      setLoading(false);
     }
+  };
 
-    setLoading(false);
+  const startPolling = (id) => {
+    const interval = setInterval(() => pollForResult(id), 5000); // Poll every 5 seconds
+    setPollingInterval(interval);
+  };
+
+  const pollForResult = async (id) => {
+    const url = `https://api.goapi.ai/api/suno/v1/music/${id}`;
+    const headers = {
+      'X-API-Key': "2b85924fa2e14640f5bde332f6ac43df64aa535810a3a9923772b21d8a413015",
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      const response = await axios.get(url, { headers });
+      console.log('Polling Response:', response.data);
+
+      if (response.data.data.status === 'completed') {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+        setLoading(false);
+
+        // Assuming the first clip in the response is the one we want
+        const firstClipId = Object.keys(response.data.data.clips)[0];
+        const audioUrl = response.data.data.clips[firstClipId].audio_url;
+        setGeneratedAudio(audioUrl);
+      }
+    } catch (error) {
+      handleError(error);
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+      setLoading(false);
+    }
+  };
+
+  const handleError = (error) => {
+    console.error('Full error object:', error);
+    if (error.response) {
+      console.error('Error data:', error.response.data);
+      console.error('Error status:', error.response.status);
+      console.error('Error headers:', error.response.headers);
+      setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
+    } else if (error.request) {
+      console.error('Error request:', error.request);
+      setError('No response received from server');
+    } else {
+      console.error('Error message:', error.message);
+      setError(`Error: ${error.message}`);
+    }
   };
 
   return (
