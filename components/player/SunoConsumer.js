@@ -1,17 +1,12 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import axios from 'axios';
 
 const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
-  const [makeInstrumental, setMakeInstrumental] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const audioRef = useRef(null);
-
-  useEffect(() => {
-    console.log('Selected prompt updated:', selectedPrompt);
-  }, [selectedPrompt]);
 
   const handleInputChange = (field, value) => {
     onPromptChange({
@@ -25,24 +20,29 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
     setError('');
     setGeneratedAudio(null);
 
-    const url = 'https://api.aimlapi.com/generate/custom-mode';
+    const url = "https://api.goapi.ai/api/suno/v1/music";
     const headers = {
-      'Authorization': `Bearer ${process.env.SUNO_API_KEY}`,
+      'X-API-Key': process.env.GOAPI_KEY,
       'Content-Type': 'application/json'
     };
     const payload = {
-      prompt: selectedPrompt.text,
-      tags: selectedPrompt.tags,
-      title: selectedPrompt.title,
-      make_instrumental: makeInstrumental,
-      wait_audio: true
+      custom_mode: true,
+      input: {
+        prompt: selectedPrompt.text,
+        title: selectedPrompt.title,
+        tags: selectedPrompt.tags,
+        continue_at: 0,
+        continue_clip_id: ""
+      }
     };
 
     try {
-      const response = await axios.post(url, payload, { headers, responseType: 'arraybuffer' });
-      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setGeneratedAudio(audioUrl);
+      const response = await axios.post(url, payload, { headers });
+      if (response.data && response.data.data && response.data.data.audio_url) {
+        setGeneratedAudio(response.data.data.audio_url);
+      } else {
+        throw new Error('No audio URL in response');
+      }
     } catch (error) {
       setError(`Error generating audio: ${error.message}`);
     }
@@ -66,7 +66,6 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
           className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           rows="6"
         />
-       
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -96,18 +95,6 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
             className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
           />
         </div>
-      </div>
-
-      <div className="mb-6">
-        <label className="flex items-center text-white cursor-pointer">
-          <input
-            type="checkbox"
-            checked={makeInstrumental}
-            onChange={(e) => setMakeInstrumental(e.target.checked)}
-            className="mr-2 form-checkbox h-5 w-5 text-purple-500 rounded focus:ring-purple-500"
-          />
-          Make Instrumental (No Vocals)
-        </label>
       </div>
 
       <button
