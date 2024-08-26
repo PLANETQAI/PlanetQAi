@@ -2,16 +2,19 @@ import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
 
 const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
-  const [makeInstrumental, setMakeInstrumental] = useState(false);
   const [generatedAudio, setGeneratedAudio] = useState(null);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [taskId, setTaskId] = useState(null);
+  const [pollingInterval, setPollingInterval] = useState(null);
 
   const audioRef = useRef(null);
 
   useEffect(() => {
-    console.log('Selected prompt updated:', selectedPrompt);
-  }, [selectedPrompt]);
+    return () => {
+      if (pollingInterval) clearInterval(pollingInterval);
+    };
+  }, [pollingInterval]);
 
   const handleInputChange = (field, value) => {
     onPromptChange({
@@ -24,30 +27,89 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
     setLoading(true);
     setError('');
     setGeneratedAudio(null);
+    setTaskId(null);
 
-    const url = 'https://api.aimlapi.com/generate/custom-mode';
+    const url = "https://api.goapi.ai/api/suno/v1/music";
     const headers = {
-      'Authorization': 'Bearer YOUR_API_KEY', // Replace with your actual API key
+      'X-API-Key': "2b85924fa2e14640f5bde332f6ac43df64aa535810a3a9923772b21d8a413015",
       'Content-Type': 'application/json'
     };
     const payload = {
-      prompt: selectedPrompt.text,
-      tags: selectedPrompt.tags,
-      title: selectedPrompt.title,
-      make_instrumental: makeInstrumental,
-      wait_audio: true
+      custom_mode: true,
+      input: {
+        prompt: selectedPrompt.text,
+        title: selectedPrompt.title,
+        tags: selectedPrompt.tags,
+        continue_at: 0,
+        continue_clip_id: ""
+      }
     };
 
     try {
-      const response = await axios.post(url, payload, { headers, responseType: 'arraybuffer' });
-      const audioBlob = new Blob([response.data], { type: 'audio/mpeg' });
-      const audioUrl = URL.createObjectURL(audioBlob);
-      setGeneratedAudio(audioUrl);
-    } catch (error) {
-      setError(`Error generating audio: ${error.message}`);
-    }
+      console.log('Sending payload:', payload);
+      const response = await axios.post(url, payload, { headers });
+      console.log('Initial API Response:', response.data);
 
-    setLoading(false);
+      if (response.data && response.data.data && response.data.data.task_id) {
+        setTaskId(response.data.data.task_id);
+        startPolling(response.data.data.task_id);
+      } else {
+        throw new Error('No task ID in response');
+      }
+    } catch (error) {
+      handleError(error);
+      setLoading(false);
+    }
+  };
+
+  const startPolling = (id) => {
+    const interval = setInterval(() => pollForResult(id), 5000); // Poll every 5 seconds
+    setPollingInterval(interval);
+  };
+
+  const pollForResult = async (id) => {
+    const url = `https://api.goapi.ai/api/suno/v1/music/${id}`;
+    const headers = {
+      'X-API-Key': "2b85924fa2e14640f5bde332f6ac43df64aa535810a3a9923772b21d8a413015",
+      'Content-Type': 'application/json'
+    };
+
+    try {
+      const response = await axios.get(url, { headers });
+      console.log('Polling Response:', response.data);
+
+      if (response.data.data.status === 'completed') {
+        clearInterval(pollingInterval);
+        setPollingInterval(null);
+        setLoading(false);
+
+        // Assuming the first clip in the response is the one we want
+        const firstClipId = Object.keys(response.data.data.clips)[0];
+        const audioUrl = response.data.data.clips[firstClipId].audio_url;
+        setGeneratedAudio(audioUrl);
+      }
+    } catch (error) {
+      handleError(error);
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+      setLoading(false);
+    }
+  };
+
+  const handleError = (error) => {
+    console.error('Full error object:', error);
+    if (error.response) {
+      console.error('Error data:', error.response.data);
+      console.error('Error status:', error.response.status);
+      console.error('Error headers:', error.response.headers);
+      setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`);
+    } else if (error.request) {
+      console.error('Error request:', error.request);
+      setError('No response received from server');
+    } else {
+      console.error('Error message:', error.message);
+      setError(`Error: ${error.message}`);
+    }
   };
 
   return (
@@ -66,7 +128,6 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
           className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
           rows="6"
         />
-       
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
@@ -96,18 +157,6 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
             className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
           />
         </div>
-      </div>
-
-      <div className="mb-6">
-        <label className="flex items-center text-white cursor-pointer">
-          <input
-            type="checkbox"
-            checked={makeInstrumental}
-            onChange={(e) => setMakeInstrumental(e.target.checked)}
-            className="mr-2 form-checkbox h-5 w-5 text-purple-500 rounded focus:ring-purple-500"
-          />
-          Make Instrumental (No Vocals)
-        </label>
       </div>
 
       <button
