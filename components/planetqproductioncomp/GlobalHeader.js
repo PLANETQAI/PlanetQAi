@@ -72,12 +72,23 @@ export default function GlobalHeader() {
           </div>
         </Link>
         {!session && (
-            <button
-              className="text-white text-md font-bold ring-white ring-1 rounded-lg px-2 hover:underline hover:ring-2 sm:text-2xl"
-              onClick={() => router.push("/signup")}
+            <Link
+              href="/signup"
+              className="bg-transparent flex justify-center items-center"
             >
-              Create account
-            </button>
+              <div className="bg-transparent flex flex-col gap-2 justify-center items-center">
+                <Image
+                  src="/images/client.png"
+                  alt="Your Logo"
+                  width={50}
+                  height={120}
+                  className="rounded-2xl bg-transparent"
+                ></Image>
+                <h1 className="animate-text bg-gradient-to-r text-center from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-sm font-black">
+                  AI Studio - Sign up
+                </h1>
+              </div>
+            </Link>
           )}
         <div className="bg-transparent flex gap-4 justify-center items-center">
           {session && (
@@ -143,7 +154,7 @@ export default function GlobalHeader() {
                   className="rounded-2xl bg-transparent"
                 ></Image>
                 <h1 className="animate-text bg-gradient-to-r text-center from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-sm font-black">
-                  AI Studio
+                  AI Studio - Login
                 </h1>
               </div>
             </Link>

@@ -1,5 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import { useSession } from "next-auth/react";
+import Link from "next/link";
 
 const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
   const [generatedAudio, setGeneratedAudio] = useState(null);
@@ -7,6 +9,8 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
   const [loading, setLoading] = useState(false);
   const [taskId, setTaskId] = useState(null);
   const [pollingInterval, setPollingInterval] = useState(null);
+
+  const { data: session, update } = useSession();
 
   const audioRef = useRef(null);
 
@@ -159,13 +163,27 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
         </div>
       </div>
 
-      <button
-        onClick={generateAudio}
-        disabled={loading}
-        className="bg-purple-600 text-white p-3 rounded-md hover:bg-purple-700 transition-colors duration-300 w-full font-semibold"
-      >
-        {loading ? 'Generating...' : 'Generate Audio'}
-      </button>
+      <div className="flex justify-center items-center">
+        {session && session.user?.userType === "premium" && (
+          <button
+            onClick={generateAudio}
+            disabled={loading}
+            className="bg-purple-600 text-white p-3 rounded-md hover:bg-purple-700 transition-colors duration-300 w-full font-semibold"
+          >
+            {loading ? "Generating..." : "Generate Audio"}
+          </button>
+        )}
+
+        {!session &&  (
+          <Link
+            href="/signup"
+            className="bg-purple-600 text-white justify-center items-center text-center p-3 rounded-md hover:bg-purple-700 transition-colors duration-300 w-full font-semibold"
+          >
+            Please Create an account
+          </Link>
+        )}
+      </div>
+
 
       {error && <p className="text-red-500 mt-4">{error}</p>}
 
