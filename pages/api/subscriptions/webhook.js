@@ -2,7 +2,7 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { buffer } from "micro";
 import Stripe from "stripe";
 import { connectToDatabase } from "../../../lib/db";
-import {  getToken } from "next-auth/react";
+import { getToken } from "next-auth/react";
 import { ObjectId } from "mongodb";
 const stripe = new Stripe(process.env.STRIPE_SECRET);
 
@@ -38,39 +38,12 @@ export default async function handler(req, res) {
       case "customer.subscription.trial_will_end":
         subscription = event.data.object;
         status = subscription.status;
-        console.log(
-          `Subscription status is ${status}. Subscription trial will end.`
-        );
+
         break;
       case "customer.subscription.deleted":
         subscription = event.data.object;
         status = subscription.status;
 
-        const deletedUserId = subscription?.metadata?.userId;
-
-        if (deletedUserId) {
-          try {
-            const client = await connectToDatabase();
-            const usersCollection = client.db().collection("login");
-
-            await usersCollection.updateOne(
-              { _id: new ObjectId(deletedUserId) },
-              {
-                $set: {
-                  userType: "member",
-                  sessionId: null,
-                },
-              }
-            );
-
-            console.log(`User ${deletedUserId} downgraded to free user type.`);
-          } catch (error) {
-            console.error(
-              "Failed to update user type on subscription deletion:",
-              error
-            );
-          }
-        }
         break;
       case "customer.subscription.created":
         subscription = event.data.object;
@@ -86,43 +59,66 @@ export default async function handler(req, res) {
         subscription = event.data.object;
         status = subscription.status;
 
-        console.log(subscription?.metadata);
-
         break;
       case "checkout.session.completed":
-        subscription = event.data.object;
-        status = subscription.status;
+        try {
+          const subscription = event.data.object;
 
-        const userId = subscription?.metadata?.userId;
+          const userId = subscription?.metadata?.userId;
+          const max_download = subscription?.metadata?.max_download;
 
-        const client = await connectToDatabase();
-        const usersCollection = client.db().collection("login");
+          if (!userId || isNaN(max_download)) {
+            throw new Error("Invalid user ID or max_download value");
+          }
 
-        const user = await usersCollection.find({
-          _id: new ObjectId(userId),
-        });
+          const client = await connectToDatabase();
+          const usersCollection = client.db().collection("login");
 
-        if (user) {
-          await usersCollection.updateOne(
-            { _id: new ObjectId(userId) },
-            {
-              $set: {
-                userType: "premium",
-                sessionId: subscription.id,
-              },
+          // Find the user in the database
+          const user = await usersCollection.findOne({
+            _id: new ObjectId(userId),
+          });
+
+          if (user) {
+            const updatedMaxDownload =
+              (Number(user.max_download) || 0) + Number(max_download);
+
+            // Update user's max_download in the database
+            await usersCollection.updateOne(
+              { _id: new ObjectId(userId) },
+              {
+                $set: { max_download: updatedMaxDownload },
+              }
+            );
+
+            // Fetch updated user data to reflect the new max_download value
+            const updatedUser = await usersCollection.findOne({
+              _id: new ObjectId(userId),
+            });
+
+            console.log(updatedUser)
+
+            // Assuming you're using NextAuth, get the token for the user
+            const token = await getToken({
+              req: null, // or pass req if available
+              secret: process.env.NEXTAUTH_SECRET,
+            });
+
+            if (token) {
+              token.max_download = updatedUser.max_download;
             }
+          } else {
+            throw new Error("User not found");
+          }
+        } catch (error) {
+          console.error(
+            "Error processing checkout.session.completed:",
+            error.message
           );
+          // Handle error appropriately, log or notify as needed
         }
-
-        // Update NextAuth session token
-        const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
-
-        if (token) {
-          token.userType = "premium";
-          token.sessionId = subscription.id;
-        }
-
         break;
+
       default:
         console.log(`Unhandled event type ${event.type}.`);
     }

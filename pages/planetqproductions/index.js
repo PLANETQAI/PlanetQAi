@@ -1,4 +1,3 @@
-import HeadContent from "@/components/Home/HeaderContent";
 import AdminLink from "@/components/Home/adminlink";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
@@ -8,6 +7,8 @@ import { CiUser } from "react-icons/ci";
 import Link from "next/link";
 import { MdOutlineDeleteOutline, MdOutlineVideoLibrary } from "react-icons/md";
 import { ImSpinner7 } from "react-icons/im";
+import GlobalHeader from "@/components/planetqproductioncomp/GlobalHeader";
+import Spinner from "@/components/common/Spinner";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -75,9 +76,6 @@ export default function HomePage() {
   };
 
   const updateSongStatus = async (songId, newStatus) => {
-    console.log(songId);
-    console.log(newStatus);
-    setUpdateLoading(true);
     try {
       const response = await fetch(
         "/api/link/updatestatus",
@@ -117,7 +115,7 @@ export default function HomePage() {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <Spinner />;
   }
 
   return (
@@ -128,7 +126,7 @@ export default function HomePage() {
         <link rel="icon" href="/images/small.webp" />
       </Head>
       <div style={backgroundImageStyle}>
-        <HeadContent />
+        <GlobalHeader />
         <AdminLink />
 
         <div className="container mx-auto px-4 py-8">

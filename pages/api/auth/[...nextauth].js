@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
 import { connectToDatabase } from "../../../lib/db";
+import { ObjectId } from "mongodb";
 
 export const authOptions = {
   providers: [
@@ -30,8 +31,9 @@ export const authOptions = {
         return {
           id: user._id,
           email: user.email,
-          userType: user.userType,
-          sessionId: user.sessionId,
+          max_download: user.max_download,
+          // userType: user.userType,
+          // sessionId: user.sessionId,
           role: user.role,
         };
       },
@@ -43,15 +45,17 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (trigger === "update" && session?.userType) {
-        token.userType = session.userType;
-        token.sessionId = session.sessionId;
+      if (trigger === "update" && session?.max_download) {
+        token.max_download = session.max_download
+        // token.userType = session.userType;
+        // token.sessionId = session.sessionId;
       }
 
       if (user) {
         token.id = user.id;
-        token.userType = user.userType;
-        token.sessionId = user.sessionId;
+        token.max_download = user.max_download;
+        // token.userType = user.userType;
+        // token.sessionId = user.sessionId;
         token.role = user.role;
       }
 
@@ -60,8 +64,9 @@ export const authOptions = {
     async session({ session, token }) {
       if (token) {
         session.user.id = token.id;
-        session.user.userType = token.userType;
-        session.user.sessionId = token.sessionId;
+        session.user.max_download = token.max_download;
+        // session.user.userType = token.userType;
+        // session.user.sessionId = token.sessionId;
         session.user.role = token.role;
       }
 
