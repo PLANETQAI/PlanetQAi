@@ -59,3 +59,72 @@
     }
   }
   
+
+  /* Custom CSS for the range input */
+.range-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 11px; /* Thumb width */
+  height: 11px; /* Thumb height */
+  background-color: #ffffff; /* Your custom color - bg-purple-600 */
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.range-slider::-moz-range-thumb {
+  width: 11px; /* Thumb width */
+  height: 11px; /* Thumb height */
+  background-color: #ffffff; /* Your custom color - bg-purple-600 */
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.range-slider::-ms-thumb {
+  width: 11px; /* Thumb width */
+  height: 11px; /* Thumb height */
+  background-color: #ffffff; /* Your custom color - bg-purple-600 */
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Hover state */
+.range-slider:hover::-webkit-slider-thumb {
+  background-color: #ffffff; /* Darker purple for hover state */
+}
+
+.range-slider:hover::-moz-range-thumb {
+  background-color: #ffffff; /* Darker purple for hover state */
+}
+
+.range-slider:hover::-ms-thumb {
+  background-color: #ffffff; /* Darker purple for hover state */
+}
+
+/* Full-page container for centering the spinner */
+.spinner-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh; /* Full viewport height */
+}
+
+/* Spinner styles */
+.spinner {
+  border: 8px solid rgba(229, 231, 235, 1); /* Light gray border */
+  border-top: 8px solid #7c3aed; /* text-violet-600 */
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

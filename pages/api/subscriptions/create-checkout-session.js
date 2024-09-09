@@ -1,4 +1,3 @@
-import { NextApiRequest, NextApiResponse } from 'next';
 import Stripe from 'stripe';
 
 const stripe = new Stripe(process.env.STRIPE_SECRET);
@@ -7,6 +6,7 @@ export default async function handler(req, res) {
   if (req.method === 'POST') {
     const userId = req.body.user_id;
     const lookupKey = req.body.lookup_key;
+    const max_download = req.body.max_download;
 
     try {
       const prices = await stripe.prices.list({
@@ -14,20 +14,33 @@ export default async function handler(req, res) {
         expand: ['data.product'],
       });
 
+      if (prices.data.length === 0) {
+        throw new Error('Price not found for the provided lookup key');
+      }
+
+      const price = prices.data[0];
+
       const session = await stripe.checkout.sessions.create({
         billing_address_collection: 'auto',
-        payment_method_types: ['card'],
+        // payment_method_types: ['card'],
         line_items: [
           {
-            price: prices.data[0]?.id,
+            price_data: {
+              currency: price.currency,
+              product_data: {
+                name: price.product.name,
+              },
+              unit_amount: price.unit_amount, // Use the actual unit_amount from the price object
+            },
             quantity: 1,
           },
         ],
-        mode: 'subscription',
-        success_url: `${process.env.DOMAIN}/?success=true&session_id={CHECKOUT_SESSION_ID}`,
+        mode: 'payment',
+        success_url: `${process.env.DOMAIN}/?success=true`,
         cancel_url: `${process.env.DOMAIN}?canceled=true`,
         metadata: {
           userId,
+          max_download
         },
       });
 

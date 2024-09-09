@@ -34,6 +34,7 @@ async function handler(req, res) {
     fullName,
     email,
     password,
+    max_download: 0,
     role: "user",
     userType: "member",
     sessionId: null,
