@@ -36,12 +36,20 @@ export default function UpgradePlusModal({ close }) {
                 24/7 Premium Support
               </li>
             </ul>
-            <button
-              disabled
-              className="block md:hidden lg:hidden bg-blue-300 text-white py-3 rounded-md text-md font-semibold transition duration-300 ease-in-out w-full shadow-md cursor-not-allowed"
+            <form
+              action="/api/subscriptions/create-checkout-session"
+              method="POST"
             >
-              Free
-            </button>
+              {/* Add a hidden field with the lookup_key of your Price */}
+              <input type="hidden" name="lookup_key" value="basic" />
+              <input type="hidden" name="user_id" value={user?.id} />
+              <input type="hidden" name="max_download" value={1} />
+              <button
+                className="block md:hidden lg:hidden bg-blue-500 hover:bg-blue-600 text-white py-3 rounded-md text-md font-semibold transition duration-300 ease-in-out w-full shadow-md"
+              >
+                Buy for $0.99
+              </button>
+            </form>
           </div>
           <div className="w-full md:w-1/2 lg:w-1/2 md:pl-4 lg:pl-4 mt-8 md:mt-0 lg:mt-0">
             <h3 className="text-lg font-semibold text-gray-300 mb-2 flex items-center">
@@ -63,14 +71,15 @@ export default function UpgradePlusModal({ close }) {
               method="POST"
             >
               {/* Add a hidden field with the lookup_key of your Price */}
-              <input type="hidden" name="lookup_key" value="plus_plan" />
+              {/* Add a hidden field with the lookup_key of your Price */}
+              <input type="hidden" name="lookup_key" value="premium" />
               <input type="hidden" name="user_id" value={user?.id} />
+              <input type="hidden" name="max_download" value={15} />
               <button
                 id="checkout-and-portal-button"
-                type="submit"
-                className="block md:hidden lg:hidden bg-purple-400 hover:bg-purple-500 text-white py-3 rounded-md text-md font-semibold transition duration-300 ease-in-out w-full shadow-md"
+                className="block md:hidden lg:hidden bg-purple-500 hover:bg-purple-600 text-white py-3 rounded-md text-md font-semibold transition duration-300 ease-in-out w-full shadow-md"
               >
-                Upgrade to Plus
+                Buy for $10
               </button>
             </form>
           </div>
