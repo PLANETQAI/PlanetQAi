@@ -4,7 +4,6 @@
   "/_document": "pages/_document.js",
   "/": "pages/index.js",
   "/login": "pages/login.js",
-  "/gallery": "pages/gallery.js",
   "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-  "/api/gallery/findAll": "pages/api/gallery/findAll.js"
+  "/api/subscriptions/create-checkout-session": "pages/api/subscriptions/create-checkout-session.js"
 }
