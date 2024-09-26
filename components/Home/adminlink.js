@@ -4,6 +4,7 @@ import { ToastContainer, toast } from "react-toastify";
 import { useSession } from "next-auth/react";
 import "react-toastify/dist/ReactToastify.css";
 
+// This function will send a song link to the server.
 async function sendSongLink(enteredVideoLink, title, thumbnailLink, userId) {
   const response = await fetch("/api/link/uploadlink", {
     method: "POST",
