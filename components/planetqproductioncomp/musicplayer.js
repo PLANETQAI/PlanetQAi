@@ -149,7 +149,7 @@ export default function MusicPlayer() {
     // }
 
     // playerRef.current.seekTo(iscurrent);
-   };
+  };
 
   const handleSeeking = () => {
     // if (playerRef.current) {

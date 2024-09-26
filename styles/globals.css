@@ -7,83 +7,94 @@
 @tailwind utilities;
 
 :root {
-    --main-color: #8e44ad;
-    --black: #222;
-    --white: #fff;
-    --light-black: #777;
-    --light-white: #fff9;
-    --dark-bg: rgba(0, 0, 0, 0.7);
-    --light-bg: #eee;
-    --border: 0.1rem solid var(--black);
-    --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-    --text-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.3);
-  }
-  
-  * {
-    font-family: "Oxanium","Baloo Bhai 2", "Roboto", "Mulish", sans-serif;
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    outline: none;
-    /* border: none; */
-    text-decoration: none;
-    /* background-color: #333A44; */
-  
-    /* #A8BBB0 */
-  }
-   /* html {  */
-    /* font-size: 62.5%; */
-    /* overflow: hidden; */
-   /* }  */
+  --main-color: #8e44ad;
+  --black: #222;
+  --white: #fff;
+  --light-black: #777;
+  --light-white: #fff9;
+  --dark-bg: rgba(0, 0, 0, 0.7);
+  --light-bg: #eee;
+  --border: 0.1rem solid var(--black);
+  --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+  --text-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.3);
+}
 
-   html { 
-    overflow: hidden;
-    overflow-y: scroll;
-   } 
-  
-  html::-webkit-scrollbar {
-    width: 1rem;
-  }
-  
-  html::-webkit-scrollbar-track {
-    background-color: var(--white);
-  }
-  
-  html::-webkit-scrollbar-thumb {
-    background-color: var(--light-black);
-  }
-  @keyframes fadeIn {
-    0% {
-      transform: scale(0);
-      opacity: 0;
-    }
-  }
-  
+* {
+  font-family: "Oxanium", "Baloo Bhai 2", "Roboto", "Mulish", sans-serif;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  outline: none;
+  /* border: none; */
+  text-decoration: none;
+  /* background-color: #333A44; */
 
-  /* Custom CSS for the range input */
+  /* #A8BBB0 */
+}
+
+/* html {  */
+/* font-size: 62.5%; */
+/* overflow: hidden; */
+/* }  */
+
+html {
+  overflow: hidden;
+  overflow-y: scroll;
+}
+
+html::-webkit-scrollbar {
+  width: 1rem;
+}
+
+html::-webkit-scrollbar-track {
+  background-color: var(--white);
+}
+
+html::-webkit-scrollbar-thumb {
+  background-color: var(--light-black);
+}
+
+@keyframes fadeIn {
+  0% {
+    transform: scale(0);
+    opacity: 0;
+  }
+}
+
+
+/* Custom CSS for the range input */
 .range-slider::-webkit-slider-thumb {
   appearance: none;
-  width: 11px; /* Thumb width */
-  height: 11px; /* Thumb height */
-  background-color: #ffffff; /* Your custom color - bg-purple-600 */
+  width: 11px;
+  /* Thumb width */
+  height: 11px;
+  /* Thumb height */
+  background-color: #ffffff;
+  /* Your custom color - bg-purple-600 */
   border-radius: 50%;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .range-slider::-moz-range-thumb {
-  width: 11px; /* Thumb width */
-  height: 11px; /* Thumb height */
-  background-color: #ffffff; /* Your custom color - bg-purple-600 */
+  width: 11px;
+  /* Thumb width */
+  height: 11px;
+  /* Thumb height */
+  background-color: #ffffff;
+  /* Your custom color - bg-purple-600 */
   border-radius: 50%;
   cursor: pointer;
   transition: background-color 0.3s ease;
 }
 
 .range-slider::-ms-thumb {
-  width: 11px; /* Thumb width */
-  height: 11px; /* Thumb height */
-  background-color: #ffffff; /* Your custom color - bg-purple-600 */
+  width: 11px;
+  /* Thumb width */
+  height: 11px;
+  /* Thumb height */
+  background-color: #ffffff;
+  /* Your custom color - bg-purple-600 */
   border-radius: 50%;
   cursor: pointer;
   transition: background-color 0.3s ease;
@@ -91,15 +102,18 @@
 
 /* Hover state */
 .range-slider:hover::-webkit-slider-thumb {
-  background-color: #ffffff; /* Darker purple for hover state */
+  background-color: #ffffff;
+  /* Darker purple for hover state */
 }
 
 .range-slider:hover::-moz-range-thumb {
-  background-color: #ffffff; /* Darker purple for hover state */
+  background-color: #ffffff;
+  /* Darker purple for hover state */
 }
 
 .range-slider:hover::-ms-thumb {
-  background-color: #ffffff; /* Darker purple for hover state */
+  background-color: #ffffff;
+  /* Darker purple for hover state */
 }
 
 /* Full-page container for centering the spinner */
@@ -107,23 +121,124 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh; /* Full viewport height */
+  height: 100vh;
+  /* Full viewport height */
 }
 
 /* Spinner styles */
 .spinner {
-  border: 8px solid rgba(229, 231, 235, 1); /* Light gray border */
-  border-top: 8px solid #7c3aed; /* text-violet-600 */
+  border: 8px solid rgba(229, 231, 235, 1);
+  border-top: 8px solid #7c3aed;
   border-radius: 50%;
   width: 50px;
   height: 50px;
   animation: spin 1s linear infinite;
 }
 
+/* mian file css */
+.video-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  height: auto;
+  overflow: hidden;
+  padding-bottom: 50%;
+  background-color: #17101d;
+}
+
+.video-container .react-player {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* video - logo */
+
+.logo-container1 {
+  position: absolute;
+  top: 54%;
+  left: 32%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: space-around;
+  /* width: 100%; */
+}
+
+.logo-container2 {
+  position: absolute;
+  top: 52%;
+  left: 48.2%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: space-around;
+  /* width: 100%; */
+}
+
+.logo-container3 {
+  position: absolute;
+  top: 53.5%;
+  left: 63.6%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  justify-content: space-around;
+}
+
+.Vlogo {
+  width: 90px;
+  height: auto;
+  cursor: pointer;
+}
+
+@media (max-width: 1400px) {
+  .Vlogo {
+    width: 60px;
+  }
+}
+
+@media (max-width: 992px) {
+  .Vlogo {
+    width: 50px;
+  }
+}
+
+@media (max-width: 768px) {
+  .Vlogo {
+    width: 30px;
+  }
+}
+
+@media (max-width: 576px) {
+  .Vlogo {
+    width: 20px;
+  }
+}
+
+/* Audio  */
+
+.audio-container {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+  margin: auto;
+  background-color: #17101d;
+}
+
+.react-audio-player {
+  width: 100%;
+  max-width: 95%;
+  margin: auto;
+  background: #1d1525 !important;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
 @keyframes spin {
   0% {
     transform: rotate(0deg);
   }
+
   100% {
     transform: rotate(360deg);
   }
