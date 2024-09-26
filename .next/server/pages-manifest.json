@@ -1,9 +1,1 @@
-{
-  "/_app": "pages/_app.js",
-  "/_error": "pages/_error.js",
-  "/_document": "pages/_document.js",
-  "/": "pages/index.js",
-  "/login": "pages/login.js",
-  "/api/auth/[...nextauth]": "pages/api/auth/[...nextauth].js",
-  "/api/subscriptions/create-checkout-session": "pages/api/subscriptions/create-checkout-session.js"
-}
+{"/_app":"pages/_app.js","/_document":"pages/_document.js","/api/gallery/create":"pages/api/gallery/create.js","/api/gallery/findAll":"pages/api/gallery/findAll.js","/api/auth/signup":"pages/api/auth/signup.js","/api/link/deletelink":"pages/api/link/deletelink.js","/api/link/getlink":"pages/api/link/getlink.js","/api/link/uploadlink":"pages/api/link/uploadlink.js","/api/singleuser/[id]":"pages/api/singleuser/[id].js","/api/link/updatestatus":"pages/api/link/updatestatus.js","/api/subscriptions/create-checkout-session":"pages/api/subscriptions/create-checkout-session.js","/api/subscriptions/create-portal-session":"pages/api/subscriptions/create-portal-session.js","/api/thumbnail/modifythumbnail":"pages/api/thumbnail/modifythumbnail.js","/forgetpassword":"pages/forgetpassword.html","/api/user/change-password":"pages/api/user/change-password.js","/api/user/update":"pages/api/user/update.js","/gallery":"pages/gallery.html","/home":"pages/home.html","/home/Main":"pages/home/Main.html","/login":"pages/login.html","/planetqproductions":"pages/planetqproductions.html","/signup":"pages/signup.html","/api/auth/[...nextauth]":"pages/api/auth/[...nextauth].js","/api/subscriptions/webhook":"pages/api/subscriptions/webhook.js","/":"pages/index.js","/_error":"pages/_error.js","/404":"pages/404.html"}
