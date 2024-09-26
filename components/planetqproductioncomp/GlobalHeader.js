@@ -5,7 +5,8 @@ import { signOut, useSession, signIn, getSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import UpgradePlusModal from "../UpgradePlusModal";
 import { IoIosLogOut } from "react-icons/io";
-import { CiMusicNote1 } from "react-icons/ci";
+import { CiSaveDown1 } from "react-icons/ci";
+import { FaArrowAltCircleDown } from "react-icons/fa";
 import { useUser } from '../../context/UserContext';
 
 export default function GlobalHeader() {
@@ -14,7 +15,7 @@ export default function GlobalHeader() {
   const isHome = router.pathname === "/";
   // const [isOpen, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
-  const {isOpen, close, openHandler} = useUser();
+  const { isOpen, close, openHandler } = useUser();
 
   async function fetchUserData(userId) {
     try {
@@ -61,7 +62,7 @@ export default function GlobalHeader() {
           >
             <div className="bg-transparent flex flex-col gap-2 justify-center items-center">
               <Image
-                src="/images/client.png"
+                src="/images/small.webp"
                 alt="Your Logo"
                 width={50}
                 height={120}
@@ -122,11 +123,8 @@ export default function GlobalHeader() {
             </Link>
           )}
           {session && (
-            <Link
-              href="/gallery"
-              className="flex items-center gap-2 bg-transparent text-md ring-white ring-1 rounded-lg px-2 font-bold hover:underline sm:text-2xl"
-            >
-              <CiMusicNote1 /> Gallery
+            <Link href="/gallery" className="flex items-center gap-2 bg-transparent text-md ring-white ring-1 rounded-lg px-2 font-bold hover:underline sm:text-2xl" >
+              <FaArrowAltCircleDown /> Downloads
             </Link>
           )}
           {session && session.user?.userType !== "premium" && (

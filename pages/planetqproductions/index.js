@@ -1,3 +1,4 @@
+/* eslint-disable @next/next/no-img-element */
 import AdminLink from "@/components/Home/adminlink";
 import { useSession } from "next-auth/react";
 import Head from "next/head";
@@ -168,13 +169,12 @@ export default function HomePage() {
                       disabled={updateLoading}
                       name="status"
                       id="status"
-                      className={`px-2 py-1 rounded ${
-                        song.status === "active"
+                      className={`px-2 py-1 rounded ${song.status === "active"
                           ? "bg-green-500 text-white"
                           : song.status === "pending"
-                          ? "bg-yellow-500 text-white"
-                          : "bg-gray-800 text-white"
-                      }`}
+                            ? "bg-yellow-500 text-white"
+                            : "bg-gray-800 text-white"
+                        }`}
                       value={song.status}
                       onChange={(e) =>
                         updateSongStatus(song._id, e.target.value)

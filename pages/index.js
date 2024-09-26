@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import MusicPlayer from "@/components/planetqproductioncomp/musicplayer";
 import GlobalHeader from "@/components/planetqproductioncomp/GlobalHeader";
 import MusicGenerator from "@/components/player/SunoConsumer";
 import Head from "next/head";
-import { useState } from 'react';
 import { FaArrowDown } from "react-icons/fa6";
+import ReactPlayer from "react-player";
+import Main from "./home/Main";
 
 export default function Home({ initialVideoLink }) {
   const [selectedPrompt, setSelectedPrompt] = useState({
@@ -49,10 +51,14 @@ export default function Home({ initialVideoLink }) {
         <meta name="description" content="planet q productions music player" />
         <link rel="icon" href="/images/small.webp" />
       </Head>
-      <div style={backgroundImageStyle}>
+
+      <Main />
+
+      {/* <div style={backgroundImageStyle}>
         <GlobalHeader />
+
         <MusicPlayer initialVideoLink={initialVideoLink} />
-        
+
         <div className="w-full lg:w-3/4 px-8 m-auto py-14">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
             {examplePrompts.map((prompt, index) => (
@@ -72,17 +78,17 @@ export default function Home({ initialVideoLink }) {
               </button>
             ))}
           </div>
-          
+
           <MusicGenerator
             selectedPrompt={selectedPrompt}
             onPromptChange={setSelectedPrompt}
           />
         </div>
-        
+
         <h1 className="animate-text text-center bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-2xl font-black md:text-4xl pb-10">
           AI Audio Player Presented By Planet Q Productions
         </h1>
-      </div>
+      </div> */}
     </>
   );
 }
