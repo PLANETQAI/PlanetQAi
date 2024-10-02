@@ -19,7 +19,7 @@ export default function HeadContent() {
     <>
       <div className="text-white bg-transparent flex justify-between items-center gap-4 px-6 py-2">
         <Link
-          href="/"
+          href="/aistudio"
           className="bg-transparent flex justify-center items-center"
         >
           <div className="bg-transparent flex gap-4 flex-col justify-center items-center">

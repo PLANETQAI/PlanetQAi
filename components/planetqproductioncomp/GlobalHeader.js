@@ -77,7 +77,7 @@ export default function GlobalHeader() {
 
         {!isHome && (
           <Link
-            href="/"
+            href="/aistudio"
             className="bg-transparent flex justify-center items-center"
           >
             <div className="bg-transparent flex flex-col gap-2 justify-center items-center">

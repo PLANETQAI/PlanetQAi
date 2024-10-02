@@ -12,7 +12,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!session) {
-      router.push("/");
+      router.push("/login");
     }
   }, [router, session]);
 
