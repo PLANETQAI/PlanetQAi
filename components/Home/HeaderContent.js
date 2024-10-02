@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/router";
 import Image from "next/image";
 
+
 export default function HeadContent() {
   const { data: session } = useSession();
   const router = useRouter();
@@ -12,6 +13,7 @@ export default function HeadContent() {
     event.preventDefault();
     if (session) {
       signOut();
+      router.replace('/');
     }
   }
 

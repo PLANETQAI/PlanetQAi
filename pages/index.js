@@ -32,7 +32,7 @@ export default function Home({ initialVideoLink }) {
                         className="react-player"
                     />
                     <div className="logo-container1">
-                        <img src="/images/V_left.gif" alt="Logo1" className="Vlogo" onClick={() => handleRedirect('/')} />
+                        <img src="/images/V_left.gif" alt="Logo1" className="Vlogo" onClick={() => handleRedirect('https://planetqproductions.wixsite.com/planet-q-productions/faqs')} />
                     </div>
                     <div className="logo-container2">
                         <img src="/images/V_center.jpg" alt="Logo2" className="Vlogo" onClick={() => handleRedirect('https://planetqproductions.wixsite.com/planet-q-productions')} />
