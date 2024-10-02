@@ -53,7 +53,7 @@ export default function GlobalHeader() {
 
   return (
     <>
-      <div className="text-white bg-transparent flex justify-between items-center gap-4 px-6 py-2">
+      <div className="text-white bg-transparent flex justify-between items-center gap-4 px-6 py-2 overflow-hidden">
         {isHome && (
           <Link
             href="https://planetqproductions.wixsite.com/planet-q-productions"
@@ -113,7 +113,7 @@ export default function GlobalHeader() {
             </div>
           </Link>
         )}
-        <div className="bg-transparent flex gap-4 justify-center items-center">
+        <div className="bg-transparent flex gap-4 justify-center items-center text-center">
           {session && (
             <Link
               href="/planetqproductions"
