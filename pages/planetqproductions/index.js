@@ -21,7 +21,7 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!session) {
-      router.push("/login");
+      router.push("/");
     } else {
       // Fetch songs when session is available
       fetchSongs();
