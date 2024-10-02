@@ -24,11 +24,11 @@ export default function Home({ initialVideoLink }) {
                 <div className="video-container">
                     <ReactPlayer
                         url={'/images/final.mp4'}
-                        controls={true}
+                        controls={false}
                         loop={true}
                         playing={true}
                         volume={1}
-                        muted={false}
+                        muted={true}
                         className="react-player"
                     />
                     <div className="logo-container1">
@@ -43,7 +43,8 @@ export default function Home({ initialVideoLink }) {
                 </div>
             </div>
             <div className="audio-container">
-                <AudioPlayer autoPlay loop src="https://radio.planetqproductions.com/listen/planetq/radio.mp3" className="react-audio-player" volume={1.0} />
+                <AudioPlayer muted={false} autoPlay loop src="https://radio.planetqproductions.com/listen/planetq/radio.mp3" className="react-audio-player" volume={1.0}
+                 />
             </div>
     </>
   );
