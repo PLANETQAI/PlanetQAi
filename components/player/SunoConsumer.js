@@ -3,6 +3,7 @@ import axios from "axios";
 import { useSession } from "next-auth/react";
 import Link from "next/link";
 import AudioPlayer from "./audioPlayer";
+import { TbInfoHexagonFilled } from "react-icons/tb";
 
 const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
   const [generatedAudio, setGeneratedAudio] = useState(null);
@@ -12,6 +13,11 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
   const [pollingInterval, setPollingInterval] = useState(null);
 
   const { data: session, update } = useSession();
+  const [isVisible, setIsVisible] = useState(false);
+
+  const toggleVisibility = () => {
+    setIsVisible(!isVisible);
+  };
 
   const saveGeneratedAudio = async (userId, audioLink) => {
     try {
@@ -202,6 +208,14 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
             onChange={(e) => handleInputChange("title", e.target.value)}
             className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
           />
+        </div>
+        <div className="flex gap-4 items-center">
+        <TbInfoHexagonFilled onClick={toggleVisibility} style={{fontSize:"2.5rem", color:"white",cursor:"pointer"}} />
+        {isVisible && (
+        <div style={{color:"white", fontSize:"15px", textAlign:"center"}}>
+          Please wait 3-5 minutes. It will be in your Downloads tab.
+        </div>
+      )}
         </div>
       </div>
 
