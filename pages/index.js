@@ -1,9 +1,10 @@
 import Head from "next/head";
 /* eslint-disable @next/next/no-img-element */
-import React from "react";
+import dynamic from "next/dynamic";
+import React,{useState} from "react";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
-import dynamic from "next/dynamic";
+
 const ReactPlayer = dynamic(() => import("react-player/lazy"), { ssr: false });
 
 
@@ -13,6 +14,12 @@ export default function Home({ initialVideoLink }) {
     window.location.href = url;
   };
   
+  const [isPlaying, setIsPlaying] = useState(false); // Initially not playing
+
+  const handleVideoReady = () => {
+    setIsPlaying(true); // Start autoplay when the video is fully loaded
+  };
+
   return (
     <>
       <Head>
@@ -28,7 +35,8 @@ export default function Home({ initialVideoLink }) {
               url={"/images/PlanetQProductions.mp4"}
               controls={false}
               loop={true}
-              playing={true}
+              playing={isPlaying}
+              onReady={handleVideoReady}
               volume={1}
               muted={true}
               className="react-player"
