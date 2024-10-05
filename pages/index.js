@@ -4,8 +4,8 @@ import React from "react";
 import AudioPlayer from "react-h5-audio-player";
 import "react-h5-audio-player/lib/styles.css";
 import dynamic from "next/dynamic";
-const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
-import Image from "next/image";
+const ReactPlayer = dynamic(() => import("react-player/lazy"), { ssr: false });
+
 
 export default function Home({ initialVideoLink }) {
 
