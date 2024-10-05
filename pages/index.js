@@ -32,7 +32,7 @@ export default function Home({ initialVideoLink }) {
         <div className="md:flex-grow flex justify-center items-center">
           <div className="video-container">
             <ReactPlayer
-              url={"/images/final.webm"}
+              url={"/images/PlanetQProductions_2.mp4"}
               controls={false}
               loop={true}
               playing={isPlaying}
