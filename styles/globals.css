@@ -151,7 +151,7 @@ html::-webkit-scrollbar-thumb {
   top: 0;
   left: 0;
   width: 100% !important;
-  height: 100% !important;
+  height: 115% !important;
 }
 
 /* video - logo */
@@ -164,6 +164,45 @@ html::-webkit-scrollbar-thumb {
   display: flex;
   justify-content: space-around;
   /* width: 100%; */
+}
+.logo-container1-left-text{
+  background-color: #17101d9c;
+  color: #afafaf;
+  font-size: 20px;
+  font-weight: 600;
+  padding: 0.5rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+@media (max-width: 1200px) {
+  .logo-container1-left-text {
+    font-size: 10px;
+    padding: 5px 10px;
+  }
+}
+@media (max-width: 576px) {
+  .logo-container1-left-text {
+    font-size: 5px;
+    padding: 4px 8px;
+  }
+}
+
+@keyframes vibrate {
+  0% { transform: translate(0); }
+  25% { transform: translate(-2px, 2px); }
+  50% { transform: translate(-2px, -2px); }
+  75% { transform: translate(2px, 2px); }
+  100% { transform: translate(0); }
+}
+
+.group:hover .group-hover\:animate-vibrate {
+  animation: vibrate 0.3s ease-in-out infinite;
+}
+
+.logo-container1-left{
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
 .logo-container2 {
@@ -222,16 +261,16 @@ html::-webkit-scrollbar-thumb {
   width: 100%;
   max-width: 100%;
   margin: auto;
-  background-color: #17101d;
+  /* background-color: #17101d; */
 }
 
 .react-audio-player {
   width: 100%;
   max-width: 95%;
   margin: auto;
-  background: #1d1525 !important;
+  background: transparent !important;
   border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  box-shadow: 0;
 }
 
 @keyframes spin {
@@ -242,4 +281,11 @@ html::-webkit-scrollbar-thumb {
   100% {
     transform: rotate(360deg);
   }
+}
+
+.image-button {
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
 }
