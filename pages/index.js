@@ -8,6 +8,11 @@ const ReactPlayer = dynamic(() => import("react-player"), { ssr: false });
 import Image from "next/image";
 
 export default function Home({ initialVideoLink }) {
+
+  const handleRedirect = (url) => {
+    window.location.href = url;
+  };
+  
   return (
     <>
       <Head>
