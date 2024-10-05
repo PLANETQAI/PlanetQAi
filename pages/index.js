@@ -98,7 +98,7 @@ export default function Home({ initialVideoLink }) {
           <iframe
             src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true" // Added autoplay parameter
             frameBorder="0"
-            allowTransparency="true"
+            allowtransparency="true"
             style={{
               width: "100%",
               minHeight: "130px",
