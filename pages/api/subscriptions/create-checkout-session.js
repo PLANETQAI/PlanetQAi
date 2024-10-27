@@ -36,8 +36,8 @@ export default async function handler(req, res) {
           },
         ],
         mode: 'payment',
-        success_url: `${process.env.DOMAIN}/?success=true`,
-        cancel_url: `${process.env.DOMAIN}?canceled=true`,
+        success_url: `https://www.planetqradio.com/gallery/?success=true`,
+        cancel_url: `https://www.planetqradio.com/gallery/?canceled=true`,
         metadata: {
           userId,
           max_download

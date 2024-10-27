@@ -12,7 +12,7 @@ export default async function handler(req, res) {
 
       const portalSession = await stripe.billingPortal.sessions.create({
         customer: checkoutSession.customer,
-        return_url: process.env.DOMAIN,
+        return_url: "https://www.planetqradio.com/gallery",
       });
 
       res.redirect(303, portalSession.url);
