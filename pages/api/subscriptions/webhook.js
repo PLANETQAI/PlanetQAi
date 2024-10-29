@@ -18,8 +18,9 @@ export default async function handler(req, res) {
   if (req.method === "POST") {
     const sig = req.headers["stripe-signature"];
     const buf = await buffer(req);
-    const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
+    // const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
 
+    const endpointSecret = "whsec_0lcDHiRhvKzhk6A6x7qk8TD6z6ZC1cfA";
 
     // const endpointSecret = "whsec_0e58cf8464f9a2ba3f231e43bf15464b36213531d397f93ac9486d76287bc638"
 

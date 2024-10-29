@@ -21,7 +21,7 @@ export default function UpgradePlusModal({ close }) {
           Buy Packages
         </h2>
         <div className="md:flex lg:flex md:justify-between lg:justify-between md:items-start lg:items-start">
-          <div className="w-full md:w-1/2 lg:w-1/2 md:pr-4 lg:pr-4 md:border-r lg:border-r md:border-gray-200 lg:border-gray-200">
+          <div className="w-full flex flex-col items-center justify-center">
             <h3 className="text-lg font-semibold text-gray-300 mb-2 flex items-center">
               <FaRegLightbulb className="mr-2 text-blue-500" /> Basic ($0.99)
             </h3>
@@ -51,7 +51,7 @@ export default function UpgradePlusModal({ close }) {
               </button>
             </form>
           </div>
-          <div className="w-full md:w-1/2 lg:w-1/2 md:pl-4 lg:pl-4 mt-8 md:mt-0 lg:mt-0">
+          {/* <div className="w-full md:w-1/2 lg:w-1/2 md:pl-4 lg:pl-4 mt-8 md:mt-0 lg:mt-0">
             <h3 className="text-lg font-semibold text-gray-300 mb-2 flex items-center">
               <BsShieldLock className="mr-2 text-purple-400" /> Premium ($10)
             </h3>
@@ -70,8 +70,6 @@ export default function UpgradePlusModal({ close }) {
               action="/api/subscriptions/create-checkout-session"
               method="POST"
             >
-              {/* Add a hidden field with the lookup_key of your Price */}
-              {/* Add a hidden field with the lookup_key of your Price */}
               <input type="hidden" name="lookup_key" value="premium" />
               <input type="hidden" name="user_id" value={user?.id} />
               <input type="hidden" name="max_download" value={15} />
@@ -82,10 +80,10 @@ export default function UpgradePlusModal({ close }) {
                 Buy for $10
               </button>
             </form>
-          </div>
+          </div> */}
         </div>
         <div className="hidden md:block lg:block">
-          <div className="mt-8 grid md:grid-cols-2 lg:md:grid-cols-2 gap-4">
+          <div className="mt-8 grid md:grid-cols-1 lg:md:grid-cols-1 gap-4">
             <form
               action="/api/subscriptions/create-checkout-session"
               method="POST"
@@ -99,11 +97,10 @@ export default function UpgradePlusModal({ close }) {
               </button>
             </form>
 
-            <form
+            {/* <form
               action="/api/subscriptions/create-checkout-session"
               method="POST"
             >
-              {/* Add a hidden field with the lookup_key of your Price */}
               <input type="hidden" name="lookup_key" value="premium" />
               <input type="hidden" name="user_id" value={user?.id} />
               <input type="hidden" name="max_download" value={15} />
@@ -114,7 +111,7 @@ export default function UpgradePlusModal({ close }) {
               >
                 Buy for $10
               </button>
-            </form>
+            </form> */}
           </div>
         </div>
       </div>
