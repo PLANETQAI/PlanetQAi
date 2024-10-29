@@ -110,21 +110,22 @@ export default function Home({ initialVideoLink }) {
           ></iframe>
         </div>
 
-        <div className="banner-container block xl:hidden">
-          <img
-            src="/images/planetQproductions.jpg"
-            alt="Banner"
-            className="w-full h-auto object-cover"
-          />
-        </div>
-        <div className="banner-container block mt-2 xl:hidden">
+       
+        <div className="banner-container block mt-6 xl:hidden">
           <img
             src="/images/QWorldStudios.jpg"
             alt="Banner"
             className="w-full h-auto object-cover"
           />
         </div>
-        <div className="banner-container block mt-2 xl:hidden">
+        <div className="banner-container block mt-6 xl:hidden">
+          <img
+            src="/images/planetQproductions.jpg"
+            alt="Banner"
+            className="w-full h-auto object-cover"
+          />
+        </div>
+        <div className="banner-container block mt-6 xl:hidden">
           <img
             src="/images/PlanetQRadio.jpg"
             alt="Banner"
