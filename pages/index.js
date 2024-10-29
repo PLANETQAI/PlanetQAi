@@ -117,6 +117,20 @@ export default function Home({ initialVideoLink }) {
             className="w-full h-auto object-cover"
           />
         </div>
+        <div className="banner-container block mt-2 xl:hidden">
+          <img
+            src="/images/QWorldStudios.jpg"
+            alt="Banner"
+            className="w-full h-auto object-cover"
+          />
+        </div>
+        <div className="banner-container block mt-2 xl:hidden">
+          <img
+            src="/images/PlanetQRadio.jpg"
+            alt="Banner"
+            className="w-full h-auto object-cover"
+          />
+        </div>
       </div>
     </>
   );

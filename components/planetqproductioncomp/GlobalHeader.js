@@ -27,7 +27,6 @@ export default function GlobalHeader() {
 
       // Update session using the data from the server
       update({ max_download: data.max_download });
-      console.log("Session updated with max_download:", data.max_download);
     } catch (error) {
       console.error("Failed to fetch user data:", error.message);
     }
