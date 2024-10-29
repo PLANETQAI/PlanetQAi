@@ -151,7 +151,6 @@ const MusicGenerator = ({ selectedPrompt, onPromptChange }) => {
       setError(`Error: ${error.message}`);
     }
   };
-  console.log("generatedAudio", generatedAudio);
 
   return (
     <div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg shadow-xl">

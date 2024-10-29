@@ -14,7 +14,7 @@ export default async function handler(req, res) {
   // }
 
   const { max_download, userId } = req.body;
-  if (!max_download || isNaN(max_download)) {
+  if (max_download < 0) {
     return res.status(400).json({ message: "Invalid max_download value" });
   }
 

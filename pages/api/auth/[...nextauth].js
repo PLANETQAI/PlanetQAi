@@ -45,7 +45,7 @@ export const authOptions = {
   },
   callbacks: {
     async jwt({ token, user, trigger, session }) {
-      if (trigger === "update" && session?.max_download) {
+      if (trigger === "update" || session?.max_download) {
         token.max_download = session.max_download
         // token.userType = session.userType;
         // token.sessionId = session.sessionId;
