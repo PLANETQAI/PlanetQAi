@@ -93,10 +93,9 @@ const AudioPlayer = ({ src }) => {
         throw new Error(data.message || "Failed to update max_download");
       }
 
-      console.log("Max download updated successfully:", data);
 
       // Optionally, you can also trigger session update if needed
-      update({ max_download: newMaxDownload });
+      await update({ max_download: newMaxDownload });
     } catch (error) {
       console.error("Error updating max_download:", error.message);
     }

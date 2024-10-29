@@ -2,9 +2,11 @@ import { NextApiRequest, NextApiResponse } from "next";
 import { buffer } from "micro";
 import Stripe from "stripe";
 import { connectToDatabase } from "../../../lib/db";
-import { getToken } from "next-auth/react";
+import { getToken } from "next-auth/jwt";
 import { ObjectId } from "mongodb";
 const stripe = new Stripe(process.env.STRIPE_SECRET);
+// const stripe = new Stripe("sk_test_51DuUNrLEbBbuiNy4C37Zjysx6YqgKd7q3dPj8mame7nc3V60KRlhLRwNYdgzG3SJlTCVGHdeS7fLlk7y4ey9J6b400J9jPM0Ie");
+
 
 export const config = {
   api: {
@@ -17,6 +19,9 @@ export default async function handler(req, res) {
     const sig = req.headers["stripe-signature"];
     const buf = await buffer(req);
     const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
+
+
+    // const endpointSecret = "whsec_0e58cf8464f9a2ba3f231e43bf15464b36213531d397f93ac9486d76287bc638"
 
     let event;
 
