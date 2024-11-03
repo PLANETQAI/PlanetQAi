@@ -1,7 +1,7 @@
 @import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&family=Roboto&display=swap");
 @import url("https://fonts.googleapis.com/css2?family=Baloo+Bhai+2&family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&family=Roboto&display=swap");
-@import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@200;300;400;500;600;700;800&display=swap');
+@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@200;300;400;500;600;700;800&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -60,7 +60,6 @@ html::-webkit-scrollbar-thumb {
     opacity: 0;
   }
 }
-
 
 /* Custom CSS for the range input */
 .range-slider::-webkit-slider-thumb {
@@ -165,7 +164,7 @@ html::-webkit-scrollbar-thumb {
   justify-content: space-around;
   /* width: 100%; */
 }
-.logo-container1-left-text{
+.logo-container1-left-text {
   background-color: #17101d9c;
   color: #afafaf;
   font-size: 20px;
@@ -188,18 +187,28 @@ html::-webkit-scrollbar-thumb {
 }
 
 @keyframes vibrate {
-  0% { transform: translate(0); }
-  25% { transform: translate(-2px, 2px); }
-  50% { transform: translate(-2px, -2px); }
-  75% { transform: translate(2px, 2px); }
-  100% { transform: translate(0); }
+  0% {
+    transform: translate(0);
+  }
+  25% {
+    transform: translate(-2px, 2px);
+  }
+  50% {
+    transform: translate(-2px, -2px);
+  }
+  75% {
+    transform: translate(2px, 2px);
+  }
+  100% {
+    transform: translate(0);
+  }
 }
 
 .group:hover .group-hover\:animate-vibrate {
   animation: vibrate 0.3s ease-in-out infinite;
 }
 
-.logo-container1-left{
+.logo-container1-left {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -213,6 +222,43 @@ html::-webkit-scrollbar-thumb {
   display: flex;
   justify-content: space-around;
   /* width: 100%; */
+}
+
+/* .imgradio{
+  border-radius: 9999px;
+  position: relative;
+      top: 21px;
+    left: 10px;
+    width: 55px;
+} */
+
+.imgradio {
+  border-radius: 9999px;
+  position: relative;
+  top: 10px;
+  left: 11px;
+  width: 80px;
+  overflow: hidden;
+}
+
+@media (min-width: 400px) and (max-width: 456px) {
+  .imgradio {
+    border-radius: 9999px;
+    position: relative;
+    top: 21px;
+    left: 18px;
+    width: 55px;
+  }
+}
+
+@media (min-width: 320px) and (max-width: 400px) {
+  .imgradio {
+    border-radius: 9999px;
+    position: relative;
+    top: 21px;
+    left: 10px;
+    width: 55px;
+  }
 }
 
 .logo-container3 {
