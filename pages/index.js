@@ -1,19 +1,18 @@
 import Head from "next/head";
 /* eslint-disable @next/next/no-img-element */
 import dynamic from "next/dynamic";
-import React,{useState} from "react";
+import React, { useState } from "react";
 import AudioPlayer from "react-h5-audio-player";
+import Image from "next/image";
 import "react-h5-audio-player/lib/styles.css";
 
 const ReactPlayer = dynamic(() => import("react-player/lazy"), { ssr: false });
 
-
 export default function Home({ initialVideoLink }) {
-
   const handleRedirect = (url) => {
     window.location.href = url;
   };
-  
+
   const [isPlaying, setIsPlaying] = useState(false); // Initially not playing
 
   const handleVideoReady = () => {
@@ -29,6 +28,62 @@ export default function Home({ initialVideoLink }) {
       </Head>
 
       <div className="flex flex-col min-h-screen bg-[#17101D]">
+        <div
+          className="flex items-center justify-center gap-12"
+          style={{
+            backgroundColor: "rgb(31 41 55 / var(--tw-bg-opacity))",
+          }}
+        >
+          <div className="relative w-[100px] h-[100px]">
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+              <video
+                autoPlay
+                loop
+                muted
+                className="w-[150%] h-auto object-cover rounded-full"
+              >
+                <source src="/images/anicircle.mp4" type="video/mp4" />
+              </video>
+            </div>
+            <Image
+              src="/images/radio1.jpeg"
+              alt="Radio Right"
+              width={100}
+              height={100}
+              className="imgradio"
+            />
+          </div>
+
+          <div className="w-[200px] h-[200px] flex justify-center items-center">
+            <Image
+              src="/images/face.jpeg"
+              alt="Human Face"
+              width={200}
+              height={200}
+              className="rounded-full w-48 sm:w-full"
+            />
+          </div>
+
+          <div className="relative w-[100px] h-[100px]">
+            <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+              <video
+                autoPlay
+                loop
+                muted
+                className="w-[150%] h-auto object-cover rounded-full"
+              >
+                <source src="/images/anicircle.mp4" type="video/mp4" />
+              </video>
+            </div>
+            <Image
+              src="/images/radio1.jpeg"
+              alt="Radio Right"
+              width={100}
+              height={100}
+              className="imgradio"
+            />
+          </div>
+        </div>
         <div className="md:flex-grow flex justify-center items-center">
           <div className="video-container">
             <ReactPlayer
@@ -110,7 +165,6 @@ export default function Home({ initialVideoLink }) {
           ></iframe>
         </div>
 
-       
         <div className="banner-container block mt-6 xl:hidden">
           <img
             src="/images/QWorldStudios.jpg"
