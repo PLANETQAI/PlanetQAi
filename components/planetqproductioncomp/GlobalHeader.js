@@ -37,7 +37,7 @@ export default function GlobalHeader() {
     if (session?.user?.id) {
       fetchUserData(session.user.id);
     }
-  }, [session?.user?.id]);
+  }, [session?.user?.id,fetchUserData]);
 
   async function logoutHandler(event) {
     event.preventDefault();
