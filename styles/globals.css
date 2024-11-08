@@ -1,35 +1,35 @@
-@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&family=Roboto&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Baloo+Bhai+2&family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&family=Roboto&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Oxanium:wght@200;300;400;500;600;700;800&display=swap");
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Baloo+Bhai+2&family=Lato:ital,wght@0,100;0,300;0,400;1,300&family=Mulish&family=Roboto&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Oxanium:wght@200;300;400;500;600;700;800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 :root {
-  --main-color: #8e44ad;
-  --black: #222;
-  --white: #fff;
-  --light-black: #777;
-  --light-white: #fff9;
-  --dark-bg: rgba(0, 0, 0, 0.7);
-  --light-bg: #eee;
-  --border: 0.1rem solid var(--black);
-  --box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
-  --text-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.3);
+	--main-color: #8e44ad;
+	--black: #222;
+	--white: #fff;
+	--light-black: #777;
+	--light-white: #fff9;
+	--dark-bg: rgba(0, 0, 0, 0.7);
+	--light-bg: #eee;
+	--border: 0.1rem solid var(--black);
+	--box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.1);
+	--text-shadow: 0 1.5rem 3rem rgba(0, 0, 0, 0.3);
 }
 
 * {
-  font-family: "Oxanium", "Baloo Bhai 2", "Roboto", "Mulish", sans-serif;
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
-  outline: none;
-  /* border: none; */
-  text-decoration: none;
-  /* background-color: #333A44; */
+	font-family: 'Oxanium', 'Baloo Bhai 2', 'Roboto', 'Mulish', sans-serif;
+	margin: 0;
+	padding: 0;
+	box-sizing: border-box;
+	outline: none;
+	/* border: none; */
+	text-decoration: none;
+	/* background-color: #333A44; */
 
-  /* #A8BBB0 */
+	/* #A8BBB0 */
 }
 
 /* html {  */
@@ -38,190 +38,190 @@
 /* }  */
 
 html {
-  overflow: hidden;
-  overflow-y: scroll;
+	overflow: hidden;
+	overflow-y: scroll;
 }
 
 html::-webkit-scrollbar {
-  width: 1rem;
+	width: 1rem;
 }
 
 html::-webkit-scrollbar-track {
-  background-color: var(--white);
+	background-color: var(--white);
 }
 
 html::-webkit-scrollbar-thumb {
-  background-color: var(--light-black);
+	background-color: var(--light-black);
 }
 
 @keyframes fadeIn {
-  0% {
-    transform: scale(0);
-    opacity: 0;
-  }
+	0% {
+		transform: scale(0);
+		opacity: 0;
+	}
 }
 
 /* Custom CSS for the range input */
 .range-slider::-webkit-slider-thumb {
-  appearance: none;
-  width: 11px;
-  /* Thumb width */
-  height: 11px;
-  /* Thumb height */
-  background-color: #ffffff;
-  /* Your custom color - bg-purple-600 */
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+	appearance: none;
+	width: 11px;
+	/* Thumb width */
+	height: 11px;
+	/* Thumb height */
+	background-color: #ffffff;
+	/* Your custom color - bg-purple-600 */
+	border-radius: 50%;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
 }
 
 .range-slider::-moz-range-thumb {
-  width: 11px;
-  /* Thumb width */
-  height: 11px;
-  /* Thumb height */
-  background-color: #ffffff;
-  /* Your custom color - bg-purple-600 */
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+	width: 11px;
+	/* Thumb width */
+	height: 11px;
+	/* Thumb height */
+	background-color: #ffffff;
+	/* Your custom color - bg-purple-600 */
+	border-radius: 50%;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
 }
 
 .range-slider::-ms-thumb {
-  width: 11px;
-  /* Thumb width */
-  height: 11px;
-  /* Thumb height */
-  background-color: #ffffff;
-  /* Your custom color - bg-purple-600 */
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
+	width: 11px;
+	/* Thumb width */
+	height: 11px;
+	/* Thumb height */
+	background-color: #ffffff;
+	/* Your custom color - bg-purple-600 */
+	border-radius: 50%;
+	cursor: pointer;
+	transition: background-color 0.3s ease;
 }
 
 /* Hover state */
 .range-slider:hover::-webkit-slider-thumb {
-  background-color: #ffffff;
-  /* Darker purple for hover state */
+	background-color: #ffffff;
+	/* Darker purple for hover state */
 }
 
 .range-slider:hover::-moz-range-thumb {
-  background-color: #ffffff;
-  /* Darker purple for hover state */
+	background-color: #ffffff;
+	/* Darker purple for hover state */
 }
 
 .range-slider:hover::-ms-thumb {
-  background-color: #ffffff;
-  /* Darker purple for hover state */
+	background-color: #ffffff;
+	/* Darker purple for hover state */
 }
 
 /* Full-page container for centering the spinner */
 .spinner-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  /* Full viewport height */
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	height: 100vh;
+	/* Full viewport height */
 }
 
 /* Spinner styles */
 .spinner {
-  border: 8px solid rgba(229, 231, 235, 1);
-  border-top: 8px solid #7c3aed;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  animation: spin 1s linear infinite;
+	border: 8px solid rgba(229, 231, 235, 1);
+	border-top: 8px solid #7c3aed;
+	border-radius: 50%;
+	width: 50px;
+	height: 50px;
+	animation: spin 1s linear infinite;
 }
 
 /* mian file css */
 .video-container {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  height: auto;
-  overflow: hidden;
-  padding-bottom: 50%;
-  background-color: #17101d;
+	position: relative;
+	width: 100%;
+	max-width: 100%;
+	height: auto;
+	overflow: hidden;
+	padding-bottom: 50%;
+	background-color: #17101d;
 }
 
 .video-container .react-player {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100% !important;
-  height: 105% !important;
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 100% !important;
+	height: 105% !important;
 }
 
 /* video - logo */
 
 .logo-container1 {
-  position: absolute;
-  top: 54%;
-  left: 32%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  justify-content: space-around;
-  /* width: 100%; */
+	position: absolute;
+	top: 54%;
+	left: 32%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	justify-content: space-around;
+	/* width: 100%; */
 }
 .logo-container1-left-text {
-  background-color: #17101d9c;
-  color: #afafaf;
-  font-size: 20px;
-  font-weight: 600;
-  padding: 0.5rem 1rem;
-  border-radius: 0.5rem;
-  margin-bottom: 0.5rem;
+	background-color: #17101d9c;
+	color: #afafaf;
+	font-size: 20px;
+	font-weight: 600;
+	padding: 0.5rem 1rem;
+	border-radius: 0.5rem;
+	margin-bottom: 0.5rem;
 }
 @media (max-width: 1200px) {
-  .logo-container1-left-text {
-    font-size: 10px;
-    padding: 5px 10px;
-  }
+	.logo-container1-left-text {
+		font-size: 10px;
+		padding: 5px 10px;
+	}
 }
 @media (max-width: 576px) {
-  .logo-container1-left-text {
-    font-size: 5px;
-    padding: 4px 8px;
-  }
+	.logo-container1-left-text {
+		font-size: 5px;
+		padding: 4px 8px;
+	}
 }
 
 @keyframes vibrate {
-  0% {
-    transform: translate(0);
-  }
-  25% {
-    transform: translate(-2px, 2px);
-  }
-  50% {
-    transform: translate(-2px, -2px);
-  }
-  75% {
-    transform: translate(2px, 2px);
-  }
-  100% {
-    transform: translate(0);
-  }
+	0% {
+		transform: translate(0);
+	}
+	25% {
+		transform: translate(-2px, 2px);
+	}
+	50% {
+		transform: translate(-2px, -2px);
+	}
+	75% {
+		transform: translate(2px, 2px);
+	}
+	100% {
+		transform: translate(0);
+	}
 }
 
 .group:hover .group-hover\:animate-vibrate {
-  animation: vibrate 0.3s ease-in-out infinite;
+	animation: vibrate 0.3s ease-in-out infinite;
 }
 
 .logo-container1-left {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
 }
 
 .logo-container2 {
-  position: absolute;
-  top: 52%;
-  left: 48.2%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  justify-content: space-around;
-  /* width: 100%; */
+	position: absolute;
+	top: 52%;
+	left: 48.2%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	justify-content: space-around;
+	/* width: 100%; */
 }
 
 /* .imgradio{
@@ -233,105 +233,124 @@ html::-webkit-scrollbar-thumb {
 } */
 
 .imgradio {
-  border-radius: 9999px;
-  position: relative;
-  top: 10px;
-  left: 11px;
-  width: 80px;
-  overflow: hidden;
+	border-radius: 9999px;
+	position: relative;
+	top: 10px;
+	left: 11px;
+	width: 80px;
+	overflow: hidden;
 }
 
 @media (min-width: 400px) and (max-width: 456px) {
-  .imgradio {
-    border-radius: 9999px;
-    position: relative;
-    top: 21px;
-    left: 18px;
-    width: 55px;
-  }
+	.imgradio {
+		border-radius: 9999px;
+		position: relative;
+		top: 21px;
+		left: 18px;
+		width: 55px;
+	}
 }
 
 @media (min-width: 320px) and (max-width: 400px) {
-  .imgradio {
-    border-radius: 9999px;
-    position: relative;
-    top: 21px;
-    left: 10px;
-    width: 55px;
-  }
+	.imgradio {
+		border-radius: 9999px;
+		position: relative;
+		top: 21px;
+		left: 10px;
+		width: 55px;
+	}
 }
 
 .logo-container3 {
-  position: absolute;
-  top: 53.5%;
-  left: 63.6%;
-  transform: translate(-50%, -50%);
-  display: flex;
-  justify-content: space-around;
+	position: absolute;
+	top: 53.5%;
+	left: 63.6%;
+	transform: translate(-50%, -50%);
+	display: flex;
+	justify-content: space-around;
 }
 
 .Vlogo {
-  width: 90px;
-  height: auto;
-  cursor: pointer;
+	width: 90px;
+	height: auto;
+	cursor: pointer;
 }
 
 @media (max-width: 1400px) {
-  .Vlogo {
-    width: 60px;
-  }
+	.Vlogo {
+		width: 60px;
+	}
 }
 
 @media (max-width: 992px) {
-  .Vlogo {
-    width: 50px;
-  }
+	.Vlogo {
+		width: 50px;
+	}
 }
 
 @media (max-width: 768px) {
-  .Vlogo {
-    width: 30px;
-  }
+	.Vlogo {
+		width: 30px;
+	}
 }
 
 @media (max-width: 576px) {
-  .Vlogo {
-    width: 20px;
-  }
+	.Vlogo {
+		width: 20px;
+	}
 }
 
 /* Audio  */
 
 .audio-container {
-  position: relative;
-  width: 100%;
-  max-width: 100%;
-  margin: auto;
-  /* background-color: #17101d; */
+	position: relative;
+	width: 100%;
+	max-width: 100%;
+	margin: auto;
+	/* background-color: #17101d; */
 }
 
 .react-audio-player {
-  width: 100%;
-  max-width: 95%;
-  margin: auto;
-  background: transparent !important;
-  border-radius: 8px;
-  box-shadow: 0;
+	width: 100%;
+	max-width: 95%;
+	margin: auto;
+	background: transparent !important;
+	border-radius: 8px;
+	box-shadow: 0;
 }
 
 @keyframes spin {
-  0% {
-    transform: rotate(0deg);
-  }
+	0% {
+		transform: rotate(0deg);
+	}
 
-  100% {
-    transform: rotate(360deg);
-  }
+	100% {
+		transform: rotate(360deg);
+	}
 }
 
 .image-button {
-  background: none;
-  border: none;
-  padding: 0;
-  cursor: pointer;
+	background: none;
+	border: none;
+	padding: 0;
+	cursor: pointer;
+}
+
+.custom-shadow {
+	@apply shadow-[0_8px_24px_rgba(17,17,26,0.1),0_16px_56px_rgba(17,17,26,0.1),0_24px_80px_rgba(17,17,26,0.1)];
+}
+
+@keyframes flicker {
+	0% {
+		box-shadow: 0 0 20px rgba(0, 255, 255, 1), 0 0 40px rgba(0, 255, 255, 0.8);
+	}
+	50% {
+		box-shadow: 0 0 40px rgba(0, 255, 255, 1), 0 0 80px rgba(0, 255, 255, 1);
+	}
+	100% {
+		box-shadow: 0 0 20px rgba(0, 255, 255, 1), 0 0 40px rgba(0, 255, 255, 0.8);
+	}
+}
+.flicker-shadow {
+	animation: flicker 1s infinite alternate;
 }
