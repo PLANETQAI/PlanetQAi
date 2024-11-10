@@ -224,14 +224,6 @@ html::-webkit-scrollbar-thumb {
 	/* width: 100%; */
 }
 
-/* .imgradio{
-  border-radius: 9999px;
-  position: relative;
-      top: 21px;
-    left: 10px;
-    width: 55px;
-} */
-
 .imgradio {
 	border-radius: 9999px;
 	position: relative;
