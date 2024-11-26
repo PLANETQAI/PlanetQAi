@@ -55,25 +55,25 @@ export default function ChatBot() {
 						backgroundColor: 'rgb(31 41 55 / var(--tw-bg-opacity))',
 					}}
 				>
-					<div className="relative w-[100px] h-[100px]">
+					<div className="relative w-[100px] h-[100px] overflow-hidden">
 						<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
 							<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
 								<source src="/images/anicircle.mp4" type="video/mp4" />
 							</video>
+							<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="absolute p-1 sm:p-4 rounded-full" />
 						</div>
-						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="imgradio" />
 					</div>
 
 					<video ref={aiVideoRef} className={`w-32 h-32 sm:w-48 sm:h-48 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer aspect-square rounded-full ${isLoading && 'flicker-shadow'}`} src="/videos/Planet-q-Chatbox.mp4">
 					</video>
 
-					<div className="relative w-[100px] h-[100px]">
+					<div className="relative w-[100px] h-[100px] overflow-hidden">
 						<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
 							<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
 								<source src="/images/anicircle.mp4" type="video/mp4" />
 							</video>
+							<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="absolute p-1 sm:p-4 rounded-full" />
 						</div>
-						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="imgradio" />
 					</div>
 				</div>
 
