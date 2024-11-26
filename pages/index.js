@@ -44,15 +44,10 @@ export default function Home({ initialVideoLink }) {
 						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="imgradio" />
 					</div>
 
-					<div className="w-[200px] h-[200px] flex justify-center items-center">
+					{/* <div className="w-[200px] h-[200px] flex justify-center items-center"> */}
+					<div className={`w-[200px] h-[192px] flex justify-center items-center rounded-full hover:shadow-[0_0_15px_rgba(0,300,300,0.8)]`}>
 						<Link href={'/chat'}>
-							<Image
-								src="/images/face.jpeg"
-								alt="Human Face"
-								width={200}
-								height={200}
-								className="rounded-full w-48 sm:w-full hover:shadow-[0_0_15px_rgba(0,300,300,0.8)]"
-							/>
+							<video className="w-48 h-48 aspect-square rounded-full" src="/videos/Planet-q-Chatbox.mp4"></video>
 						</Link>
 					</div>
 

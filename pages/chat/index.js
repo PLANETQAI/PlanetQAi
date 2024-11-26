@@ -3,13 +3,12 @@ import Head from 'next/head'
 import Image from 'next/image'
 
 import { useChat } from 'ai/react'
-import { useRouter } from 'next/router'
 import Link from 'next/link'
 
 export default function ChatBot() {
 	const { messages, input, handleSubmit, handleInputChange, isLoading } = useChat()
 	const [triggerPrompt, setTriggerPrompt] = useState(false)
-	const router = useRouter()
+	const aiVideoRef = useRef(null)
 
 	useEffect(() => {
 		if (triggerPrompt) {
@@ -23,6 +22,19 @@ export default function ChatBot() {
 		'Produce a warm, funky track with smooth electric guitar, groovy bass, and steady drums, perfect for a sunset drive',
 		'Make an ambient, space-themed electronic track with ethereal synths, echoing chimes, and deep bass pulses, creating a sense of vastness.',
 	]
+
+	useEffect(() => {
+		if (isLoading) {
+			if (aiVideoRef.current) {
+				aiVideoRef.current.play()
+			}
+		} else {
+			if (aiVideoRef.current) {
+				aiVideoRef.current.pause()
+			}
+		}
+		console.log(aiVideoRef.current)
+	}, [isLoading])
 
 	useEffect(() => {
 		window.scrollTo(0, document.body.scrollHeight)
@@ -52,14 +64,9 @@ export default function ChatBot() {
 						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="imgradio" />
 					</div>
 
-					<div className="w-[200px] h-[200px] flex justify-center items-center rounded-full hover:shadow-[0_0_15px_rgba(0,300,300,0.8)]">
-						<Image
-							src="/images/face.jpeg"
-							alt="Human Face"
-							width={200}
-							height={200}
-							className={`rounded-full w-48 sm:w-full ${isLoading && 'flicker-shadow'}`}
-						/>
+					<div className={`w-[200px] h-[192px] hover:cursor-pointer flex justify-center items-center rounded-full hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] ${isLoading && 'flicker-shadow'}`}>
+						<video ref={aiVideoRef} className='w-48 h-48 aspect-square rounded-full' src="/videos/Planet-q-Chatbox.mp4">
+						</video>
 					</div>
 
 					<div className="relative w-[100px] h-[100px]">
@@ -93,9 +100,8 @@ export default function ChatBot() {
 							<div className="flex gap-4 justify-center flex-wrap mb-28">
 								{prompts.map((value, indx) => (
 									<div
-										className={`text-white max-w-md border border-white rounded-xl p-4 hover:cursor-pointer hover:bg-gray-600 ${
-											indx > 1 && 'hidden lg:block'
-										}`}
+										className={`text-white max-w-md border border-white rounded-xl p-4 hover:cursor-pointer hover:bg-gray-600 ${indx > 1 && 'hidden lg:block'
+											}`}
 										key={indx}
 										onClick={() => {
 											handleInputChange({ target: { value } })
