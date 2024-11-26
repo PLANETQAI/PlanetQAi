@@ -50,7 +50,7 @@ export default function ChatBot() {
 
 			<div className="flex justify-between flex-col min-h-screen bg-[#17101D]">
 				<div
-					className="flex items-center justify-center gap-12 sticky top-0"
+					className="flex items-center justify-center px-2 gap-12 sticky top-0"
 					style={{
 						backgroundColor: 'rgb(31 41 55 / var(--tw-bg-opacity))',
 					}}
@@ -64,10 +64,8 @@ export default function ChatBot() {
 						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="imgradio" />
 					</div>
 
-					<div className={`w-[200px] h-[192px] hover:cursor-pointer flex justify-center items-center rounded-full hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] ${isLoading && 'flicker-shadow'}`}>
-						<video ref={aiVideoRef} className='w-48 h-48 aspect-square rounded-full' src="/videos/Planet-q-Chatbox.mp4">
-						</video>
-					</div>
+					<video ref={aiVideoRef} className={`w-32 h-32 sm:w-48 sm:h-48 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer aspect-square rounded-full ${isLoading && 'flicker-shadow'}`} src="/videos/Planet-q-Chatbox.mp4">
+					</video>
 
 					<div className="relative w-[100px] h-[100px]">
 						<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
@@ -123,6 +121,6 @@ export default function ChatBot() {
 					</form>
 				</div>
 			</div>
-		</div>
+		</div >
 	)
 }

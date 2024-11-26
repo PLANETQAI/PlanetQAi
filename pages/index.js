@@ -5,11 +5,13 @@ import React, { useState } from 'react'
 import AudioPlayer from 'react-h5-audio-player'
 import Image from 'next/image'
 import 'react-h5-audio-player/lib/styles.css'
-import Link from 'next/link'
+import { useRouter } from 'next/router'
 
 const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false })
 
 export default function Home({ initialVideoLink }) {
+	const router = useRouter()
+
 	const handleRedirect = url => {
 		window.location.href = url
 	}
@@ -30,7 +32,7 @@ export default function Home({ initialVideoLink }) {
 
 			<div className="flex flex-col min-h-screen bg-[#17101D]">
 				<div
-					className="flex items-center justify-center gap-12"
+					className="flex items-center justify-center px-2 gap-12"
 					style={{
 						backgroundColor: 'rgb(31 41 55 / var(--tw-bg-opacity))',
 					}}
@@ -45,11 +47,8 @@ export default function Home({ initialVideoLink }) {
 					</div>
 
 					{/* <div className="w-[200px] h-[200px] flex justify-center items-center"> */}
-					<div className={`w-[200px] h-[192px] flex justify-center items-center rounded-full hover:shadow-[0_0_15px_rgba(0,300,300,0.8)]`}>
-						<Link href={'/chat'}>
-							<video className="w-48 h-48 aspect-square rounded-full" src="/videos/Planet-q-Chatbox.mp4"></video>
-						</Link>
-					</div>
+					<video onClick={() => { router.push('/chat') }} className='w-32 h-32 sm:w-48 sm:h-48 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer aspect-square rounded-full' src="/videos/Planet-q-Chatbox.mp4">
+					</video>
 
 					<div className="relative w-[100px] h-[100px]">
 						<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
