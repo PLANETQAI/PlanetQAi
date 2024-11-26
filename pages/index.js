@@ -32,18 +32,18 @@ export default function Home({ initialVideoLink }) {
 
 			<div className="flex flex-col min-h-screen bg-[#17101D]">
 				<div
-					className="flex items-center justify-center px-2 gap-12"
+					className="flex items-center justify-center px-2 gap-6 sm:gap-12"
 					style={{
 						backgroundColor: 'rgb(31 41 55 / var(--tw-bg-opacity))',
 					}}
 				>
-					<div className="relative w-[100px] h-[100px]">
+					<div className="relative w-[100px] h-[100px] overflow-hidden">
 						<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
 							<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
 								<source src="/images/anicircle.mp4" type="video/mp4" />
 							</video>
+							<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="absolute p-1 sm:p-4 rounded-full" />
 						</div>
-						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="imgradio" />
 					</div>
 
 					{/* <div className="w-[200px] h-[200px] flex justify-center items-center"> */}
@@ -55,8 +55,8 @@ export default function Home({ initialVideoLink }) {
 							<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
 								<source src="/images/anicircle.mp4" type="video/mp4" />
 							</video>
+							<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="absolute p-1 sm:p-4 rounded-full" />
 						</div>
-						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="imgradio" />
 					</div>
 				</div>
 				<div className="md:flex-grow flex justify-center items-center">
