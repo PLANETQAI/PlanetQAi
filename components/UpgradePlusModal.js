@@ -1,14 +1,15 @@
-import React from "react";
 import { FiCheckCircle } from "react-icons/fi";
 import { FaRegLightbulb } from "react-icons/fa";
-import { BsShieldLock } from "react-icons/bs";
 import { IoIosCloseCircleOutline } from "react-icons/io";
-import { useSession } from "next-auth/react";
+// import { useSession } from "next-auth/react";
+// import { getServerSession } from "next-auth";
 
 export default function UpgradePlusModal({ close }) {
-  const {
-    data: { user },
-  } = useSession();
+  // const {
+  //   data: { user },
+  // } = useSession();
+
+  const user = { id: '1232' }
 
   return (
     <>
