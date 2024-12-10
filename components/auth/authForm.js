@@ -7,8 +7,16 @@ import { ToastContainer, toast } from 'react-toastify'
 import Link from 'next/link'
 import Image from 'next/image'
 import 'react-toastify/dist/ReactToastify.css'
+import { useSearchParams } from 'next/navigation'
 
 export default function AuthForm() {
+	const searchParams = useSearchParams()
+	const redirectTo = searchParams.get('redirectTo')
+	const text = searchParams.get('text')
+	const tags = searchParams.get('tags')
+	const title = searchParams.get('title')
+	console.log(redirectTo + `?tags=${tags}&text=${text}&title=${title}`)
+
 	const router = useRouter()
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
@@ -20,7 +28,7 @@ export default function AuthForm() {
 
 		try {
 			await signIn('credentials', {
-				redirect: false,
+				redirectTo: redirectTo ? redirectTo + `?tags=${tags}&text=${text}&title=${title}` : '/',
 				email,
 				password,
 			})
@@ -40,10 +48,18 @@ export default function AuthForm() {
 			<div className="h-screen w-screen flex min-h-full flex-1  flex-col justify-center px-6 py-12 lg:px-8 bg-[#333A44]">
 				<div className=" flex justify-center items-center flex-col sm:mx-auto sm:w-full sm:max-w-sm">
 					<Link href={'/'}>
-						<Image src="/images/small.webp" alt="Your Logo" width={135} height={150} className="rounded-2xl"></Image>
+						<Image
+							src="/images/small.webp"
+							alt="Your Logo"
+							width={135}
+							height={150}
+							className="rounded-2xl"
+						></Image>
 					</Link>
 
-					<h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-300">Sign in to your account</h2>
+					<h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-300">
+						Sign in to your account
+					</h2>
 				</div>
 
 				<div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -101,7 +117,10 @@ export default function AuthForm() {
 							>
 								{isLoading ? 'Processing...' : 'Sign in'}
 							</button>
-							<Link href="/signup" className="relative text-white text-right cursor-pointer group inline-block w-fit">
+							<Link
+								href={`/signup?text=${text}&tags=${tags}&title=${title}&redirectTo=${redirectTo}`}
+								className="relative text-white text-right cursor-pointer group inline-block w-fit"
+							>
 								Sign Up now
 								<span className="absolute left-0 bottom-[-2px] w-0 h-[2px] bg-white transition-all duration-500 group-hover:w-full"></span>
 							</Link>

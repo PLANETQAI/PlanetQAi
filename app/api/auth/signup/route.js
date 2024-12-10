@@ -17,6 +17,7 @@ export async function POST(req, res) {
 
 		// Check if the user already exists
 		const existingUser = await db.collection('login').findOne({ email })
+		console.log(existingUser, 'existing user')
 		if (existingUser) {
 			client.close()
 			return NextResponse.json({ message: 'User exists already!' }, { status: 422 })

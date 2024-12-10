@@ -5,6 +5,7 @@ import axios from 'axios'
 import Link from 'next/link'
 import AudioPlayer from './audioPlayer'
 import { TbInfoHexagonFilled } from 'react-icons/tb'
+import { usePathname } from 'next/navigation'
 
 const MusicGenerator = ({
 	session,
@@ -17,6 +18,8 @@ const MusicGenerator = ({
 		selectedPrompt = prompt
 	},
 }) => {
+	const pathname = usePathname()
+
 	const [generatedAudio, setGeneratedAudio] = useState(null)
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
@@ -200,7 +203,10 @@ const MusicGenerator = ({
 					/>
 				</div>
 				<div className="flex gap-4 items-center">
-					<TbInfoHexagonFilled onClick={toggleVisibility} style={{ fontSize: '2.5rem', color: 'white', cursor: 'pointer' }} />
+					<TbInfoHexagonFilled
+						onClick={toggleVisibility}
+						style={{ fontSize: '2.5rem', color: 'white', cursor: 'pointer' }}
+					/>
 					{isVisible && (
 						<div style={{ color: 'white', fontSize: '15px', textAlign: 'center' }}>
 							Please wait 3-5 minutes. It will be in your Downloads tab.
@@ -222,7 +228,7 @@ const MusicGenerator = ({
 
 				{!session && (
 					<Link
-						href="/signup"
+						href={`/signup?text=${selectedPrompt.text}&tags=${selectedPrompt.tags}&title=${selectedPrompt.title}&redirectTo=${pathname}`}
 						className="bg-purple-600 text-white justify-center items-center text-center p-3 rounded-md hover:bg-purple-700 transition-colors duration-300 w-full font-semibold"
 					>
 						Please Create an account

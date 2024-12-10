@@ -1,6 +1,5 @@
 'use client'
 
-import Head from 'next/head'
 import { useState, useEffect } from 'react'
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'
 import MusicPlayer from '@/components/planetqproductioncomp/musicplayer'
@@ -14,17 +13,25 @@ export default function Studio({ session }) {
 	const initialVideoLink = 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
 
 	const searchParams = useSearchParams()
+	const text = searchParams.get('text')
+	const tags = searchParams.get('tags')
+	const title = searchParams.get('title')
+
 	const message = searchParams.get('message')
 	console.log(message, 'user message')
 
 	const [selectedPrompt, setSelectedPrompt] = useState({
-		text: message || '',
-		tags: '',
-		title: '',
+		text: message || text || '',
+		tags: tags || '',
+		title: title || '',
 	})
 
 	useEffect(() => {
-		setSelectedPrompt(prev => ({ text: message || prev.text || '', tags: prev.tags || '', title: prev.title || '' }))
+		setSelectedPrompt(prev => ({
+			text: message || prev.text || '',
+			tags: prev.tags || '',
+			title: prev.title || '',
+		}))
 	}, [message])
 
 	const backgroundImageStyle = {
@@ -62,12 +69,6 @@ export default function Studio({ session }) {
 
 	return (
 		<>
-			<Head>
-				<title>PlanetQProductions</title>
-				<meta name="description" content="planet q productions music player" />
-				<link rel="icon" href="/images/small.webp" />
-			</Head>
-
 			<div style={backgroundImageStyle}>
 				<GlobalHeader session={session} />
 
@@ -83,7 +84,9 @@ export default function Studio({ session }) {
 							>
 								<div className="font-bold mb-2">{prompt.title}</div>
 								<div className="text-xs mb-2 text-gray-300">{prompt.tags}</div>
-								<div className="text-xs text-left overflow-hidden h-20">{prompt.text.split('\n').slice(0, 4).join('\n')}...</div>
+								<div className="text-xs text-left overflow-hidden h-20">
+									{prompt.text.split('\n').slice(0, 4).join('\n')}...
+								</div>
 								<div className="w-full text-right mt-2">
 									<FaArrowDown className="text-purple-500 inline" />
 								</div>
@@ -91,7 +94,11 @@ export default function Studio({ session }) {
 						))}
 					</div>
 
-					<MusicGenerator session={session} selectedPrompt={selectedPrompt} onPromptChange={setSelectedPrompt} />
+					<MusicGenerator
+						session={session}
+						selectedPrompt={selectedPrompt}
+						onPromptChange={setSelectedPrompt}
+					/>
 				</div>
 
 				<h1 className="animate-text text-center bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-2xl font-black md:text-4xl pb-10">

@@ -1,38 +1,32 @@
 'use client'
-
-import { useRef, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
+import axios from 'axios'
+import { signIn } from 'next-auth/react'
 
 export default function SignupForm() {
+	const searchParams = useSearchParams()
+	const title = searchParams.get('title')
+	const tags = searchParams.get('tags')
+	const text = searchParams.get('text')
+	const redirectTo = searchParams.get('redirectTo')
+
 	const [fullName, setFullName] = useState('')
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
-
-	const router = useRouter()
 
 	const submitHandler = async event => {
 		event.preventDefault()
 		setIsLoading(true)
 
 		try {
-			const response = await fetch('/api/auth/signup', {
-				method: 'POST',
-				body: JSON.stringify({
-					fullName,
-					email,
-					password,
-				}),
-				headers: {
-					'Content-Type': 'application/json',
-				},
-			})
-
-			const data = await response.json()
+			const response = await axios.post('/api/auth/signup', { fullName, email, password })
+			const data = await response.data
 
 			if (!response.ok) {
 				throw new Error(data.message || 'Something went wrong!')
@@ -49,10 +43,15 @@ export default function SignupForm() {
 				theme: 'dark',
 			})
 
-			setTimeout(() => {
-				router.push('/login')
+			setTimeout(async () => {
+				await signIn('credentials', {
+					redirectTo: redirectTo ? redirectTo + `?tags=${tags}&text=${text}&title=${title}` : '/',
+					email,
+					password,
+				})
 			}, 2000)
 		} catch (error) {
+			console.log(error)
 			toast.error(error.message, {
 				position: 'top-right',
 				autoClose: 1500,
@@ -74,9 +73,17 @@ export default function SignupForm() {
 			<div className="h-screen w-screen flex min-h-full flex-1 flex-col justify-center px-6 py-12 lg:px-8 bg-[#333A44]">
 				<div className="flex justify-center items-center flex-col sm:mx-auto sm:w-full sm:max-w-sm">
 					<Link href={'/'}>
-						<Image src="/images/small.webp" alt="Your Logo" width={135} height={150} className="rounded-2xl"></Image>
+						<Image
+							src="/images/small.webp"
+							alt="Your Logo"
+							width={135}
+							height={150}
+							className="rounded-2xl"
+						></Image>
 					</Link>
-					<h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-300">Create your account</h2>
+					<h2 className="mt-10 text-center text-2xl font-bold leading-9 tracking-tight text-gray-300">
+						Create your account
+					</h2>
 				</div>
 
 				<div className="mt-10 sm:mx-auto sm:w-full sm:max-w-sm">
@@ -141,7 +148,10 @@ export default function SignupForm() {
 							>
 								{isLoading ? 'Processing' : 'Sign Up'}
 							</button>
-							<Link href="/login" className="relative text-white text-right cursor-pointer group inline-block w-fit">
+							<Link
+								href={`/login?text=${text}&tags=${tags}&title=${title}&redirectTo=${redirectTo}`}
+								className="relative text-white text-right cursor-pointer group inline-block w-fit"
+							>
 								Login now
 								<span className="absolute left-0 bottom-[-2px] w-0 h-[2px] bg-white transition-all duration-500 group-hover:w-full"></span>
 							</Link>
