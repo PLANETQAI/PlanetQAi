@@ -15,7 +15,6 @@ export default function AuthForm() {
 	const text = searchParams.get('text')
 	const tags = searchParams.get('tags')
 	const title = searchParams.get('title')
-	console.log(redirectTo + `?tags=${tags}&text=${text}&title=${title}`)
 
 	const router = useRouter()
 	const [email, setEmail] = useState('')
@@ -27,15 +26,26 @@ export default function AuthForm() {
 		setIsLoading(true)
 
 		try {
-			await signIn('credentials', {
-				redirectTo: redirectTo ? redirectTo + `?tags=${tags}&text=${text}&title=${title}` : '/',
-				email,
-				password,
-			})
+			if (redirectTo) {
+				await signIn('credentials', {
+					redirectTo:
+						redirectTo +
+						`?tags=${encodeURIComponent(tags)}&text=${encodeURIComponent(
+							text
+						)}&title=${encodeURIComponent(title)}`,
+					email,
+					password,
+				})
+			} else {
+				await signIn('credentials', {
+					redirect: false,
+					email,
+					password,
+				})
+			}
 			toast.success('Logged in Successfully')
 			router.push('/')
 		} catch (error) {
-			console.log(error)
 			toast.error('Oops! Something went wrong')
 		}
 
@@ -118,7 +128,11 @@ export default function AuthForm() {
 								{isLoading ? 'Processing...' : 'Sign in'}
 							</button>
 							<Link
-								href={`/signup?text=${text}&tags=${tags}&title=${title}&redirectTo=${redirectTo}`}
+								href={`/signup?tags=${encodeURIComponent(tags)}&text=${encodeURIComponent(
+									text
+								)}&title=${encodeURIComponent(title)}&redirectTo=${encodeURIComponent(
+									redirectTo
+								)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`}
 								className="relative text-white text-right cursor-pointer group inline-block w-fit"
 							>
 								Sign Up now

@@ -18,9 +18,7 @@ export default function MusicPlayer() {
 			.then(response => response.json())
 			.then(links => {
 				const shuffledLinks = shuffleArray(links)
-				console.log(shuffledLinks)
 				setIsVideoLink(shuffledLinks)
-				console.log(shuffledLinks, 'from here link')
 				if (links && links.length > 0) {
 					toast.success('Music successfully retrieved.', {
 						position: 'top-right',

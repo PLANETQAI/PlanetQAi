@@ -37,7 +37,6 @@ export default function PlanetQProductions({ session, songData }) {
 			setSongs(prevSongs => prevSongs.filter(song => song._id !== songId))
 			setDeleteLoading(false)
 		} catch (error) {
-			console.log('Error deleting song:', error)
 			setDeleteLoading(false)
 		}
 	}
@@ -57,7 +56,9 @@ export default function PlanetQProductions({ session, songData }) {
 			}
 
 			// Update the status of the song in the state
-			setSongs(prevSongs => prevSongs.map(song => (song._id === songId ? { ...song, status: newStatus } : song)))
+			setSongs(prevSongs =>
+				prevSongs.map(song => (song._id === songId ? { ...song, status: newStatus } : song))
+			)
 			setUpdateLoading(false)
 		} catch (error) {
 			console.log('Error updating song status:', error)
@@ -84,11 +85,20 @@ export default function PlanetQProductions({ session, songData }) {
 					<h1 className="text-3xl font-bold mb-8 text-white">Planet Q Productions Showcase</h1>
 					<div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
 						{songs.map(song => (
-							<div key={song._id} className="bg-[#11111146] backdrop-filter backdrop-blur-lg bg-opacity-80 border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 relative">
+							<div
+								key={song._id}
+								className="bg-[#11111146] backdrop-filter backdrop-blur-lg bg-opacity-80 border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 relative"
+							>
 								<div className="flex items-center">
 									<Link href={song.link} target="_blank">
 										{song.thumbnail ? (
-											<Image width={100} height={100} src="/images/small.webp" alt={`${song.title} cover`} className="w-20 h-20 object-cover rounded-md mr-4" />
+											<Image
+												width={100}
+												height={100}
+												src="/images/small.webp"
+												alt={`${song.title} cover`}
+												className="w-20 h-20 object-cover rounded-md mr-4"
+											/>
 										) : (
 											<MdOutlineVideoLibrary className="w-20 h-20 mr-4 text-violet-600 hover:text-violet-700" />
 										)}
@@ -108,7 +118,13 @@ export default function PlanetQProductions({ session, songData }) {
 											disabled={updateLoading}
 											name="status"
 											id="status"
-											className={`px-2 py-1 rounded ${song.status === 'active' ? 'bg-green-500 text-white' : song.status === 'pending' ? 'bg-yellow-500 text-white' : 'bg-gray-800 text-white'}`}
+											className={`px-2 py-1 rounded ${
+												song.status === 'active'
+													? 'bg-green-500 text-white'
+													: song.status === 'pending'
+													? 'bg-yellow-500 text-white'
+													: 'bg-gray-800 text-white'
+											}`}
 											value={song.status}
 											onChange={e => updateSongStatus(song._id, e.target.value)}
 										>
@@ -119,7 +135,14 @@ export default function PlanetQProductions({ session, songData }) {
 												Pending
 											</option>
 										</select>
-										{!deleteLoading ? <MdOutlineDeleteOutline className="text-red-500 text-2xl hover:text-red-600 cursor-pointer" onClick={() => deleteSong(song._id)} /> : <ImSpinner7 className="animate-spin text-gray-400 text-xl" />}
+										{!deleteLoading ? (
+											<MdOutlineDeleteOutline
+												className="text-red-500 text-2xl hover:text-red-600 cursor-pointer"
+												onClick={() => deleteSong(song._id)}
+											/>
+										) : (
+											<ImSpinner7 className="animate-spin text-gray-400 text-xl" />
+										)}
 									</div>
 								)}
 							</div>

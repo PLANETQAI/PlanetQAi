@@ -135,7 +135,6 @@ html::-webkit-scrollbar-thumb {
 	max-width: 100%;
 	height: auto;
 	overflow: hidden;
-	padding-bottom: 50%;
 	background-color: #17101d;
 }
 

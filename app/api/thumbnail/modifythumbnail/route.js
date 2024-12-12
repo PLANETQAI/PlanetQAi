@@ -19,7 +19,10 @@ export async function DELETE(req, res) {
 			deletedCount: result.deletedCount,
 		})
 	} catch (error) {
-		return NextResponse.json({ message: 'Internal Server Error: Unable to delete thumbnail picture' }, { status: 500 })
+		return NextResponse.json(
+			{ message: 'Internal Server Error: Unable to delete thumbnail picture' },
+			{ status: 500 }
+		)
 	}
 }
 
@@ -40,7 +43,9 @@ export async function POST(req, res) {
 		const count = await linkCollection.countDocuments()
 
 		if (count === 1) {
-			return NextResponse.json({ message: 'Please delete previous thumbnail first to upload a new one.' })
+			return NextResponse.json({
+				message: 'Please delete previous thumbnail first to upload a new one.',
+			})
 		}
 
 		const existingThumbnail = await linkCollection.findOne({
@@ -73,7 +78,9 @@ export async function GET(req, res) {
 
 		return NextResponse.json({ newThumbnail })
 	} catch (error) {
-		console.log('Error:', error)
-		return NextResponse.json({ message: 'Internal Server Error: Unable to get music' }, { status: 500 })
+		return NextResponse.json(
+			{ message: 'Internal Server Error: Unable to get music' },
+			{ status: 500 }
+		)
 	}
 }

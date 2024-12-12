@@ -30,7 +30,6 @@ const GalleryPage = async () => {
 		userId: song.user,
 		id: JSON.parse(JSON.stringify(song._id)),
 	}))
-	console.log(prevSongs, 'all songs from db')
 
 	return <Gallery session={session} prevSongs={prevSongs} />
 }

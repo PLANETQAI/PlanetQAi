@@ -45,7 +45,12 @@ export default function SignupForm() {
 
 			setTimeout(async () => {
 				await signIn('credentials', {
-					redirectTo: redirectTo ? redirectTo + `?tags=${tags}&text=${text}&title=${title}` : '/',
+					redirectTo: redirectTo
+						? redirectTo +
+						  `?tags=${encodeURIComponent(tags)}&text=${encodeURIComponent(
+								text
+						  )}&title=${encodeURIComponent(title)}`
+						: '/',
 					email,
 					password,
 				})
@@ -149,7 +154,13 @@ export default function SignupForm() {
 								{isLoading ? 'Processing' : 'Sign Up'}
 							</button>
 							<Link
-								href={`/login?text=${text}&tags=${tags}&title=${title}&redirectTo=${redirectTo}`}
+								href={`/login?tags=${encodeURIComponent(tags)}&text=${encodeURIComponent(
+									text
+								)}&title=${encodeURIComponent(title)}&redirectTo=${encodeURIComponent(
+									redirectTo
+								)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(
+									password
+								)}&fullName=${encodeURIComponent(fullName)}`}
 								className="relative text-white text-right cursor-pointer group inline-block w-fit"
 							>
 								Login now

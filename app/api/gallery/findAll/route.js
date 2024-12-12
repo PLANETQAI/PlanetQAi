@@ -25,7 +25,9 @@ export async function GET(req, res) {
 		// Return the found galleries
 		return NextResponse.json(galleries, { status: 200 })
 	} catch (error) {
-		console.log('Error:', error)
-		return NextResponse.json({ message: 'Internal Server Error: Unable to fetch galleries' }, { status: 500 })
+		return NextResponse.json(
+			{ message: 'Internal Server Error: Unable to fetch galleries' },
+			{ status: 500 }
+		)
 	}
 }

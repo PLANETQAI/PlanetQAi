@@ -1,4 +1,3 @@
-import Head from 'next/head'
 import React from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
@@ -9,7 +8,6 @@ export const metadata = {
 }
 
 const RootPage = () => {
-	// const initialVideoLink = 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
 	return (
 		<div className="flex flex-col min-h-screen bg-[#17101D]">
 			<div
@@ -23,12 +21,25 @@ const RootPage = () => {
 						<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
 							<source src="/images/anicircle.mp4" type="video/mp4" />
 						</video>
-						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="absolute p-1 sm:p-4 rounded-full" />
+						<Image
+							src="/images/radio1.jpeg"
+							alt="Radio Right"
+							width={100}
+							height={100}
+							className="absolute p-1 sm:p-4 rounded-full"
+						/>
 					</div>
 				</div>
 
 				<Link href={'/chat'}>
-					<video className="w-32 h-32 sm:w-48 sm:h-48 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer aspect-square rounded-full" preload="auto" playsInline src="/videos/Planet-q-Chatbox.mp4" autoPlay muted></video>
+					<video
+						className="w-32 h-32 sm:w-48 sm:h-48 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer aspect-square rounded-full"
+						loop
+						autoPlay
+						muted
+					>
+						<source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
+					</video>
 				</Link>
 
 				<div className="relative w-[100px] h-[100px]">
@@ -36,13 +47,25 @@ const RootPage = () => {
 						<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
 							<source src="/images/anicircle.mp4" type="video/mp4" />
 						</video>
-						<Image src="/images/radio1.jpeg" alt="Radio Right" width={100} height={100} className="absolute p-1 sm:p-4 rounded-full" />
+						<Image
+							src="/images/radio1.jpeg"
+							alt="Radio Right"
+							width={100}
+							height={100}
+							className="absolute p-1 sm:p-4 rounded-full"
+						/>
 					</div>
 				</div>
 			</div>
 			<div className="md:flex-grow flex justify-center items-center">
-				<div className="video-container relative">
-					<video src="/images/PlanetQProductions_2.mp4" className="absolute top-0" autoPlay muted loop></video>
+				<div className="video-container relative pb-[35%]">
+					<video
+						src="/images/PlanetQProductions_2.mp4"
+						className="absolute top-0"
+						autoPlay
+						muted
+						loop
+					></video>
 
 					<div className="logo-container1 group">
 						<div className="logo-container1-left">
@@ -93,15 +116,33 @@ const RootPage = () => {
 				></iframe>
 			</div>
 
-			<div className="banner-container block mt-6 xl:hidden">
-				<Image width={100} height={100} src="/images/QWorldStudios.jpg" alt="Banner" className="w-full h-auto object-cover" />
+			{/* <div className="banner-container block mt-6 xl:hidden">
+				<Image
+					width={100}
+					height={100}
+					src="/images/QWorldStudios.jpg"
+					alt="Banner"
+					className="w-full h-auto object-cover"
+				/>
 			</div>
 			<div className="banner-container block mt-6 xl:hidden">
-				<Image width={100} height={100} src="/images/planetQproductions.jpg" alt="Banner" className="w-full h-auto object-cover" />
+				<Image
+					width={100}
+					height={100}
+					src="/images/planetQproductions.jpg"
+					alt="Banner"
+					className="w-full h-auto object-cover"
+				/>
 			</div>
 			<div className="banner-container block mt-6 xl:hidden">
-				<Image width={100} height={100} src="/images/PlanetQRadio.jpg" alt="Banner" className="w-full h-auto object-cover" />
-			</div>
+				<Image
+					width={100}
+					height={100}
+					src="/images/PlanetQRadio.jpg"
+					alt="Banner"
+					className="w-full h-auto object-cover"
+				/>
+			</div> */}
 		</div>
 	)
 }
