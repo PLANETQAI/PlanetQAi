@@ -10,6 +10,7 @@ const RootLoader = async () => {
 				width={100}
 				height={100}
 				alt="loader"
+				unoptimized
 				className="w-full h-full max-h-svh object-cover"
 			/>
 		</div>
