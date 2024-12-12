@@ -14,7 +14,7 @@ const page = async () => {
 	console.log(process.env.NEXTAUTH_URL)
 
 	const domain =
-		process.env.NODE_ENV !== 'development' ? process.env.NEXTAUTH_URL : process.env.DOMAIN
+		process.env.NODE_ENV !== 'development' ? 'https://planetqproductions.com/' : process.env.DOMAIN
 
 	if (!session) {
 		redirect(`/login?redirectTo=/my-studio`)
@@ -24,7 +24,8 @@ const page = async () => {
 
 	let serializedVideos = []
 	try {
-		const res = await fetch(`${domain}/api/my-studio`)
+		const res = await fetch(domain)
+
 		serializedVideos = await res.json()
 		console.log(serializedVideos)
 	} catch (error) {
