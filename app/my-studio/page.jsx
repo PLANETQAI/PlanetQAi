@@ -10,9 +10,11 @@ export const metadata = {
 
 const page = async () => {
 	const session = await auth()
-
+	console.log(process.env.NODE_ENV)
+	console.log(process.env.NEXTAUTH_URL)
+	
 	const domain =
-		process.env.NODE_ENV === 'production' ? process.env.NEXTAUTH_URL : process.env.DOMAIN
+		process.env.NODE_ENV !== 'development' ? process.env.NEXTAUTH_URL : process.env.DOMAIN
 
 	if (!session) {
 		redirect(`${domain}/login?redirectTo=/my-studio`)
