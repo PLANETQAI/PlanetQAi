@@ -1,4 +1,3 @@
-import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 import { connectToDatabase } from '@/lib/db'
 
