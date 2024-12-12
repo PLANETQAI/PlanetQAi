@@ -212,7 +212,10 @@ const AudioPlayer = ({ src, onAudioPlay }) => {
 				></div>
 			</div>
 
-			<MdOutlineFileDownload className="text-2xl mr-2 cursor-pointer" onClick={() => handleDownload(src)} />
+			<MdOutlineFileDownload
+				className="text-2xl mr-2 cursor-pointer"
+				onClick={() => handleDownload(src)}
+			/>
 
 			<GiSpeaker className="text-2xl" />
 			<input

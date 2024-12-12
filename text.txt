@@ -1,2 +1,2 @@
 email: planetqproductions@gmail.com
-password:   
+password: 1234567890

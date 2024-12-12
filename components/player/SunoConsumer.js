@@ -81,9 +81,9 @@ const MusicGenerator = ({
 		const payload = {
 			custom_mode: true,
 			input: {
-				prompt: selectedPrompt.text,
-				title: selectedPrompt.title,
-				tags: selectedPrompt.tags,
+				prompt: selectedPrompt.text || '',
+				title: selectedPrompt.title || '',
+				tags: selectedPrompt.tags || '',
 				continue_at: 0,
 				continue_clip_id: '',
 			},
