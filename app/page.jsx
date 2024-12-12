@@ -73,7 +73,14 @@ const RootPage = () => {
 								<h1>Planet Q Radio</h1>
 							</div>
 							<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'}>
-								<Image width={200} height={100} src="/images/V_left.gif" alt="Logo1" className="Vlogo" />
+								<Image
+									width={200}
+									height={100}
+									src="/images/V_left.gif"
+									unoptimized
+									alt="Logo1"
+									className="Vlogo"
+								/>
 							</Link>
 						</div>
 					</div>

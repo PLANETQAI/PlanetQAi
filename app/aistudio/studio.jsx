@@ -8,21 +8,21 @@ import { FaArrowDown } from 'react-icons/fa6'
 import React from 'react'
 import 'react-h5-audio-player/lib/styles.css'
 import { useSearchParams } from 'next/navigation'
+import { normalizeValue } from '@/utils/functions'
 
 export default function Studio({ session }) {
 	const initialVideoLink = 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
 
 	const searchParams = useSearchParams()
-	const text = decodeURIComponent(searchParams.get('text'))
-	const tags = decodeURIComponent(searchParams.get('tags'))
-	const title = decodeURIComponent(searchParams.get('title'))
+	const text = normalizeValue(decodeURIComponent(searchParams.get('text')))
+	const tags = normalizeValue(decodeURIComponent(searchParams.get('tags')))
+	const title = normalizeValue(decodeURIComponent(searchParams.get('title')))
 
-	const message = searchParams.get('message')
-
+	const message = normalizeValue(decodeURIComponent(searchParams.get('message')))
 	const [selectedPrompt, setSelectedPrompt] = useState({
-		text: message || text || '',
-		tags: tags || '',
-		title: title || '',
+		text: message ? message : text ? text : '',
+		tags: tags ? tags : '',
+		title: title ? title : '',
 	})
 
 	useEffect(() => {
