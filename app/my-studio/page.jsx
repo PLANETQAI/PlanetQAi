@@ -11,15 +11,18 @@ export const metadata = {
 const page = async () => {
 	const session = await auth()
 
+	const domain =
+		process.env.NODE_ENV === 'production' ? process.env.NEXTAUTH_URL : process.env.DOMAIN
+
 	if (!session) {
-		redirect(`${process.env.DOMAIN}login?redirectTo=/my-studio`)
+		redirect(`${domain}/login?redirectTo=/my-studio`)
 	} else if (session.user.email !== 'planetqproductions@gmail.com') {
 		redirect(`/`)
 	}
 
 	let serializedVideos = []
 	try {
-		const res = await fetch(`${process.env.DOMAIN}api/my-studio`)
+		const res = await fetch(`${domain}/api/my-studio`)
 		serializedVideos = await res.json()
 		console.log(serializedVideos)
 	} catch (error) {
