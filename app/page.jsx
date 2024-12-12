@@ -89,7 +89,7 @@ const RootPage = () => {
 							<div className="logo-container1-left-text group-hover:animate-vibrate">
 								<h1>Planet Q Productions</h1>
 							</div>
-							<Link href={'https://planetqproductions.wixsite.com/planet-q-productions'}>
+							<Link href={'/my-studio'}>
 								<Image width={100} height={100} src="/images/V_center.jpg" alt="Logo1" className="Vlogo" />
 							</Link>
 						</div>
