@@ -18,7 +18,6 @@ export async function POST(req) {
 
 		return result.toDataStreamResponse()
 	} catch (error) {
-		console.log('Something went wrong', error)
 		return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
 	}
 }

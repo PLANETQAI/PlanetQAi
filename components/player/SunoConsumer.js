@@ -90,9 +90,7 @@ const MusicGenerator = ({
 		}
 
 		try {
-			console.log('Sending payload:', payload)
 			const response = await axios.post(url, payload, { headers })
-			console.log('Initial API Response:', response.data)
 
 			if (response.data && response.data.data && response.data.data.task_id) {
 				startPolling(response.data.data.task_id)
@@ -119,7 +117,6 @@ const MusicGenerator = ({
 
 		try {
 			const response = await axios.get(url, { headers })
-			console.log('Polling Response:', response.data)
 
 			if (response.data.data.status === 'completed') {
 				clearInterval(pollingInterval)
@@ -142,17 +139,11 @@ const MusicGenerator = ({
 	}
 
 	const handleError = error => {
-		console.log('Full error object:', error)
 		if (error.response) {
-			console.log('Error data:', error.response.data)
-			console.log('Error status:', error.response.status)
-			console.log('Error headers:', error.response.headers)
 			setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`)
 		} else if (error.request) {
-			console.log('Error request:', error.request)
 			setError('No response received from server')
 		} else {
-			console.log('Error message:', error.message)
 			setError(`Error: ${error.message}`)
 		}
 	}
@@ -228,7 +219,11 @@ const MusicGenerator = ({
 
 				{!session && (
 					<Link
-						href={`/signup?text=${selectedPrompt.text}&tags=${selectedPrompt.tags}&title=${selectedPrompt.title}&redirectTo=${pathname}`}
+						href={`/signup?text=${encodeURIComponent(selectedPrompt.text)}&tags=${encodeURIComponent(
+							selectedPrompt.tags
+						)}&title=${encodeURIComponent(selectedPrompt.title)}&redirectTo=${encodeURIComponent(
+							pathname
+						)}`}
 						className="bg-purple-600 text-white justify-center items-center text-center p-3 rounded-md hover:bg-purple-700 transition-colors duration-300 w-full font-semibold"
 					>
 						Please Create an account

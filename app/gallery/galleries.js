@@ -38,7 +38,6 @@ export default function Gallery({ session, prevSongs }) {
 
 			if (response.ok) {
 				const data = await response.json()
-				console.log(data.message)
 
 				// Update the local state to remove the deleted song
 				setSongs(prevSongs => prevSongs.filter(song => song.id !== id))
@@ -57,7 +56,6 @@ export default function Gallery({ session, prevSongs }) {
 				throw new Error('Failed to delete the song')
 			}
 		} catch (error) {
-			console.log('Error deleting song:', error)
 			toast.error('An error occurred while deleting song.', {
 				position: 'top-right',
 				autoClose: 1500,

@@ -13,12 +13,11 @@ export default function Studio({ session }) {
 	const initialVideoLink = 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
 
 	const searchParams = useSearchParams()
-	const text = searchParams.get('text')
-	const tags = searchParams.get('tags')
-	const title = searchParams.get('title')
+	const text = decodeURIComponent(searchParams.get('text'))
+	const tags = decodeURIComponent(searchParams.get('tags'))
+	const title = decodeURIComponent(searchParams.get('title'))
 
 	const message = searchParams.get('message')
-	console.log(message, 'user message')
 
 	const [selectedPrompt, setSelectedPrompt] = useState({
 		text: message || text || '',

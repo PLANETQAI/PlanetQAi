@@ -36,7 +36,6 @@ export async function POST(req) {
 		// Update the session using the NextAuth update() function on the client-side later
 		return NextResponse.json({ message: 'User max_download updated successfully', user: updatedUser }, { status: 200 })
 	} catch (error) {
-		console.log('Error updating user max_download:', error)
 		return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
 	}
 }

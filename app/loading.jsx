@@ -1,10 +1,17 @@
 import React from 'react'
 import Spinner from '@/components/common/Spinner'
+import Image from 'next/image'
 
 const RootLoader = async () => {
 	return (
 		<div className="w-full flex justify-center items-center">
-			<Spinner />
+			<Image
+				src={'/images/loader.webp'}
+				width={100}
+				height={100}
+				alt="loader"
+				className="w-full h-full max-h-svh object-cover"
+			/>
 		</div>
 	)
 }
