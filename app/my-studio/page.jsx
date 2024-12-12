@@ -1,7 +1,6 @@
 import React from 'react'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
-import { connectToDatabase } from '@/lib/db'
 import Player from './player'
 
 export const metadata = {
@@ -12,25 +11,20 @@ export const metadata = {
 const page = async () => {
 	const session = await auth()
 
-	if (session.user.email !== 'planetqproductions@gmail.com') {
-		redirect('/')
+	if (!session) {
+		redirect(`${process.env.DOMAIN}login?redirectTo=/my-studio`)
+	} else if (session.user.email !== 'planetqproductions@gmail.com') {
+		redirect(`/`)
 	}
 
-	// Connect to the database
-	const client = await connectToDatabase()
-	const db = client.db()
-	const videoLinksCollection = db.collection('videolinks')
-
-	// Find videos uploaded by the current user
-	const userVideos = await videoLinksCollection.find({ user: session.user.id }).toArray()
-
-	// Serialize the data to plain objects
-	const serializedVideos = userVideos.map(video => ({
-		...video,
-		_id: video._id.toString(), // Convert ObjectId to string
-	}))
-
-	console.log(serializedVideos)
+	let serializedVideos = []
+	try {
+		const res = await fetch(`${process.env.DOMAIN}api/my-studio`)
+		serializedVideos = await res.json()
+		console.log(serializedVideos)
+	} catch (error) {
+		console.log(error)
+	}
 
 	const backgroundImageStyle = {
 		backgroundImage: 'url("/images/back.png")',
