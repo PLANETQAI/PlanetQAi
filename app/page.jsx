@@ -141,15 +141,16 @@ const RootPage = () => {
 					className="w-full h-auto object-cover"
 				/>
 			</div>
+			*/}
 			<div className="banner-container block mt-6 xl:hidden">
 				<Image
 					width={100}
 					height={100}
-					src="/images/PlanetQRadio.jpg"
+					src="/images/robo.webp"
 					alt="Banner"
 					className="w-full h-auto object-cover"
 				/>
-			</div> */}
+			</div>
 		</div>
 	)
 }

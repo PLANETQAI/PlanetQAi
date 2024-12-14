@@ -1,8 +1,8 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
-import { connectToDatabase } from './lib/db'
 import { logInSchema } from './lib/zod'
 import bcrypt from 'bcryptjs'
+import prisma from './lib/prisma'
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
 	providers: [
@@ -20,12 +20,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 						password: credentials.password,
 					})
 
-					// Connect to the database
-					const client = await connectToDatabase()
-					const usersCollection = client.db().collection('login')
+					// Check if the user exists in the database
+					const user = await prisma.user.findUnique({
+						where: { email: validatedCredentials.email },
+					})
+					console.log(user)
 
-					// Check if the user exists
-					const user = await usersCollection.findOne({ email: validatedCredentials.email })
 					if (!user) {
 						throw new Error('User does not exist with this email.')
 					}
@@ -38,11 +38,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
 					// Return user data to be used in the session and JWT
 					return {
-						id: user._id,
+						id: user.id,
+						fullName: user.fullName,
 						email: user.email,
-						max_download: user.max_download,
-						userType: user.userType,
-						sessionId: user.sessionId,
+						allowedDownloads: user.allowedDownloads,
+						totalDownloads: user.totalDownloads,
 						role: user.role,
 					}
 				} catch (error) {
@@ -55,16 +55,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 		async jwt({ token, user, trigger, session }) {
 			if (trigger === 'update' || session?.max_download) {
 				token.max_download = session.max_download
-				// token.userType = session.userType;
-				// token.sessionId = session.sessionId;
 			}
 
 			if (user) {
 				token.id = user.id
 				token.max_download = user.max_download
 				token.role = user.role
-				// token.userType = user.userType;
-				// token.sessionId = user.sessionId;
 			}
 			return token
 		},
@@ -73,8 +69,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 				session.user.id = token.id
 				session.user.max_download = token.max_download
 				session.user.role = token.role
-				// session.user.userType = token.userType;
-				// session.user.sessionId = token.sessionId;
 			}
 			return session
 		},

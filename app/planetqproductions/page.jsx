@@ -2,6 +2,7 @@ import React from 'react'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import PlanetQProductions from './planetQ'
+import prisma from '@/lib/prisma'
 
 export const metadata = {
 	title: 'PlanetQRadio',
@@ -10,17 +11,48 @@ export const metadata = {
 
 const Page = async () => {
 	const session = await auth()
+	let videoLinks
 
 	if (!session) {
-		redirect('/')
+		redirect('/login?redirectTo=/planetqproductions')
 	} else {
-		let songData = []
-		console.log(songData, 'from here')
-		const response = await fetch(`${process.env.DOMAIN}api/link/getlink`)
-		songData = await response.json()
-		console.log('crossed this')
+		const isAdmin = session.user.role === 'Admin'
 
-		return <PlanetQProductions session={session} songData={songData} />
+		if (isAdmin) {
+			// Fetch all video links if admin
+			videoLinks = await prisma.videoLinks.findMany({
+				include: {
+					user: {
+						select: {
+							id: true,
+							role: true,
+							fullName: true,
+							// Exclude password from response
+							password: false,
+						},
+					},
+				},
+			})
+		} else {
+			// Fetch only active video links if no session or admin
+			videoLinks = await prisma.videoLinks.findMany({
+				where: {
+					isLive: true,
+				},
+				include: {
+					user: {
+						select: {
+							id: true,
+							role: true,
+							fullName: true,
+							password: false,
+						},
+					},
+				},
+			})
+		}
+
+		return <PlanetQProductions session={session} songData={videoLinks} />
 	}
 }
 

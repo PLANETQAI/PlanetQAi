@@ -2,6 +2,7 @@ import React from 'react'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
 import Player from './player'
+import prisma from '@/lib/prisma'
 
 export const metadata = {
 	title: 'PlanetQRadio',
@@ -10,11 +11,6 @@ export const metadata = {
 
 const page = async () => {
 	const session = await auth()
-	console.log(process.env.NODE_ENV)
-	console.log(process.env.NEXTAUTH_URL)
-
-	const domain =
-		process.env.NODE_ENV !== 'development' ? 'https://planetqproductions.com/' : process.env.DOMAIN
 
 	if (!session) {
 		redirect(`/login?redirectTo=/my-studio`)
@@ -22,15 +18,21 @@ const page = async () => {
 		redirect(`/`)
 	}
 
-	let serializedVideos = []
-	try {
-		const res = await fetch(domain)
-
-		serializedVideos = await res.json()
-		console.log(serializedVideos)
-	} catch (error) {
-		console.log(error)
-	}
+	const userVideos = await prisma.videoLinks.findMany({
+		where: { userId: session.user.id },
+		include: {
+			user: {
+				select: {
+					id: true,
+					role: true,
+					fullName: true,
+					password: false,
+					email: true,
+				},
+			},
+		},
+	})
+	console.log(userVideos)
 
 	const backgroundImageStyle = {
 		backgroundImage: 'url("/images/back.png")',
@@ -45,7 +47,7 @@ const page = async () => {
 			<div className="container mx-auto px-4 py-8">
 				<h1 className="text-3xl font-bold mb-8 text-white">My Studio Gallery</h1>
 				<div className="w-full flex justify-center items-center mt-20">
-					<Player userVideos={serializedVideos} />
+					<Player userVideos={userVideos} />
 				</div>
 			</div>
 		</div>

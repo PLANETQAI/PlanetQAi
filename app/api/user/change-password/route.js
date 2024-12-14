@@ -1,4 +1,4 @@
-import { connectToDatabase } from '@/lib/db'
+import prisma from '@/lib/prisma' // Assuming Prisma client is set up
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
 import { redirect } from 'next/navigation'
@@ -16,15 +16,17 @@ export async function PATCH(req, res) {
 
 		// Validate input
 		if (!newPassword || newPassword.trim().length < 7) {
-			return NextResponse.json({ message: 'Invalid input - new password should be at least 7 characters.' }, { status: 422 })
+			return NextResponse.json(
+				{ message: 'Invalid input - new password should be at least 7 characters.' },
+				{ status: 422 }
+			)
 		}
 
-		// Connect to database
-		const client = await connectToDatabase()
-		const usersCollection = client.db().collection('login')
+		// Find the user by session email using Prisma
+		const user = await prisma.user.findUnique({
+			where: { email: session.user.email },
+		})
 
-		// Find the user by session email
-		const user = await usersCollection.findOne({ email: session.user.email })
 		if (!user) {
 			return NextResponse.json({ message: 'User not found.' }, { status: 404 })
 		}
@@ -38,11 +40,11 @@ export async function PATCH(req, res) {
 		// Hash the new password
 		const hashedNewPassword = saltAndHashPassword(newPassword)
 
-		// Update the password
-		await usersCollection.updateOne({ email: session.user.email }, { $set: { password: hashedNewPassword } })
-
-		// Close database connection
-		client.close()
+		// Update the password using Prisma
+		await prisma.user.update({
+			where: { email: session.user.email },
+			data: { password: hashedNewPassword },
+		})
 
 		return NextResponse.json({ message: 'Password updated successfully!' }, { status: 200 })
 	} catch (error) {

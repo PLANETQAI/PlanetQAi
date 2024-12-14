@@ -1,27 +1,30 @@
-import { NextResponse } from "next/server";
-import { connectToDatabase } from "../../../../lib/db";
+import { NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
 
 export async function POST(req, res) {
-  const data = req.body;
-  let { user, audioLink } = data;
+	try {
+		const body = await req.json()
+		const { user, audioLink } = body
 
-  if (!user) {
-    return NextResponse.json({ message: 'User is required!' }, { status: 422 })
-  }
+		if (!user) {
+			return NextResponse.json({ message: 'User is required!' }, { status: 422 })
+		}
 
-  if (!audioLink) {
-    return NextResponse.json({ message: 'Link not entered' }, { status: 422 })
-  }
+		if (!audioLink) {
+			return NextResponse.json({ message: 'Link not entered' }, { status: 422 })
+		}
 
-  const client = await connectToDatabase();
-  const db = client.db();
+		const result = await prisma.gallery.create({
+			data: {
+				user,
+				audioLink,
+				isPaid: false,
+			},
+		})
 
-  const result = await db.collection("gallery").insertOne({
-    user,
-    audioLink,
-    isPaid: false,
-  });
-
-  return NextResponse.json({ message: 'Music created Successfully!' }, { status: 201 })
+		return NextResponse.json({ message: 'Music created Successfully!', result }, { status: 201 })
+	} catch (error) {
+		console.error(error)
+		return NextResponse.json({ message: 'Something went wrong!' }, { status: 500 })
+	}
 }
-
