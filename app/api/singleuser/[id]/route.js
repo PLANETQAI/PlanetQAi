@@ -1,38 +1,30 @@
-import { connectToDatabase } from '@/lib/db'
-import { ObjectId } from 'mongodb'
+import prisma from '@/lib/prisma' // Assuming prisma is set up in this file
 import { NextResponse } from 'next/server'
 
-export async function GET(req, { params }, res) {
-	const allParams = await params
-	console.log(allParams.id)
-	const { id } = allParams
+export async function GET(req, { params }) {
+	const { id } = params
 
-	if (!ObjectId.isValid(id)) {
+	// Validate the user ID
+	if (!id || isNaN(parseInt(id))) {
 		return NextResponse.json({ message: 'Invalid user ID' }, { status: 400 })
 	}
 
-	let client
-
 	try {
-		client = await connectToDatabase()
-		const usersCollection = client.db().collection('login')
-
-		const user = await usersCollection.findOne({
-			_id: new ObjectId(id),
+		// Fetch the user from the database
+		const user = await prisma.user.findUnique({
+			where: { id: parseInt(id) }, // Assuming the user ID is an integer
 		})
 
 		if (!user) {
 			return NextResponse.json({ message: 'User not found' }, { status: 404 })
 		}
 
-		delete user.password
-		return NextResponse.json({ user })
+		// Exclude the password from the response
+		const { password, ...userWithoutPassword } = user
+
+		return NextResponse.json({ user: userWithoutPassword })
 	} catch (error) {
 		console.log('Failed to fetch user:', error)
 		return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 })
-	} finally {
-		if (client) {
-			await client.close()
-		}
 	}
 }

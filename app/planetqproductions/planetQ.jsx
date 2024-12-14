@@ -9,7 +9,7 @@ import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'
 import Image from 'next/image'
 
 export default function PlanetQProductions({ session, songData }) {
-	const [songs, setSongs] = useState([...songData])
+	const [songs, setSongs] = useState(songData && [...songData])
 	const [deleteLoading, setDeleteLoading] = useState(false)
 	const [updateLoading, setUpdateLoading] = useState(false)
 
@@ -74,7 +74,7 @@ export default function PlanetQProductions({ session, songData }) {
 		backgroundAttachment: 'fixed',
 		minHeight: '100vh',
 	}
-
+	console.log(songs)
 	return (
 		<>
 			<div style={backgroundImageStyle}>
@@ -84,13 +84,13 @@ export default function PlanetQProductions({ session, songData }) {
 				<div className="container mx-auto px-4 py-8">
 					<h1 className="text-3xl font-bold mb-8 text-white">Planet Q Productions Showcase</h1>
 					<div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6">
-						{songs.map(song => (
+						{songs.map((song, indx) => (
 							<div
-								key={song._id}
+								key={indx}
 								className="bg-[#11111146] backdrop-filter backdrop-blur-lg bg-opacity-80 border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 relative"
 							>
 								<div className="flex items-center">
-									<Link href={song.link} target="_blank">
+									<Link href={song.videoLink} target="_blank">
 										{song.thumbnail ? (
 											<Image
 												width={100}
@@ -104,11 +104,11 @@ export default function PlanetQProductions({ session, songData }) {
 										)}
 									</Link>
 									<div>
-										<Link href={song.link} target="_blank">
+										<Link href={song.videoLink} target="_blank">
 											<h2 className="text-xl font-semibold mb-2 text-white hover:underline">{song.title}</h2>
 										</Link>
 										<p className="text-gray-400 flex items-center gap-1">
-											<CiUser /> {song.user?.fullName}
+											<CiUser /> {song.user?.fullName || 'Not-Available'}
 										</p>
 									</div>
 								</div>

@@ -1,53 +1,57 @@
-import { connectToDatabase } from '@/lib/db'
-import { ObjectId } from 'mongodb'
+import prisma from '@/lib/prisma'
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 
 export async function GET(req, res) {
 	try {
-		const client = await connectToDatabase()
-		const db = client.db()
-		const videoLinksCollection = db.collection('videolinks')
-		const usersCollection = db.collection('login')
-
 		// Get session to check if user is authenticated
 		const session = await auth()
+		console.log(session)
 
-		// Fetch all video links
 		let videoLinks
+
 		if (session) {
-			const isAdmin = session.user.role === 'admin'
-			//console.log(session);
-			//console.log(session.user.role);
+			const isAdmin = session.user.role === 'Admin'
+
 			if (isAdmin) {
-				videoLinks = await videoLinksCollection.find({}).toArray()
-			} else {
-				videoLinks = await videoLinksCollection.find({ status: 'active' }).toArray()
+				// Fetch all video links if admin
+				videoLinks = await prisma.videoLinks.findMany({
+					include: {
+						user: {
+							select: {
+								id: true,
+								role: true,
+								// Exclude password from response
+								password: false,
+							},
+						},
+					},
+				})
 			}
-		} else {
-			videoLinks = await videoLinksCollection.find({ status: 'active' }).toArray()
+
+			// Fetch only active video links if no admin
+			videoLinks = await prisma.videoLinks.findMany({
+				where: {
+					isLive: true,
+				},
+				include: {
+					user: {
+						select: {
+							id: true,
+							role: true,
+							password: false,
+						},
+					},
+				},
+			})
 		}
 
-		const populatedVideoLinks = await Promise.all(
-			videoLinks.map(async videoLink => {
-				const user = await usersCollection.findOne({ _id: new ObjectId(videoLink.user) })
-
-				if (user) {
-					const { password, ...userWithoutPassword } = user
-
-					return {
-						...videoLink,
-						user: userWithoutPassword,
-					}
-				}
-
-				return videoLink
-			})
-		)
-
-		return NextResponse.json(populatedVideoLinks)
+		return NextResponse.json(videoLinks)
 	} catch (error) {
 		console.log('Error:', error)
-		return NextResponse.json({ message: 'Internal Server Error: Unable to get music' }, { status: 500 })
+		return NextResponse.json(
+			{ message: 'Internal Server Error: Unable to get video links' },
+			{ status: 500 }
+		)
 	}
 }

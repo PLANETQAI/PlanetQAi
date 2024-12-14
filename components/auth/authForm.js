@@ -28,11 +28,7 @@ export default function AuthForm() {
 		try {
 			if (redirectTo) {
 				await signIn('credentials', {
-					redirectTo:
-						redirectTo +
-						`?tags=${encodeURIComponent(tags)}&text=${encodeURIComponent(
-							text
-						)}&title=${encodeURIComponent(title)}`,
+					redirectTo: redirectTo + `?tags=${tags}&text=${text}&title=${title}`,
 					email,
 					password,
 				})
@@ -44,7 +40,9 @@ export default function AuthForm() {
 				})
 			}
 			toast.success('Logged in Successfully')
-			router.push('/')
+			setTimeout(() => {
+				router.push('/')
+			}, 1500)
 		} catch (error) {
 			toast.error('Oops! Something went wrong')
 		}
@@ -128,11 +126,7 @@ export default function AuthForm() {
 								{isLoading ? 'Processing...' : 'Sign in'}
 							</button>
 							<Link
-								href={`/signup?tags=${encodeURIComponent(tags)}&text=${encodeURIComponent(
-									text
-								)}&title=${encodeURIComponent(title)}&redirectTo=${encodeURIComponent(
-									redirectTo
-								)}&email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`}
+								href={{ pathname: '/signup', query: { tags, text, title, email, password } }}
 								className="relative text-white text-right cursor-pointer group inline-block w-fit"
 							>
 								Sign Up now

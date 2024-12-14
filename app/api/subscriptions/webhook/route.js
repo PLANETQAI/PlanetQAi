@@ -1,11 +1,10 @@
 import { buffer } from 'micro'
 import Stripe from 'stripe'
-import { connectToDatabase } from '@/lib/db'
+import prisma from '@/lib/prisma' // Assuming Prisma client is set up
 import { getToken } from 'next-auth/jwt'
-import { ObjectId } from 'mongodb'
 import { NextResponse } from 'next/server'
+
 const stripe = new Stripe(process.env.STRIPE_SECRET)
-// const stripe = new Stripe("sk_test_51DuUNrLEbBbuiNy4C37Zjysx6YqgKd7q3dPj8mame7nc3V60KRlhLRwNYdgzG3SJlTCVGHdeS7fLlk7y4ey9J6b400J9jPM0Ie");
 
 export const config = {
 	api: {
@@ -16,11 +15,8 @@ export const config = {
 export async function POST(req, res) {
 	const sig = req.headers['stripe-signature']
 	const buf = await buffer(req)
-	// const endpointSecret = process.env.STRIPE_ENDPOINT_SECRET;
 
 	const endpointSecret = 'whsec_0lcDHiRhvKzhk6A6x7qk8TD6z6ZC1cfA'
-
-	// const endpointSecret = "whsec_0e58cf8464f9a2ba3f231e43bf15464b36213531d397f93ac9486d76287bc638"
 
 	let event
 
@@ -28,7 +24,7 @@ export async function POST(req, res) {
 		event = stripe.webhooks.constructEvent(buf.toString(), sig, endpointSecret)
 	} catch (err) {
 		console.log('Webhook signature verification failed.', err.message)
-		return NextResponse.json({ message: 'Webhook Error: ${err.message' }, { status: 400 })
+		return NextResponse.json({ message: `Webhook Error: ${err.message}` }, { status: 400 })
 	}
 
 	let subscription
@@ -38,12 +34,10 @@ export async function POST(req, res) {
 		case 'customer.subscription.trial_will_end':
 			subscription = event.data.object
 			status = subscription.status
-
 			break
 		case 'customer.subscription.deleted':
 			subscription = event.data.object
 			status = subscription.status
-
 			break
 		case 'customer.subscription.created':
 			subscription = event.data.object
@@ -58,12 +52,10 @@ export async function POST(req, res) {
 		case 'billing_portal.session.created':
 			subscription = event.data.object
 			status = subscription.status
-
 			break
 		case 'checkout.session.completed':
 			try {
 				const subscription = event.data.object
-
 				const userId = subscription?.metadata?.userId
 				const max_download = subscription?.metadata?.max_download
 
@@ -71,28 +63,23 @@ export async function POST(req, res) {
 					throw new Error('Invalid user ID or max_download value')
 				}
 
-				const client = await connectToDatabase()
-				const usersCollection = client.db().collection('login')
-
-				// Find the user in the database
-				const user = await usersCollection.findOne({
-					_id: new ObjectId(userId),
+				// Use Prisma to find the user
+				const user = await prisma.user.findUnique({
+					where: { id: userId },
 				})
 
 				if (user) {
 					const updatedMaxDownload = (Number(user.max_download) || 0) + Number(max_download)
 
-					// Update user's max_download in the database
-					await usersCollection.updateOne(
-						{ _id: new ObjectId(userId) },
-						{
-							$set: { max_download: updatedMaxDownload },
-						}
-					)
+					// Update user's max_download in the database using Prisma
+					await prisma.user.update({
+						where: { id: userId },
+						data: { max_download: updatedMaxDownload },
+					})
 
-					// Fetch updated user data to reflect the new max_download value
-					const updatedUser = await usersCollection.findOne({
-						_id: new ObjectId(userId),
+					// Fetch updated user data
+					const updatedUser = await prisma.user.findUnique({
+						where: { id: userId },
 					})
 
 					console.log(updatedUser)
@@ -114,7 +101,6 @@ export async function POST(req, res) {
 				// Handle error appropriately, log or notify as needed
 			}
 			break
-
 		default:
 			console.log(`Unhandled event type ${event.type}.`)
 	}

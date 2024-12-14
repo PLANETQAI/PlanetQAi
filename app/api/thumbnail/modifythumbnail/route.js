@@ -1,22 +1,21 @@
-import { connectToDatabase } from '@/lib/db'
+import prisma from '@/lib/prisma' // Assuming Prisma client is set up
 import { NextResponse } from 'next/server'
 
 export async function DELETE(req, res) {
 	try {
-		const client = await connectToDatabase()
-
-		const linkCollection = client.db().collection('Thumbnail')
-		const count = await linkCollection.countDocuments()
+		// Check if a thumbnail exists
+		const count = await prisma.thumbnail.count()
 
 		if (count === 0) {
 			return NextResponse.json({ message: 'No thumbnail is available to delete' })
 		}
 
-		const result = await linkCollection.deleteMany({})
+		// Delete all thumbnails
+		const result = await prisma.thumbnail.deleteMany()
 
 		return NextResponse.json({
-			message: `Successfully deleted ${result.deletedCount} Thumbnail`,
-			deletedCount: result.deletedCount,
+			message: `Successfully deleted ${result.count} Thumbnail`,
+			deletedCount: result.count,
 		})
 	} catch (error) {
 		return NextResponse.json(
@@ -27,7 +26,7 @@ export async function DELETE(req, res) {
 }
 
 export async function POST(req, res) {
-	const data = req.body
+	const data = await req.json()
 
 	const { ThumbnailImage } = data
 
@@ -35,12 +34,9 @@ export async function POST(req, res) {
 		return NextResponse.json({ message: 'Please Upload a thumbnail image.' })
 	}
 
-	const client = await connectToDatabase()
-	if (client) {
-		const db = client.db()
-
-		const linkCollection = db.collection('Thumbnail')
-		const count = await linkCollection.countDocuments()
+	try {
+		// Check if a thumbnail exists
+		const count = await prisma.thumbnail.count()
 
 		if (count === 1) {
 			return NextResponse.json({
@@ -48,33 +44,38 @@ export async function POST(req, res) {
 			})
 		}
 
-		const existingThumbnail = await linkCollection.findOne({
-			ThumbnailImage,
+		// Check if the thumbnail already exists
+		const existingThumbnail = await prisma.thumbnail.findUnique({
+			where: { ThumbnailImage },
 		})
 
 		if (existingThumbnail) {
 			return NextResponse.json({ message: 'This thumbnail already exists.' }, { status: 422 })
 		}
 
-		const result = await linkCollection.insertOne({ ThumbnailImage })
-		return NextResponse.json({ message: 'Thumnail Updated!' })
-	} else {
+		// Insert new thumbnail
+		await prisma.thumbnail.create({
+			data: { ThumbnailImage },
+		})
+
+		return NextResponse.json({ message: 'Thumbnail Updated!' })
+	} catch (error) {
 		return NextResponse.json({ message: 'Failed to connect to the database' }, { status: 500 })
 	}
 }
 
 export async function GET(req, res) {
 	try {
-		const client = await connectToDatabase()
-		const db = client.db()
-		const thumbnailCollection = db.collection('Thumbnail')
-		const count = await thumbnailCollection.countDocuments()
+		const count = await prisma.thumbnail.count()
 
 		if (count === 0) {
-			return NextResponse.json({ message: 'no thumbnail is available' })
+			return NextResponse.json({ message: 'No thumbnail is available' })
 		}
 
-		const newThumbnail = await thumbnailCollection.find({}, { projection: { _id: 0 } }).toArray()
+		// Fetch the thumbnail(s) from the database
+		const newThumbnail = await prisma.thumbnail.findMany({
+			select: { ThumbnailImage: true },
+		})
 
 		return NextResponse.json({ newThumbnail })
 	} catch (error) {

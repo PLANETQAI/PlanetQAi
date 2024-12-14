@@ -4,7 +4,7 @@ import Image from 'next/image'
 
 const RootLoader = async () => {
 	return (
-		<div className="w-full flex justify-center items-center">
+		<div className="w-full flex h-screen justify-center items-center">
 			<Image
 				src={'/images/loader.webp'}
 				width={100}
