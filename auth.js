@@ -36,15 +36,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 						throw new Error('Incorrect password.')
 					}
 
-					// Return user data to be used in the session and JWT
-					return {
-						id: user.id,
-						fullName: user.fullName,
-						email: user.email,
-						allowedDownloads: user.allowedDownloads,
-						totalDownloads: user.totalDownloads,
-						role: user.role,
-					}
+					return user
 				} catch (error) {
 					throw new Error(error.message || 'Invalid login attempt.')
 				}
@@ -52,23 +44,21 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 		}),
 	],
 	callbacks: {
-		async jwt({ token, user, trigger, session }) {
-			if (trigger === 'update' || session?.max_download) {
-				token.max_download = session.max_download
-			}
-
+		async jwt({ token, user }) {
 			if (user) {
-				token.id = user.id
-				token.max_download = user.max_download
+				token.fullName = user.fullName
 				token.role = user.role
+				token.max_download = user.max_download
+				token.totalDownloads = user.totalDownloads
 			}
 			return token
 		},
 		async session({ session, token }) {
 			if (token) {
-				session.user.id = token.id
-				session.user.max_download = token.max_download
+				session.user.fullName = token.fullName
 				session.user.role = token.role
+				session.user.max_download = token.max_download
+				session.user.totalDownloads = token.totalDownloads
 			}
 			return session
 		},

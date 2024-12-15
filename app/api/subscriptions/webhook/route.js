@@ -87,7 +87,7 @@ export async function POST(req, res) {
 					// Assuming you're using NextAuth, get the token for the user
 					const token = await getToken({
 						req: null, // or pass req if available
-						secret: process.env.NEXTAUTH_SECRET,
+						secret: process.env.AUTH_SECRET,
 					})
 
 					if (token) {

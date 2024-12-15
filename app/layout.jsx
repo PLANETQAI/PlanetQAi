@@ -1,5 +1,5 @@
 import '../app/globals.css'
-import { cn } from '../lib/utils'
+import { cn } from '@/lib/utils'
 import { auth } from '@/auth'
 import { Providers } from './providers'
 
@@ -15,6 +15,7 @@ export const metadata = {
 
 export default async function RootLayout({ children }) {
 	const session = await auth()
+	console.log(session)
 
 	return (
 		<html lang="en">
