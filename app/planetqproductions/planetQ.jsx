@@ -1,14 +1,18 @@
 'use client'
+
 import AdminLink from '@/components/Home/adminlink'
 import { useState } from 'react'
+import { ToastContainer, toast } from 'react-toastify'
 import { CiUser } from 'react-icons/ci'
 import Link from 'next/link'
 import { MdOutlineDeleteOutline, MdOutlineVideoLibrary } from 'react-icons/md'
 import { ImSpinner7 } from 'react-icons/im'
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'
 import Image from 'next/image'
+import { useRouter } from 'next/navigation'
 
 export default function PlanetQProductions({ session, songData }) {
+	const router = useRouter()
 	const [songs, setSongs] = useState(songData && [...songData])
 	const [deleteLoading, setDeleteLoading] = useState(false)
 	const [updateLoading, setUpdateLoading] = useState(false)
@@ -19,9 +23,10 @@ export default function PlanetQProductions({ session, songData }) {
 		if (!confirmed) {
 			return
 		}
+
 		setDeleteLoading(true)
 		try {
-			const response = await fetch('api/link/deletelink', {
+			const response = await fetch('/api/link/deletelink', {
 				method: 'DELETE',
 				headers: {
 					'Content-Type': 'application/json',
@@ -29,19 +34,21 @@ export default function PlanetQProductions({ session, songData }) {
 				body: JSON.stringify({ songId }),
 			})
 
-			if (!response.ok) {
-				throw new Error('Failed to delete song')
-			}
-
-			// Filter out the deleted song from the state
-			setSongs(prevSongs => prevSongs.filter(song => song._id !== songId))
-			setDeleteLoading(false)
+			setSongs(prevSongs => prevSongs.filter(song => song.id !== songId))
+			toast.success('Song deleted successfully!')
+			setTimeout(() => {
+				location.reload()
+			}, 1500)
 		} catch (error) {
+			console.log(error)
+			toast.error(`Oops! Something went wrong`)
+		} finally {
 			setDeleteLoading(false)
 		}
 	}
 
 	const updateSongStatus = async (songId, newStatus) => {
+		setUpdateLoading(true)
 		try {
 			const response = await fetch('/api/link/updatestatus', {
 				method: 'PUT',
@@ -52,16 +59,20 @@ export default function PlanetQProductions({ session, songData }) {
 			})
 
 			if (!response.ok) {
-				throw new Error('Failed to update song status')
+				const errorData = await response.json()
+				throw new Error(errorData.message || 'Failed to update song status')
 			}
 
-			// Update the status of the song in the state
 			setSongs(prevSongs =>
-				prevSongs.map(song => (song._id === songId ? { ...song, status: newStatus } : song))
+				prevSongs.map(song => (song.id === songId ? { ...song, status: newStatus } : song))
 			)
-			setUpdateLoading(false)
+			toast.success('Song status updated successfully!')
+			setTimeout(() => {
+				location.reload()
+			}, 1500)
 		} catch (error) {
-			console.log('Error updating song status:', error)
+			toast.error(`Error: Something went wrong`)
+		} finally {
 			setUpdateLoading(false)
 		}
 	}
@@ -74,9 +85,10 @@ export default function PlanetQProductions({ session, songData }) {
 		backgroundAttachment: 'fixed',
 		minHeight: '100vh',
 	}
-	console.log(songs)
+
 	return (
 		<>
+			<ToastContainer className="bg-transparent" autoClose={1500} draggable closeOnClick />
 			<div style={backgroundImageStyle}>
 				<GlobalHeader session={session} />
 				<AdminLink />
@@ -112,7 +124,7 @@ export default function PlanetQProductions({ session, songData }) {
 										</p>
 									</div>
 								</div>
-								{session?.user?.role === 'admin' && (
+								{session?.user?.role === 'Admin' && (
 									<div className="absolute top-2 right-2 flex gap-3 items-center">
 										<select
 											disabled={updateLoading}
@@ -125,8 +137,8 @@ export default function PlanetQProductions({ session, songData }) {
 													? 'bg-yellow-500 text-white'
 													: 'bg-gray-800 text-white'
 											}`}
-											value={song.status}
-											onChange={e => updateSongStatus(song._id, e.target.value)}
+											value={song.isLive === true ? 'active' : 'pending'}
+											onChange={e => updateSongStatus(song.id, e.target.value)}
 										>
 											<option value="active" className="bg-green-500 text-white">
 												Active
@@ -138,7 +150,7 @@ export default function PlanetQProductions({ session, songData }) {
 										{!deleteLoading ? (
 											<MdOutlineDeleteOutline
 												className="text-red-500 text-2xl hover:text-red-600 cursor-pointer"
-												onClick={() => deleteSong(song._id)}
+												onClick={() => deleteSong(song.id)}
 											/>
 										) : (
 											<ImSpinner7 className="animate-spin text-gray-400 text-xl" />

@@ -1,36 +1,20 @@
 'use client'
+
 import React, { useRef, useState } from 'react'
-import { ToastContainer, toast } from 'react-toastify'
-import { useSession } from 'next-auth/react'
+import { toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import axios from 'axios'
 
-async function sendSongLink(enteredVideoLink, title, thumbnailLink, userId) {
-	const response = await fetch('/api/link/uploadlink', {
-		method: 'POST',
-		body: JSON.stringify({
-			user: userId,
+async function sendSongLink(enteredVideoLink, title, thumbnailLink) {
+	try {
+		const response = await axios.post('/api/link/uploadlink', {
 			videoLink: enteredVideoLink,
-			title: title,
+			title,
 			thumbnail: thumbnailLink,
-		}),
-		headers: {
-			'Content-Type': 'application/json',
-		},
-	})
-
-	const data = await response.json()
-	if (!response.ok) {
-		toast.error(data.message, {
-			position: 'top-right',
-			autoClose: 1500,
-			hideProgressBar: false,
-			closeOnClick: true,
-			pauseOnHover: true,
-			draggable: true,
-			progress: undefined,
-			theme: 'dark',
 		})
-	} else {
+		const data = await response.data
+		console.log(data)
+
 		toast.success(data.message, {
 			position: 'top-right',
 			autoClose: 1500,
@@ -41,75 +25,55 @@ async function sendSongLink(enteredVideoLink, title, thumbnailLink, userId) {
 			progress: undefined,
 			theme: 'dark',
 		})
-	}
 
-	return data
+		return data
+	} catch (error) {
+		console.log(error.response)
+		console.log(error)
+		const errorMessage = error.response.data.message
+		toast.error(errorMessage, {
+			position: 'top-right',
+			autoClose: 1500,
+			hideProgressBar: false,
+			closeOnClick: true,
+			pauseOnHover: true,
+			draggable: true,
+			progress: undefined,
+			theme: 'dark',
+		})
+		throw new Error(error)
+	}
 }
 
 export default function AdminLink() {
-	const { data: session } = useSession()
 	const videoLinkInputRef = useRef()
 	const titleInputRef = useRef()
 	const thumbnailLinkInputRef = useRef()
 	const [isLoading, setIsLoading] = useState(false)
-	const [isDelete, setIsDelete] = useState(false)
 
 	const submitHandler = async event => {
 		event.preventDefault()
-		setIsLoading(true)
-		const enteredVideoLink = videoLinkInputRef.current.value
-		const title = titleInputRef.current.value
-		const thumbnailLink = thumbnailLinkInputRef.current.value
+		try {
+			setIsLoading(true)
+			const enteredVideoLink = videoLinkInputRef.current.value
+			const title = titleInputRef.current.value
+			const thumbnailLink = thumbnailLinkInputRef.current.value
 
-		const result = await sendSongLink(enteredVideoLink, title, thumbnailLink, session?.user?.id)
-		if (result.message === 'Link Stored Successfully!') {
-			event.target.reset()
+			const result = await sendSongLink(enteredVideoLink, title, thumbnailLink)
+			if (result.message === 'Link Stored Successfully!') {
+				event.target.reset()
+			}
+			setIsLoading(false)
+		} catch (error) {
+			console.log(error)
+			window.location.reload()
+			setIsLoading(false)
 		}
-		setIsLoading(false)
-	}
-
-	const deleteLinksHandler = async event => {
-		event.preventDefault()
-		setIsDelete(true)
-		const response = await fetch('/api/link/deletelink', {
-			method: 'DELETE',
-			body: JSON.stringify(),
-			headers: {
-				'Content-Type': 'application/json',
-			},
-		})
-
-		const data = await response.json()
-		if (!response.ok) {
-			toast.error(data.message, {
-				position: 'top-right',
-				autoClose: 1500,
-				hideProgressBar: false,
-				closeOnClick: true,
-				pauseOnHover: true,
-				draggable: true,
-				progress: undefined,
-				theme: 'dark',
-			})
-		} else {
-			toast.success(data.message, {
-				position: 'top-right',
-				autoClose: 1500,
-				hideProgressBar: false,
-				closeOnClick: true,
-				pauseOnHover: true,
-				draggable: true,
-				progress: undefined,
-				theme: 'dark',
-			})
-			event.target.reset()
-		}
-		setIsDelete(false)
+		location.reload()
 	}
 
 	return (
 		<>
-			<ToastContainer className="bg-transparent" autoClose={1500} draggable closeOnClick />
 			<section className=" w-3/4 m-auto py-8 px-4 gap-8 rounded-lg shadow-lg">
 				<div className="flex flex-col gap-6 p-6 rounded-lg shadow-inner">
 					<form className="flex flex-col gap-4" onSubmit={submitHandler}>

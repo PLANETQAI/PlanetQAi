@@ -21,7 +21,7 @@ const GalleryPage = async () => {
 
 	// Find all galleries for the authenticated user
 	const prevSongsDB = await prisma.gallery.findMany({
-		where: { user: userId },
+		where: { userId: userId },
 	})
 
 	const prevSongs = prevSongsDB.map(song => ({

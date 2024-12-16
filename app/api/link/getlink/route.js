@@ -7,12 +7,11 @@ export async function GET(req, res) {
 		// Get session to check if user is authenticated
 		const session = await auth()
 		console.log(session)
+		console.log('running here')
 
 		let videoLinks
-
-		if (session) {
-			const isAdmin = session.user.role === 'Admin'
-
+		const isAdmin = session?.user?.role === 'Admin'
+		if (session && isAdmin) {
 			if (isAdmin) {
 				// Fetch all video links if admin
 				videoLinks = await prisma.videoLinks.findMany({
@@ -28,7 +27,7 @@ export async function GET(req, res) {
 					},
 				})
 			}
-
+		} else {
 			// Fetch only active video links if no admin
 			videoLinks = await prisma.videoLinks.findMany({
 				where: {

@@ -14,9 +14,11 @@ const Home = ({ session }) => {
 	})
 
 	return (
-		<div>
-			<MusicGenerator session={session} selectedPrompt={selectedPrompt} onPromptChange={setSelectedPrompt} />
-		</div>
+		<MusicGenerator
+			session={session}
+			selectedPrompt={selectedPrompt}
+			onPromptChange={setSelectedPrompt}
+		/>
 	)
 }
 
