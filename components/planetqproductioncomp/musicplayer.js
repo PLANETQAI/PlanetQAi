@@ -19,6 +19,7 @@ export default function MusicPlayer() {
 			.then(links => {
 				const shuffledLinks = shuffleArray(links)
 				setIsVideoLink(shuffledLinks)
+				// console.log(shuffledLinks)
 				if (links && links.length > 0) {
 					toast.success('Music successfully retrieved.', {
 						position: 'top-right',
@@ -34,7 +35,9 @@ export default function MusicPlayer() {
 					const storedLinkValue = JSON.parse(localStorage.getItem('linkvalue'))
 
 					if (storedLinkValue) {
-						const foundIndex = shuffledLinks.findIndex(item => item.link === storedLinkValue.link)
+						const foundIndex = shuffledLinks.findIndex(
+							item => item.videoLink === storedLinkValue.videoLink
+						)
 
 						if (foundIndex !== -1) {
 							setCurrentVideoIndex(foundIndex)
@@ -125,26 +128,6 @@ export default function MusicPlayer() {
 		localStorage.setItem('linkvalue', JSON.stringify(currentValue))
 	}
 
-	const handlePause = () => {
-		// if (playerRef.current) {
-		//   playerRef.current.showPreview();
-		//   setIsCurrent(playerRef.current.getCurrentTime());
-		// }
-	}
-
-	const playhandler = () => {
-		// if (!iscurrent || iscurrent === null) {
-		//   playerRef.current.seekTo(playerRef.current.getCurrentTime());
-		// }
-		// playerRef.current.seekTo(iscurrent);
-	}
-
-	const handleSeeking = () => {
-		// if (playerRef.current) {
-		//   playerRef.current.seekTo(playerRef.current.getCurrentTime());
-		// }
-	}
-
 	return (
 		<>
 			<ToastContainer className="bg-transparent" autoClose={1500} draggable closeOnClick />
@@ -167,17 +150,15 @@ export default function MusicPlayer() {
 						ref={playerRef}
 						className="bg-transparent"
 						url={
-							isVideoLink?.length > 0 && isVideoLink[currentVideoIndex]?.link
-								? isVideoLink[currentVideoIndex]?.link
+							isVideoLink?.length > 0 && isVideoLink[currentVideoIndex]?.videoLink
+								? isVideoLink[currentVideoIndex]?.videoLink
 								: 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
 						}
 						light={isThumbnail?.length ? isThumbnail : '/images/client.png'}
-						onStart={playhandler}
+						// onStart={playhandler}
 						pip={true}
 						loop={!isVideoLink?.length > 0}
 						playing={true}
-						onPause={handlePause}
-						onSeek={handleSeeking}
 						stopOnUnmount={false}
 						playIcon={
 							<div className={classes.heartbeat}>
