@@ -1,42 +1,53 @@
 import prisma from '@/lib/prisma' // Assuming prisma is set up in this file
 import { NextResponse } from 'next/server'
 import { auth } from '@/auth'
-import { redirect } from 'next/navigation'
 
-export async function POST(req, res) {
-	const session = await auth()
+export async function POST(req) {
+	let session
 
-	// Check if the user is authenticated
+	// Authenticate the user
+	try {
+		session = await auth()
+		console.log('sesson from api', session)
+	} catch (error) {
+		console.log('Authentication Error:', error)
+		return NextResponse.json({ message: 'Authentication failed' }, { status: 500 })
+	}
+
 	if (!session) {
-		redirect('/login')
+		return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
 	}
 
 	const data = await req.json()
-	let { videoLink, title, thumbnail } = data
+	// Validate payload
+	if (!data || typeof data !== 'object') {
+		return NextResponse.json({ message: 'Invalid payload' }, { status: 400 })
+	}
 
-	// Validate the video link
+	const { videoLink, title, thumbnail } = data
+
+	// Validate video link
 	if (!videoLink) {
 		return NextResponse.json({ message: 'Link not entered' }, { status: 422 })
 	}
 
-	// Basic URL format validation
-	const urlPattern = /^(https?:\/\/)?(www\.)?(youtube\.com|youtu\.be|vimeo\.com|spotify\.com)\/.+$/
-	const imagePattern = /^(https?:\/\/.*\.(?:png|jpg|jpeg|gif|webp))$/
-
-	if (!urlPattern.test(videoLink)) {
+	try {
+		new URL(videoLink)
+	} catch {
 		return NextResponse.json({ message: 'Invalid video link format!' }, { status: 422 })
 	}
 
-	// Transform Spotify link
+	// Transform Spotify links
+	let finalVideoLink = videoLink
 	if (videoLink.includes('spotify')) {
 		const spotifyPart = videoLink.split('.com')[1]
-		videoLink = `https://open.spotify.com/embed${spotifyPart}`
+		finalVideoLink = `https://open.spotify.com/embed${spotifyPart}`
 	}
 
 	try {
-		// Check if the link already exists in the database
-		const existingLink = await prisma.videoLinks.findUnique({
-			where: { videoLink: videoLink },
+		// Check if the link already exists
+		const existingLink = await prisma.videoLinks.findFirst({
+			where: { videoLink: finalVideoLink },
 		})
 
 		if (existingLink) {
@@ -46,17 +57,16 @@ export async function POST(req, res) {
 			)
 		}
 
-		// Insert new video link into the database
 		await prisma.videoLinks.create({
 			data: {
 				userId: session.user.id,
-				videoLink: videoLink,
+				videoLink: finalVideoLink,
 				title,
 				thumbnailLink:
-					thumbnail || 'https://cdn1.suno.ai/image_d552114f-0ba9-4015-be3b-6b0effd3db9b.png', // Default thumbnail if not provided
+					thumbnail || 'https://cdn1.suno.ai/image_d552114f-0ba9-4015-be3b-6b0effd3db9b.png',
 			},
 		})
-
+		console.log('running step 2')
 		return NextResponse.json({ message: 'Link Stored Successfully!' }, { status: 201 })
 	} catch (error) {
 		console.log('Error:', error)

@@ -7,11 +7,6 @@ import { useChat } from 'ai/react'
 import Link from 'next/link'
 import { FaArrowRight } from 'react-icons/fa'
 
-// export const metadata = {
-// 	title: 'PlanetQRadio',
-// 	description: 'Welcome to PlanetQRadio Studio',
-// }
-
 export default function ChatBot() {
 	const { messages, input, handleSubmit, handleInputChange, isLoading } = useChat()
 	const [triggerPrompt, setTriggerPrompt] = useState(false)

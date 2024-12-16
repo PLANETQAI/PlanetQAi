@@ -10,10 +10,11 @@ import { signIn } from 'next-auth/react'
 
 export default function SignupForm() {
 	const searchParams = useSearchParams()
-	const title = searchParams.get('title')
-	const tags = searchParams.get('tags')
-	const text = searchParams.get('text')
-	const redirectTo = searchParams.get('redirectTo')
+	const redirectTo =
+		searchParams.get('redirectTo') && decodeURIComponent(searchParams.get('redirectTo'))
+	const text = searchParams.get('text') && decodeURIComponent(searchParams.get('text'))
+	const tags = searchParams.get('tags') && decodeURIComponent(searchParams.get('tags'))
+	const title = searchParams.get('title') && decodeURIComponent(searchParams.get('title'))
 
 	const [fullName, setFullName] = useState('')
 	const [email, setEmail] = useState('')
@@ -45,7 +46,17 @@ export default function SignupForm() {
 
 			setTimeout(async () => {
 				await signIn('credentials', {
-					redirectTo: redirectTo ? redirectTo + `?tags=${tags}&text=${text}&title=${title}` : '/',
+					redirectTo: redirectTo
+						? decodeURIComponent(redirectTo) +
+						  '?' +
+						  [
+								tags ? `tags=${encodeURIComponent(tags)}` : '',
+								text ? `text=${encodeURIComponent(text)}` : '',
+								title ? `title=${encodeURIComponent(title)}` : '',
+						  ]
+								.filter(Boolean)
+								.join('&')
+						: '/',
 					email,
 					password,
 				})
@@ -149,7 +160,18 @@ export default function SignupForm() {
 								{isLoading ? 'Processing' : 'Sign Up'}
 							</button>
 							<Link
-								href={{ pathname: '/login', query: { tags, text, title, email, password, fullName } }}
+								href={{
+									pathname: '/login',
+									query: {
+										...(tags ? { tags: encodeURIComponent(tags) } : {}),
+										...(text ? { text: encodeURIComponent(text) } : {}),
+										...(title ? { title: encodeURIComponent(title) } : {}),
+										...(email ? { email: encodeURIComponent(email) } : {}),
+										...(password ? { password: encodeURIComponent(password) } : {}),
+										...(fullName ? { fullName: encodeURIComponent(fullName) } : {}),
+										...(redirectTo ? { redirectTo: encodeURIComponent(redirectTo) } : {}),
+									},
+								}}
 								className="relative text-white text-right cursor-pointer group inline-block w-fit"
 							>
 								Login now

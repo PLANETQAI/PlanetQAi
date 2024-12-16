@@ -5,7 +5,8 @@ import axios from 'axios'
 import Link from 'next/link'
 import AudioPlayer from './audioPlayer'
 import { TbInfoHexagonFilled } from 'react-icons/tb'
-import { usePathname } from 'next/navigation'
+import { usePathname, useSearchParams } from 'next/navigation'
+import { normalizeValue } from '@/utils/functions'
 
 const MusicGenerator = ({
 	session,
@@ -19,6 +20,10 @@ const MusicGenerator = ({
 	},
 }) => {
 	const pathname = usePathname()
+	const searchParams = useSearchParams()
+	const text = normalizeValue(decodeURIComponent(searchParams.get('text')))
+	const tags = normalizeValue(decodeURIComponent(searchParams.get('tags')))
+	const title = normalizeValue(decodeURIComponent(searchParams.get('title')))
 
 	const [generatedAudio, setGeneratedAudio] = useState(null)
 	const [error, setError] = useState('')
@@ -219,11 +224,15 @@ const MusicGenerator = ({
 
 				{!session && (
 					<Link
-						href={`/signup?text=${encodeURIComponent(selectedPrompt.text)}&tags=${encodeURIComponent(
-							selectedPrompt.tags
-						)}&title=${encodeURIComponent(selectedPrompt.title)}&redirectTo=${encodeURIComponent(
-							pathname
-						)}`}
+						href={{
+							pathname: '/signup',
+							query: {
+								...(tags ? { tags: encodeURIComponent(tags) } : {}),
+								...(text ? { text: encodeURIComponent(text) } : {}),
+								...(title ? { title: encodeURIComponent(title) } : {}),
+								redirectTo: encodeURIComponent(pathname),
+							},
+						}}
 						className="bg-purple-600 text-white justify-center items-center text-center p-3 rounded-md hover:bg-purple-700 transition-colors duration-300 w-full font-semibold"
 					>
 						Please Create an account

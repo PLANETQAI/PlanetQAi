@@ -11,7 +11,7 @@ export async function PUT(req, res) {
 	}
 
 	// Check if the user is an admin
-	const isAdmin = session.user.role === 'admin'
+	const isAdmin = session.user.role === 'Admin'
 	if (!isAdmin) {
 		return NextResponse.json(
 			{ message: 'Forbidden: You do not have permission to perform this action' },
@@ -41,7 +41,7 @@ export async function PUT(req, res) {
 		// Update the status of the video link
 		const updatedVideoLink = await prisma.videoLinks.update({
 			where: { id: songId },
-			data: { status: newStatus },
+			data: { isLive: newStatus === 'active' ? true : false },
 		})
 
 		return NextResponse.json({ message: 'Successfully updated the song status' }, { status: 200 })

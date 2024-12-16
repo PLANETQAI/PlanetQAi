@@ -46,6 +46,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 	callbacks: {
 		async jwt({ token, user }) {
 			if (user) {
+				token.id = user.id
 				token.fullName = user.fullName
 				token.role = user.role
 				token.max_download = user.max_download
@@ -55,6 +56,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 		},
 		async session({ session, token }) {
 			if (token) {
+				session.user.id = token.id
 				session.user.fullName = token.fullName
 				session.user.role = token.role
 				session.user.max_download = token.max_download

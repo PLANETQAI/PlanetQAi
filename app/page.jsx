@@ -58,14 +58,8 @@ const RootPage = () => {
 				</div>
 			</div>
 			<div className="md:flex-grow flex justify-center items-center">
-				<div className="video-container relative pb-[57%]">
-					<video
-						src="/images/PlanetQProductions_2.mp4"
-						className="absolute top-0"
-						autoPlay
-						muted
-						loop
-					></video>
+				<div className="video-container relative pb-[53%]">
+					<video src="/images/bg-video.mp4" className="absolute top-0" autoPlay muted loop></video>
 
 					<div className="logo-container1 group">
 						<div className="logo-container1-left">

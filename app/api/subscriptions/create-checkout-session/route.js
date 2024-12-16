@@ -7,7 +7,7 @@ const stripe = new Stripe(process.env.STRIPE_SECRET)
 // const stripe = new Stripe("sk_test_51DuUNrLEbBbuiNy4C37Zjysx6YqgKd7q3dPj8mame7nc3V60KRlhLRwNYdgzG3SJlTCVGHdeS7fLlk7y4ey9J6b400J9jPM0Ie");
 
 export async function POST(req, res) {
-	const userId = req.body.user_id
+	const userId = req.body.user.id
 	const lookupKey = req.body.lookup_key
 	const max_download = req.body.max_download
 

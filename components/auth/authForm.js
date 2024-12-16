@@ -11,10 +11,11 @@ import { useSearchParams } from 'next/navigation'
 
 export default function AuthForm() {
 	const searchParams = useSearchParams()
-	const redirectTo = searchParams.get('redirectTo')
-	const text = searchParams.get('text')
-	const tags = searchParams.get('tags')
-	const title = searchParams.get('title')
+	const redirectTo =
+		searchParams.get('redirectTo') && decodeURIComponent(searchParams.get('redirectTo'))
+	const text = searchParams.get('text') && decodeURIComponent(searchParams.get('text'))
+	const tags = searchParams.get('tags') && decodeURIComponent(searchParams.get('tags'))
+	const title = searchParams.get('title') && decodeURIComponent(searchParams.get('title'))
 
 	const router = useRouter()
 	const [email, setEmail] = useState('')
@@ -28,7 +29,15 @@ export default function AuthForm() {
 		try {
 			if (redirectTo) {
 				await signIn('credentials', {
-					redirectTo: redirectTo + `?tags=${tags}&text=${text}&title=${title}`,
+					redirectTo:
+						redirectTo +
+						[
+							tags ? `tags=${encodeURIComponent(tags)}` : '',
+							text ? `text=${encodeURIComponent(text)}` : '',
+							title ? `title=${encodeURIComponent(title)}` : '',
+						]
+							.filter(Boolean) // Filters out empty strings
+							.join('&'), // Joins the remaining parameters with "&"
 					email,
 					password,
 				})
@@ -126,7 +135,17 @@ export default function AuthForm() {
 								{isLoading ? 'Processing...' : 'Sign in'}
 							</button>
 							<Link
-								href={{ pathname: '/signup', query: { tags, text, title, email, password } }}
+								href={{
+									pathname: '/signup',
+									query: {
+										...(tags ? { tags: encodeURIComponent(tags) } : {}),
+										...(text ? { text: encodeURIComponent(text) } : {}),
+										...(title ? { title: encodeURIComponent(title) } : {}),
+										...(email ? { email: encodeURIComponent(email) } : {}),
+										...(password ? { password: encodeURIComponent(password) } : {}),
+										...(redirectTo ? { redirectTo: encodeURIComponent(redirectTo) } : {}),
+									},
+								}}
 								className="relative text-white text-right cursor-pointer group inline-block w-fit"
 							>
 								Sign Up now

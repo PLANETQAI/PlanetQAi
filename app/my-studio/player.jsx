@@ -7,21 +7,75 @@ import Link from 'next/link'
 import { MdMusicNote, MdOutlineDeleteOutline, MdOutlineVideoLibrary } from 'react-icons/md'
 import { ImSpinner7 } from 'react-icons/im'
 import { CiUser } from 'react-icons/ci'
-import { MdDelete } from 'react-icons/md'
-import axios from 'axios'
 import { toast, ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { revalidatePath } from 'next/cache'
-import { useRouter } from 'next/navigation'
 
 const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false })
 
 const Player = ({ userVideos }) => {
-	const router = useRouter()
 	const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
+	const [deleteLoading, setDeleteLoading] = useState(false)
+	const [updateLoading, setUpdateLoading] = useState(false)
 
 	const handleVideoEnd = () => {
 		setCurrentVideoIndex(prevIndex => (prevIndex + 1) % userVideos.length)
+	}
+
+	const deleteSong = async songId => {
+		const confirmed = confirm('Are you sure you want to delete this song?')
+
+		if (!confirmed) {
+			return
+		}
+
+		setDeleteLoading(true)
+		try {
+			const response = await fetch('/api/link/deletelink', {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ songId }),
+			})
+
+			toast.success('Song deleted successfully!')
+			setTimeout(() => {
+				location.reload()
+			}, 1500)
+		} catch (error) {
+			console.log(error)
+			toast.error(`Oops! Something went wrong`)
+		} finally {
+			setDeleteLoading(false)
+		}
+	}
+
+	const updateSongStatus = async (songId, newStatus) => {
+		setUpdateLoading(true)
+		try {
+			const response = await fetch('/api/link/updatestatus', {
+				method: 'PUT',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({ songId, newStatus }),
+			})
+
+			if (!response.ok) {
+				const errorData = await response.json()
+				throw new Error(errorData.message || 'Failed to update song status')
+			}
+
+			toast.success('Song status updated successfully!')
+			setTimeout(() => {
+				location.reload()
+			}, 1500)
+		} catch (error) {
+			console.log(error)
+			toast.error(`Error: Something went wrong`)
+		} finally {
+			setUpdateLoading(false)
+		}
 	}
 
 	return (
@@ -93,25 +147,8 @@ const Player = ({ userVideos }) => {
 									</p>
 								</div>
 							</div>
-							<button
-								onClick={async () => {
-									try {
-										await axios.delete(`/api/link/deletelink`, {
-											data: { songId: song.id },
-										})
-										toast.success('Song deleted successfully🎉')
-										router.refresh()
-									} catch (error) {
-										toast.error('Something went wrong!')
-										console.log('Error deleting song:', error)
-									}
-								}}
-								className="flex justify-start items-start"
-							>
-								<MdDelete size={25} className="text-white hover:cursor-pointer" />
-							</button>
 						</div>
-						{song.user?.role === 'admin' && (
+						{song.user?.role === 'Admin' && (
 							<div className="absolute top-2 right-2 flex gap-3 items-center">
 								<select
 									disabled={updateLoading}
@@ -124,8 +161,8 @@ const Player = ({ userVideos }) => {
 											? 'bg-yellow-500 text-white'
 											: 'bg-gray-800 text-white'
 									}`}
-									value={song.status}
-									onChange={e => updateSongStatus(song._id, e.target.value)}
+									value={song.isLive === true ? 'active' : 'pending'}
+									onChange={e => updateSongStatus(song.id, e.target.value)}
 								>
 									<option value="active" className="bg-green-500 text-white">
 										Active
@@ -137,7 +174,7 @@ const Player = ({ userVideos }) => {
 								{!deleteLoading ? (
 									<MdOutlineDeleteOutline
 										className="text-red-500 text-2xl hover:text-red-600 cursor-pointer"
-										onClick={() => deleteSong(song._id)}
+										onClick={() => deleteSong(song.id)}
 									/>
 								) : (
 									<ImSpinner7 className="animate-spin text-gray-400 text-xl" />
