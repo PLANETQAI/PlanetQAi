@@ -9,11 +9,9 @@ import { MdOutlineDeleteOutline, MdOutlineVideoLibrary } from 'react-icons/md'
 import { ImSpinner7 } from 'react-icons/im'
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'
 import Image from 'next/image'
-import { useRouter } from 'next/navigation'
 
 export default function PlanetQProductions({ session, songData }) {
-	const router = useRouter()
-	const [songs, setSongs] = useState(songData && [...songData])
+	const [songs, setSongs] = useState(songData ? [...songData] : [])
 	const [deleteLoading, setDeleteLoading] = useState(false)
 	const [updateLoading, setUpdateLoading] = useState(false)
 
@@ -36,9 +34,9 @@ export default function PlanetQProductions({ session, songData }) {
 
 			setSongs(prevSongs => prevSongs.filter(song => song.id !== songId))
 			toast.success('Song deleted successfully!')
-			setTimeout(() => {
-				location.reload()
-			}, 1500)
+			// setTimeout(() => {
+			// 	location.reload()
+			// }, 1500)
 		} catch (error) {
 			console.log(error)
 			toast.error(`Oops! Something went wrong`)
@@ -67,9 +65,9 @@ export default function PlanetQProductions({ session, songData }) {
 				prevSongs.map(song => (song.id === songId ? { ...song, status: newStatus } : song))
 			)
 			toast.success('Song status updated successfully!')
-			setTimeout(() => {
-				location.reload()
-			}, 1500)
+			// setTimeout(() => {
+			// 	location.reload()
+			// }, 1500)
 		} catch (error) {
 			toast.error(`Error: Something went wrong`)
 		} finally {

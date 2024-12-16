@@ -64,12 +64,13 @@ export default function AdminLink() {
 				event.target.reset()
 			}
 			setIsLoading(false)
+			setTimeout(() => {
+				location.reload()
+			}, 1800)
 		} catch (error) {
 			console.log(error)
-			window.location.reload()
 			setIsLoading(false)
 		}
-		location.reload()
 	}
 
 	return (

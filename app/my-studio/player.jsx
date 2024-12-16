@@ -14,6 +14,7 @@ const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false })
 
 const Player = ({ userVideos }) => {
 	const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
+	const [songs, setSongs] = useState(userVideos ? [...userVideos] : [])
 	const [deleteLoading, setDeleteLoading] = useState(false)
 	const [updateLoading, setUpdateLoading] = useState(false)
 
@@ -38,10 +39,8 @@ const Player = ({ userVideos }) => {
 				body: JSON.stringify({ songId }),
 			})
 
+			setSongs(prevSongs => prevSongs.filter(song => song.id !== songId))
 			toast.success('Song deleted successfully!')
-			setTimeout(() => {
-				location.reload()
-			}, 1500)
 		} catch (error) {
 			console.log(error)
 			toast.error(`Oops! Something went wrong`)
@@ -66,12 +65,11 @@ const Player = ({ userVideos }) => {
 				throw new Error(errorData.message || 'Failed to update song status')
 			}
 
+			setSongs(prevSongs =>
+				prevSongs.map(song => (song.id === songId ? { ...song, status: newStatus } : song))
+			)
 			toast.success('Song status updated successfully!')
-			setTimeout(() => {
-				location.reload()
-			}, 1500)
 		} catch (error) {
-			console.log(error)
 			toast.error(`Error: Something went wrong`)
 		} finally {
 			setUpdateLoading(false)
@@ -82,7 +80,7 @@ const Player = ({ userVideos }) => {
 		<div className="bg-transparent w-full h-auto mb-2">
 			<ToastContainer />
 			<div className="w-full flex justify-center items-center">
-				{userVideos.length > 0 ? (
+				{songs.length > 0 ? (
 					<ReactPlayer
 						url={userVideos[currentVideoIndex]?.videoLink}
 						playing
@@ -118,7 +116,7 @@ const Player = ({ userVideos }) => {
 				)}
 			</div>
 			<div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 mt-20">
-				{userVideos.map((song, indx) => (
+				{songs.map((song, indx) => (
 					<div
 						key={indx}
 						className="bg-[#11111146] backdrop-filter backdrop-blur-lg bg-opacity-80 border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 relative"

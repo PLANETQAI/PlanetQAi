@@ -17,8 +17,8 @@ export default function Studio({ session }) {
 	const text = normalizeValue(decodeURIComponent(searchParams.get('text')))
 	const tags = normalizeValue(decodeURIComponent(searchParams.get('tags')))
 	const title = normalizeValue(decodeURIComponent(searchParams.get('title')))
-
 	const message = normalizeValue(decodeURIComponent(searchParams.get('message')))
+
 	const [selectedPrompt, setSelectedPrompt] = useState({
 		text: message ? message : text ? text : '',
 		tags: tags ? tags : '',
