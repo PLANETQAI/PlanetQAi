@@ -71,9 +71,7 @@ html::-webkit-scrollbar-thumb {
 
 .range-slider::-moz-range-thumb {
 	width: 11px;
-	/* Thumb width */
 	height: 11px;
-	/* Thumb height */
 	background-color: #ffffff;
 	/* Your custom color - bg-purple-600 */
 	border-radius: 50%;
