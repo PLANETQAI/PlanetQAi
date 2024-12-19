@@ -1,4 +1,3 @@
-import { NextApiRequest, NextApiResponse } from 'next'
 import { redirect } from 'next/navigation'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'

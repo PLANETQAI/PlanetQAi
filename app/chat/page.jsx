@@ -16,7 +16,7 @@ export default function ChatBot() {
 		if (triggerPrompt) {
 			handleSubmit()
 		}
-	}, [triggerPrompt])
+	}, [triggerPrompt, handleSubmit])
 
 	const prompts = [
 		'Create a relaxing lo-fi beat with gentle piano, soft bass, and a subtle vinyl crackle for a calm and laid-back atmosphere.',
