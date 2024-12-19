@@ -2,6 +2,7 @@ import '../app/globals.css'
 import { cn } from '@/lib/utils'
 import { auth } from '@/auth'
 import { Providers } from './providers'
+import { Analytics } from '@vercel/analytics/react'
 
 export const metadata = {
 	title: 'PlanetQRadio',
@@ -21,6 +22,7 @@ export default async function RootLayout({ children }) {
 		<html lang="en">
 			<body className={cn('antialiased')}>
 				<Providers>{children}</Providers>
+				<Analytics />
 			</body>
 		</html>
 	)

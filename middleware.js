@@ -15,5 +15,5 @@ export default auth(async req => {
 
 export const config = {
 	matcher:
-		'/((?!api/auth|auth|images|api/link/getlink|aistudio|api/gallery/create|api/thumbnail/modifythumbnail|vidoes|_next/static|_next/image|favicon.ico|^/$).+)',
+		'/((?!api/auth|auth|images|api/link/getlink|chat|api/chat|videos/*|aistudio|api/gallery/create|api/thumbnail/modifythumbnail|vidoes|_next/static|_next/image|favicon.ico|^/$).+)',
 }
