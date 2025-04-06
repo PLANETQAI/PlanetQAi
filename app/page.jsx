@@ -1,165 +1,171 @@
-import React from 'react'
+'use client'
+
+import React, { useState } from 'react'
 import Image from 'next/image'
 import Link from 'next/link'
-
-export const metadata = {
-	title: 'PlanetQRadio',
-	description: 'Welcome to PlanetQRadio Studio',
-}
+import StarsCanvas from '@/components/canvas/stars'
+import CircleTypeText from '@/components/circleTypeText'
+import { cn } from '@/lib/utils'
+import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '@/components/ui/carousel'
 
 const RootPage = () => {
+	const [isClicked, setIsClicked] = useState(false)
+
 	return (
-		<div className="flex flex-col min-h-screen bg-[#17101D]">
+		<div className="w-full min-h-screen relative">
 			<div
-				className="flex items-center justify-center px-2 gap-6 sm:gap-12"
-				style={{
-					backgroundColor: 'rgb(31 41 55 / var(--tw-bg-opacity))',
-				}}
-			>
-				<div className="relative w-[100px] h-[100px] overflow-hidden">
-					<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-						<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
-							<source src="/images/anicircle.mp4" type="video/mp4" />
-						</video>
-						<Image
-							src="/images/radio1.jpeg"
-							alt="Radio Right"
-							width={100}
-							height={100}
-							className="absolute p-1 sm:p-4 rounded-full"
-						/>
-					</div>
-				</div>
-				<div className="relative w-[100px] h-[100px] overflow-hidden hidden md:block">
-					<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-						<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
-							<source src="/images/anicircle.mp4" type="video/mp4" />
-						</video>
-						<Image
-							src="/images/radio1.jpeg"
-							alt="Radio Right"
-							width={100}
-							height={100}
-							className="absolute p-1 sm:p-4 rounded-full"
-						/>
-					</div>
-				</div>
-
-				<Link
-					href={'/chat'}
-					className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-32 h-32 sm:w-48 sm:h-48 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer"
-				>
-					<video loop autoPlay muted className="rounded-full">
-						<source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
-					</video>
-				</Link>
-
-				<div className="relative w-[100px] h-[100px]">
-					<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-						<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
-							<source src="/images/anicircle.mp4" type="video/mp4" />
-						</video>
-						<Image
-							src="/images/radio1.jpeg"
-							alt="Radio Right"
-							width={100}
-							height={100}
-							className="absolute p-1 sm:p-4 rounded-full"
-						/>
-					</div>
-				</div>
-				<div className="relative w-[100px] h-[100px] hidden md:block">
-					<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-						<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
-							<source src="/images/anicircle.mp4" type="video/mp4" />
-						</video>
-						<Image
-							src="/images/radio1.jpeg"
-							alt="Radio Right"
-							width={100}
-							height={100}
-							className="absolute p-1 sm:p-4 rounded-full"
-						/>
-					</div>
-				</div>
-			</div>
-			<div className="md:flex-grow flex justify-center items-center">
-				<div className="video-container relative pb-[53%]">
-					<video
-						src="/images/bg-video-compressed.mp4"
-						className="absolute top-0"
-						autoPlay
-						muted
-						loop
-					></video>
-
-					<div className="logo-container1 group">
-						<div className="logo-container1-left">
-							<div className="logo-container1-left-text group-hover:animate-vibrate">
-								<h1>Planet Q Radio</h1>
-							</div>
-							<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'}>
-								<video
-									src="/videos/V_left-compressed.mp4"
-									width={200}
-									height={100}
-									autoPlay
-									muted
-									className="Vlogo"
-									loop
-								></video>
-							</Link>
-						</div>
-					</div>
-					<div className="logo-container2 group">
-						<div className="logo-container1-left">
-							<div className="logo-container1-left-text group-hover:animate-vibrate">
-								<h1>Planet Q Productions</h1>
-							</div>
-							<Link href={'/my-studio'}>
-								<Image width={100} height={100} src="/images/V_center.jpg" alt="Logo1" className="Vlogo" />
-							</Link>
-						</div>
-					</div>
-					<div className="logo-container3 group">
-						<div className="logo-container1-left">
-							<div className="logo-container1-left-text group-hover:animate-vibrate">
-								<h1>Q World Studios</h1>
-							</div>
-							<Link href={'/aistudio'}>
-								<Image width={100} height={100} src="/images/V_right.jpg" alt="Logo1" className="Vlogo" />
-							</Link>
-						</div>
-					</div>
-				</div>
-			</div>
-
-			<div className="bg-gray-800" style={{ padding: '10px' }}>
-				<iframe
-					src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true" // Added autoplay parameter
-					frameBorder="0"
-					allowtransparency="true"
-					style={{
-						width: '100%',
-						minHeight: '130px',
-						border: '0',
-						maxHeight: '130px',
-					}}
-					title="Radio Planet Q"
-					allow="autoplay; encrypted-media" // Ensure autoplay is allowed
-				></iframe>
-			</div>
-
-			<div className="block mt-6 xl:hidden">
-				<Image
-					width={100}
-					height={100}
-					src="/images/robo.jpeg"
-					alt="Banner"
-					unoptimized
-					loading="eager"
-					className="w-full h-auto object-cover"
+				className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-hidden"
+				onClick={() => setIsClicked(!isClicked)}>
+				<CircleTypeText
+					text={'Tap Anywhere'}
+					className={'absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24'}
 				/>
+				<StarsCanvas />
+
+				<CircleTypeText
+					text={'Tap Anywhere'}
+					className={'absolute bottom-6 sm:bottom-10 z-50 text-white text-xl animate-bounce left-24'}
+					radius={100}
+				/>
+			</div>
+			{/* Main content container with fixed width constraints */}
+			<div className="w-full max-w-md mx-auto overflow-hidden px-4! absolute top-[20%] left-1/2 -translate-x-1/2 z-20">
+				{/* First view - Radio player */}
+				<div
+					className={cn(
+						'flex justify-center items-center flex-col sm:w-full transition-all duration-500 overflow-hidden',
+						isClicked ? 'translate-x-[200%]' : 'translate-x-0'
+					)}>
+					{/* Top section with radio circles and chat link */}
+					<div
+						className="flex items-center justify-between px-2! sm:px-4 py-4 sm:py-6 w-full rounded-t-lg"
+						style={{
+							backgroundColor: 'rgb(31 41 55 / 0.9)',
+						}}>
+						{/* Left Radio Circle */}
+						<div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
+							<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+								<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
+									<source src="/images/anicircle.mp4" type="video/mp4" />
+								</video>
+								<Image
+									src="/images/radio1.jpeg"
+									alt="Radio Left"
+									width={100}
+									height={100}
+									className="absolute p-1 sm:p-2 rounded-full"
+								/>
+							</div>
+						</div>
+
+						{/* Center Chat Link - Responsive sizing */}
+						<Link
+							href={'/chat'}
+							className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer mx-2">
+							<video loop autoPlay muted className="rounded-full w-full h-full object-cover">
+								<source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
+							</video>
+						</Link>
+
+						{/* Right Radio Circle */}
+						<div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
+							<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+								<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
+									<source src="/images/anicircle.mp4" type="video/mp4" />
+								</video>
+								<Image
+									src="/images/radio1.jpeg"
+									alt="Radio Right"
+									width={100}
+									height={100}
+									className="absolute p-1 sm:p-2 rounded-full"
+								/>
+							</div>
+						</div>
+					</div>
+
+					{/* Background Video - Fixed aspect ratio container */}
+					<div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+						<video
+							src="/images/bg-video-compressed.mp4"
+							className="absolute top-0 left-0 w-full h-full object-cover"
+							autoPlay
+							muted
+							loop></video>
+					</div>
+
+					{/* Radio Player */}
+					<div className="bg-gray-800 w-full rounded-b-lg p-2! sm:p-3">
+						<iframe
+							src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true"
+							frameBorder="0"
+							allowtransparency="true"
+							style={{
+								width: '100%',
+								height: '130px',
+								border: '0',
+							}}
+							title="Radio Planet Q"
+							allow="autoplay; encrypted-media"></iframe>
+					</div>
+				</div>
+
+				{/* Second view - Links grid - Fixed for mobile */}
+				<div
+					className={cn(
+						'w-full transition-all duration-500 text-white absolute top-1/2 left-0 -translate-y-1/2 flex justify-center items-center',
+						!isClicked ? '-translate-x-[200%]' : 'translate-x-0'
+					)}>
+					<Carousel className="w-full max-w-[15rem] sm:max-w-xs mx-auto">
+						<CarouselContent>
+							<CarouselItem>
+								<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'} className="p-1">
+									<div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
+										<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+											<h1 className="text-xl">Planet Q Radio</h1>
+										</div>
+										<video src="/videos/V_left-compressed.mp4" autoPlay muted loop className="w-full h-auto rounded-lg"></video>
+									</div>
+								</Link>
+							</CarouselItem>
+							<CarouselItem>
+								<Link href={'/my-studio'} className="p-1">
+									<div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
+										<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+											<h1 className="text-xl">Planet Q Productions</h1>
+										</div>
+										<Image
+											src="/images/V_center.jpg"
+											alt="Planet Q Productions"
+											width={300}
+											height={200}
+											className="w-full h-auto rounded-lg"
+										/>
+									</div>
+								</Link>
+							</CarouselItem>
+							<CarouselItem>
+								<Link href={'/aistudio'} className="p-1">
+									<div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto">
+										<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+											<h1 className="text-xl">Q World Studios</h1>
+										</div>
+
+										<Image
+											src="/images/V_right.jpg"
+											alt="Q World Studios"
+											width={300}
+											height={200}
+											className="w-full h-auto rounded-lg"
+										/>
+									</div>
+								</Link>
+							</CarouselItem>
+						</CarouselContent>
+						<CarouselPrevious className={'text-black'} />
+						<CarouselNext className={'text-black'} />
+					</Carousel>
+				</div>
 			</div>
 		</div>
 	)
