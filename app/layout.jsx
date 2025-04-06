@@ -3,6 +3,7 @@ import { cn } from '@/lib/utils'
 import { auth } from '@/auth'
 import { Providers } from './providers'
 import { Analytics } from '@vercel/analytics/react'
+import Link from 'next/link'
 
 export const metadata = {
 	title: 'PlanetQRadio',
@@ -14,6 +15,8 @@ export const metadata = {
 	},
 }
 
+const Domain = 'https://planetqproductions.vercel.app/'
+
 export default async function RootLayout({ children }) {
 	const session = await auth()
 	console.log(session)
@@ -21,6 +24,7 @@ export default async function RootLayout({ children }) {
 	return (
 		<html lang="en">
 			<body className={cn('antialiased')}>
+				<link rel="canonical" href={Domain} />
 				<Providers>{children}</Providers>
 				<Analytics />
 			</body>
