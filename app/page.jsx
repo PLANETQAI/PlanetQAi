@@ -18,15 +18,9 @@ const RootPage = () => {
 				onClick={() => setIsClicked(!isClicked)}>
 				<CircleTypeText
 					text={'Tap Anywhere'}
-					className={'absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24'}
+					className={'absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24 left-1/2 -translate-x-[50%]'}
 				/>
 				<StarsCanvas />
-
-				<CircleTypeText
-					text={'Tap Anywhere'}
-					className={'absolute bottom-6 sm:bottom-10 z-50 text-white text-xl animate-bounce left-24'}
-					radius={100}
-				/>
 			</div>
 			{/* Main content container with fixed width constraints */}
 			<div className="w-full max-w-md mx-auto overflow-hidden px-4! absolute top-[20%] left-1/2 -translate-x-1/2 z-20">
