@@ -115,7 +115,16 @@
 	--sidebar-ring: oklch(0.553 0.013 58.071);
 }
 
+
 @layer base {
+	/* Add this in your global CSS file or Tailwind's layer */
+.custom-dots .slick-dots li button:before {
+	color: #fff; /* Your custom color */
+	opacity: 1;  /* Optional: full visibility */
+  }
+  
+  /* Change active dot color */
+
 	body {
 		@apply bg-background text-foreground;
 	}
