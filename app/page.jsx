@@ -22,11 +22,11 @@ const RootPage = () => {
 
 		setTimeout(() => {
 			if (direction === 'forward') {
-				if (clickSteps < 2) {
+				if (clickSteps < 3) {
 					setClickSteps(clickSteps + 1)
 				} else {
 					setDirection('backward')
-					setClickSteps(1)
+					setClickSteps(2)
 				}
 			} else {
 				if (clickSteps > 0) {
@@ -143,6 +143,12 @@ const RootPage = () => {
 		</Link>
 	)
 
+	const roboCard = (
+		<div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all text-center">
+			<Image src={'/images/robo.jpeg'} width={300} height={200} alt="robo" className="w-full h-auto rounded-lg" />
+		</div>
+	)
+
 	return (
 		<div className="w-full overflow-y-scroll min-h-screen h-full relative">
 			<div
@@ -188,6 +194,14 @@ const RootPage = () => {
 								{qWorldStudios}
 							</div>
 
+							<div
+								className={cn(
+									'absolute w-full transition-all duration-500 ease-in-out',
+									clickSteps === 3 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
+								)}>
+								{roboCard}
+							</div>
+
 							{/* Spacer div to maintain container height */}
 							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 0 ? 'block' : 'hidden')}>
 								{planetQRadio}
@@ -196,11 +210,12 @@ const RootPage = () => {
 							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 2 ? 'block' : 'hidden')}>
 								{qWorldStudios}
 							</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 3 ? 'block' : 'hidden')}>{roboCard}</div>
 						</div>
 
 						{/* Indicators */}
 						<div className="mt-8 flex justify-center gap-2">
-							{[0, 1, 2].map(index => (
+							{[0, 1, 2, 3].map(index => (
 								<div
 									key={index}
 									className={cn(

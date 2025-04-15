@@ -1,17 +1,13 @@
 'use client'
-
-import React, { useRef, useState, useEffect } from 'react'
+import { useRef, useState, useEffect } from 'react'
 import { TbPlayerPlay, TbPlayerPause } from 'react-icons/tb'
 import { GiSpeaker } from 'react-icons/gi'
 import { MdOutlineFileDownload } from 'react-icons/md'
 import { saveAs } from 'file-saver'
-import { useSession } from 'next-auth/react'
 import { toast } from 'react-toastify'
-import axios from 'axios'
 // import { useUser } from '../../context/UserContext' // Uncomment when this is resolved
 
 const AudioPlayer = ({ src, onAudioPlay }) => {
-	const { data: session, update } = useSession()
 	const audioRef = useRef(null)
 	const progressRef = useRef(null)
 	const [isPlaying, setIsPlaying] = useState(false)
@@ -192,8 +188,7 @@ const AudioPlayer = ({ src, onAudioPlay }) => {
 			<button
 				onClick={togglePlayPause}
 				className="bg-white text-slate-800 p-2 rounded-full hover:bg-gray-200 transition-colors duration-300 mr-4"
-				disabled={isLoading || !src}
-			>
+				disabled={isLoading || !src}>
 				{isPlaying ? <TbPlayerPause /> : <TbPlayerPlay />}
 			</button>
 
@@ -204,18 +199,13 @@ const AudioPlayer = ({ src, onAudioPlay }) => {
 			<div
 				className="flex-grow h-1.5 bg-gray-500 rounded-full overflow-hidden mr-4 relative cursor-pointer"
 				onClick={src ? handleProgressClick : undefined}
-				ref={progressRef}
-			>
+				ref={progressRef}>
 				<div
 					className="absolute top-0 left-0 h-full bg-purple-600 transition-all duration-100"
-					style={{ width: `${progress}%` }}
-				></div>
+					style={{ width: `${progress}%` }}></div>
 			</div>
 
-			<MdOutlineFileDownload
-				className="text-2xl mr-2 cursor-pointer"
-				onClick={() => handleDownload(src)}
-			/>
+			<MdOutlineFileDownload className="text-2xl mr-2 cursor-pointer" onClick={() => handleDownload(src)} />
 
 			<GiSpeaker className="text-2xl" />
 			<input
