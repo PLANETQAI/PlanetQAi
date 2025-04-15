@@ -10,29 +10,13 @@ import CircleTypeText from '@/components/circleTypeText'
 import { cn } from '@/lib/utils'
 
 const RootPage = () => {
-	const [clickSteps, setClickSteps] = useState(0)
+	const [clickSteps, setClickSteps] = useState(1)
 	const [direction, setDirection] = useState('forward')
 	const [isTransitioning, setIsTransitioning] = useState(false)
-
-	// Refs for the card containers
-	const planetQRadioRef = useRef(null)
-	const radioPlayerRef = useRef(null)
-	const qWorldStudiosRef = useRef(null)
 
 	const handleClickSteps = e => {
 		// Check if the click happened on or inside one of the card containers
 		if (isTransitioning) return // Prevent clicks during transition
-
-		// Check if click was inside any of the card containers
-		const clickedInsideCard =
-			(planetQRadioRef.current && planetQRadioRef.current.contains(e.target)) ||
-			(radioPlayerRef.current && radioPlayerRef.current.contains(e.target)) ||
-			(qWorldStudiosRef.current && qWorldStudiosRef.current.contains(e.target))
-
-		// If clicked inside a card, don't trigger the slide
-		if (clickedInsideCard) {
-			return
-		}
 
 		setIsTransitioning(true)
 
@@ -62,10 +46,7 @@ const RootPage = () => {
 
 	// Define views - these won't be recreated on each render
 	const planetQRadio = (
-		<Link
-			href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'}
-			className="h-full p-1 block"
-			ref={planetQRadioRef}>
+		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'} className="h-full p-1 block">
 			<div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
 				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
 					<h1 className="text-xl">Planet Q Radio</h1>
@@ -76,7 +57,7 @@ const RootPage = () => {
 	)
 
 	const radioPlayer = (
-		<div className="w-full" ref={radioPlayerRef}>
+		<div className="w-full">
 			<div
 				className="flex items-center justify-between px-2 sm:px-4 py-4 sm:py-6 w-full rounded-t-lg"
 				style={{
@@ -152,7 +133,7 @@ const RootPage = () => {
 	)
 
 	const qWorldStudios = (
-		<Link href={'/aistudio'} className="p-1 block" ref={qWorldStudiosRef}>
+		<Link href={'/aistudio'} className="p-1 block">
 			<div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto">
 				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
 					<h1 className="text-xl">Q World Studios</h1>
@@ -234,7 +215,6 @@ const RootPage = () => {
 						</div>
 					</div>
 				</div>
-				<Image src={'/images/robo.jpeg'} width={100} height={100} alt="robo" className="h-96 w-96" />
 			</div>
 		</div>
 	)
