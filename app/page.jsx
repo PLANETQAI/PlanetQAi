@@ -12,18 +12,12 @@ import { cn } from '@/lib/utils'
 const RootPage = () => {
 	const [clickSteps, setClickSteps] = useState(0)
 	const [direction, setDirection] = useState('forward')
-	const [isLoaded, setIsLoaded] = useState(false)
 	const [isTransitioning, setIsTransitioning] = useState(false)
 
 	// Refs for the card containers
 	const planetQRadioRef = useRef(null)
 	const radioPlayerRef = useRef(null)
 	const qWorldStudiosRef = useRef(null)
-
-	// Set isLoaded to true after component mounts
-	useEffect(() => {
-		setIsLoaded(true)
-	}, [])
 
 	const handleClickSteps = e => {
 		// Check if the click happened on or inside one of the card containers
@@ -181,70 +175,66 @@ const RootPage = () => {
 
 				{/* Content container */}
 				<div className="w-full max-w-md mx-auto relative px-4 pt-16 pb-16">
-					{/* Only render content when component is mounted */}
-					{isLoaded && (
-						<div className="w-full text-white relative">
-							{/* Container for overflow hidden */}
-							<div className="overflow-hidden relative h-full">
-								{/* All views are loaded but only one is visible at a time */}
-								<div
-									className={cn(
-										'absolute w-full transition-all duration-500 ease-in-out',
-										clickSteps === 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
-									)}>
-									{planetQRadio}
-								</div>
-
-								<div
-									className={cn(
-										'absolute w-full transition-all duration-500 ease-in-out',
-										clickSteps === 1
-											? 'opacity-100 translate-x-0'
-											: clickSteps < 1
-											? 'opacity-0 -translate-x-full'
-											: 'opacity-0 translate-x-full'
-									)}>
-									{radioPlayer}
-								</div>
-
-								<div
-									className={cn(
-										'absolute w-full transition-all duration-500 ease-in-out',
-										clickSteps === 2 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
-									)}>
-									{qWorldStudios}
-								</div>
-
-								{/* Spacer div to maintain container height */}
-								<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 0 ? 'block' : 'hidden')}>
-									{planetQRadio}
-								</div>
-								<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 1 ? 'block' : 'hidden')}>
-									{radioPlayer}
-								</div>
-								<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 2 ? 'block' : 'hidden')}>
-									{qWorldStudios}
-								</div>
+					<div className="w-full text-white relative">
+						{/* Container for overflow hidden */}
+						<div className="overflow-hidden relative h-full">
+							{/* All views are loaded but only one is visible at a time */}
+							<div
+								className={cn(
+									'absolute w-full transition-all duration-500 ease-in-out',
+									clickSteps === 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
+								)}>
+								{planetQRadio}
 							</div>
 
-							{/* Indicators */}
-							<div className="mt-8 flex justify-center gap-2">
-								{[0, 1, 2].map(index => (
-									<div
-										key={index}
-										className={cn(
-											'w-2 h-2 rounded-full transition-all duration-300',
-											clickSteps === index ? 'bg-white scale-125' : 'bg-gray-500 hover:bg-gray-400'
-										)}
-									/>
-								))}
-								<div className={cn('ml-2 text-xs transition-all duration-300', isTransitioning ? 'opacity-0' : 'opacity-70')}>
-									{direction === 'forward' ? '→' : '←'}
-								</div>
+							<div
+								className={cn(
+									'absolute w-full transition-all duration-500 ease-in-out',
+									clickSteps === 1
+										? 'opacity-100 translate-x-0'
+										: clickSteps < 1
+										? 'opacity-0 -translate-x-full'
+										: 'opacity-0 translate-x-full'
+								)}>
+								{radioPlayer}
+							</div>
+
+							<div
+								className={cn(
+									'absolute w-full transition-all duration-500 ease-in-out',
+									clickSteps === 2 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
+								)}>
+								{qWorldStudios}
+							</div>
+
+							{/* Spacer div to maintain container height */}
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 0 ? 'block' : 'hidden')}>
+								{planetQRadio}
+							</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 1 ? 'block' : 'hidden')}>{radioPlayer}</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 2 ? 'block' : 'hidden')}>
+								{qWorldStudios}
 							</div>
 						</div>
-					)}
+
+						{/* Indicators */}
+						<div className="mt-8 flex justify-center gap-2">
+							{[0, 1, 2].map(index => (
+								<div
+									key={index}
+									className={cn(
+										'w-2 h-2 rounded-full transition-all duration-300',
+										clickSteps === index ? 'bg-white scale-125' : 'bg-gray-500 hover:bg-gray-400'
+									)}
+								/>
+							))}
+							<div className={cn('ml-2 text-xs transition-all duration-300', isTransitioning ? 'opacity-0' : 'opacity-70')}>
+								{direction === 'forward' ? '→' : '←'}
+							</div>
+						</div>
+					</div>
 				</div>
+				<Image src={'/images/robo.jpeg'} width={100} height={100} alt="robo" className="h-96 w-96" />
 			</div>
 		</div>
 	)
