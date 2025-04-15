@@ -14,34 +14,38 @@ const RootPage = () => {
 	const [direction, setDirection] = useState('forward')
 	const [isTransitioning, setIsTransitioning] = useState(false)
 
-	const handleClickSteps = e => {
-		// Check if the click happened on or inside one of the card containers
-		if (isTransitioning) return // Prevent clicks during transition
+	const handleClickSteps = () => {
+		if (isTransitioning) return
 
 		setIsTransitioning(true)
 
 		setTimeout(() => {
+			let newStep = clickSteps
+			let newDirection = direction
+
 			if (direction === 'forward') {
-				if (clickSteps < 3) {
-					setClickSteps(clickSteps + 1)
+				if (clickSteps < 4) {
+					newStep = clickSteps + 1
 				} else {
-					setDirection('backward')
-					setClickSteps(2)
+					newDirection = 'backward'
+					newStep = clickSteps - 1
 				}
 			} else {
 				if (clickSteps > 0) {
-					setClickSteps(clickSteps - 1)
+					newStep = clickSteps - 1
 				} else {
-					setDirection('forward')
-					setClickSteps(1)
+					newDirection = 'forward'
+					newStep = clickSteps + 1
 				}
 			}
 
-			// Allow new transitions after animation completes
+			setClickSteps(newStep)
+			setDirection(newDirection)
+
 			setTimeout(() => {
 				setIsTransitioning(false)
 			}, 400)
-		}, 100) // Small delay before state change
+		}, 100)
 	}
 
 	// Define views - these won't be recreated on each render
@@ -149,6 +153,23 @@ const RootPage = () => {
 		</div>
 	)
 
+	const fifthLink = (
+		<Link href={'/my-studio'} className="p-1">
+			<div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
+				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+					<h1 className="text-xl">Planet Q Productions</h1>
+				</div>
+				<Image
+					src="/images/V_center.jpg"
+					alt="Planet Q Productions"
+					width={300}
+					height={200}
+					className="w-full h-auto rounded-lg"
+				/>
+			</div>
+		</Link>
+	)
+
 	return (
 		<div className="w-full overflow-y-scroll min-h-screen h-full relative">
 			<div
@@ -189,7 +210,11 @@ const RootPage = () => {
 							<div
 								className={cn(
 									'absolute w-full transition-all duration-500 ease-in-out',
-									clickSteps === 2 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
+									clickSteps === 2
+										? 'opacity-100 translate-x-0'
+										: clickSteps < 2
+										? 'opacity-0 -translate-x-full'
+										: 'opacity-0 translate-x-full'
 								)}>
 								{qWorldStudios}
 							</div>
@@ -197,9 +222,21 @@ const RootPage = () => {
 							<div
 								className={cn(
 									'absolute w-full transition-all duration-500 ease-in-out',
-									clickSteps === 3 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
+									clickSteps === 3
+										? 'opacity-100 translate-x-0'
+										: clickSteps < 3
+										? 'opacity-0 -translate-x-full'
+										: 'opacity-0 translate-x-full'
 								)}>
 								{roboCard}
+							</div>
+
+							<div
+								className={cn(
+									'absolute w-full transition-all duration-500 ease-in-out',
+									clickSteps === 4 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
+								)}>
+								{fifthLink}
 							</div>
 
 							{/* Spacer div to maintain container height */}
@@ -211,11 +248,12 @@ const RootPage = () => {
 								{qWorldStudios}
 							</div>
 							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 3 ? 'block' : 'hidden')}>{roboCard}</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 4 ? 'block' : 'hidden')}>{fifthLink}</div>
 						</div>
 
 						{/* Indicators */}
 						<div className="mt-8 flex justify-center gap-2">
-							{[0, 1, 2, 3].map(index => (
+							{[0, 1, 2, 3, 4].map(index => (
 								<div
 									key={index}
 									className={cn(
