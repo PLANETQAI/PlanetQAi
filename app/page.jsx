@@ -202,7 +202,8 @@ const CustomRadioPlayer = () => {
 			<div className="mt-2 text-gray-300 text-sm overflow-hidden">
 				<div className="whitespace-nowrap animate-marquee">
 					Now Playing: Planet Q Radio - Futuristic Music Experience -Monday Thru Friday Futuristic Mornings Futuristic Hip Hop-
-					Saturday Futristic Tech Rave Dance Party Music- Sunday's Futuristic Hip Hop Sunday Music -Futuristic Nights Every Night
+					Saturday Futristic Tech Rave Dance Party Music- Sunday&apos;s Futuristic Hip Hop Sunday Music -Futuristic Nights Every
+					Night
 				</div>
 			</div>
 		</div>
