@@ -84,9 +84,9 @@ const CustomRadioPlayer = () => {
 			<div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-white">
 				<div className="flex items-center gap-2">
 					{/* Station logo */}
-					<div className="relative w-12 h-12 overflow-hidden rounded-full">
+					{/* <div className="relative w-12 h-12 overflow-hidden rounded-full">
 						<Image src="/images/radio1.jpeg" alt="Planet Q Radio" width={48} height={48} className="object-cover" />
-					</div>
+					</div> */}
 
 					{/* Station info */}
 					<div className="text-sm">
