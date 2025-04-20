@@ -398,7 +398,7 @@ const RootPage = () => {
         }
         
         .animate-marquee {
-          animation: marquee 10s linear infinite;
+          animation: marquee 25s linear infinite;
         }
       `
 			document.head.appendChild(style)
