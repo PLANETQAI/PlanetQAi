@@ -337,7 +337,7 @@ const RootPage = () => {
 	)
 
 	const radioPlayer = (
-		<Link href={'/aistudio'} className="p-1 block">
+		<Link href={'https://planetia-tau.vercel.app/'} className="p-1 block">
 			<div
 				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto card-content"
 				onClick={preventPropagation}>
