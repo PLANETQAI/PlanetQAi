@@ -200,7 +200,10 @@ const CustomRadioPlayer = () => {
 
 			{/* Now playing marquee */}
 			<div className="mt-2 text-gray-300 text-sm overflow-hidden">
-				<div className="whitespace-nowrap animate-marquee">Now Playing: Planet Q Radio - Futuristic Music Experience</div>
+				<div className="whitespace-nowrap animate-marquee">
+					Now Playing: Planet Q Radio - Futuristic Music Experience -Monday Thru Friday Futuristic Mornings Futuristic Hip Hop-
+					Saturday Futristic Tech Rave Dance Party Music- Sunday's Futuristic Hip Hop Sunday Music -Futuristic Nights Every Night
+				</div>
 			</div>
 		</div>
 	)
@@ -390,11 +393,11 @@ const RootPage = () => {
 			style.innerHTML = `
         @keyframes marquee {
           0% { transform: translateX(100%); }
-          100% { transform: translateX(-100%); }
+          100% { transform: translateX(-250%); }
         }
         
         .animate-marquee {
-          animation: marquee 15s linear infinite;
+          animation: marquee 10s linear infinite;
         }
       `
 			document.head.appendChild(style)
