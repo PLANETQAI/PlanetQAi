@@ -363,7 +363,7 @@ const RootPage = () => {
 	)
 
 	const fifthLink = (
-		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/videos'} className="p-1">
+		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions'} className="p-1">
 			<div
 				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
 				onClick={preventPropagation}>
