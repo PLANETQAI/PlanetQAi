@@ -9,7 +9,5 @@ export const metadata = {
 export default async function AIStudioPage() {
 	const session = await auth()
 
-	await new Promise(resolve => setTimeout(resolve, 1000))
-
 	return <Studio session={session} />
 }

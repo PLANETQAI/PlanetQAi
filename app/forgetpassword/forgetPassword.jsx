@@ -52,27 +52,19 @@ export default function ForgetPassword() {
 				progress: undefined,
 				theme: 'dark',
 			})
-		}
 
+			router.push('/')
+		}
 		event.target.reset()
 		setLoading(false)
-		router.push('/')
 	}
 	return (
 		<>
 			<ToastContainer autoClose={1500} draggable closeOnClick />
 			<div className="h-screen w-screen flex justify-center items-center flex-col gap-4 bg-[#333A44]">
-				<Image
-					src="/images/small.webp"
-					alt="Your Logo"
-					width={135}
-					height={150}
-					className="rounded-2xl"
-				></Image>
+				<Image src="/images/small.webp" alt="Your Logo" width={135} height={150} className="rounded-2xl"></Image>
 				<div className="w-[300px] h-[330px] border-2 border-solid mx-2  p-4 rounded-2xl shadow-2xl border-white hover:border-double sm:w-[400px] sm:p-5">
-					<h1 className="text-2xl font-bold text-white flex items-center justify-center">
-						Reset Password?
-					</h1>
+					<h1 className="text-2xl font-bold text-white flex items-center justify-center">Reset Password?</h1>
 
 					<form onSubmit={submit}>
 						<div className="mt-5 ">
@@ -84,8 +76,7 @@ export default function ForgetPassword() {
 									setOldPassword(e.target.value)
 								}}
 								value={oldPassword}
-								required
-							></input>
+								required></input>
 						</div>
 						<div className="mt-5">
 							<label className="block text-gray-300 text-sm">Enter New Password</label>
@@ -100,10 +91,7 @@ export default function ForgetPassword() {
 							/>
 						</div>
 						<div className="mt-5">
-							<button
-								className="w-full bg-indigo-600 p-2 rounded-lg text-white hover:bg-indigo-500"
-								disabled={loading}
-							>
+							<button className="w-full bg-indigo-600 p-2 rounded-lg text-white hover:bg-indigo-500" disabled={loading}>
 								{loading ? 'Processing..' : 'Submit'}
 							</button>
 						</div>

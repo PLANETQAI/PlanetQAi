@@ -83,13 +83,8 @@ const CustomRadioPlayer = () => {
 
 			<div className="flex flex-col sm:flex-row items-center justify-between gap-2 text-white">
 				<div className="flex items-center gap-2">
-					{/* Station logo */}
-					{/* <div className="relative w-12 h-12 overflow-hidden rounded-full">
-						<Image src="/images/radio1.jpeg" alt="Planet Q Radio" width={48} height={48} className="object-cover" />
-					</div> */}
-
 					{/* Station info */}
-					<div className="text-sm">
+					<div className="text-sm flex flex-col text-center justify-center">
 						<div className="font-bold">Planet Q Radio</div>
 						<div className="text-gray-300 text-xs">Live Stream</div>
 					</div>
@@ -201,9 +196,7 @@ const CustomRadioPlayer = () => {
 			{/* Now playing marquee */}
 			<div className="mt-2 text-gray-300 text-sm overflow-hidden">
 				<div className="whitespace-nowrap animate-marquee">
-					Now Playing: Planet Q Radio - Futuristic Music Experience -Monday Thru Friday Futuristic Mornings Futuristic Hip Hop-
-					Saturday Futristic Tech Rave Dance Party Music- Sunday&apos;s Futuristic Hip Hop Sunday Music -Futuristic Nights Every
-					Night
+					Now Playing: Planet Q Radio - Futuristic Music Experience -Monday - Friday Futuristic Mornings Futuristic Hip Hop{' '}
 				</div>
 			</div>
 		</div>
@@ -220,7 +213,11 @@ const RootPage = () => {
 		setTimeout(() => {
 			setShowTime(false)
 		}, 5000)
-	}, [showTime])
+
+		setTimeout(() => {
+			setShowTime(true)
+		}, 10000)
+	}, [])
 
 	const handleClickSteps = e => {
 		// Don't process the click if it comes from a card element
@@ -300,13 +297,16 @@ const RootPage = () => {
 				</div>
 
 				{/* Center Chat Link */}
-				<Link
-					href={'/chat'}
-					className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer mx-2">
-					<video loop autoPlay muted className="rounded-full w-full h-full object-cover">
-						<source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
-					</video>
-				</Link>
+				<div className="flex justify-center items-center flex-col gap-4">
+					<Link
+						href={'/chat'}
+						className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer mx-2">
+						<video loop autoPlay muted className="rounded-full w-full h-full object-cover">
+							<source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
+						</video>
+					</Link>
+					<p className="text-blue-500 text-lg font-bold animate-pulse">Chat Bot</p>
+				</div>
 
 				{/* Right Radio Circle */}
 				<div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
@@ -358,7 +358,7 @@ const RootPage = () => {
 			className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all text-center card-content"
 			onClick={preventPropagation}>
 			<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-				<h1 className="text-xl">PlanetQ Store</h1>
+				<h1 className="text-xl">Planet Q Store</h1>
 			</div>
 			<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/futuristichiphopbeats'}>
 				<Image src={'/images/robo.jpeg'} width={300} height={200} alt="robo" className="w-full h-auto rounded-lg" />
@@ -411,7 +411,7 @@ const RootPage = () => {
 				className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-scroll"
 				onClick={e => handleClickSteps(e)}>
 				<CircleTypeText
-					text={'Futuristic Music'}
+					text={'Play Futuristic Music'}
 					className={cn(
 						'absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24 left-1/2 -translate-x-[50%]',
 						showTime ? 'opacity-100' : 'opacity-0'
@@ -425,6 +425,7 @@ const RootPage = () => {
 					)}
 				/>
 				<StarsCanvas />
+
 				{/* Content container */}
 				<div className="w-full max-w-md mx-auto relative px-4 pt-16 pb-16">
 					<div className="w-full text-white relative">

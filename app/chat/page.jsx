@@ -49,8 +49,7 @@ export default function ChatBot() {
 					className="flex items-center justify-center px-2 gap-12 sticky top-0"
 					style={{
 						backgroundColor: 'rgb(31 41 55 / var(--tw-bg-opacity))',
-					}}
-				>
+					}}>
 					<div className="relative w-[100px] h-[100px] overflow-hidden">
 						<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
 							<video autoPlay loop muted className="w-[150%] h-auto object-cover rounded-full">
@@ -71,8 +70,7 @@ export default function ChatBot() {
 						className={`w-32 h-32 sm:w-48 sm:h-48 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer aspect-square rounded-full ${
 							isLoading && 'flicker-shadow'
 						}`}
-						src="/videos/Planet-q-Chatbox.mp4"
-					></video>
+						src="/videos/Planet-q-Chatbox.mp4"></video>
 
 					<div className="relative w-[100px] h-[100px] overflow-hidden">
 						<div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
@@ -96,38 +94,21 @@ export default function ChatBot() {
 							<Link
 								href={`/aistudio?message=${m.content}`}
 								key={m.id}
-								className={`whitespace-pre-wrap flex gap-4 items-center ${
-									m.role === 'user' ? 'justify-end' : 'justify-start'
-								}`}
-							>
+								className={`whitespace-pre-wrap flex gap-4 items-center ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}>
 								{m.role === 'user' ? (
 									''
 								) : (
-									<Image
-										src={'/images/face.jpeg'}
-										width={32}
-										height={32}
-										alt="AI Face"
-										className="rounded-full"
-									/>
+									<Image src={'/images/face.jpeg'} width={32} height={32} alt="AI Face" className="rounded-full" />
 								)}
-								<span
-									className={`my-4 p-4 ${
-										m.role === 'user' ? 'bg-gray-600 rounded-xl' : 'bg-gray-600 rounded-xl'
-									}`}
-								>
-									{m.toolInvocations ? (
-										<pre>{JSON.stringify(m.toolInvocations, null, 2)}</pre>
-									) : (
-										<span>{m.content}</span>
-									)}
+								<span className={`my-4 p-4 ${m.role === 'user' ? 'bg-gray-600 rounded-xl' : 'bg-gray-600 rounded-xl'}`}>
+									{m.toolInvocations ? <pre>{JSON.stringify(m.toolInvocations, null, 2)}</pre> : <span>{m.content}</span>}
 								</span>
 							</Link>
 						))}
 					</div>
 
 					<form onSubmit={handleSubmit} className="flex flex-col justify-center items-center gap-8">
-						{!messages.length > 0 && (
+						{/* {!messages.length > 0 && (
 							<div className="flex gap-4 justify-center flex-wrap mb-28">
 								{prompts.map((value, indx) => (
 									<div
@@ -138,13 +119,12 @@ export default function ChatBot() {
 										onClick={() => {
 											handleInputChange({ target: { value } })
 											setTriggerPrompt(true)
-										}}
-									>
+										}}>
 										{value}
 									</div>
 								))}
 							</div>
-						)}
+						)} */}
 						<div className="max-w-[80%] flex fixed mx-auto w-full bottom-0 left-4 right-4 mb-8 border border-gray-300 rounded shadow-xl bg-white items-center">
 							<input
 								className="w-full p-2"
@@ -154,9 +134,6 @@ export default function ChatBot() {
 							/>
 							{input.length > 0 && <FaArrowRight className="mr-2 cursor-pointer" onClick={handleSubmit} />}
 						</div>
-						<p className="text-white text-start">
-							Clicking on the AI response would redirect you the generate page.
-						</p>
 					</form>
 				</div>
 			</div>

@@ -8,6 +8,7 @@ import { saltAndHashPassword } from '@/utils/password'
 export async function PATCH(req, res) {
 	try {
 		const session = await auth()
+
 		if (!session) {
 			redirect('/login')
 		}
@@ -16,10 +17,7 @@ export async function PATCH(req, res) {
 
 		// Validate input
 		if (!newPassword || newPassword.trim().length < 7) {
-			return NextResponse.json(
-				{ message: 'Invalid input - new password should be at least 7 characters.' },
-				{ status: 422 }
-			)
+			return NextResponse.json({ message: 'Invalid input - new password should be at least 7 characters.' }, { status: 422 })
 		}
 
 		// Find the user by session email using Prisma

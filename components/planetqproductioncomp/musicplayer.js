@@ -35,9 +35,7 @@ export default function MusicPlayer() {
 					const storedLinkValue = JSON.parse(localStorage.getItem('linkvalue'))
 
 					if (storedLinkValue) {
-						const foundIndex = shuffledLinks.findIndex(
-							item => item.videoLink === storedLinkValue.videoLink
-						)
+						const foundIndex = shuffledLinks.findIndex(item => item.videoLink === storedLinkValue.videoLink)
 
 						if (foundIndex !== -1) {
 							setCurrentVideoIndex(foundIndex)
@@ -170,8 +168,7 @@ export default function MusicPlayer() {
 									className="bg-transparent w-auto h-auto shadow-2xl opacity-100 transition-transform duration-200 ease-in-out transform-gpu scale-125 hover:scale-100 hover:opacity-95"
 									style={{
 										clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)',
-									}}
-								></Image>
+									}}></Image>
 							</div>
 						}
 						onEnded={handleVideoEnd}

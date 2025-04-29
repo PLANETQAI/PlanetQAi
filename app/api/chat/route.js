@@ -9,11 +9,10 @@ export async function POST(req) {
 	try {
 		const { messages } = await req.json()
 
-		const result = await streamText({
-			model: openai('gpt-3.5-turbo'),
+		const result = streamText({
+			model: openai('gpt-4o-mini'),
 			messages,
-			system: 'You are being aked to generate lyrics.',
-			experimental_providerMetadata: { openai: { maxCompletionTokens: 1000 } },
+			// system: 'You are being aked to generate lyrics.',
 		})
 
 		return result.toDataStreamResponse()

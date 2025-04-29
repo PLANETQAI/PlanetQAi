@@ -79,13 +79,10 @@ export default function Studio({ session }) {
 							<button
 								key={index}
 								className="bg-gradient-to-t from-slate-600 to-slate-500 text-white flex flex-col justify-between items-start p-4 rounded mb-5 w-full hover:from-slate-500 hover:to-slate-600 transition-colors duration-300 shadow-lg text-sm"
-								onClick={() => handlePromptClick(prompt)}
-							>
+								onClick={() => handlePromptClick(prompt)}>
 								<div className="font-bold mb-2">{prompt.title}</div>
 								<div className="text-xs mb-2 text-gray-300">{prompt.tags}</div>
-								<div className="text-xs text-left overflow-hidden h-20">
-									{prompt.text.split('\n').slice(0, 4).join('\n')}...
-								</div>
+								<div className="text-xs text-left overflow-hidden h-20">{prompt.text.split('\n').slice(0, 4).join('\n')}...</div>
 								<div className="w-full text-right mt-2">
 									<FaArrowDown className="text-purple-500 inline" />
 								</div>
@@ -93,11 +90,7 @@ export default function Studio({ session }) {
 						))}
 					</div>
 
-					<MusicGenerator
-						session={session}
-						selectedPrompt={selectedPrompt}
-						onPromptChange={setSelectedPrompt}
-					/>
+					<MusicGenerator session={session} selectedPrompt={selectedPrompt} onPromptChange={setSelectedPrompt} />
 				</div>
 
 				<h1 className="animate-text text-center bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-2xl font-black md:text-4xl pb-10">
