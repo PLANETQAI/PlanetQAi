@@ -260,17 +260,18 @@ const RootPage = () => {
 	}
 
 	// Define views - these won't be recreated on each render
-	const planetQRadio = (
-		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'} className="h-full p-1 block">
-			<div
-				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
-				onClick={preventPropagation}>
-				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-					<h1 className="text-xl">Planet Q Radio</h1>
-				</div>
-				<video src="/videos/V_left-compressed.mp4" autoPlay muted loop className="w-full h-auto rounded-lg"></video>
+	// SWAPPED: Store moved to radio position (was planetQRadio)
+	const planetQStore = (
+		<div
+			className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all text-center card-content"
+			onClick={preventPropagation}>
+			<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+				<h1 className="text-xl">Planet Q Store</h1>
 			</div>
-		</Link>
+			<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/futuristichiphopbeats'}>
+				<Image src={'/images/robo.jpeg'} width={300} height={200} alt="robo" className="w-full h-auto rounded-lg" />
+			</Link>
+		</div>
 	)
 
 	const qWorldStudios = (
@@ -336,40 +337,28 @@ const RootPage = () => {
 			</div>
 
 			{/* Replace the iframe with our custom player */}
-			<CustomRadioPlayer />
+			<div className="bg-gray-800 w-full rounded-b-lg p-2! sm:p-3">
+				<iframe
+					src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true"
+					frameBorder="0"
+					allowtransparency="true"
+					style={{
+						width: '100%',
+						height: '130px',
+						border: '0',
+					}}
+					title="Radio Planet Q"
+					allow="autoplay; encrypted-media"></iframe>
+			</div>
+			{/* <CustomRadioPlayer /> */}
 		</div>
 	)
 
-	const radioPlayer = (
-		<Link href={'https://planetia-tau.vercel.app/'} className="p-1 block">
+	// SWAPPED: Productions moved to studio position (was radioPlayer)
+	const planetQProductions = (
+		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions'} className="p-1 block">
 			<div
 				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto card-content"
-				onClick={preventPropagation}>
-				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-					<h1 className="text-xl">Q World Studios</h1>
-				</div>
-				<Image src="/images/V_right.jpg" alt="Q World Studios" width={300} height={200} className="w-full h-auto rounded-lg" />
-			</div>
-		</Link>
-	)
-
-	const roboCard = (
-		<div
-			className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all text-center card-content"
-			onClick={preventPropagation}>
-			<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-				<h1 className="text-xl">Planet Q Store</h1>
-			</div>
-			<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/futuristichiphopbeats'}>
-				<Image src={'/images/robo.jpeg'} width={300} height={200} alt="robo" className="w-full h-auto rounded-lg" />
-			</Link>
-		</div>
-	)
-
-	const fifthLink = (
-		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions'} className="p-1">
-			<div
-				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
 				onClick={preventPropagation}>
 				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
 					<h1 className="text-xl">Planet Q Productions</h1>
@@ -381,6 +370,34 @@ const RootPage = () => {
 					height={200}
 					className="w-full h-auto rounded-lg"
 				/>
+			</div>
+		</Link>
+	)
+
+	// SWAPPED: Radio moved to store position (was roboCard)
+	const planetQRadio = (
+		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'} className="h-full p-1 block">
+			<div
+				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
+				onClick={preventPropagation}>
+				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+					<h1 className="text-xl">Planet Q Radio</h1>
+				</div>
+				<video src="/videos/V_left-compressed.mp4" autoPlay muted loop className="w-full h-auto rounded-lg"></video>
+			</div>
+		</Link>
+	)
+
+	// SWAPPED: Studio moved to productions position (was fifthLink)
+	const studioCard = (
+		<Link href={'https://planetia-tau.vercel.app/'} className="p-1">
+			<div
+				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
+				onClick={preventPropagation}>
+				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+					<h1 className="text-xl">Q World Studios</h1>
+				</div>
+				<Image src="/images/V_right.jpg" alt="Q World Studios" width={300} height={200} className="w-full h-auto rounded-lg" />
 			</div>
 		</Link>
 	)
@@ -437,7 +454,7 @@ const RootPage = () => {
 									'absolute w-full transition-all duration-500 ease-in-out',
 									clickSteps === 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
 								)}>
-								{planetQRadio}
+								{planetQStore}
 							</div>
 
 							<div
@@ -449,7 +466,7 @@ const RootPage = () => {
 										? 'opacity-0 -translate-x-full'
 										: 'opacity-0 translate-x-full'
 								)}>
-								{radioPlayer}
+								{planetQProductions}
 							</div>
 
 							<div
@@ -473,7 +490,7 @@ const RootPage = () => {
 										? 'opacity-0 -translate-x-full'
 										: 'opacity-0 translate-x-full'
 								)}>
-								{roboCard}
+								{planetQRadio}
 							</div>
 
 							<div
@@ -481,19 +498,23 @@ const RootPage = () => {
 									'absolute w-full transition-all duration-500 ease-in-out',
 									clickSteps === 4 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
 								)}>
-								{fifthLink}
+								{studioCard}
 							</div>
 
 							{/* Spacer div to maintain container height */}
 							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 0 ? 'block' : 'hidden')}>
-								{planetQRadio}
+								{planetQStore}
 							</div>
-							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 1 ? 'block' : 'hidden')}>{radioPlayer}</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 1 ? 'block' : 'hidden')}>
+								{planetQProductions}
+							</div>
 							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 2 ? 'block' : 'hidden')}>
 								{qWorldStudios}
 							</div>
-							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 3 ? 'block' : 'hidden')}>{roboCard}</div>
-							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 4 ? 'block' : 'hidden')}>{fifthLink}</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 3 ? 'block' : 'hidden')}>
+								{planetQRadio}
+							</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 4 ? 'block' : 'hidden')}>{studioCard}</div>
 						</div>
 
 						{/* Indicators */}
