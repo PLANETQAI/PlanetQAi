@@ -1,2 +1,7 @@
 email: planetqproductions@gmail.com
 password: 1234567890
+
+
+###
+Previous Credentails: 
+MongoDB_DATABASE_URL="mongodb+srv://root:randompassword@cluster0.ab1cd.mongodb.net/mydb?retryWrites=true&w=majority"
