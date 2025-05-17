@@ -10,6 +10,7 @@ datasource db {
 enum Role {
   Admin
   Premium
+<<<<<<< HEAD
   Basic
 }
 
@@ -23,6 +24,100 @@ model User {
   totalDownloads Int          @default(0)
   Gallery        Gallery[]
   videoLinks     videoLinks[]
+=======
+  Pro
+  Starter
+  Basic
+}
+
+enum SubscriptionStatus {
+  Active
+  Canceled
+  Expired
+  Paused
+  Trialing
+}
+
+model User {
+  id                 String           @id @default(cuid())
+  fullName           String
+  email              String           @unique
+  password           String
+  role               Role             @default(Basic)
+  credits            Int              @default(0)      // Current credit balance
+  totalCreditsUsed   Int              @default(0)      // Lifetime credits used
+  maxMonthlyCredits  Int              @default(0)      // Monthly credit allowance based on subscription
+  max_download       Int              @default(0)
+  totalDownloads     Int              @default(0)
+  stripeCustomerId   String?          // Stripe customer ID for payment processing
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  subscription       Subscription?
+  payments           Payment[]
+  creditLogs         CreditLog[]
+  generatedSongs     Song[]
+  Gallery            Gallery[]
+  videoLinks         videoLinks[]
+}
+
+model Subscription {
+  id               String             @id @default(cuid())
+  userId           String             @unique
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripeSubscriptionId String          // Stripe subscription ID
+  stripePriceId    String             // Stripe price ID
+  planName         String             // Free, Starter, Pro, Premium
+  status           SubscriptionStatus
+  currentPeriodStart DateTime
+  currentPeriodEnd   DateTime
+  cancelAtPeriodEnd  Boolean          @default(false)
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+}
+
+model Payment {
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stripePaymentId  String             // Stripe payment ID
+  amount           Float
+  currency         String             @default("USD")
+  status           String             // succeeded, pending, failed
+  paymentMethod    String?            // card, paypal, etc.
+  description      String?
+  metadata         Json?              // Additional payment metadata
+  createdAt        DateTime           @default(now())
+}
+
+model CreditLog {
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount           Int                // Positive for credits added, negative for credits used
+  balanceAfter     Int                // Balance after this transaction
+  description      String             // e.g., "Song generation", "Monthly renewal", "Subscription upgrade"
+  relatedEntityId  String?            // ID of related entity (song, payment, etc.)
+  relatedEntityType String?           // Type of related entity (Song, Payment, etc.)
+  createdAt        DateTime           @default(now())
+}
+
+model Song {
+  id               String             @id @default(cuid())
+  userId           String
+  user             User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title            String
+  prompt           String             @db.Text        // The prompt used to generate the song
+  lyrics           String?            @db.Text        // Generated lyrics
+  audioUrl         String             // URL to the audio file
+  videoUrl         String?            // Optional video URL (could be null initially)
+  thumbnailUrl     String?            // URL to the thumbnail image
+  duration         Int                // Song duration in seconds
+  creditsUsed      Int                // Credits consumed for this generation
+  isPublic         Boolean            @default(false) // Whether this song is public or private
+  tags             String[]           // Array of tags associated with the song
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+>>>>>>> e72410d (My Payment work)
 }
 
 model Gallery {
@@ -49,3 +144,21 @@ model Thumbnail {
   id             Int    @id @default(autoincrement())
   ThumbnailImage String
 }
+<<<<<<< HEAD
+=======
+
+// For storing pricing plans configuration
+model PricingPlan {
+  id               String  @id @default(cuid())
+  stripePriceId    String  @unique // Reference to Stripe price ID
+  name             String  // Free, Starter, Pro, Premium
+  description      String
+  priceMonthly     Float
+  credits          Int     // Credits per billing period
+  maxDownloads     Int
+  features         String[]
+  isActive         Boolean @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
+>>>>>>> e72410d (My Payment work)
