@@ -10,21 +10,6 @@ datasource db {
 enum Role {
   Admin
   Premium
-<<<<<<< HEAD
-  Basic
-}
-
-model User {
-  id             String       @id @default(cuid())
-  fullName       String
-  email          String       @unique
-  password       String
-  role           Role         @default(Basic)
-  max_download   Int          @default(0)
-  totalDownloads Int          @default(0)
-  Gallery        Gallery[]
-  videoLinks     videoLinks[]
-=======
   Pro
   Starter
   Basic
@@ -117,7 +102,6 @@ model Song {
   tags             String[]           // Array of tags associated with the song
   createdAt        DateTime           @default(now())
   updatedAt        DateTime           @updatedAt
->>>>>>> e72410d (My Payment work)
 }
 
 model Gallery {
@@ -144,8 +128,6 @@ model Thumbnail {
   id             Int    @id @default(autoincrement())
   ThumbnailImage String
 }
-<<<<<<< HEAD
-=======
 
 // For storing pricing plans configuration
 model PricingPlan {
@@ -161,4 +143,16 @@ model PricingPlan {
   createdAt        DateTime @default(now())
   updatedAt        DateTime @updatedAt
 }
->>>>>>> e72410d (My Payment work)
+model SubscriptionPlan {
+  id               String  @id @default(cuid())
+  stripePriceId    String  @unique // Reference to Stripe price ID
+  name             String  // Free, Starter, Pro, Premium
+  description      String
+  priceMonthly     Float
+  credits          Int     // Credits per billing period
+  maxDownloads     Int
+  features         String[]
+  isActive         Boolean @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+}
