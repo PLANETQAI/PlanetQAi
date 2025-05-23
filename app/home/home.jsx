@@ -38,16 +38,35 @@ const Home = ({ session }) => {
 	// Function to fetch user credits
 	const fetchUserCredits = async () => {
 		try {
-			const response = await fetch('/api/user-credits', {
+			// First check if the user is authenticated by getting the session
+			const sessionResponse = await fetch('/api/auth/session')
+			const sessionData = await sessionResponse.json()
+			
+			// If not authenticated, redirect to login page
+			if (!sessionData || !sessionData.user) {
+				console.log('User not authenticated, redirecting to login')
+				window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+				return
+			}
+			
+			// Now fetch credits with the authenticated session
+			const response = await fetch('/api/credits-api', {
 				method: 'GET',
 				credentials: 'include', // This ensures cookies are sent with the request
 				headers: {
 					'Content-Type': 'application/json'
 				}
 			})
+			
 			if (!response.ok) {
-				throw new Error('Failed to fetch credits')
+				// If unauthorized, redirect to login
+				if (response.status === 401) {
+					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+					return
+				}
+				throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
 			}
+			
 			const data = await response.json()
 			setUserCredits(data)
 		} catch (error) {

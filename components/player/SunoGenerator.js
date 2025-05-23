@@ -130,16 +130,35 @@ const SunoGenerator = ({
 	// Fetch user credits
 	const fetchUserCredits = async () => {
 		try {
-			const response = await fetch('/api/user-credits', {
+			// First check if the user is authenticated by getting the session
+			const sessionResponse = await fetch('/api/auth/session')
+			const sessionData = await sessionResponse.json()
+			
+			// If not authenticated, redirect to login page
+			if (!sessionData || !sessionData.user) {
+				console.log('User not authenticated, redirecting to login')
+				window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+				return
+			}
+			
+			// Now fetch credits with the authenticated session
+			const response = await fetch('/api/credits-api', {
 				method: 'GET',
 				credentials: 'include', // This ensures cookies are sent with the request
 				headers: {
 					'Content-Type': 'application/json'
 				}
 			})
+			
 			if (!response.ok) {
-				throw new Error('Failed to fetch credits')
+				// If unauthorized, redirect to login
+				if (response.status === 401) {
+					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+					return
+				}
+				throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
 			}
+			
 			const data = await response.json()
 			setUserCredits(data)
 			// Notify parent component that credits have been updated
@@ -158,35 +177,11 @@ const SunoGenerator = ({
 
 	// Calculate estimated credits based on prompt complexity and selected options
 	const calculateEstimatedCredits = () => {
-		// Base cost for any generation
-		let credits = 15; // Suno is slightly more expensive than Diffrhym
+		// Base cost for any generation - fixed at 15 credits for Suno
+		// This ensures users always know exactly how many credits will be used
+		const credits = 15;
 
-		// Add credits based on prompt length
-		const promptLength = selectedPrompt.text.length;
-		if (promptLength > 100) {
-			credits += 5;
-		}
-		if (promptLength > 200) {
-			credits += 5;
-		}
-
-		// Add credits based on style complexity
-		const complexStyles = ['orchestral', 'cinematic', 'classical', 'jazz'];
-		if (complexStyles.includes(selectedPrompt.style)) {
-			credits += 10;
-		}
-
-		// Add credits based on tempo (fast is more complex)
-		if (selectedPrompt.tempo === 'fast') {
-			credits += 3;
-		}
-
-		// Add credits based on lyrics type (user lyrics are more complex)
-		if (lyricsType === 'user') {
-			credits += 5;
-		}
-
-		// Return the total estimated credits
+		// Return the fixed credit amount
 		return credits;
 	}
 

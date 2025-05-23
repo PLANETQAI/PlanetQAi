@@ -65,7 +65,11 @@ const DiffrhymGenerator = ({
 	const [generationStartTime, setGenerationStartTime] = useState(null)
 	const [generationEndTime, setGenerationEndTime] = useState(null)
 	const [generationDuration, setGenerationDuration] = useState(null)
-	const [selectedSong, setSelectedSong] = useState(null)
+	// State for generated songs
+	const [generatedSongs, setGeneratedSongs] = useState([])
+	const [selectedSongIndex, setSelectedSongIndex] = useState(0)
+	const [editingSongTitle, setEditingSongTitle] = useState(false)
+	const [editedSongTitle, setEditedSongTitle] = useState('')
 
 	// Style options
 	const styleOptions = [
@@ -119,16 +123,35 @@ const DiffrhymGenerator = ({
 	// Fetch user credits
 	const fetchUserCredits = async () => {
 		try {
-			const response = await fetch('/api/user-credits', {
+			// First check if the user is authenticated by getting the session
+			const sessionResponse = await fetch('/api/auth/session')
+			const sessionData = await sessionResponse.json()
+			
+			// If not authenticated, redirect to login page
+			if (!sessionData || !sessionData.user) {
+				console.log('User not authenticated, redirecting to login')
+				window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+				return
+			}
+			
+			// Now fetch credits with the authenticated session
+			const response = await fetch('/api/credits-api', {
 				method: 'GET',
 				credentials: 'include', // This ensures cookies are sent with the request
 				headers: {
 					'Content-Type': 'application/json'
 				}
 			})
+			
 			if (!response.ok) {
-				throw new Error('Failed to fetch credits')
+				// If unauthorized, redirect to login
+				if (response.status === 401) {
+					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+					return
+				}
+				throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
 			}
+			
 			const data = await response.json()
 			setUserCredits(data)
 			// Notify parent component that credits have been updated
@@ -147,30 +170,11 @@ const DiffrhymGenerator = ({
 
 	// Calculate estimated credits based on prompt complexity and selected options
 	const calculateEstimatedCredits = () => {
-		// Base cost for any generation
-		let credits = 10;
+		// Base cost for any generation - fixed at 10 credits
+		// This ensures users always know exactly how many credits will be used
+		const credits = 10;
 
-		// Add credits based on prompt length
-		const promptLength = selectedPrompt.text.length;
-		if (promptLength > 100) {
-			credits += 5;
-		}
-		if (promptLength > 200) {
-			credits += 5;
-		}
-
-		// Add credits based on style complexity
-		const complexStyles = ['orchestral', 'cinematic', 'classical', 'jazz'];
-		if (complexStyles.includes(selectedPrompt.style)) {
-			credits += 10;
-		}
-
-		// Add credits based on tempo (fast is more complex)
-		if (selectedPrompt.tempo === 'fast') {
-			credits += 3;
-		}
-
-		// Return the total estimated credits
+		// Return the fixed credit amount
 		return credits;
 	}
 
@@ -230,8 +234,11 @@ const DiffrhymGenerator = ({
 	}
 
 	const startPolling = (taskId, songId) => {
-		const interval = setInterval(() => pollForResult(taskId, songId), 3000) // Poll every 3 seconds
+		// Start polling for results every 3 seconds
+		const interval = setInterval(() => pollForResult(taskId, songId), 3000)
 		setPollingInterval(interval)
+		// Record the start time
+		setGenerationStartTime(new Date())
 	}
 
 	const pollForResult = async (taskId, songId) => {
@@ -255,10 +262,14 @@ const DiffrhymGenerator = ({
 				setGeneratedAudio(data.output.audio_url)
 				
 				// Set lyrics if available
+				let lyrics = null
 				if (data.input && data.input.lyrics) {
-					setGeneratedLyrics(data.input.lyrics)
+					lyrics = data.input.lyrics
+					setGeneratedLyrics(lyrics)
 				}
 
+				// Calculate duration
+				let durationSec = 0
 				// Record end time and calculate duration
 				if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
 					const endTime = new Date(data.meta.ended_at)
@@ -266,10 +277,33 @@ const DiffrhymGenerator = ({
 					
 					if (generationStartTime) {
 						const durationMs = endTime - generationStartTime
-						const durationSec = Math.round(durationMs / 1000)
+						durationSec = Math.round(durationMs / 1000)
 						setGenerationDuration(durationSec)
 					}
 				}
+
+				// Create a new song object
+				const newSong = {
+					id: songId || `song-${Date.now()}`,
+					title: selectedPrompt.title || `Generated Song ${generatedSongs.length + 1}`,
+					audioUrl: data.output.audio_url,
+					lyrics: lyrics,
+					coverImageUrl: null, // Diffrhym doesn't provide cover images
+					duration: durationSec,
+					createdAt: new Date().toISOString(),
+					generator: 'diffrhym',
+					prompt: selectedPrompt.text,
+					style: selectedPrompt.style,
+					tempo: selectedPrompt.tempo,
+					mood: selectedPrompt.mood
+				}
+
+				// Add the new song to the list
+				setGeneratedSongs(prevSongs => [...prevSongs, newSong])
+
+				// Select the new song
+				setSelectedSongIndex(generatedSongs.length)
+				setEditedSongTitle(newSong.title)
 
 				// Clear the polling interval
 				if (pollingInterval) {
@@ -294,16 +328,45 @@ const DiffrhymGenerator = ({
 			}
 		} catch (err) {
 			console.error('Error polling for result:', err)
+			setError('Failed to check generation status. Please try again.')
+			setGenerationStatus('failed')
+			setLoading(false)
+
+			// Clear polling interval
+			if (pollingInterval) {
+				clearInterval(pollingInterval)
+				setPollingInterval(null)
+			}
 		}
 	}
 
-	const handleError = error => {
-		if (error.response) {
-			setError(`Server error: ${error.response.status}. ${JSON.stringify(error.response.data)}`)
-		} else if (error.request) {
-			setError('No response received from server')
-		} else {
-			setError(`Error: ${error.message}`)
+	// Function to handle song selection
+	const selectSong = (index) => {
+		setSelectedSongIndex(index)
+		if (generatedSongs[index]) {
+			setGeneratedAudio(generatedSongs[index].audioUrl)
+			setGeneratedLyrics(generatedSongs[index].lyrics)
+			setEditedSongTitle(generatedSongs[index].title)
+		}
+	}
+
+	// Function to handle song title editing
+	const startEditingTitle = () => {
+		setEditingSongTitle(true)
+	}
+
+	// Function to save edited song title
+	const saveEditedTitle = () => {
+		if (generatedSongs.length > 0 && selectedSongIndex >= 0) {
+			setGeneratedSongs(prevSongs => {
+				const updatedSongs = [...prevSongs]
+				updatedSongs[selectedSongIndex] = {
+					...updatedSongs[selectedSongIndex],
+					title: editedSongTitle
+				}
+				return updatedSongs
+			})
+			setEditingSongTitle(false)
 		}
 	}
 
@@ -525,32 +588,107 @@ const DiffrhymGenerator = ({
 				</div>
 			)}
 
-			{generatedAudio && (
-				<div className="mt-6 space-y-4">
-					<div className="flex items-center justify-between">
-						<h4 className="text-white font-semibold">Generated Music:</h4>
-						{coverImage && (
-							<div className="flex items-center gap-2">
-								<img src={coverImage} alt="Cover art" className="w-10 h-10 rounded" />
+			{generatedSongs.length > 0 && (
+				<div className="mt-6 space-y-6">
+					<div>
+						<h4 className="text-white font-semibold mb-3">Your Generated Music:</h4>
+						
+						{/* Song list in a horizontal scrollable row */}
+						<div className="overflow-x-auto pb-2">
+							<div className="flex gap-3 min-w-max">
+								{generatedSongs.map((song, index) => (
+									<div 
+										key={song.id} 
+										className={`flex-shrink-0 w-48 p-3 rounded-lg cursor-pointer transition-all duration-200 ${selectedSongIndex === index ? 'bg-purple-800 ring-2 ring-purple-500' : 'bg-slate-800 hover:bg-slate-700'}`}
+										onClick={() => selectSong(index)}
+									>
+										<div className="flex flex-col h-full">
+											{/* Song thumbnail/placeholder */}
+											<div className="bg-slate-700 h-28 rounded-md flex items-center justify-center mb-2">
+												<Music className="w-10 h-10 text-purple-400 opacity-70" />
+											</div>
+											
+											{/* Song title */}
+											<div className="text-white font-medium text-sm truncate mb-1">
+												{song.title}
+											</div>
+											
+											{/* Song metadata */}
+											<div className="text-gray-400 text-xs flex items-center gap-1">
+												<Clock className="w-3 h-3" />
+												<span>{song.duration ? formatDuration(song.duration) : '~1m'}</span>
+											</div>
+										</div>
+									</div>
+								))}
 							</div>
-						)}
+						</div>
 					</div>
 					
-					<AudioPlayer src={generatedAudio} />
-					
-					{generationDuration && (
-						<div className="flex items-center justify-end gap-2 text-sm text-gray-400">
-							<Clock className="w-4 h-4" />
-							<span>Generation time: {formatDuration(generationDuration)}</span>
-						</div>
-					)}
-					
-					{generatedLyrics && (
-						<div className="mt-4">
-							<h4 className="text-white mb-2 font-semibold">Lyrics:</h4>
-							<div className="bg-slate-700/50 p-3 rounded-md text-gray-300 whitespace-pre-line overflow-y-auto max-h-60">
-								{generatedLyrics}
+					{/* Currently selected song with player */}
+					{generatedSongs[selectedSongIndex] && (
+						<div className="bg-slate-800 p-4 rounded-lg">
+							{/* Song title with edit functionality */}
+							<div className="mb-3">
+								{editingSongTitle ? (
+									<div className="flex gap-2">
+										<input
+											type="text"
+											value={editedSongTitle}
+											onChange={(e) => setEditedSongTitle(e.target.value)}
+											className="bg-slate-700 text-white px-2 py-1 rounded flex-1 focus:outline-none focus:ring-1 focus:ring-purple-500"
+											autoFocus
+										/>
+										<button 
+											onClick={saveEditedTitle}
+											className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm"
+										>
+											Save
+										</button>
+									</div>
+								) : (
+									<div className="flex items-center justify-between">
+										<h3 className="text-white font-semibold text-lg">
+											{generatedSongs[selectedSongIndex].title}
+										</h3>
+										<button 
+											onClick={startEditingTitle}
+											className="text-purple-400 hover:text-purple-300 text-sm"
+										>
+											Edit Title
+										</button>
+									</div>
+								)}
 							</div>
+							
+							{/* Audio player */}
+							<AudioPlayer src={generatedSongs[selectedSongIndex].audioUrl} />
+							
+							{/* Song details */}
+							<div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+								<div className="text-gray-400">
+									<span className="text-gray-500">Style:</span> {generatedSongs[selectedSongIndex].style}
+								</div>
+								<div className="text-gray-400">
+									<span className="text-gray-500">Tempo:</span> {generatedSongs[selectedSongIndex].tempo}
+								</div>
+								<div className="text-gray-400">
+									<span className="text-gray-500">Mood:</span> {generatedSongs[selectedSongIndex].mood}
+								</div>
+								<div className="text-gray-400">
+									<span className="text-gray-500">Created:</span> {new Date(generatedSongs[selectedSongIndex].createdAt).toLocaleDateString()}
+								</div>
+							</div>
+							
+							{/* Lyrics if available */}
+							{generatedSongs[selectedSongIndex].lyrics && (
+								<div className="mt-4">
+									<h4 className="text-white mb-2 font-semibold">Lyrics:</h4>
+									<div className="bg-slate-700/50 p-3 rounded-md text-gray-300 whitespace-pre-line overflow-y-auto max-h-60">
+										{generatedSongs[selectedSongIndex].lyrics}
+									</div>
+								</div>
+							)}
 						</div>
 					)}
 				</div>

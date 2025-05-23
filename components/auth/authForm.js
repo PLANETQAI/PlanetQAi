@@ -20,10 +20,43 @@ export default function AuthForm() {
 	const router = useRouter()
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
+	const [passwordError, setPasswordError] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
 
+	const validatePassword = (password) => {
+		if (password.length < 8) {
+			setPasswordError('Password must be at least 8 characters')
+			return false
+		}
+		
+		// You can add more validation rules here if needed
+		// For example, requiring special characters, numbers, etc.
+		
+		setPasswordError('')
+		return true
+	}
+	
+	// Validate password on change
+	const handlePasswordChange = (e) => {
+		const newPassword = e.target.value
+		setPassword(newPassword)
+		
+		// Only show validation errors after user has typed something
+		if (newPassword.length > 0) {
+			validatePassword(newPassword)
+		} else {
+			setPasswordError('')
+		}
+	}
+	
 	const submitHandler = async event => {
 		event.preventDefault()
+		
+		// Validate password before submission
+		if (!validatePassword(password)) {
+			return // Stop form submission if password is invalid
+		}
+		
 		setIsLoading(true)
 
 		try {
@@ -119,10 +152,13 @@ export default function AuthForm() {
 									autoComplete="current-password"
 									disabled={isLoading}
 									required
-									className="block w-full px-2 rounded-md border-0 py-1.5 text-3ray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+									className={`block w-full px-2 rounded-md border-0 py-1.5 text-3ray-900 shadow-sm ring-1 ring-inset ${passwordError ? 'ring-red-500' : 'ring-gray-300'} placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
 									value={password}
-									onChange={e => setPassword(e.target.value)}
+									onChange={handlePasswordChange}
 								/>
+								{passwordError && (
+									<p className="mt-1 text-sm text-red-500">{passwordError}</p>
+								)}
 							</div>
 						</div>
 

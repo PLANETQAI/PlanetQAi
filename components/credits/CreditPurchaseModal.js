@@ -39,26 +39,46 @@ const CreditPurchaseModal = ({
 
   const fetchCreditPackages = async () => {
     try {
-      const response = await fetch('/api/buy-credits', {
+      // First check if the user is authenticated by getting the session
+      const sessionResponse = await fetch('/api/auth/session')
+      const sessionData = await sessionResponse.json()
+      
+      // If not authenticated, redirect to login page
+      if (!sessionData || !sessionData.user) {
+        console.log('User not authenticated, redirecting to login')
+        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+        return
+      }
+      
+      // Now fetch credit packages with the authenticated session
+      const response = await fetch('/api/credits-api', {
         method: 'GET',
         credentials: 'include', // This ensures cookies are sent with the request
         headers: {
           'Content-Type': 'application/json'
         }
       })
-      if (response.ok) {
-        const data = await response.json()
-        if (data.packages && data.packages.length > 0) {
-          setPackages(data.packages)
-          
-          // Auto-select the smallest package that covers the needed credits
-          if (creditsNeeded > 0) {
-            const suitablePackage = data.packages.find(pkg => pkg.credits >= creditsNeeded)
-            if (suitablePackage) {
-              setSelectedPackage(suitablePackage.id)
-            } else {
-              setSelectedPackage(data.packages[0].id)
-            }
+      
+      if (!response.ok) {
+        // If unauthorized, redirect to login
+        if (response.status === 401) {
+          window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+          return
+        }
+        throw new Error(`Failed to fetch credit packages: ${response.status} ${response.statusText}`)
+      }
+      
+      const data = await response.json()
+      if (data.packages && data.packages.length > 0) {
+        setPackages(data.packages)
+        
+        // Auto-select the smallest package that covers the needed credits
+        if (creditsNeeded > 0) {
+          const suitablePackage = data.packages.find(pkg => pkg.credits >= creditsNeeded)
+          if (suitablePackage) {
+            setSelectedPackage(suitablePackage.id)
+          } else {
+            setSelectedPackage(data.packages[0].id)
           }
         }
       }
@@ -74,7 +94,19 @@ const CreditPurchaseModal = ({
     setError(null)
     
     try {
-      const response = await fetch('/api/buy-credits', {
+      // First check if the user is authenticated by getting the session
+      const sessionResponse = await fetch('/api/auth/session')
+      const sessionData = await sessionResponse.json()
+      
+      // If not authenticated, redirect to login page
+      if (!sessionData || !sessionData.user) {
+        console.log('User not authenticated, redirecting to login')
+        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+        return
+      }
+      
+      // Now process purchase with the authenticated session
+      const response = await fetch('/api/credits-api', {
         method: 'POST',
         credentials: 'include', // This ensures cookies are sent with the request
         headers: {
@@ -88,6 +120,11 @@ const CreditPurchaseModal = ({
       const data = await response.json()
       
       if (!response.ok) {
+        // If unauthorized, redirect to login
+        if (response.status === 401) {
+          window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+          return
+        }
         throw new Error(data.error || 'Failed to create checkout session')
       }
       
