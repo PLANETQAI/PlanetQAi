@@ -1,24 +1,159 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# PlanetQAi - AI-Powered Music Generation Platform
 
-## Getting Started
+![PlanetQAi Logo](/public/images/logo.png)
 
-First, run the development server:
+PlanetQAi is a comprehensive platform that combines AI music generation, video content, and interactive features to create a unique digital experience. The platform allows users to generate AI music using different models, manage credits, and access various multimedia content through an intuitive interface.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+## 🚀 Features
+
+### 🎵 AI Music Generation
+- **Multiple AI Models**: Generate music using Diffrhym and Suno AI models
+- **Customizable Parameters**: Control style, mood, and other aspects of music generation
+- **Credit System**: Pay-per-generation using a flexible credit system
+
+### 🎮 Interactive UI
+- **Swipeable Cards**: Tinder-like card interface for navigating between different sections
+- **Responsive Design**: Optimized for all device sizes
+- **Animated Elements**: Engaging animations and transitions
+
+### 💳 Payment & Credits
+- **Stripe Integration**: Secure payment processing for credit purchases
+- **Subscription Plans**: Various subscription tiers with different benefits
+- **Credit Management**: Track and manage user credits for various actions
+
+### 🔐 User Authentication
+- **Next-Auth Integration**: Secure authentication system
+- **User Profiles**: Personalized user experiences
+- **Role-Based Access**: Different permissions for different user types
+
+### 📱 Media Content
+- **Video Player**: Custom video player for Planet Q content
+- **Radio Integration**: Stream Planet Q Radio directly in the app
+- **Gallery**: Browse and manage generated content
+
+## 🏗️ Project Structure
+
+### Core Components
+
+#### Frontend
+- **`/app`**: Main application pages and layouts using Next.js App Router
+  - `/page.jsx`: Landing page with swipeable cards
+  - `/payment`: Subscription and credit purchase page
+  - `/studio`: Music generation studio
+  - `/gallery`: User's generated content
+
+- **`/components`**: Reusable UI components
+  - `/player`: Music player and generation components
+    - `DiffrhymGenerator.js`: Interface for Diffrhym AI model
+    - `SunoGenerator.js`: Interface for Suno AI model
+  - `/credits`: Credit management components
+  - `/ui`: General UI components
+
+#### Backend (API Routes)
+- **`/app/api`**: Server-side API endpoints
+  - `/music`: Music generation endpoints
+    - `/generate`: Diffrhym generation endpoint
+    - `/generate-suno`: Suno generation endpoint
+  - `/credits`: Credit management endpoints
+  - `/subscriptions`: Stripe subscription management
+  - `/auth`: Authentication endpoints
+
+#### Utilities
+- **`/lib`**: Utility functions and shared logic
+  - `credit-stripe-utils.js`: Credit calculation and management
+  - `auth.js`: Authentication configuration
+  - `prisma.js`: Database client
+
+## 🛠️ Technology Stack
+
+- **Frontend**: Next.js, React, TailwindCSS
+- **Backend**: Next.js API Routes, Node.js
+- **Database**: PostgreSQL with Prisma ORM
+- **Authentication**: NextAuth.js
+- **Payment Processing**: Stripe
+- **AI Integration**: Custom APIs for Diffrhym and Suno
+- **Deployment**: Vercel/Netlify
+
+## 🚦 Getting Started
+
+### Prerequisites
+- Node.js (v14 or higher)
+- npm or yarn
+- PostgreSQL database
+- Stripe account for payment processing
+
+### Environment Variables
+Create a `.env.local` file with the following variables:
+
+```
+# Database
+DATABASE_URL="postgresql://username:password@localhost:5432/planetqai"
+
+# Authentication
+NEXTAUTH_URL=http://localhost:3000
+NEXTAUTH_SECRET=your-secret-key
+
+# Stripe
+NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY=pk_test_your_key
+STRIPE_SECRET_KEY=sk_test_your_key
+
+# AI Services
+DIFFRHYM_API_KEY=your-diffrhym-key
+SUNO_API_KEY=your-suno-key
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+### Installation
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+```bash
+# Clone the repository
+git clone https://github.com/yourusername/planetqai.git
+cd planetqai
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+# Install dependencies
+npm install
+
+# Set up the database
+npx prisma migrate dev
+
+# Run the development server
+npm run dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the application.
+
+## 📊 Credit System
+
+The platform uses a credit-based system for AI music generation:
+
+- **Base Credits**: Each user starts with a set number of free credits
+- **Credit Calculation**: 
+  - Diffrhym: 50 credits base + 4 credits per 10 words over 200
+  - Suno: 80 credits base + 5 credits per 10 words over 200
+- **Credit Purchase**: Users can purchase additional credits through the Stripe integration
+
+## 🔄 Deployment
+
+The application is optimized for deployment on Vercel or similar platforms:
+
+```bash
+# Build for production
+npm run build
+
+# Start production server
+npm start
+```
+
+## 📝 License
+
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 👥 Contributors
+
+- Planet Q Productions Team
+
+## 📞 Support
+
+For support, email support@planetqproductions.com or visit our website at [planetqproductions.com](https://planetqproductions.com).
 
 The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 

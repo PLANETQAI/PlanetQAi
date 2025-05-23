@@ -84,12 +84,20 @@ const CreditPurchaseModal = ({
         throw new Error(data.error || 'Failed to create checkout session')
       }
       
-      // Redirect to Stripe checkout
-      router.push(data.url)
+      if (data.url) {
+        // Store the session ID in localStorage for later verification
+        if (data.sessionId) {
+          localStorage.setItem('stripeSessionId', data.sessionId)
+        }
+        
+        // Redirect to Stripe checkout
+        window.location.href = data.url // Using window.location for a full page redirect
+      } else {
+        throw new Error('No checkout URL returned from the server')
+      }
     } catch (error) {
       console.error('Purchase error:', error)
       setError(error.message || 'Failed to process purchase')
-    } finally {
       setLoading(false)
     }
   }

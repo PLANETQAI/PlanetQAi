@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
+import Stripe from "stripe";
+
+// Initialize Stripe with the secret key
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY);
 
 const prisma = new PrismaClient();
 
@@ -57,48 +61,61 @@ export async function POST(req) {
       );
     }
 
-    // In a real implementation, you would create a Stripe checkout session here
-    // For now, we'll just add the credits directly to the user's account for testing
-
-    // Get current user credits
+    // Get user information
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { credits: true },
+      select: { id: true, email: true, name: true, credits: true },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Add credits to user account
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        credits: user.credits + selectedPackage.credits,
-      },
+    // Create metadata for the purchase
+    const metadata = {
+      userId: user.id,
+      packageId: selectedPackage.id,
+      credits: selectedPackage.credits.toString(),
+      packageName: selectedPackage.name,
+      type: 'credit_purchase'
+    };
+
+    // Create a Stripe checkout session
+    const stripeSession = await stripe.checkout.sessions.create({
+      payment_method_types: ["card"],
+      line_items: [
+        {
+          price_data: {
+            currency: "usd",
+            product_data: {
+              name: `${selectedPackage.name} - ${selectedPackage.credits} Credits`,
+              description: `Purchase ${selectedPackage.credits} credits for PlanetQAi`,
+              images: ["https://planetqproductions.com/images/logo.png"],
+            },
+            unit_amount: selectedPackage.price * 100, // Stripe uses cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: "payment",
+      success_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/payment?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/payment?canceled=true`,
+      customer_email: user.email,
+      metadata: metadata,
     });
 
-    // Create a credit log entry
-    await prisma.creditLog.create({
-      data: {
-        userId,
-        amount: selectedPackage.credits,
-        balanceBefore: user.credits,
-        balanceAfter: updatedUser.credits,
-        description: `Purchased ${selectedPackage.name} (${selectedPackage.credits} credits)`,
-      },
-    });
-
-    // In a real implementation, you would return the Stripe checkout URL
-    // For now, we'll just return success
+    // Return the Stripe checkout URL
     return NextResponse.json({
       success: true,
-      message: "Credits added successfully",
-      newBalance: updatedUser.credits,
-      // In a real implementation: url: stripeCheckoutSession.url
+      url: stripeSession.url,
+      sessionId: stripeSession.id
     });
   } catch (error) {
-    console.error("Credit purchase error:", error);
+    console.error("Credit purchase error:", error.message);
+    return NextResponse.json(
+      { error: "Failed to process credit purchase", details: error.message },
+      { status: 500 }
+    );
     return NextResponse.json(
       { error: "Failed to process credit purchase" },
       { status: 500 }
