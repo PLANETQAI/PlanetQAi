@@ -97,8 +97,24 @@ export async function GET(req) {
           }
         }
         
+        // Debug log before update
+        console.log('Updating song in database:', {
+          songId,
+          audioUrl,
+          lyrics: lyrics ? 'Has lyrics' : 'No lyrics',
+          duration: actualDuration,
+          thumbnailUrl: coverImageUrl ? 'Has thumbnail' : 'No thumbnail',
+        });
+        
+        // Check if song exists before update
+        const songBeforeUpdate = await prisma.song.findUnique({
+          where: { id: songId },
+        });
+        
+        console.log('Song before update:', songBeforeUpdate);
+        
         // Update the song with the audio URL and other details
-        await prisma.song.update({
+        const updatedSong = await prisma.song.update({
           where: { id: songId },
           data: {
             audioUrl,
@@ -108,8 +124,13 @@ export async function GET(req) {
             thumbnailUrl: coverImageUrl,
             completedAt: new Date(),
             generationTime,
+            provider: 'diffrhym', // Explicitly set provider
+            tags: [...(songBeforeUpdate.tags || []), 'updated_by_status_endpoint'],
           },
         });
+        
+        // Debug log after update
+        console.log('Song updated successfully:', updatedSong);
         
         // Add the song to the user's gallery
         await prisma.gallery.create({

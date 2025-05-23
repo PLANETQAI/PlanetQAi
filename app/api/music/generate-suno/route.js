@@ -118,6 +118,11 @@ export async function POST(req) {
       }
     };
 
+    // Log the request details for debugging
+    console.log('Suno API request URL:', url);
+    console.log('Suno API request payload:', JSON.stringify(payload, null, 2));
+    console.log('Suno API key available:', !!apiKey);
+    
     // Make the API call to PiAPI Suno
     const response = await axios.post(url, payload, {
       headers: {
@@ -166,9 +171,37 @@ export async function POST(req) {
     });
   } catch (error) {
     console.error("Suno music generation error:", error);
-    return NextResponse.json(
-      { error: "Failed to generate music with Suno" },
-      { status: 500 }
-    );
+    
+    // Log more detailed error information
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      console.error("Error response data:", error.response.data);
+      console.error("Error response status:", error.response.status);
+      console.error("Error response headers:", error.response.headers);
+      
+      return NextResponse.json(
+        { 
+          error: "Failed to generate music with Suno", 
+          details: error.response.data,
+          status: error.response.status 
+        },
+        { status: 500 }
+      );
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error("Error request:", error.request);
+      return NextResponse.json(
+        { error: "No response received from Suno API" },
+        { status: 500 }
+      );
+    } else {
+      // Something happened in setting up the request that triggered an Error
+      console.error("Error message:", error.message);
+      return NextResponse.json(
+        { error: "Failed to generate music with Suno", message: error.message },
+        { status: 500 }
+      );
+    }
   }
 }

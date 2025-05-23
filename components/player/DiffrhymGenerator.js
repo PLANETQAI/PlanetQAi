@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
 import AudioPlayer from './audioPlayer'
+import SongList from './SongList'
+import SongDetail from './SongDetail'
 import { TbInfoHexagonFilled } from 'react-icons/tb'
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { normalizeValue } from '@/utils/functions'
@@ -106,12 +108,116 @@ const DiffrhymGenerator = ({
 		setIsVisible(!isVisible)
 	}
 
-	// Fetch user credits on component mount
+	// Fetch user credits and songs on component mount
 	useEffect(() => {
 		if (session?.user) {
 			fetchUserCredits()
+			fetchUserSongs()
 		}
 	}, [session])
+	
+	// Fetch user's songs from the database
+	const fetchUserSongs = async () => {
+		console.log('Starting to fetch Diffrhym songs...')
+		try {
+			// First check if the user is authenticated by getting the session
+			const sessionResponse = await fetch('/api/auth/session')
+			const sessionData = await sessionResponse.json()
+			
+			if (!sessionData || !sessionData.user) {
+				console.log('User not authenticated, skipping song fetch')
+				return
+			}
+			
+			// Fetch all user songs and filter locally
+			const response = await fetch('/api/songs', {
+				method: 'GET',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			
+			if (!response.ok) {
+				throw new Error(`Failed to fetch songs: ${response.status} ${response.statusText}`)
+			}
+			
+			const data = await response.json()
+			console.log('All songs from API:', data)
+			if (data.songs && Array.isArray(data.songs)) {
+				// Filter songs for Diffrhym
+				const diffrhymSongs = data.songs.filter(song => {
+					// Check provider field
+					if (song.provider === 'diffrhym') return true;
+					
+					// Check tags array
+					if (song.tags && Array.isArray(song.tags)) {
+						return song.tags.some(tag => tag === 'provider:diffrhym');
+					}
+					
+					return false;
+				});
+				
+				console.log(`Filtered ${diffrhymSongs.length} Diffrhym songs from ${data.songs.length} total songs`);
+				
+				// Sort songs by creation date (newest first)
+				const sortedSongs = diffrhymSongs.sort((a, b) => {
+					return new Date(b.createdAt) - new Date(a.createdAt)
+				})
+				
+				console.log('Raw songs from database:', sortedSongs)
+				
+				// Map database songs to the format used in the component
+				const formattedSongs = sortedSongs.map(song => {
+					// Extract provider, style, tempo, mood from tags if available
+					let provider = 'diffrhym';
+					let style = 'pop';
+					let tempo = 'medium';
+					let mood = 'neutral';
+					
+					if (song.tags && Array.isArray(song.tags)) {
+						song.tags.forEach(tag => {
+							if (tag.startsWith('provider:')) {
+								provider = tag.split(':')[1];
+							} else if (tag.startsWith('style:')) {
+								style = tag.split(':')[1];
+							} else if (tag.startsWith('tempo:')) {
+								tempo = tag.split(':')[1];
+							} else if (tag.startsWith('mood:')) {
+								mood = tag.split(':')[1];
+							}
+						});
+					}
+					
+					return {
+						id: song.id,
+						title: song.title || 'Untitled Song',
+						audioUrl: song.audioUrl,
+						lyrics: song.lyrics,
+						coverImageUrl: song.thumbnailUrl || `https://via.placeholder.com/300?text=${encodeURIComponent(song.title || 'Untitled')}`,
+						duration: song.duration || 0,
+						createdAt: song.createdAt,
+						generator: provider,
+						prompt: song.prompt,
+						style: song.style || style,
+						tempo: song.tempo || tempo,
+						mood: song.mood || mood
+					};
+				})
+				
+				console.log('Formatted songs for UI:', formattedSongs)
+				setGeneratedSongs(formattedSongs)
+				
+				// If songs exist, select the first (newest) one
+				if (formattedSongs.length > 0) {
+					console.log('Selecting first song:', formattedSongs[0])
+					selectSong(0)
+				}
+			}
+		} catch (error) {
+			console.error('Error fetching user songs:', error)
+		}
+	}
 
 	// Cleanup polling interval on unmount
 	useEffect(() => {
@@ -288,14 +394,13 @@ const DiffrhymGenerator = ({
 					title: selectedPrompt.title || `Generated Song ${generatedSongs.length + 1}`,
 					audioUrl: data.output.audio_url,
 					lyrics: lyrics,
-					coverImageUrl: null, // Diffrhym doesn't provide cover images
 					duration: durationSec,
 					createdAt: new Date().toISOString(),
-					generator: 'diffrhym',
+					style: selectedPrompt.style || 'pop',
+					tempo: selectedPrompt.tempo || 'medium',
+					mood: selectedPrompt.mood || 'neutral',
 					prompt: selectedPrompt.text,
-					style: selectedPrompt.style,
-					tempo: selectedPrompt.tempo,
-					mood: selectedPrompt.mood
+					generator: 'diffrhym'
 				}
 
 				// Add the new song to the list
@@ -591,105 +696,43 @@ const DiffrhymGenerator = ({
 			{generatedSongs.length > 0 && (
 				<div className="mt-6 space-y-6">
 					<div>
-						<h4 className="text-white font-semibold mb-3">Your Generated Music:</h4>
+						<h4 className="text-white font-semibold mb-3">Your Diffrhym Songs</h4>
 						
-						{/* Song list in a horizontal scrollable row */}
-						<div className="overflow-x-auto pb-2">
-							<div className="flex gap-3 min-w-max">
-								{generatedSongs.map((song, index) => (
-									<div 
-										key={song.id} 
-										className={`flex-shrink-0 w-48 p-3 rounded-lg cursor-pointer transition-all duration-200 ${selectedSongIndex === index ? 'bg-purple-800 ring-2 ring-purple-500' : 'bg-slate-800 hover:bg-slate-700'}`}
-										onClick={() => selectSong(index)}
-									>
-										<div className="flex flex-col h-full">
-											{/* Song thumbnail/placeholder */}
-											<div className="bg-slate-700 h-28 rounded-md flex items-center justify-center mb-2">
-												<Music className="w-10 h-10 text-purple-400 opacity-70" />
-											</div>
-											
-											{/* Song title */}
-											<div className="text-white font-medium text-sm truncate mb-1">
-												{song.title}
-											</div>
-											
-											{/* Song metadata */}
-											<div className="text-gray-400 text-xs flex items-center gap-1">
-												<Clock className="w-3 h-3" />
-												<span>{song.duration ? formatDuration(song.duration) : '~1m'}</span>
-											</div>
-										</div>
-									</div>
-								))}
-							</div>
-						</div>
+						{/* Use the reusable SongList component */}
+						<SongList 
+							songs={generatedSongs} 
+							selectedSongIndex={selectedSongIndex} 
+							onSelectSong={selectSong} 
+							generator="diffrhym" 
+						/>
 					</div>
 					
-					{/* Currently selected song with player */}
+					{/* Use the reusable SongDetail component */}
 					{generatedSongs[selectedSongIndex] && (
-						<div className="bg-slate-800 p-4 rounded-lg">
-							{/* Song title with edit functionality */}
-							<div className="mb-3">
-								{editingSongTitle ? (
-									<div className="flex gap-2">
-										<input
-											type="text"
-											value={editedSongTitle}
-											onChange={(e) => setEditedSongTitle(e.target.value)}
-											className="bg-slate-700 text-white px-2 py-1 rounded flex-1 focus:outline-none focus:ring-1 focus:ring-purple-500"
-											autoFocus
-										/>
-										<button 
-											onClick={saveEditedTitle}
-											className="bg-purple-600 text-white px-3 py-1 rounded hover:bg-purple-700 text-sm"
-										>
-											Save
-										</button>
-									</div>
-								) : (
-									<div className="flex items-center justify-between">
-										<h3 className="text-white font-semibold text-lg">
-											{generatedSongs[selectedSongIndex].title}
-										</h3>
-										<button 
-											onClick={startEditingTitle}
-											className="text-purple-400 hover:text-purple-300 text-sm"
-										>
-											Edit Title
-										</button>
-									</div>
-								)}
-							</div>
-							
-							{/* Audio player */}
-							<AudioPlayer src={generatedSongs[selectedSongIndex].audioUrl} />
-							
-							{/* Song details */}
-							<div className="mt-3 grid grid-cols-2 gap-2 text-sm">
-								<div className="text-gray-400">
-									<span className="text-gray-500">Style:</span> {generatedSongs[selectedSongIndex].style}
-								</div>
-								<div className="text-gray-400">
-									<span className="text-gray-500">Tempo:</span> {generatedSongs[selectedSongIndex].tempo}
-								</div>
-								<div className="text-gray-400">
-									<span className="text-gray-500">Mood:</span> {generatedSongs[selectedSongIndex].mood}
-								</div>
-								<div className="text-gray-400">
-									<span className="text-gray-500">Created:</span> {new Date(generatedSongs[selectedSongIndex].createdAt).toLocaleDateString()}
-								</div>
-							</div>
-							
-							{/* Lyrics if available */}
-							{generatedSongs[selectedSongIndex].lyrics && (
-								<div className="mt-4">
-									<h4 className="text-white mb-2 font-semibold">Lyrics:</h4>
-									<div className="bg-slate-700/50 p-3 rounded-md text-gray-300 whitespace-pre-line overflow-y-auto max-h-60">
-										{generatedSongs[selectedSongIndex].lyrics}
-									</div>
-								</div>
-							)}
-						</div>
+						<SongDetail 
+							song={generatedSongs[selectedSongIndex]} 
+							onEditTitle={(newTitle) => {
+								// Update the song title in the state
+								const updatedSongs = [...generatedSongs]
+								updatedSongs[selectedSongIndex] = {
+									...updatedSongs[selectedSongIndex],
+									title: newTitle
+								}
+								setGeneratedSongs(updatedSongs)
+								
+								// Update the song title in the database
+								const songId = updatedSongs[selectedSongIndex].id
+								fetch(`/api/songs/${songId}`, {
+									method: 'PATCH',
+									headers: {
+										'Content-Type': 'application/json'
+									},
+									body: JSON.stringify({ title: newTitle })
+								}).catch(error => {
+									console.error('Error updating song title:', error)
+								})
+							}} 
+						/>
 					)}
 				</div>
 			)}

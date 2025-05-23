@@ -4,6 +4,8 @@ import React, { useState, useEffect } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
 import AudioPlayer from './audioPlayer'
+import SongList from './SongList'
+import SongDetail from './SongDetail'
 import { TbInfoHexagonFilled } from 'react-icons/tb'
 import { usePathname, useSearchParams, useRouter } from 'next/navigation'
 import { normalizeValue } from '@/utils/functions'
@@ -113,12 +115,112 @@ const SunoGenerator = ({
 		setIsVisible(!isVisible)
 	}
 
-	// Fetch user credits on component mount
+	// Fetch user credits and songs on component mount
 	useEffect(() => {
 		if (session?.user) {
 			fetchUserCredits()
+			fetchUserSongs()
 		}
 	}, [session])
+	
+	// Fetch user's songs from the database
+	const fetchUserSongs = async () => {
+		console.log('Starting to fetch Suno songs...')
+		try {
+			// First check if the user is authenticated by getting the session
+			const sessionResponse = await fetch('/api/auth/session')
+			const sessionData = await sessionResponse.json()
+			
+			if (!sessionData || !sessionData.user) {
+				console.log('User not authenticated, skipping song fetch')
+				return
+			}
+			
+			// Fetch all user songs and filter locally
+			const response = await fetch('/api/songs', {
+				method: 'GET',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			
+			if (!response.ok) {
+				throw new Error(`Failed to fetch songs: ${response.status} ${response.statusText}`)
+			}
+			
+			const data = await response.json()
+			console.log('All songs from API:', data)
+			if (data.songs && Array.isArray(data.songs)) {
+				// Filter songs for Suno
+				const sunoSongs = data.songs.filter(song => {
+					// Check provider field
+					if (song.provider === 'suno') return true;
+					
+					// Check tags array
+					if (song.tags && Array.isArray(song.tags)) {
+						return song.tags.some(tag => tag === 'provider:suno');
+					}
+					
+					return false;
+				});
+				
+				console.log(`Filtered ${sunoSongs.length} Suno songs from ${data.songs.length} total songs`);
+				
+				// Sort songs by creation date (newest first)
+				const sortedSongs = sunoSongs.sort((a, b) => {
+					return new Date(b.createdAt) - new Date(a.createdAt)
+				})
+				
+				// Map database songs to the format used in the component
+				const formattedSongs = sortedSongs.map(song => {
+					// Extract provider, style, tempo, mood from tags if available
+					let provider = 'suno';
+					let style = 'pop';
+					let tempo = 'medium';
+					let mood = 'neutral';
+					
+					if (song.tags && Array.isArray(song.tags)) {
+						song.tags.forEach(tag => {
+							if (tag.startsWith('provider:')) {
+								provider = tag.split(':')[1];
+							} else if (tag.startsWith('style:')) {
+								style = tag.split(':')[1];
+							} else if (tag.startsWith('tempo:')) {
+								tempo = tag.split(':')[1];
+							} else if (tag.startsWith('mood:')) {
+								mood = tag.split(':')[1];
+							}
+						});
+					}
+					
+					return {
+						id: song.id,
+						title: song.title || 'Untitled Song',
+						audioUrl: song.audioUrl,
+						lyrics: song.lyrics,
+						coverImageUrl: song.thumbnailUrl || song.coverImageUrl,
+						duration: song.duration || 0,
+						createdAt: song.createdAt,
+						generator: provider,
+						prompt: song.prompt,
+						style: song.style || style,
+						tempo: song.tempo || tempo,
+						mood: song.mood || mood
+					};
+				})
+				
+				setGeneratedSongs(formattedSongs)
+				
+				// If songs exist, select the first (newest) one
+				if (formattedSongs.length > 0) {
+					selectSong(0)
+				}
+			}
+		} catch (error) {
+			console.error('Error fetching user songs:', error)
+		}
+	}
 
 	// Cleanup polling interval on unmount
 	useEffect(() => {
@@ -565,75 +667,46 @@ const SunoGenerator = ({
 				</div>
 			)}
 
-			{generatedAudio && (
-				<div className="mt-6 space-y-4">
-					{/* Song selection tabs if multiple songs are available */}
-					{generatedSongs && generatedSongs.length > 1 && (
-						<div className="mb-4">
-							<h4 className="text-white font-semibold mb-2">Choose a version:</h4>
-							<div className="flex gap-2 overflow-x-auto pb-2">
-								{generatedSongs.map((song, index) => (
-									<button
-										key={song.id}
-										className={`px-4 py-2 rounded-md text-sm font-medium whitespace-nowrap flex items-center gap-2 ${index === selectedSongIndex ? 'bg-blue-600 text-white' : 'bg-blue-900/50 text-blue-200 hover:bg-blue-800/50'}`}
-										onClick={() => selectSong(index)}
-									>
-										<span className="h-2 w-2 rounded-full bg-blue-400"></span>
-										{song.title || `Version ${index + 1}`}
-									</button>
-								))}
-							</div>
-						</div>
-					)}
-					
-					{/* Song details and player */}
-					<div className="flex items-center justify-between">
-						<h4 className="text-white font-semibold">
-							{generatedSongs && generatedSongs[selectedSongIndex]?.title ? 
-								generatedSongs[selectedSongIndex].title : 'Generated Music'}
-						</h4>
-						{coverImage && (
-							<div className="flex items-center gap-2">
-								<img src={coverImage} alt="Cover art" className="w-12 h-12 rounded" />
-							</div>
-						)}
+			{generatedSongs && generatedSongs.length > 0 && (
+				<div className="mt-6 space-y-6">
+					<div>
+						<h4 className="text-white font-semibold mb-3">Your Suno Songs</h4>
+						
+						{/* Use the reusable SongList component */}
+						<SongList 
+							songs={generatedSongs} 
+							selectedSongIndex={selectedSongIndex} 
+							onSelectSong={selectSong} 
+							generator="suno" 
+						/>
 					</div>
 					
-					<AudioPlayer src={generatedAudio} />
-					
-					{generationDuration && (
-						<div className="flex items-center justify-end gap-2 text-sm text-gray-400">
-							<Clock className="w-4 h-4" />
-							<span>Generation time: {formatDuration(generationDuration)}</span>
-						</div>
-					)}
-					
-					{/* Song tags if available */}
-					{generatedSongs && generatedSongs[selectedSongIndex]?.tags && generatedSongs[selectedSongIndex].tags.length > 0 && (
-						<div className="flex flex-wrap gap-1 mt-2">
-							{generatedSongs[selectedSongIndex].tags.map((tag, index) => (
-								<span key={index} className="text-xs bg-blue-900/50 text-blue-200 px-2 py-1 rounded-full">
-									{tag}
-								</span>
-							))}
-						</div>
-					)}
-					
-					{/* Larger cover image */}
-					{coverImage && (
-						<div className="mt-4">
-							<img src={coverImage} alt="Cover art" className="w-full max-w-sm mx-auto rounded-md shadow-lg" />
-						</div>
-					)}
-					
-					{/* Lyrics with better formatting */}
-					{generatedLyrics && (
-						<div className="mt-4">
-							<h4 className="text-white mb-2 font-semibold">Lyrics:</h4>
-							<div className="bg-blue-700/50 p-4 rounded-md text-gray-300 whitespace-pre-line overflow-y-auto max-h-80">
-								{generatedLyrics}
-							</div>
-						</div>
+					{/* Use the reusable SongDetail component */}
+					{generatedSongs[selectedSongIndex] && (
+						<SongDetail 
+							song={generatedSongs[selectedSongIndex]} 
+							onEditTitle={(newTitle) => {
+								// Update the song title in the state
+								const updatedSongs = [...generatedSongs]
+								updatedSongs[selectedSongIndex] = {
+									...updatedSongs[selectedSongIndex],
+									title: newTitle
+								}
+								setGeneratedSongs(updatedSongs)
+								
+								// Update the song title in the database
+								const songId = updatedSongs[selectedSongIndex].id
+								fetch(`/api/songs/${songId}`, {
+									method: 'PATCH',
+									headers: {
+										'Content-Type': 'application/json'
+									},
+									body: JSON.stringify({ title: newTitle })
+								}).catch(error => {
+									console.error('Error updating song title:', error)
+								})
+							}} 
+						/>
 					)}
 				</div>
 			)}
