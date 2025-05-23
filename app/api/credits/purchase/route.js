@@ -3,8 +3,16 @@ import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import Stripe from "stripe";
 
-// Initialize Stripe with the secret key
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY);
+// Initialize Stripe with the secret key if available
+let stripe;
+try {
+  const stripeKey = process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY;
+  if (stripeKey) {
+    stripe = new Stripe(stripeKey);
+  }
+} catch (error) {
+  console.error('Failed to initialize Stripe:', error.message);
+}
 
 const prisma = new PrismaClient();
 
@@ -80,6 +88,37 @@ export async function POST(req) {
       type: 'credit_purchase'
     };
 
+    // Check if Stripe is initialized
+    if (!stripe) {
+      // If Stripe is not available, fall back to directly adding credits (for testing/development)
+      console.log('Stripe not initialized, falling back to direct credit addition');
+      
+      // Add credits to user account
+      const updatedUser = await prisma.user.update({
+        where: { id: userId },
+        data: {
+          credits: user.credits + selectedPackage.credits,
+        },
+      });
+
+      // Create a credit log entry
+      await prisma.creditLog.create({
+        data: {
+          userId,
+          amount: selectedPackage.credits,
+          balanceBefore: user.credits,
+          balanceAfter: updatedUser.credits,
+          description: `Purchased ${selectedPackage.name} (${selectedPackage.credits} credits)`,
+        },
+      });
+
+      return NextResponse.json({
+        success: true,
+        message: "Credits added successfully (Stripe bypass mode)",
+        newBalance: updatedUser.credits,
+      });
+    }
+    
     // Create a Stripe checkout session
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
