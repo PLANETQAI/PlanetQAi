@@ -11,7 +11,7 @@ export default function HeadContent({ session }) {
 					<div className="bg-transparent flex gap-4 flex-col justify-center items-center">
 						<Image
 							src="/images/client.png"
-							alt="Your Logo"
+							alt="Logo"
 							width={50}
 							height={120}
 							className="rounded-2xl bg-transparent"

@@ -5,7 +5,7 @@ import Image from 'next/image'
 import 'slick-carousel/slick/slick.css'
 import 'slick-carousel/slick/slick-theme.css'
 import Link from 'next/link'
-import StarsCanvas from '@/components/canvas/stars'
+// Removed Three.js import to fix rendering issues
 import CircleTypeText from '@/components/circleTypeText'
 import { cn } from '@/lib/utils'
 
@@ -390,7 +390,7 @@ const RootPage = () => {
 
 	// SWAPPED: Studio moved to productions position (was fifthLink)
 	const studioCard = (
-		<Link href={'https://planetia-tau.vercel.app/'} className="p-1">
+		<Link href={'/home'} className="p-1">
 			<div
 				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
 				onClick={preventPropagation}>
@@ -441,7 +441,8 @@ const RootPage = () => {
 						showTime ? 'opacity-0' : 'opacity-100'
 					)}
 				/>
-				<StarsCanvas />
+				{/* Replaced Three.js stars with a simple gradient background */}
+				<div className="absolute inset-0 bg-gradient-to-b from-[#0a0a1a] via-[#131347] to-[#050816] z-[-1]"></div>
 
 				{/* Content container */}
 				<div className="w-full max-w-md mx-auto relative px-4 pt-16 pb-16">

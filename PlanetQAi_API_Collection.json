@@ -1,0 +1,379 @@
+{
+  "info": {
+    "_postman_id": "c5f8e5a7-3b4d-4b5c-9e8a-f5e8d3c7b9a0",
+    "name": "PlanetQAi API Collection",
+    "description": "A collection of API endpoints for testing the PlanetQAi music generation application",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Authentication",
+      "item": [
+        {
+          "name": "Get CSRF Token",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/csrf",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "csrf"
+              ]
+            },
+            "description": "Get a CSRF token for authentication requests"
+          },
+          "response": [],
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "exec": [
+                  "const jsonData = pm.response.json();\n",
+                  "pm.environment.set(\"csrfToken\", jsonData.csrfToken);\n",
+                  "console.log(\"CSRF Token set to: \" + jsonData.csrfToken);\n"
+                ],
+                "type": "text/javascript"
+              }
+            }
+          ]
+        },
+        {
+          "name": "Sign Up",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"fullName\": \"Test User\",\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/signup",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "signup"
+              ]
+            },
+            "description": "Create a new user account with 50 default credits"
+          },
+          "response": []
+        },
+        {
+          "name": "Sign In",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"email\": \"test@example.com\",\n    \"password\": \"password123\",\n    \"csrfToken\": \"{{csrfToken}}\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/auth/callback/credentials",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "auth",
+                "callback",
+                "credentials"
+              ]
+            },
+            "description": "Sign in to an existing user account"
+          },
+          "response": []
+        }
+      ],
+      "description": "Authentication-related endpoints"
+    },
+    {
+      "name": "Credits",
+      "item": [
+        {
+          "name": "Get User Credits",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/music/credits",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "music",
+                "credits"
+              ]
+            },
+            "description": "Get the current user's credit information"
+          },
+          "response": []
+        },
+        {
+          "name": "Get Credit Packages",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/credits/purchase",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "credits",
+                "purchase"
+              ]
+            },
+            "description": "Get available credit packages for purchase"
+          },
+          "response": []
+        },
+        {
+          "name": "Purchase Credits",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"packageId\": \"basic\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/credits/purchase",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "credits",
+                "purchase"
+              ]
+            },
+            "description": "Purchase a credit package"
+          },
+          "response": []
+        }
+      ],
+      "description": "Credit management endpoints"
+    },
+    {
+      "name": "Diffrhym Music Generation",
+      "item": [
+        {
+          "name": "Generate Music (Diffrhym)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"prompt\": \"A catchy pop song about artificial intelligence helping humans create music\",\n    \"title\": \"AI Symphony\",\n    \"tags\": \"Modern, AI, Pop\",\n    \"style\": \"pop\",\n    \"tempo\": \"medium\",\n    \"mood\": \"happy\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/music/generate",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "music",
+                "generate"
+              ]
+            },
+            "description": "Generate music using the Diffrhym API"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Music Generation Status (Diffrhym)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/music/status?taskId={{taskId}}&songId={{songId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "music",
+                "status"
+              ],
+              "query": [
+                {
+                  "key": "taskId",
+                  "value": "{{taskId}}"
+                },
+                {
+                  "key": "songId",
+                  "value": "{{songId}}"
+                }
+              ]
+            },
+            "description": "Check the status of a music generation task for Diffrhym"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for Diffrhym music generation"
+    },
+    {
+      "name": "Suno Music Generation",
+      "item": [
+        {
+          "name": "Generate Music (Suno)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"prompt\": \"A catchy pop song about artificial intelligence helping humans create music\",\n    \"title\": \"AI Symphony\",\n    \"tags\": \"Modern, AI, Pop\",\n    \"style\": \"pop\",\n    \"tempo\": \"medium\",\n    \"mood\": \"happy\",\n    \"lyricsType\": \"generate\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/music/generate-suno",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "music",
+                "generate-suno"
+              ]
+            },
+            "description": "Generate music using the Suno API"
+          },
+          "response": []
+        },
+        {
+          "name": "Generate Music with Custom Lyrics (Suno)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n    \"prompt\": \"A catchy pop song\",\n    \"title\": \"AI Symphony\",\n    \"tags\": \"Modern, AI, Pop\",\n    \"style\": \"pop\",\n    \"tempo\": \"medium\",\n    \"mood\": \"happy\",\n    \"lyricsType\": \"user\",\n    \"lyrics\": \"[Verse]\\nIn the digital age we thrive,\\nAI and humans side by side.\\nCreating music, art, and more,\\nOpening up a brand new door.\\n[Chorus]\\nTogether we make magic sound,\\nThe future's here, it's all around.\\nHarmony of code and soul,\\nMaking music is our goal.\"\n}"
+            },
+            "url": {
+              "raw": "{{baseUrl}}/api/music/generate-suno",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "music",
+                "generate-suno"
+              ]
+            },
+            "description": "Generate music using the Suno API with custom lyrics"
+          },
+          "response": []
+        },
+        {
+          "name": "Check Music Generation Status (Suno)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/music/status-suno?taskId={{taskId}}&songId={{songId}}",
+              "host": [
+                "{{baseUrl}}"
+              ],
+              "path": [
+                "api",
+                "music",
+                "status-suno"
+              ],
+              "query": [
+                {
+                  "key": "taskId",
+                  "value": "{{taskId}}"
+                },
+                {
+                  "key": "songId",
+                  "value": "{{songId}}"
+                }
+              ]
+            },
+            "description": "Check the status of a music generation task for Suno"
+          },
+          "response": []
+        }
+      ],
+      "description": "Endpoints for Suno music generation"
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    },
+    {
+      "listen": "test",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          ""
+        ]
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    },
+    {
+      "key": "taskId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "songId",
+      "value": "",
+      "type": "string"
+    }
+  ]
+}

@@ -8,7 +8,9 @@ export default auth(async req => {
 	const host = req.headers.get('host')
 
 	// 🔒 Redirect all requests from vercel.app to your custom domain
-	if (host && host.includes('vercel.app')) {
+	// Skip this redirect in development environment
+	const isDevelopment = process.env.NODE_ENV === 'development'
+	if (!isDevelopment && host && host.includes('vercel.app')) {
 		return NextResponse.redirect(`${CUSTOM_DOMAIN}${req.nextUrl.pathname}`)
 	}
 

@@ -1,0 +1,151 @@
+{
+  "info": {
+    "_postman_id": "b7e5c9d0-6b1e-4c0c-9f6f-8f3e5c7d8e9f",
+    "name": "Suno API Tests",
+    "description": "Collection for testing the Suno API integration via PiAPI",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Generate Music with Suno",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{piapi_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"model\": \"music-u\",\n  \"task_type\": \"generate_music\",\n  \"input\": {\n    \"gpt_description_prompt\": \"A catchy pop song about artificial intelligence helping humans create music. Style: pop, Tempo: medium, Mood: happy\",\n    \"negative_tags\": \"\",\n    \"lyrics_type\": \"generate\",\n    \"seed\": -1\n  },\n  \"config\": {\n    \"service_mode\": \"public\",\n    \"webhook_config\": {\n      \"endpoint\": \"\",\n      \"secret\": \"\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{piapi_url}}",
+          "host": [
+            "{{piapi_url}}"
+          ]
+        },
+        "description": "Generate music using the Suno API via PiAPI"
+      },
+      "response": []
+    },
+    {
+      "name": "Check Suno Task Status",
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{piapi_api_key}}"
+          }
+        ],
+        "url": {
+          "raw": "{{piapi_url}}/{{task_id}}",
+          "host": [
+            "{{piapi_url}}"
+          ],
+          "path": [
+            "{{task_id}}"
+          ]
+        },
+        "description": "Check the status of a task using the Suno API via PiAPI"
+      },
+      "response": []
+    },
+    {
+      "name": "Generate Music with Lyrics",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{piapi_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"model\": \"music-u\",\n  \"task_type\": \"generate_music\",\n  \"input\": {\n    \"lyrics\": \"[Verse]\\nIn the digital age we thrive,\\nAI and humans side by side.\\nCreating music, art, and more,\\nOpening up a brand new door.\\n[Chorus]\\nTogether we make magic sound,\\nThe future's here, it's all around.\\nHarmony of code and soul,\\nMaking music is our goal.\",\n    \"gpt_description_prompt\": \"pop, upbeat\",\n    \"negative_tags\": \"\",\n    \"lyrics_type\": \"user\",\n    \"seed\": -1\n  },\n  \"config\": {\n    \"service_mode\": \"public\",\n    \"webhook_config\": {\n      \"endpoint\": \"\",\n      \"secret\": \"\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{piapi_url}}",
+          "host": [
+            "{{piapi_url}}"
+          ]
+        },
+        "description": "Generate music with user-provided lyrics using the Suno API via PiAPI"
+      },
+      "response": []
+    },
+    {
+      "name": "Generate Instrumental Music",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Accept",
+            "value": "application/json"
+          },
+          {
+            "key": "x-api-key",
+            "value": "{{piapi_api_key}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"model\": \"music-u\",\n  \"task_type\": \"generate_music\",\n  \"input\": {\n    \"gpt_description_prompt\": \"A relaxing piano piece with gentle strings in the background. Perfect for meditation and focus.\",\n    \"negative_tags\": \"vocals, singing, lyrics\",\n    \"lyrics_type\": \"instrumental\",\n    \"seed\": -1\n  },\n  \"config\": {\n    \"service_mode\": \"public\",\n    \"webhook_config\": {\n      \"endpoint\": \"\",\n      \"secret\": \"\"\n    }\n  }\n}"
+        },
+        "url": {
+          "raw": "{{piapi_url}}",
+          "host": [
+            "{{piapi_url}}"
+          ]
+        },
+        "description": "Generate instrumental music using the Suno API via PiAPI"
+      },
+      "response": []
+    }
+  ],
+  "event": [],
+  "variable": [
+    {
+      "key": "piapi_url",
+      "value": "https://piapi.ai/api/v1/task",
+      "type": "string"
+    },
+    {
+      "key": "piapi_api_key",
+      "value": "your_piapi_key_here",
+      "type": "string"
+    },
+    {
+      "key": "task_id",
+      "value": "your_task_id_here",
+      "type": "string"
+    }
+  ]
+}

@@ -15,15 +15,16 @@ export const metadata = {
 	},
 }
 
-const Domain = 'https://planetqproductions.vercel.app/'
+// Use a dynamic domain based on environment
+const Domain = process.env.NODE_ENV === 'development' ? 'http://localhost:3000/' : 'https://www.planetqradio.com/'
 
 export default async function RootLayout({ children }) {
 	const session = await auth()
 	console.log(session)
 
 	return (
-		<html lang="en">
-			<body className={cn('antialiased')}>
+		<html lang="en" suppressHydrationWarning>
+			<body className={cn('antialiased')} suppressHydrationWarning>
 				<link rel="canonical" href={Domain} />
 				<Providers>{children}</Providers>
 				<Analytics />
