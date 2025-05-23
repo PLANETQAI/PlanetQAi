@@ -4,7 +4,8 @@ import prisma from '@/lib/prisma' // Assuming Prisma client is set up
 import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET)
+// Make sure to use the correct environment variable name
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY)
 
 export const config = {
 	api: {
@@ -12,9 +13,10 @@ export const config = {
 	},
 }
 
-export async function POST(req, res) {
-	const sig = req.headers['stripe-signature']
-	const buf = await buffer(req)
+export async function POST(req) {
+	const sig = req.headers.get('stripe-signature')
+	// In App Router, we need to get the raw body differently
+	const buf = await req.text()
 
 	const endpointSecret = 'whsec_0lcDHiRhvKzhk6A6x7qk8TD6z6ZC1cfA'
 

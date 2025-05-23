@@ -40,11 +40,21 @@ export async function POST(req) {
       Math.ceil(prompt.length / 50) // Simple heuristic: longer prompts might take more time
     );
 
-    // Calculate estimated credits needed
-    const estimatedCredits = CreditManager.calculateCreditsForGeneration(
-      estimatedDuration,
-      CREDITS_PER_SECOND
-    );
+    // Calculate estimated credits based on prompt length, matching frontend calculation
+    // Base cost: 24 credits for Suno generation
+    let estimatedCredits = 24;
+    
+    // Count words in the prompt
+    const wordCount = prompt.split(/\s+/).filter(word => word.length > 0).length;
+    
+    // Additional cost: 5 credits for every 10 words (or fraction) over 200 words
+    if (wordCount > 200) {
+      const excessWords = wordCount - 200;
+      const excessWordPacks = Math.ceil(excessWords / 10);
+      estimatedCredits += excessWordPacks * 5;
+    }
+    
+    console.log(`Suno backend credit calculation: ${wordCount} words = ${estimatedCredits} credits`);
 
     // Check if user has enough credits
     const user = await prisma.user.findUnique({

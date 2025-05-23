@@ -1,8 +1,10 @@
+"use client";
+
 import React, { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { loadStripe } from "@stripe/stripe-js";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 import {
   CheckCircle,
@@ -219,7 +221,7 @@ const SubscriptionPlans = () => {
             Pricing Plans
           </h1>
           <p className="text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto">
-            Choose the plan that's right for you. Start with our free plan, or
+            Choose the plan that&apos;s right for you. Start with our free plan, or
             get more credits and features with a Pro subscription.
           </p>
         </div>
@@ -240,7 +242,7 @@ const SubscriptionPlans = () => {
             <div className="flex items-center gap-2 text-purple-300">
               <CreditCard size={20} />
               <p>
-                You're currently on the{" "}
+                You&apos;re currently on the{" "}
                 <span className="font-bold">{userSubscription.planName}</span>{" "}
                 plan.
                 {userSubscription.cancelAtPeriodEnd

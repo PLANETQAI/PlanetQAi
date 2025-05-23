@@ -7,6 +7,7 @@ import 'slick-carousel/slick/slick-theme.css'
 import Link from 'next/link'
 // Removed Three.js import to fix rendering issues
 import CircleTypeText from '@/components/circleTypeText'
+import CardComponent from '@/components/CardComponent'
 import { cn } from '@/lib/utils'
 
 const CustomRadioPlayer = () => {
@@ -204,10 +205,12 @@ const CustomRadioPlayer = () => {
 }
 
 const RootPage = () => {
-	const [clickSteps, setClickSteps] = useState(2)
+	const [clickSteps, setClickSteps] = useState(0)
 	const [direction, setDirection] = useState('forward')
 	const [isTransitioning, setIsTransitioning] = useState(false)
 	const [showTime, setShowTime] = useState(true)
+	const [touchStart, setTouchStart] = useState(null)
+	const [touchEnd, setTouchEnd] = useState(null)
 
 	useEffect(() => {
 		setTimeout(() => {
@@ -230,7 +233,7 @@ const RootPage = () => {
 			let newDirection = direction
 
 			if (direction === 'forward') {
-				if (clickSteps < 4) {
+				if (clickSteps < 5) { // Updated to support 6 cards (0-5) since studioCard is commented out
 					newStep = clickSteps + 1
 				} else {
 					newDirection = 'backward'
@@ -254,6 +257,93 @@ const RootPage = () => {
 		}, 100)
 	}
 
+	// Handle touch events for swipe functionality
+	// Enhanced touch handling for Tinder-like swipe functionality
+	const [swipeDistance, setSwipeDistance] = useState(0);
+	const [isDragging, setIsDragging] = useState(false);
+	const cardRef = useRef(null);
+	
+	const handleTouchStart = (e) => {
+		if (isTransitioning) return;
+		setTouchStart(e.targetTouches[0].clientX);
+		setIsDragging(true);
+	}
+
+	const handleTouchMove = (e) => {
+		if (!touchStart || !isDragging) return;
+		
+		const currentTouch = e.targetTouches[0].clientX;
+		setTouchEnd(currentTouch);
+		
+		// Calculate distance moved for real-time card movement
+		const distance = currentTouch - touchStart;
+		setSwipeDistance(distance);
+	}
+
+	const handleTouchEnd = () => {
+		if (!touchStart || !touchEnd || !isDragging) return;
+		
+		setIsDragging(false);
+		const distance = touchStart - touchEnd;
+		
+		// Threshold for swipe detection - 80px or 20% of screen width, whichever is smaller
+		const threshold = Math.min(80, window.innerWidth * 0.2);
+		const isLeftSwipe = distance > threshold;
+		const isRightSwipe = distance < -threshold;
+		
+		// Reset swipe distance immediately for animation
+		setSwipeDistance(0);
+		
+		if (isLeftSwipe || isRightSwipe) {
+			if (isTransitioning) return;
+			
+			setIsTransitioning(true);
+			
+			// Add haptic feedback if available
+			if (window.navigator && window.navigator.vibrate) {
+				window.navigator.vibrate(50); // Short vibration
+			}
+			
+			setTimeout(() => {
+				let newStep = clickSteps;
+				let newDirection = direction;
+				
+				if (isLeftSwipe) {
+					// Going forward
+					if (clickSteps < 5) { // Updated to 5 since studioCard is commented out
+						newStep = clickSteps + 1;
+						newDirection = 'forward';
+					} else {
+						// Loop back to the first card
+						newStep = 0;
+						newDirection = 'forward';
+					}
+				} else if (isRightSwipe) {
+					// Going backward
+					if (clickSteps > 0) {
+						newStep = clickSteps - 1;
+						newDirection = 'backward';
+					} else {
+						// Loop to the last card
+						newStep = 5; // Updated to 5 since studioCard is commented out
+						newDirection = 'backward';
+					}
+				}
+				
+				setClickSteps(newStep);
+				setDirection(newDirection);
+				
+				setTimeout(() => {
+					setIsTransitioning(false);
+				}, 400);
+			}, 100);
+		}
+		
+		// Reset touch values
+		setTouchStart(null);
+		setTouchEnd(null);
+	}
+
 	// Prevent click propagation on interactive elements
 	const preventPropagation = e => {
 		e.stopPropagation()
@@ -262,16 +352,13 @@ const RootPage = () => {
 	// Define views - these won't be recreated on each render
 	// SWAPPED: Store moved to radio position (was planetQRadio)
 	const planetQStore = (
-		<div
-			className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all text-center card-content"
-			onClick={preventPropagation}>
-			<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-				<h1 className="text-xl">Planet Q Store</h1>
-			</div>
-			<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/futuristichiphopbeats'}>
-				<Image src={'/images/robo.jpeg'} width={300} height={200} alt="robo" className="w-full h-auto rounded-lg" />
-			</Link>
-		</div>
+		<CardComponent
+			title="Planet Q Store"
+			href="https://planetqproductions.wixsite.com/planet-q-productions/futuristichiphopbeats"
+			imageUrl="/images/robo.jpeg"
+			className="text-center"
+			onClick={preventPropagation}
+		/>
 	)
 
 	const qWorldStudios = (
@@ -337,7 +424,7 @@ const RootPage = () => {
 			</div>
 
 			{/* Replace the iframe with our custom player */}
-			<div className="bg-gray-800 w-full rounded-b-lg p-2! sm:p-3">
+			{/* <div className="bg-gray-800 w-full rounded-b-lg p-2! sm:p-3">
 				<iframe
 					src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true"
 					frameBorder="0"
@@ -349,57 +436,66 @@ const RootPage = () => {
 					}}
 					title="Radio Planet Q"
 					allow="autoplay; encrypted-media"></iframe>
-			</div>
-			{/* <CustomRadioPlayer /> */}
+			</div> */}
+			<CustomRadioPlayer />
 		</div>
 	)
 
+
 	// SWAPPED: Productions moved to studio position (was radioPlayer)
 	const planetQProductions = (
-		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions'} className="p-1 block">
-			<div
-				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto card-content"
-				onClick={preventPropagation}>
-				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-					<h1 className="text-xl">Planet Q Productions</h1>
-				</div>
-				<Image
-					src="/images/V_center.jpg"
-					alt="Planet Q Productions"
-					width={300}
-					height={200}
-					className="w-full h-auto rounded-lg"
-				/>
-			</div>
-		</Link>
+		<CardComponent
+			title="Planet Q Productions"
+			href="https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions"
+			imageUrl="/images/V_center.jpg"
+			className="col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto text-center"
+			onClick={preventPropagation}
+		/>
 	)
 
 	// SWAPPED: Radio moved to store position (was roboCard)
 	const planetQRadio = (
-		<Link href={'https://planetqproductions.wixsite.com/planet-q-productions/faqs'} className="h-full p-1 block">
-			<div
-				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
-				onClick={preventPropagation}>
-				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-					<h1 className="text-xl">Planet Q Radio</h1>
-				</div>
-				<video src="/videos/V_left-compressed.mp4" autoPlay muted loop className="w-full h-auto rounded-lg"></video>
-			</div>
-		</Link>
+		<CardComponent
+			title="Planet Q Radio"
+			href="https://planetqproductions.wixsite.com/planet-q-productions/faqs"
+			imageUrl="/videos/V_left-compressed.mp4"
+			isVideo={true}
+			className="h-full text-center"
+			onClick={preventPropagation}
+		/>
 	)
 
 	// SWAPPED: Studio moved to productions position (was fifthLink)
-	const studioCard = (
-		<Link href={'/home'} className="p-1">
-			<div
-				className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
-				onClick={preventPropagation}>
-				<div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-					<h1 className="text-xl">Q World Studios</h1>
-				</div>
-				<Image src="/images/V_right.jpg" alt="Q World Studios" width={300} height={200} className="w-full h-auto rounded-lg" />
-			</div>
-		</Link>
+	// const studioCard = (
+	// 	<CardComponent
+	// 		title="Planet Q Studio"
+	// 		href="/my-studio"
+	// 		imageUrl="/images/studio.jpeg"
+	// 		className="text-center"
+	// 		onClick={preventPropagation}
+	// 	/>
+	// )
+
+	// Original Q World Studios card that was accidentally removed
+	const qWorldStudiosCard = (
+		<CardComponent
+			title="Q World Studios"
+			href="/home"
+			imageUrl="/images/V_right.jpg"
+			className="text-center"
+			onClick={preventPropagation}
+		/>
+	)
+
+	// New Video Player card
+	const videoPlayerCard = (
+		<CardComponent
+			title="Planet Q Video Player"
+			href="/video-player"
+			imageUrl="/images/video-player.jpg"
+			className="text-center"
+			onClick={preventPropagation}
+		/>
 	)
 
 	// Add CSS for marquee animation if needed
@@ -448,13 +544,20 @@ const RootPage = () => {
 				<div className="w-full max-w-md mx-auto relative px-4 pt-16 pb-16">
 					<div className="w-full text-white relative">
 						{/* Container for overflow hidden */}
-						<div className="overflow-hidden relative h-full">
+						<div 
+							className="overflow-hidden relative h-full"
+							onTouchStart={handleTouchStart}
+							onTouchMove={handleTouchMove}
+							onTouchEnd={handleTouchEnd}>
 							{/* All views are loaded but only one is visible at a time */}
-							<div
+							<div 
+								ref={cardRef}
 								className={cn(
 									'absolute w-full transition-all duration-500 ease-in-out',
 									clickSteps === 0 ? 'opacity-100 translate-x-0' : 'opacity-0 translate-x-full'
-								)}>
+								)}
+								style={isDragging ? { transform: `translateX(${swipeDistance}px)` } : {}}
+							>
 								{planetQStore}
 							</div>
 
@@ -466,7 +569,9 @@ const RootPage = () => {
 										: clickSteps < 1
 										? 'opacity-0 -translate-x-full'
 										: 'opacity-0 translate-x-full'
-								)}>
+								)}
+								style={isDragging && clickSteps === 1 ? { transform: `translateX(${swipeDistance}px)` } : {}}
+							>
 								{planetQProductions}
 							</div>
 
@@ -478,7 +583,9 @@ const RootPage = () => {
 										: clickSteps < 2
 										? 'opacity-0 -translate-x-full'
 										: 'opacity-0 translate-x-full'
-								)}>
+								)}
+								style={isDragging && clickSteps === 2 ? { transform: `translateX(${swipeDistance}px)` } : {}}
+							>
 								{qWorldStudios}
 							</div>
 
@@ -490,16 +597,52 @@ const RootPage = () => {
 										: clickSteps < 3
 										? 'opacity-0 -translate-x-full'
 										: 'opacity-0 translate-x-full'
-								)}>
+								)}
+								style={isDragging && clickSteps === 3 ? { transform: `translateX(${swipeDistance}px)` } : {}}
+							>
 								{planetQRadio}
+							</div>
+
+							{/* <div
+								className={cn(
+									'absolute w-full transition-all duration-500 ease-in-out',
+									clickSteps === 4
+										? 'opacity-100 translate-x-0'
+										: clickSteps < 4
+										? 'opacity-0 -translate-x-full'
+										: 'opacity-0 translate-x-full'
+								)}
+								style={isDragging && clickSteps === 4 ? { transform: `translateX(${swipeDistance}px)` } : {}}
+							>
+								{studioCard}
+							</div> */}
+
+							<div
+								className={cn(
+									'absolute w-full transition-all duration-500 ease-in-out',
+									clickSteps === 5
+										? 'opacity-100 translate-x-0'
+										: clickSteps < 5
+										? 'opacity-0 -translate-x-full'
+										: 'opacity-0 translate-x-full'
+								)}
+								style={isDragging && clickSteps === 5 ? { transform: `translateX(${swipeDistance}px)` } : {}}
+							>
+								{qWorldStudiosCard}
 							</div>
 
 							<div
 								className={cn(
 									'absolute w-full transition-all duration-500 ease-in-out',
-									clickSteps === 4 ? 'opacity-100 translate-x-0' : 'opacity-0 -translate-x-full'
-								)}>
-								{studioCard}
+									clickSteps === 6
+										? 'opacity-100 translate-x-0'
+										: clickSteps < 6
+										? 'opacity-0 -translate-x-full'
+										: 'opacity-0 translate-x-full'
+								)}
+								style={isDragging && clickSteps === 6 ? { transform: `translateX(${swipeDistance}px)` } : {}}
+							>
+								{videoPlayerCard}
 							</div>
 
 							{/* Spacer div to maintain container height */}
@@ -515,18 +658,34 @@ const RootPage = () => {
 							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 3 ? 'block' : 'hidden')}>
 								{planetQRadio}
 							</div>
-							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 4 ? 'block' : 'hidden')}>{studioCard}</div>
+							{/* <div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 4 ? 'block' : 'hidden')}>
+								{studioCard}
+							</div> */}
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 5 ? 'block' : 'hidden')}>
+								{qWorldStudiosCard}
+							</div>
+							<div className={cn('w-full opacity-0 pointer-events-none', clickSteps === 6 ? 'block' : 'hidden')}>
+								{videoPlayerCard}
+							</div>
 						</div>
 
 						{/* Indicators */}
 						<div className="mt-8 flex justify-center gap-2">
-							{[0, 1, 2, 3, 4].map(index => (
+							{[0, 1, 2, 3, 4, 5].map(index => (
 								<div
 									key={index}
 									className={cn(
 										'w-2 h-2 rounded-full transition-all duration-300',
 										clickSteps === index ? 'bg-white scale-125' : 'bg-gray-500 hover:bg-gray-400'
 									)}
+									onClick={() => {
+										if (!isTransitioning) {
+											setIsTransitioning(true);
+											setClickSteps(index);
+											setDirection(index > clickSteps ? 'forward' : 'backward');
+											setTimeout(() => setIsTransitioning(false), 400);
+										}
+									}}
 								/>
 							))}
 							<div className={cn('ml-2 text-xs transition-all duration-300', isTransitioning ? 'opacity-0' : 'opacity-70')}>

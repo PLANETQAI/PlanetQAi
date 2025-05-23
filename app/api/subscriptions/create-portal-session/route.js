@@ -2,11 +2,12 @@ import { redirect } from 'next/navigation'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET)
-// const stripe = new Stripe("sk_test_51DuUNrLEbBbuiNy4C37Zjysx6YqgKd7q3dPj8mame7nc3V60KRlhLRwNYdgzG3SJlTCVGHdeS7fLlk7y4ey9J6b400J9jPM0Ie");
+// Make sure to use the correct environment variable name
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY);
 
-export async function POST(req, res) {
-	const { session_id } = req.body
+export async function POST(req) {
+	const data = await req.json()
+	const { session_id } = data
 
 	try {
 		const checkoutSession = await stripe.checkout.sessions.retrieve(session_id)

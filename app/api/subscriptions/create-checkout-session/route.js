@@ -4,12 +4,14 @@ import { redirect } from 'next/navigation'
 import { NextResponse } from 'next/server'
 import Stripe from 'stripe'
 
-const stripe = new Stripe(process.env.STRIPE_SECRET)
+// Make sure to use the correct environment variable name
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY)
 
-export async function POST(req, res) {
-	const userId = req.body.user.id
-	const lookupKey = req.body.lookup_key
-	const max_download = req.body.max_download
+export async function POST(req) {
+	const data = await req.json()
+	const userId = data.user.id
+	const lookupKey = data.lookup_key
+	const max_download = data.max_download
 
 	try {
 		const prices = await stripe.prices.list({

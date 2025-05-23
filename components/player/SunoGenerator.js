@@ -279,11 +279,24 @@ const SunoGenerator = ({
 
 	// Calculate estimated credits based on prompt complexity and selected options
 	const calculateEstimatedCredits = () => {
-		// Base cost for any generation - fixed at 15 credits for Suno
-		// This ensures users always know exactly how many credits will be used
-		const credits = 15;
-
-		// Return the fixed credit amount
+		// Get the prompt text
+		const promptText = selectedPrompt.text || '';
+		// Count words in the prompt
+		const wordCount = promptText.split(/\s+/).filter(word => word.length > 0).length;
+		
+		// Base cost: 80 credits for Suno generation
+		let credits = 24;
+		
+		// Additional cost: 5 credits for every 10 words (or fraction) over 200 words
+		if (wordCount > 200) {
+			const excessWords = wordCount - 200;
+			const excessWordPacks = Math.ceil(excessWords / 10);
+			credits += excessWordPacks * 5;
+		}
+		
+		console.log(`Suno credit calculation: ${wordCount} words = ${credits} credits`);
+		
+		// Return the calculated credit amount
 		return credits;
 	}
 

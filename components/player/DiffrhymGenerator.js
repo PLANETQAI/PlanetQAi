@@ -276,11 +276,24 @@ const DiffrhymGenerator = ({
 
 	// Calculate estimated credits based on prompt complexity and selected options
 	const calculateEstimatedCredits = () => {
-		// Base cost for any generation - fixed at 10 credits
-		// This ensures users always know exactly how many credits will be used
-		const credits = 10;
-
-		// Return the fixed credit amount
+		// Get the prompt text
+		const promptText = selectedPrompt.text || '';
+		
+		// Backend uses a duration-based calculation with CREDITS_PER_SECOND = 5
+		// For frontend estimation, we'll use the same formula as the backend
+		const CREDITS_PER_SECOND = 5;
+		
+		// Estimate duration based on prompt length (similar to backend heuristic)
+		// MIN_GENERATION_DURATION is 10 seconds in the backend
+		const MIN_GENERATION_DURATION = 10;
+		const estimatedDuration = Math.max(MIN_GENERATION_DURATION, Math.ceil(promptText.length / 50));
+		
+		// Calculate credits using the same formula as the backend
+		const credits = Math.ceil(estimatedDuration * CREDITS_PER_SECOND);
+		
+		console.log(`Diffrhym credit calculation: prompt length ${promptText.length}, estimated duration ${estimatedDuration}s = ${credits} credits`);
+		
+		// Return the calculated credit amount
 		return credits;
 	}
 
