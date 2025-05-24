@@ -71,15 +71,26 @@ export async function POST(req) {
 			}
 		}
 		
-		// Create a credit log entry for the initial credits
-		await prisma.creditLog.create({
-			data: {
+		// Create a credit log entry for the initial credits with error handling
+		try {
+			await prisma.creditLog.create({
+				data: {
+					userId: result.id,
+					amount: 50,
+					balanceAfter: 50,
+					description: 'Welcome bonus credits',
+				},
+			});
+			console.log('Credit log created successfully for user:', result.id);
+		} catch (creditLogError) {
+			// Log the error but don't fail the signup process
+			console.error('Failed to create credit log, but user was created:', {
 				userId: result.id,
-				amount: 50,
-				balanceAfter: 50,
-				description: 'Welcome bonus credits',
-			},
-		})
+				error: creditLogError.message,
+				code: creditLogError.code
+			});
+			// We'll continue the signup process even if credit log creation fails
+		}
 		
 		console.log('User Created:', result)
 
@@ -89,7 +100,26 @@ export async function POST(req) {
 			return NextResponse.json({ message: error.errors }, { status: 422 })
 		}
 
-		console.error('Error:', error)
-		return NextResponse.json({ message: 'Something went wrong!' }, { status: 500 })
+		// Log detailed error information
+		console.error('Signup Error:', {
+			message: error.message,
+			code: error.code,
+			meta: error.meta,
+			stack: error.stack
+		})
+		
+		// Handle specific Prisma errors
+		if (error.code === 'P2022') {
+			return NextResponse.json({ 
+				message: 'Database schema mismatch. Please contact support.', 
+				detail: 'Missing column in database schema' 
+			}, { status: 500 })
+		}
+		
+		// Return a more specific error message if possible
+		return NextResponse.json({ 
+			message: 'Registration failed. Please try again later.', 
+			detail: error.message || 'Unknown error'
+		}, { status: 500 })
 	}
 }
