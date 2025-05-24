@@ -9,8 +9,7 @@ export async function POST(req) {
 		const body = await req.json()
 		console.log('Request Body:', body)
 
-		// TEMPORARY: Skip strict validation for testing
-		// const parsedData = signInSchema.parse(body)
+		// Extract only the essential fields
 		const { fullName, email, password } = body
 		
 		// Basic validation
@@ -24,8 +23,12 @@ export async function POST(req) {
 		}
 
 		// Check if the user already exists
-		const existingUser = await prisma.user.findUnique({ where: { email } })
+		const existingUser = await prisma.user.findUnique({ 
+			where: { email },
+			select: { email: true }
+		})
 		console.log('Existing User:', existingUser)
+		
 		if (existingUser) {
 			return NextResponse.json({ message: 'User exists already!' }, { status: 422 })
 		}
@@ -37,13 +40,13 @@ export async function POST(req) {
 			throw new Error('Password hashing failed')
 		}
 
-		// Create the new user in the database with default 50 credits
+		// Create the new user in the database
 		const result = await prisma.user.create({
 			data: {
 				fullName,
 				email,
-				password: hashedPassword, // Save the hashed password
-				credits: 50, // Give new users 50 credits by default
+				password: hashedPassword,
+				role: 'Basic',
 			},
 		})
 		
@@ -56,6 +59,7 @@ export async function POST(req) {
 				description: 'Welcome bonus credits',
 			},
 		})
+		
 		console.log('User Created:', result)
 
 		return NextResponse.json({ message: 'User Created!' }, { status: 201 })
