@@ -128,15 +128,18 @@ const CreditPurchaseModal = ({
         throw new Error(data.error || 'Failed to create checkout session')
       }
       
-      // Handle successful purchase
+      // Check if we got a Stripe checkout URL
+      if (data.url) {
+        console.log('Redirecting to Stripe checkout:', data.url)
+        // Use window.location for a full page redirect to Stripe
+        window.location.href = data.url
+        return
+      }
+      
+      // Handle direct success (should not happen with Stripe integration)
       if (data.success) {
-        onSuccess(data);
-        onClose();
-      } else {
-        // Redirect to Stripe checkout if URL is provided
-        if (data.url) {
-          router.push(data.url);
-        }
+        onSuccess(data)
+        onClose()
       }
     } catch (error) {
       console.error('Purchase error:', error)

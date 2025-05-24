@@ -511,7 +511,7 @@ const RootPage = () => {
 
   // SWAPPED: Studio moved to productions position (was fifthLink)
   const studioCard = (
-    <Link href={"/my-studio"} className="p-1">
+    <Link href={"/aistudio"} className="p-1">
       <div
         className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
         onClick={preventPropagation}

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import Image from 'next/image'
 import { signOut, useSession } from 'next-auth/react'
@@ -9,16 +9,51 @@ import UpgradePlusModal from '../UpgradePlusModal'
 import { IoIosLogOut } from 'react-icons/io'
 import { FaArrowAltCircleDown } from 'react-icons/fa'
 import { useUser } from '../../context/UserContext'
+import { CreditCard, Plus } from 'lucide-react'
+import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 
 export default function GlobalHeader({ session }) {
 	const router = useRouter()
 	const isHome = router.pathname === '/'
 	const [loading, setLoading] = useState(false)
+	// State for user credits
+	const [userCredits, setUserCredits] = useState(null)
+	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
+	
 	//change-nikhil
 	// const { isOpen, close, openHandler } = useUser();
 	const isOpen = () => {}
 	const close = () => {}
 	const openHandler = () => {}
+	
+	// Fetch user credits on component mount
+	useEffect(() => {
+		if (session?.user) {
+			fetchUserCredits()
+		}
+	}, [session])
+	
+	// Function to fetch user credits
+	const fetchUserCredits = async () => {
+		try {
+			const response = await fetch('/api/credits-api', {
+				method: 'GET',
+				credentials: 'include',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+
+			if (response.ok) {
+				const data = await response.json()
+				setUserCredits(data)
+			} else {
+				console.error('Failed to fetch credits')
+			}
+		} catch (error) {
+			console.error('Error fetching credits:', error)
+		}
+	}
 
 	async function logoutHandler(event) {
 		event.preventDefault()
@@ -100,19 +135,27 @@ export default function GlobalHeader({ session }) {
 					{session && (
 						<Link
 							href="/gallery"
-							className="flex items-center gap-2 bg-transparent text-sm ring-white ring-1 rounded-lg px-1 font-bold hover:underline sm:text-2xl sm:font-bold sm:px-2"
+							className="flex items-center gap-2 bg-slate-800 text-white text-sm rounded-lg px-3 py-2 font-medium hover:bg-slate-700 transition-colors duration-200 sm:text-lg"
 						>
-							<FaArrowAltCircleDown /> Downloads
+							<FaArrowAltCircleDown className="text-blue-400" /> Downloads
 						</Link>
 					)}
-					{session && session.user?.userType !== 'premium' && (
-						<button
-							disabled={loading}
-							onClick={() => openHandler()}
-							className="animate-text bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 text-sm font-normal ring-white ring-1 rounded-lg px-1 hover:underline hover:ring-2 sm:text-2xl sm:font-bold sm:px-2"
-						>
-							Buy Packages
-						</button>
+					{session && (
+						<div className="flex items-center gap-3">
+							<div className="bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2">
+								<CreditCard className="text-blue-400 w-4 h-4 sm:w-5 sm:h-5" />
+								<span className="text-white font-medium text-sm sm:text-base">
+									{userCredits ? userCredits.credits.toLocaleString() : '...'} Credits
+								</span>
+							</div>
+							<button 
+								onClick={() => setShowCreditPurchaseModal(true)}
+								className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 flex items-center gap-1 transition-colors duration-200 text-sm sm:text-base"
+							>
+								<Plus className="w-3 h-3 sm:w-4 sm:h-4" />
+								Buy Credits
+							</button>
+						</div>
 					)}
 
 					{session && session.user?.userType === 'premium' && session.user?.sessionId && (
@@ -155,6 +198,18 @@ export default function GlobalHeader({ session }) {
 				</div>
 				{/* {isOpen && <UpgradePlusModal close={close} />} */}
 			</div>
+			{/* Credit Purchase Modal */}
+			{session && (
+				<CreditPurchaseModal
+					isOpen={showCreditPurchaseModal}
+					onClose={() => setShowCreditPurchaseModal(false)}
+					creditsNeeded={0}
+					onSuccess={() => {
+						// Refresh user credits after successful purchase
+						fetchUserCredits()
+					}}
+				/>
+			)}
 		</>
 	)
 }

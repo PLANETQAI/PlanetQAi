@@ -113,38 +113,77 @@ export async function POST(req) {
       );
     }
 
-    // Get current user credits
+    // Get current user data
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { credits: true },
+      select: { 
+        id: true,
+        email: true,
+        fullName: true,
+        credits: true,
+        stripeCustomerId: true
+      },
     });
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Add credits to user account
-    const updatedUser = await prisma.user.update({
-      where: { id: userId },
-      data: {
-        credits: user.credits + selectedPackage.credits,
-      },
-    });
-
-    // Create a credit log entry
-    await prisma.creditLog.create({
-      data: {
-        userId,
-        amount: selectedPackage.credits,
-        balanceAfter: updatedUser.credits,
-        description: `Purchased ${selectedPackage.name} (${selectedPackage.credits} credits)`,
-      },
+    // Import Stripe
+    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+    
+    // Create or get Stripe customer
+    let customerId = user.stripeCustomerId;
+    if (!customerId) {
+      const customer = await stripe.customers.create({
+        email: user.email,
+        name: user.fullName,
+        metadata: {
+          userId: user.id
+        }
+      });
+      customerId = customer.id;
+      
+      // Save the Stripe customer ID to the user
+      await prisma.user.update({
+        where: { id: userId },
+        data: { stripeCustomerId: customerId }
+      });
+    }
+    
+    // Create Stripe checkout session
+    const checkoutSession = await stripe.checkout.sessions.create({
+      customer: customerId,
+      payment_method_types: ['card'],
+      line_items: [
+        {
+          price_data: {
+            currency: 'usd',
+            product_data: {
+              name: selectedPackage.name,
+              description: `${selectedPackage.credits} credits for PlanetQAi`,
+              metadata: {
+                packageId: selectedPackage.id
+              }
+            },
+            unit_amount: selectedPackage.price * 100, // Convert to cents
+          },
+          quantity: 1,
+        },
+      ],
+      mode: 'payment',
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?canceled=true`,
+      metadata: {
+        userId: userId,
+        packageId: selectedPackage.id,
+        credits: selectedPackage.credits.toString()
+      }
     });
 
     return NextResponse.json({
       success: true,
-      message: "Credits added successfully",
-      newBalance: updatedUser.credits,
+      url: checkoutSession.url
     });
   } catch (error) {
     console.error("Credit purchase error:", error);

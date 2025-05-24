@@ -5,10 +5,16 @@ import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'
 import MusicPlayer from '@/components/planetqproductioncomp/musicplayer'
 import MusicGenerator from '@/components/player/SunoConsumer'
 import { FaArrowDown } from 'react-icons/fa6'
+import DiffrhymGenerator from '@/components/player/DiffrhymGenerator'
+import SunoGenerator from '@/components/player/SunoGenerator'
 import React from 'react'
 import 'react-h5-audio-player/lib/styles.css'
 import { useSearchParams } from 'next/navigation'
 import { normalizeValue } from '@/utils/functions'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { CreditCard, Zap, Plus } from 'lucide-react'
+import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal'
+
 
 export default function Studio({ session }) {
 	const initialVideoLink = 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
@@ -20,10 +26,66 @@ export default function Studio({ session }) {
 	const message = normalizeValue(decodeURIComponent(searchParams.get('message')))
 
 	const [selectedPrompt, setSelectedPrompt] = useState({
-		text: message ? message : text ? text : '',
-		tags: tags ? tags : '',
-		title: title ? title : '',
+		text: message || '',
+		tags: '',
+		title: '',
+		style: 'pop',
+		tempo: 'medium',
+		mood: 'neutral'
 	})
+
+	// State to track which generator is active
+	const [activeGenerator, setActiveGenerator] = useState('diffrhym')
+
+	// State for user credits
+	const [userCredits, setUserCredits] = useState(null)
+	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
+
+	// Fetch user credits on component mount
+	useEffect(() => {
+		if (session?.user) {
+			fetchUserCredits()
+		}
+	}, [session])
+
+	// Function to fetch user credits
+	const fetchUserCredits = async () => {
+		try {
+			// First check if the user is authenticated by getting the session
+			const sessionResponse = await fetch('/api/auth/session')
+			const sessionData = await sessionResponse.json()
+
+			// If not authenticated, redirect to login page
+			if (!sessionData || !sessionData.user) {
+				console.log('User not authenticated, redirecting to login')
+				window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+				return
+			}
+
+			// Now fetch credits with the authenticated session
+			const response = await fetch('/api/credits-api', {
+				method: 'GET',
+				credentials: 'include', // This ensures cookies are sent with the request
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+
+			if (!response.ok) {
+				// If unauthorized, redirect to login
+				if (response.status === 401) {
+					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+					return
+				}
+				throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
+			}
+
+			const data = await response.json()
+			setUserCredits(data)
+		} catch (error) {
+			console.error('Error fetching credits:', error)
+		}
+	}
 
 	useEffect(() => {
 		setSelectedPrompt(prev => ({
@@ -41,57 +103,95 @@ export default function Studio({ session }) {
 		minHeight: '100vh',
 	}
 
-	const examplePrompts = [
-		{
-			text:
-				"[Verse 1]\nWalking through neon streets\nHolograms flicker and dance\nRobots and humans intertwine\nIn this brave new romance\n\n[Chorus]\nIn the year 3000\nWhere dreams come alive\nTechnology and humanity\nLearning to survive\n\n[Verse 2]\nFlying cars zoom overhead\nVirtual reality's our new bed\nAI assistants guide our way\nThrough this futuristic day\n\n[Bridge]\nBut in this world of steel and chrome\nWe're searching for a place called home\nHuman touch, a rare delight\nIn the glow of cybernetic light\n\n[Chorus]\nIn the year 3000\nWhere dreams come alive\nTechnology and humanity\nLearning to survive",
-			tags: 'futuristic, electronic, synthwave',
-			title: 'Year 3000',
-		},
-		{
-			text:
-				"[Verse 1]\nDigital love in the palm of my hand\nSwipe right, it's a perfect match\nVirtual hearts, they expand\nIn this new world, we're trying to catch\n\n[Chorus]\nLove in the age of ones and zeros\nFeeling real in a world that's virtual\nCan we find our digital heroes?\nIn this romance that's truly plural\n\n[Verse 2]\nVideo calls replace tender touch\nEmojis speak louder than words\nIn this age, we long for so much\nOur feelings fly high like birds\n\n[Bridge]\nBut beneath the screens and the codes\nBeats a heart that's truly human\nNavigating these new love modes\nIn a dance that's old and new, man\n\n[Chorus]\nLove in the age of ones and zeros\nFeeling real in a world that's virtual\nCan we find our digital heroes?\nIn this romance that's truly plural",
-			tags: 'r&b, futuristic, romantic',
-			title: 'Digital Love Story',
-		},
-		{
-			text:
-				"[Verse 1]\nCyber raindrops on my window\nPixelated puddles down below\nThunder claps in surround sound\nIn this future storm, I'm spellbound\n\n[Chorus]\nNeon rain, falling down\nWashing clean this techno town\nLightning strikes the VR sky\nIn this downpour, we can't deny\n\n[Verse 2]\nUmbrellas glow with LED lights\nGuiding us through augmented nights\nWeather control's on the fritz again\nMaking this shower more than just pretend\n\n[Bridge]\nBut in this deluge of data and dreams\nNature finds a way, or so it seems\nReminds us all, as the droplets fall\nWe're part of something beyond our firewall\n\n[Chorus]\nNeon rain, falling down\nWashing clean this techno town\nLightning strikes the VR sky\nIn this downpour, we can't deny",
-			tags: 'rock, futuristic, atmospheric',
-			title: 'Neon Rain',
-		},
-	]
 
-	const handlePromptClick = prompt => {
-		setSelectedPrompt(prompt)
-	}
 
 	return (
 		<>
 			<div style={backgroundImageStyle}>
 				<GlobalHeader session={session} />
-
-				<MusicPlayer initialVideoLink={initialVideoLink} />
-
-				<div className="w-full lg:w-3/4 px-8 m-auto py-14">
-					<div className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-8">
-						{examplePrompts.map((prompt, index) => (
-							<button
-								key={index}
-								className="bg-gradient-to-t from-slate-600 to-slate-500 text-white flex flex-col justify-between items-start p-4 rounded mb-5 w-full hover:from-slate-500 hover:to-slate-600 transition-colors duration-300 shadow-lg text-sm"
-								onClick={() => handlePromptClick(prompt)}>
-								<div className="font-bold mb-2">{prompt.title}</div>
-								<div className="text-xs mb-2 text-gray-300">{prompt.tags}</div>
-								<div className="text-xs text-left overflow-hidden h-20">{prompt.text.split('\n').slice(0, 4).join('\n')}...</div>
-								<div className="w-full text-right mt-2">
-									<FaArrowDown className="text-purple-500 inline" />
-								</div>
-							</button>
-						))}
+{/* <div className="flex justify-between items-center mb-6">
+				
+				
+				{session && (
+					<div className="flex items-center gap-4">
+						<div className="bg-slate-800 rounded-lg px-4 py-2 flex items-center gap-2">
+							<CreditCard className="text-blue-400 w-5 h-5" />
+							<span className="text-white font-medium">
+								{userCredits ? userCredits.credits.toLocaleString() : '...'} Credits
+							</span>
+						</div>
+						<button 
+							onClick={() => setShowCreditPurchaseModal(true)}
+							className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 flex items-center gap-1 transition-colors duration-200"
+						>
+							<Plus className="w-4 h-4" />
+							Buy Credits
+						</button>
 					</div>
+				)}
+			</div> */}
 
-					<MusicGenerator session={session} selectedPrompt={selectedPrompt} onPromptChange={setSelectedPrompt} />
+				<p className="text-center text-gray-300 mb-8">Choose your preferred AI music generator</p>
+
+				<Tabs defaultValue="diffrhym" className="w-full mb-8" onValueChange={setActiveGenerator}>
+					<TabsList className="grid w-full grid-cols-2 mb-6">
+						<TabsTrigger value="diffrhym" className="text-lg">
+							<span className="flex items-center gap-2">
+								<span className="h-3 w-3 rounded-full bg-purple-500"></span>
+								Q_World Studio
+							</span>
+						</TabsTrigger>
+						<TabsTrigger value="suno" className="text-lg">
+							<span className="flex items-center gap-2">
+								<span className="h-3 w-3 rounded-full bg-blue-500"></span>
+								Planet Q AI
+							</span>
+						</TabsTrigger>
+					</TabsList>
+
+					<TabsContent value="diffrhym" className="mt-0">
+						<div className="mb-4 text-center">
+							<p className="text-gray-300">Diffrhym creates unique instrumental tracks with a focus on rhythm and melody</p>
+						</div>
+						<DiffrhymGenerator
+							session={session}
+							selectedPrompt={selectedPrompt}
+							onPromptChange={setSelectedPrompt}
+							onCreditsUpdate={setUserCredits}
+						/>
+					</TabsContent>
+
+					<TabsContent value="suno" className="mt-0">
+						<div className="mb-4 text-center">
+							<p className="text-gray-300">Suno specializes in generating vocal music with lyrics and high-quality production</p>
+						</div>
+						<SunoGenerator
+							session={session}
+							selectedPrompt={selectedPrompt}
+							onPromptChange={setSelectedPrompt}
+							onCreditsUpdate={setUserCredits}
+						/>
+					</TabsContent>
+				</Tabs>
+
+				<div className="mt-8 text-center text-sm text-gray-400">
+					<p>Watch your credits decrease as you generate music. More complex styles and longer prompts use more credits.</p>
+					<p className="mt-2">Each generator has different strengths - try both to find the best fit for your project!</p>
 				</div>
+
+				{/* Credit Purchase Modal */}
+				{session && (
+					<CreditPurchaseModal
+						isOpen={showCreditPurchaseModal}
+						onClose={() => setShowCreditPurchaseModal(false)}
+						creditsNeeded={0}
+						onSuccess={() => {
+							// Refresh user credits after successful purchase
+							fetchUserCredits()
+						}}
+					/>
+				)}
+				<MusicPlayer initialVideoLink={initialVideoLink} />
 
 				<h1 className="animate-text text-center bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-2xl font-black md:text-4xl pb-10">
 					AI Audio Player Presented By Planet Q Productions

@@ -14,6 +14,7 @@ model User {
   email             String        @unique
   password          String
   role              Role          @default(Basic)
+  credits           Int           @default(0)  // Add credits field with default value of 0
   totalCreditsUsed  Int           @default(0)
   maxMonthlyCredits Int           @default(0)
   max_download      Int           @default(0)
