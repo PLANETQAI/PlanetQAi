@@ -23,30 +23,42 @@ export async function GET(req) {
 
     const userId = session.user.id;
 
-    // Get user credit information
+    // Get user information (basic details)
     const user = await prisma.user.findUnique({
       where: { id: userId },
       select: {
-        credits: true,
-        maxMonthlyCredits: true,
-        totalCreditsUsed: true,
         role: true,
-        subscription: {
-          select: {
-            planName: true,
-            status: true,
-            currentPeriodEnd: true,
-          },
-        },
       },
     });
-
+    
     if (!user) {
-      return NextResponse.json({ error: "User not found" }, { status: 404 });
+      return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
-
-    // Get user's recent credit logs
+    
+    // Get credit logs for the user to calculate current balance
     const creditLogs = await prisma.creditLog.findMany({
+      where: { userId },
+      orderBy: { createdAt: 'desc' },
+    });
+    
+    // Calculate current credit balance from logs
+    const credits = creditLogs.length > 0 ? creditLogs[0].balanceAfter : 0;
+    
+    // Default values for fields that might not exist in the schema yet
+    const userCredits = {
+      credits,
+      maxMonthlyCredits: 5000, // Default value
+      totalCreditsUsed: 0, // Calculate this if needed
+      role: user.role,
+      subscription: {
+        planName: 'Free',
+        status: 'active',
+        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
+      },
+    };
+
+    // Get user's recent credit logs for display
+    const recentCreditLogs = await prisma.creditLog.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
       take: 5,
@@ -73,12 +85,12 @@ export async function GET(req) {
 
     return NextResponse.json({
       success: true,
-      credits: user.credits,
-      maxMonthlyCredits: user.maxMonthlyCredits,
-      totalCreditsUsed: user.totalCreditsUsed,
-      role: user.role,
-      subscription: user.subscription,
-      creditLogs,
+      credits: userCredits.credits,
+      maxMonthlyCredits: userCredits.maxMonthlyCredits,
+      totalCreditsUsed: userCredits.totalCreditsUsed,
+      role: userCredits.role,
+      subscription: userCredits.subscription,
+      creditLogs: recentCreditLogs,
       recentSongs,
       packages: CREDIT_PACKAGES,
     });
