@@ -151,7 +151,7 @@ export default function Studio({ session }) {
 
 					<TabsContent value="diffrhym" className="mt-0">
 						<div className="mb-4 text-center">
-							<p className="text-gray-300">Diffrhym creates unique instrumental tracks with a focus on rhythm and melody</p>
+							<p className="text-gray-300">Q_World Studio creates unique instrumental tracks with a focus on rhythm and melody</p>
 						</div>
 						<DiffrhymGenerator
 							session={session}
@@ -163,7 +163,7 @@ export default function Studio({ session }) {
 
 					<TabsContent value="suno" className="mt-0">
 						<div className="mb-4 text-center">
-							<p className="text-gray-300">Suno specializes in generating vocal music with lyrics and high-quality production</p>
+							<p className="text-gray-300">Planet Q AI specializes in generating vocal music with lyrics and high-quality production</p>
 						</div>
 						<SunoGenerator
 							session={session}
