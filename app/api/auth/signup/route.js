@@ -40,15 +40,36 @@ export async function POST(req) {
 			throw new Error('Password hashing failed')
 		}
 
-		// Create the new user in the database
-		const result = await prisma.user.create({
-			data: {
-				fullName,
-				email,
-				password: hashedPassword,
-				role: 'Basic',
-			},
-		})
+		// Create the new user in the database with a try-catch to handle schema differences
+		let result;
+		try {
+			// First try with credits field (for when the migration has been applied)
+			result = await prisma.user.create({
+				data: {
+					fullName,
+					email,
+					password: hashedPassword,
+					role: 'Basic',
+					credits: 50, // Initial credits
+				},
+			});
+		} catch (createError) {
+			// If the credits field doesn't exist yet, try without it
+			if (createError.code === 'P2022') {
+				console.log('Credits field not found in schema, creating user without credits');
+				result = await prisma.user.create({
+					data: {
+						fullName,
+						email,
+						password: hashedPassword,
+						role: 'Basic',
+					},
+				});
+			} else {
+				// If it's a different error, rethrow it
+				throw createError;
+			}
+		}
 		
 		// Create a credit log entry for the initial credits
 		await prisma.creditLog.create({
