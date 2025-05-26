@@ -7,10 +7,10 @@ export const metadata = {
 	description: 'Create your account on the planetQProductions and get started.',
 }
 
-export default async function Login() {
+export default async function Signup() {
 	const session = await auth()
 	if (session) {
-		redirect('/home')
+		redirect('/aistudio')
 	}
 
 	return <SignupForm />

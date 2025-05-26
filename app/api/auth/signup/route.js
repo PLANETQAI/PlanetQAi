@@ -100,7 +100,7 @@ export async function POST(req) {
 			return NextResponse.json({ message: error.errors }, { status: 422 })
 		}
 
-		// Log detailed error information
+		// Log detailed error information for debugging
 		console.error('Signup Error:', {
 			message: error.message,
 			code: error.code,
@@ -108,18 +108,34 @@ export async function POST(req) {
 			stack: error.stack
 		})
 		
-		// Handle specific Prisma errors
+		// Handle specific Prisma errors with user-friendly messages
 		if (error.code === 'P2022') {
 			return NextResponse.json({ 
-				message: 'Database schema mismatch. Please contact support.', 
-				detail: 'Missing column in database schema' 
+				message: 'We\'re experiencing technical difficulties with our user registration system.', 
+				detail: 'Our team has been notified. Please try again later.' 
 			}, { status: 500 })
 		}
 		
-		// Return a more specific error message if possible
+		// Handle database connection errors (like the URL format issue)
+		if (error.code === 'P6001' || error.message.includes('URL must start with the protocol')) {
+			return NextResponse.json({ 
+				message: 'We\'re currently experiencing database connectivity issues.', 
+				detail: 'Our team has been notified. Please try again later or contact support if the issue persists.' 
+			}, { status: 503 })
+		}
+		
+		// Handle duplicate email error more gracefully
+		if (error.code === 'P2002' && error.meta?.target?.includes('email')) {
+			return NextResponse.json({ 
+				message: 'This email is already registered.', 
+				detail: 'Please use a different email address or try logging in instead.' 
+			}, { status: 409 })
+		}
+		
+		// Generic error for all other cases
 		return NextResponse.json({ 
 			message: 'Registration failed. Please try again later.', 
-			detail: error.message || 'Unknown error'
+			detail: 'If this issue persists, please contact our support team.'
 		}, { status: 500 })
 	}
 }

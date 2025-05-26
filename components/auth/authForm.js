@@ -60,36 +60,65 @@ export default function AuthForm() {
 		setIsLoading(true)
 
 		try {
+			const callbackUrl = searchParams.get('callbackUrl') || '/aistudio'
+			
 			if (redirectTo) {
-				await signIn('credentials', {
-					redirectTo:
-						redirectTo +
-						[
-							tags ? `tags=${encodeURIComponent(tags)}` : '',
-							text ? `text=${encodeURIComponent(text)}` : '',
-							title ? `title=${encodeURIComponent(title)}` : '',
-						]
-							.filter(Boolean) // Filters out empty strings
-							.join('&'), // Joins the remaining parameters with "&"
-					email,
-					password,
-				})
-			} else {
-				await signIn('credentials', {
+				// Handle special case with additional parameters
+				const queryParams = [
+					tags ? `tags=${encodeURIComponent(tags)}` : '',
+					text ? `text=${encodeURIComponent(text)}` : '',
+					title ? `title=${encodeURIComponent(title)}` : ''
+				].filter(Boolean).join('&')
+				
+				const redirectUrl = queryParams ? `${redirectTo}?${queryParams}` : redirectTo
+				
+				const result = await signIn('credentials', {
 					redirect: false,
 					email,
-					password,
+					password
 				})
+				
+				if (result?.error) {
+					// Handle authentication errors without showing technical details
+					if (result.error.includes('configuration')) {
+						throw new Error('System error. Please try again later or contact support.')
+					} else {
+						throw new Error('Invalid email or password. Please try again.')
+					}
+				}
+				
+				toast.success('Logged in Successfully')
+				setTimeout(() => {
+					router.push(redirectUrl)
+				}, 1000)
+			} else {
+				// Standard login with callback
+				const result = await signIn('credentials', {
+					redirect: false,
+					email,
+					password
+				})
+				
+				if (result?.error) {
+					// Handle authentication errors without showing technical details
+					if (result.error.includes('configuration')) {
+						throw new Error('System error. Please try again later or contact support.')
+					} else {
+						throw new Error('Invalid email or password. Please try again.')
+					}
+				}
+				
+				toast.success('Logged in Successfully')
+				setTimeout(() => {
+					router.push(callbackUrl)
+				}, 1000)
 			}
-			toast.success('Logged in Successfully')
-			setTimeout(() => {
-				router.push('/')
-			}, 1500)
 		} catch (error) {
-			toast.error('Oops! Something went wrong')
+			console.error('Login error:', error)
+			// Show user-friendly error message
+			toast.error(error.message || 'Login failed. Please try again later.')
+			setIsLoading(false)
 		}
-
-		setIsLoading(false)
 	}
 
 	return (

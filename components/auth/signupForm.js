@@ -60,13 +60,9 @@ export default function SignupForm() {
 
 		try {
 			const response = await axios.post('/api/auth/signup', { fullName, email, password })
-			const data = await response.data
-
-			if (!response.ok) {
-				throw new Error(data.message || 'Something went wrong!')
-			}
-
-			toast.success('User created!', {
+			
+			// Success case
+			toast.success('Account created successfully!', {
 				position: 'top-right',
 				autoClose: 1500,
 				hideProgressBar: false,
@@ -77,28 +73,64 @@ export default function SignupForm() {
 				theme: 'dark',
 			})
 
+			// Automatically log in after successful registration
 			setTimeout(async () => {
+				const callbackUrl = '/aistudio' // Default redirect to AI Studio
+				
+				// Handle special redirects with parameters if needed
+				let redirectUrl = callbackUrl
+				if (redirectTo) {
+					const queryParams = [
+						tags ? `tags=${encodeURIComponent(tags)}` : '',
+						text ? `text=${encodeURIComponent(text)}` : '',
+						title ? `title=${encodeURIComponent(title)}` : ''
+					].filter(Boolean).join('&')
+					
+					redirectUrl = queryParams ? `${redirectTo}?${queryParams}` : redirectTo
+				}
+				
+				// Sign in with credentials
 				await signIn('credentials', {
-					redirectTo: redirectTo
-						? decodeURIComponent(redirectTo) +
-						  '?' +
-						  [
-								tags ? `tags=${encodeURIComponent(tags)}` : '',
-								text ? `text=${encodeURIComponent(text)}` : '',
-								title ? `title=${encodeURIComponent(title)}` : '',
-						  ]
-								.filter(Boolean)
-								.join('&')
-						: '/',
+					redirect: false,
 					email,
-					password,
+					password
+				}).then(result => {
+					if (result?.error) {
+						toast.error('Login failed after signup. Please try logging in manually.', {
+							position: 'top-right',
+							autoClose: 3000
+						})
+					} else {
+						window.location.href = redirectUrl
+					}
 				})
-			}, 2000)
+			}, 1500)
 		} catch (error) {
-			console.log(error)
-			toast.error(error.message, {
+			console.error('Signup error:', error)
+			
+			// Extract the error message from the response
+			let errorMessage = 'Registration failed. Please try again.'
+			let errorDetail = ''
+			
+			if (error.response) {
+				// The server responded with an error status
+				const { data } = error.response
+				if (data.message) {
+					errorMessage = data.message
+					errorDetail = data.detail || ''
+				}
+			} else if (error.request) {
+				// The request was made but no response was received
+				errorMessage = 'No response from server. Please check your internet connection.'
+			} else {
+				// Something happened in setting up the request
+				errorMessage = error.message || 'An unexpected error occurred'
+			}
+			
+			// Display the main error message
+			toast.error(errorMessage, {
 				position: 'top-right',
-				autoClose: 1500,
+				autoClose: 5000, // Longer display time for errors
 				hideProgressBar: false,
 				closeOnClick: true,
 				pauseOnHover: true,
@@ -106,9 +138,22 @@ export default function SignupForm() {
 				progress: undefined,
 				theme: 'dark',
 			})
+			
+			// If there's additional detail, show it as a second toast
+			if (errorDetail) {
+				setTimeout(() => {
+					toast.info(errorDetail, {
+						position: 'top-right',
+						autoClose: 5000,
+						hideProgressBar: false,
+						closeOnClick: true,
+						theme: 'dark'
+					})
+				}, 500) // Slight delay for better UX
+			}
+			
+			setIsLoading(false)
 		}
-
-		setIsLoading(false)
 	}
 
 	return (
