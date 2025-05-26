@@ -275,25 +275,26 @@ const DiffrhymGenerator = ({
 	}
 
 	// Calculate estimated credits based on prompt complexity and selected options
+	// This is only used to check if user has enough credits, not to show the cost
 	const calculateEstimatedCredits = () => {
 		// Get the prompt text
 		const promptText = selectedPrompt.text || '';
+		// Count words in the prompt
+		const wordCount = promptText.split(/\s+/).filter(word => word.length > 0).length;
 		
-		// Backend uses a duration-based calculation with CREDITS_PER_SECOND = 5
-		// For frontend estimation, we'll use the same formula as the backend
-		const CREDITS_PER_SECOND = 5;
+		// Base cost: 50 credits for Diffrhythm generation
+		let credits = 50;
 		
-		// Estimate duration based on prompt length (similar to backend heuristic)
-		// MIN_GENERATION_DURATION is 10 seconds in the backend
-		const MIN_GENERATION_DURATION = 10;
-		const estimatedDuration = Math.max(MIN_GENERATION_DURATION, Math.ceil(promptText.length / 50));
+		// Additional cost: 4 credits for every 10 words (or fraction) over 200 words
+		if (wordCount > 200) {
+			const excessWords = wordCount - 200;
+			const excessWordPacks = Math.ceil(excessWords / 10);
+			credits += excessWordPacks * 4;
+		}
 		
-		// Calculate credits using the same formula as the backend
-		const credits = Math.ceil(estimatedDuration * CREDITS_PER_SECOND);
+		// Only log the calculation, don't show to user
+		console.log(`Diffrhythm credit calculation: ${wordCount} words = ${credits} credits`);
 		
-		console.log(`Diffrhym credit calculation: prompt length ${promptText.length}, estimated duration ${estimatedDuration}s = ${credits} credits`);
-		
-		// Return the calculated credit amount
 		return credits;
 	}
 

@@ -7,9 +7,10 @@ import axios from "axios";
 const prisma = new PrismaClient();
 
 // Constants for credit calculation
-const CREDITS_PER_SECOND = 5;
-const MIN_GENERATION_DURATION = 10; // Minimum duration in seconds for credit calculation
-const DEFAULT_ESTIMATED_DURATION = 15; // Default estimated duration in seconds
+const SUNO_BASE_CREDITS = 80; // Base cost for Suno generation (80 cents in credits)
+const EXCESS_WORDS_PACK_SIZE = 10; // Additional credits for every 10 words over 200
+const SUNO_EXCESS_WORDS_COST = 5; // Cost per pack of excess words
+const WORD_COUNT_THRESHOLD = 200; // Threshold for additional credit costs
 
 /**
  * Suno music generation API endpoint
@@ -34,24 +35,18 @@ export async function POST(req) {
       );
     }
 
-    // Get estimated duration based on prompt complexity or use default
-    const estimatedDuration = Math.max(
-      MIN_GENERATION_DURATION,
-      Math.ceil(prompt.length / 50) // Simple heuristic: longer prompts might take more time
-    );
-
-    // Calculate estimated credits based on prompt length, matching frontend calculation
-    // Base cost: 24 credits for Suno generation
-    let estimatedCredits = 24;
-    
+    // Calculate credits based on word count
     // Count words in the prompt
     const wordCount = prompt.split(/\s+/).filter(word => word.length > 0).length;
     
+    // Base cost: 24 credits for Suno generation
+    let estimatedCredits = SUNO_BASE_CREDITS;
+    
     // Additional cost: 5 credits for every 10 words (or fraction) over 200 words
-    if (wordCount > 200) {
-      const excessWords = wordCount - 200;
-      const excessWordPacks = Math.ceil(excessWords / 10);
-      estimatedCredits += excessWordPacks * 5;
+    if (wordCount > WORD_COUNT_THRESHOLD) {
+      const excessWords = wordCount - WORD_COUNT_THRESHOLD;
+      const excessWordPacks = Math.ceil(excessWords / EXCESS_WORDS_PACK_SIZE);
+      estimatedCredits += excessWordPacks * SUNO_EXCESS_WORDS_COST;
     }
     
     console.log(`Suno backend credit calculation: ${wordCount} words = ${estimatedCredits} credits`);
@@ -164,10 +159,10 @@ export async function POST(req) {
       }
     });
 
-    // Deduct credits based on estimated duration
+    // Deduct credits based on word count (handled by CreditManager)
     await CreditManager.deductCreditsForSongGeneration(
       userId,
-      estimatedDuration,
+      0, // Duration parameter is not used anymore but kept for backward compatibility
       song.id
     );
 
