@@ -11,6 +11,7 @@ import { cn } from "@/lib/utils";
 
 // Import the improved stars component
 import StarsWrapper from "@/components/canvas/StarsWrapper";
+import StarsCanvas from "@/components/canvas/RandomStars";
 
 const CustomRadioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -600,6 +601,7 @@ const RootPage = () => {
         />
         {/* Reintroducing the improved stars component */}
         <StarsWrapper />
+        {/* <StarsCanvas /> */}
 
         {/* Content container */}
         <div className="w-full max-w-md mx-auto relative px-4 pt-16 pb-16">
