@@ -59,12 +59,32 @@ export default function SignupForm() {
 		setIsLoading(true)
 
 		try {
-			const response = await axios.post('/api/auth/signup', { fullName, email, password })
+			// Determine the redirect URL after verification
+			let redirectAfterVerification = '/aistudio' // Default redirect to AI Studio
+			
+			// Handle special redirects with parameters if needed
+			if (redirectTo) {
+				const queryParams = [
+					tags ? `tags=${encodeURIComponent(tags)}` : '',
+					text ? `text=${encodeURIComponent(text)}` : '',
+					title ? `title=${encodeURIComponent(title)}` : ''
+				].filter(Boolean).join('&')
+				
+				redirectAfterVerification = queryParams ? `${redirectTo}?${queryParams}` : redirectTo
+			}
+
+			// Include redirectUrl in the signup request
+			const response = await axios.post('/api/auth/signup', { 
+				fullName, 
+				email, 
+				password,
+				redirectUrl: redirectAfterVerification
+			})
 			
 			// Success case
-			toast.success('Account created successfully!', {
+			toast.success('Account created! Please verify your email.', {
 				position: 'top-right',
-				autoClose: 1500,
+				autoClose: 3000,
 				hideProgressBar: false,
 				closeOnClick: true,
 				pauseOnHover: true,
@@ -73,37 +93,25 @@ export default function SignupForm() {
 				theme: 'dark',
 			})
 
-			// Automatically log in after successful registration
-			setTimeout(async () => {
-				const callbackUrl = '/aistudio' // Default redirect to AI Studio
-				
-				// Handle special redirects with parameters if needed
-				let redirectUrl = callbackUrl
-				if (redirectTo) {
-					const queryParams = [
-						tags ? `tags=${encodeURIComponent(tags)}` : '',
-						text ? `text=${encodeURIComponent(text)}` : '',
-						title ? `title=${encodeURIComponent(title)}` : ''
-					].filter(Boolean).join('&')
-					
-					redirectUrl = queryParams ? `${redirectTo}?${queryParams}` : redirectTo
-				}
-				
-				// Sign in with credentials
-				await signIn('credentials', {
-					redirect: false,
-					email,
-					password
-				}).then(result => {
-					if (result?.error) {
-						toast.error('Login failed after signup. Please try logging in manually.', {
-							position: 'top-right',
-							autoClose: 3000
-						})
-					} else {
-						window.location.href = redirectUrl
+			// Redirect to verification page with the necessary parameters
+			setTimeout(() => {
+				if (response.data.userId && response.data.email) {
+					// If we have verification code in development, include it
+					const verificationParams = new URLSearchParams({
+						userId: response.data.userId,
+						email: response.data.email
+					})
+
+					// In development, include the verification code for easier testing
+					if (response.data.verificationCode) {
+						verificationParams.append('code', response.data.verificationCode)
 					}
-				})
+
+					window.location.href = `/verify-account?${verificationParams.toString()}`
+				} else {
+					// Fallback if we don't have the expected data
+					window.location.href = '/verify-account'
+				}
 			}, 1500)
 		} catch (error) {
 			console.error('Signup error:', error)

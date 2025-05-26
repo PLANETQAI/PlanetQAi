@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { ToastContainer, toast } from 'react-toastify'
@@ -16,12 +16,20 @@ export default function AuthForm() {
 	const text = searchParams.get('text') && decodeURIComponent(searchParams.get('text'))
 	const tags = searchParams.get('tags') && decodeURIComponent(searchParams.get('tags'))
 	const title = searchParams.get('title') && decodeURIComponent(searchParams.get('title'))
+	const error = searchParams.get('error')
 
 	const router = useRouter()
 	const [email, setEmail] = useState('')
 	const [password, setPassword] = useState('')
 	const [passwordError, setPasswordError] = useState('')
 	const [isLoading, setIsLoading] = useState(false)
+	
+	// Show error message if redirected from admin page
+	useEffect(() => {
+		if (error === 'adminonly') {
+			toast.error('Admin access only. Please log in with an admin account.')
+		}
+	}, [error])
 
 	const validatePassword = (password) => {
 		if (password.length < 8) {
@@ -60,9 +68,34 @@ export default function AuthForm() {
 		setIsLoading(true)
 
 		try {
-			const callbackUrl = searchParams.get('callbackUrl') || '/aistudio'
+			// Perform login
+			const result = await signIn('credentials', {
+				redirect: false,
+				email,
+				password
+			})
 			
-			if (redirectTo) {
+			if (result?.error) {
+				// Handle authentication errors without showing technical details
+				if (result.error.includes('configuration')) {
+					throw new Error('System error. Please try again later or contact support.')
+				} else {
+					throw new Error(result.error || 'Invalid email or password. Please try again.')
+				}
+			}
+
+			// Get user info from the result to check role
+			const userResponse = await fetch('/api/auth/session');
+			const session = await userResponse.json();
+			
+			// Determine redirect URL based on user role
+			let redirectUrl;
+			
+			if (session?.user?.role === 'Admin') {
+				// Admin users go to admin dashboard
+				redirectUrl = '/admin';
+				toast.success('Admin login successful!');
+			} else if (redirectTo) {
 				// Handle special case with additional parameters
 				const queryParams = [
 					tags ? `tags=${encodeURIComponent(tags)}` : '',
@@ -70,49 +103,19 @@ export default function AuthForm() {
 					title ? `title=${encodeURIComponent(title)}` : ''
 				].filter(Boolean).join('&')
 				
-				const redirectUrl = queryParams ? `${redirectTo}?${queryParams}` : redirectTo
-				
-				const result = await signIn('credentials', {
-					redirect: false,
-					email,
-					password
-				})
-				
-				if (result?.error) {
-					// Handle authentication errors without showing technical details
-					if (result.error.includes('configuration')) {
-						throw new Error('System error. Please try again later or contact support.')
-					} else {
-						throw new Error('Invalid email or password. Please try again.')
-					}
-				}
-				
-				toast.success('Logged in Successfully')
-				setTimeout(() => {
-					router.push(redirectUrl)
-				}, 1000)
+				redirectUrl = queryParams ? `${redirectTo}?${queryParams}` : redirectTo;
+				toast.success('Logged in successfully!');
 			} else {
 				// Standard login with callback
-				const result = await signIn('credentials', {
-					redirect: false,
-					email,
-					password
-				})
-				
-				if (result?.error) {
-					// Handle authentication errors without showing technical details
-					if (result.error.includes('configuration')) {
-						throw new Error('System error. Please try again later or contact support.')
-					} else {
-						throw new Error('Invalid email or password. Please try again.')
-					}
-				}
-				
-				toast.success('Logged in Successfully')
-				setTimeout(() => {
-					router.push(callbackUrl)
-				}, 1000)
+				const callbackUrl = searchParams.get('callbackUrl') || '/aistudio';
+				redirectUrl = callbackUrl;
+				toast.success('Logged in successfully!');
 			}
+			
+			// Redirect after a short delay to allow toast to be seen
+			setTimeout(() => {
+				router.push(redirectUrl);
+			}, 1000);
 		} catch (error) {
 			console.error('Login error:', error)
 			// Show user-friendly error message
@@ -129,7 +132,7 @@ export default function AuthForm() {
 					<Link href={'/'}>
 						<Image
 							src="/images/small.webp"
-							alt="Your Logo"
+							alt="Planet Q Logo"
 							width={135}
 							height={150}
 							className="rounded-2xl"
@@ -168,8 +171,8 @@ export default function AuthForm() {
 									Password
 								</label>
 								<div className="text-sm">
-									<Link href="/forgetpassword" legacyBehavior>
-										<a className="font-semibold text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+									<Link href="/forgot-password" className="font-semibold text-indigo-600 hover:text-indigo-500">
+										Forgot password?
 									</Link>
 								</div>
 							</div>

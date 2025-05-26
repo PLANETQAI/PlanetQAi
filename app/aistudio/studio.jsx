@@ -51,19 +51,24 @@ export default function Studio({ session }) {
 	// Function to fetch user credits
 	const fetchUserCredits = async () => {
 		try {
+			// Get base URL for API calls
+			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+			
 			// First check if the user is authenticated by getting the session
-			const sessionResponse = await fetch('/api/auth/session')
+			console.log('Fetching session from:', `${apiBaseUrl}/api/auth/session`)
+			const sessionResponse = await fetch(`${apiBaseUrl}/api/auth/session`)
 			const sessionData = await sessionResponse.json()
 
 			// If not authenticated, redirect to login page
 			if (!sessionData || !sessionData.user) {
 				console.log('User not authenticated, redirecting to login')
-				window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+				window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
 				return
 			}
 
 			// Now fetch credits with the authenticated session
-			const response = await fetch('/api/credits-api', {
+			console.log('Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
+			const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
 				method: 'GET',
 				credentials: 'include', // This ensures cookies are sent with the request
 				headers: {
@@ -74,7 +79,7 @@ export default function Studio({ session }) {
 			if (!response.ok) {
 				// If unauthorized, redirect to login
 				if (response.status === 401) {
-					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+					window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
 					return
 				}
 				throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)

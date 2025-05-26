@@ -1,0 +1,17 @@
+[2025-05-26T14:22:06.458Z] 🔔 Webhook received at 2025-05-26T14:22:06.458Z
+[2025-05-26T14:22:06.461Z] 📝 Request headers: {"accept":"*/*; q=0.5, application/xml","accept-encoding":"gzip","cache-control":"no-cache","content-length":"3912","content-type":"application/json; charset=utf-8","host":"3ae0-2c0f-fe38-202b-dd78-48a7-e212-8fa6-58e3.ngrok-free.app","stripe-signature":"t=1748269325,v1=4afe6337fd18b226a52b8d4237cc31f1e1e08187ea9d245dabd9e87869407b1c,v0=698bf6eedcd8a496991668c34919caa0a42fa9735f1798ad80301514c899fe1a","user-agent":"Stripe/1.0 (+https://stripe.com/docs/webhooks)","x-forwarded-for":"54.187.205.235","x-forwarded-host":"3ae0-2c0f-fe38-202b-dd78-48a7-e212-8fa6-58e3.ngrok-free.app","x-forwarded-port":"3000","x-forwarded-proto":"https"}
+[2025-05-26T14:22:06.461Z] 🔑 Webhook signature: t=1748269325,v1=4afe6337fd18b226a52b8d4237cc31f1e1e08187ea9d245dabd9e87869407b1c,v0=698bf6eedcd8a496991668c34919caa0a42fa9735f1798ad80301514c899fe1a
+[2025-05-26T14:22:06.461Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-26T14:22:06.461Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_1RT1uiLEbBbuiNy4R2W4MOOj",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748269324,
+  "data": {
+    "object": {
+      "id": "cs_test_a1TlTMUh6etPxpEmMBtSUhNZ4AOurfqv...
+[2025-05-26T14:22:06.462Z] ERROR: ⚠️ Webhook signature verification failed: No signatures found matching the expected signature for payload. Are you passing the raw request body you received from Stripe? 
+ If a webhook request is being forwarded by a third-party tool, ensure that the exact request body, including JSON formatting and new line style, is preserved.
+
+Learn more about webhook signing and explore webhook integration examples for various frameworks at https://docs.stripe.com/webhooks/signature
+

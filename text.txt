@@ -5,3 +5,7 @@ password: 1234567890
 ###
 Previous Credentails: 
 MongoDB_DATABASE_URL="mongodb+srv://root:randompassword@cluster0.ab1cd.mongodb.net/mydb?retryWrites=true&w=majority"
+
+node scripts/verify-admin.js
+Email: admin@planetqai.com
+Password: Admin123!

@@ -18,10 +18,10 @@ const prisma = new PrismaClient();
 
 // Define credit packages
 const CREDIT_PACKAGES = [
-  { id: "small", name: "Small Pack", credits: 100, price: 5 },
-  { id: "medium", name: "Medium Pack", credits: 300, price: 12 },
-  { id: "large", name: "Large Pack", credits: 700, price: 25 },
-  { id: "xl", name: "Extra Large Pack", credits: 1500, price: 45 },
+  { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
+  { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
+  { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
+  { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
 ];
 
 // GET handler to retrieve available credit packages
@@ -50,24 +50,37 @@ export async function GET(req) {
 // POST handler to process credit purchase
 export async function POST(req) {
   try {
+    console.log('Credit purchase API called');
+    
     // Get user session
     const session = await auth();
     if (!session) {
+      console.log('Unauthorized: No session found');
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = session.user.id;
+    console.log('User ID from session:', userId);
+    
     const body = await req.json();
+    console.log('Request body:', body);
+    
     const { packageId } = body;
 
     // Validate package ID
+    console.log('Looking for package with ID:', packageId);
+    console.log('Available packages:', CREDIT_PACKAGES);
+    
     const selectedPackage = CREDIT_PACKAGES.find(pkg => pkg.id === packageId);
     if (!selectedPackage) {
+      console.log('Invalid package selected:', packageId);
       return NextResponse.json(
         { error: "Invalid package selected" },
         { status: 400 }
       );
     }
+    
+    console.log('Selected package:', selectedPackage);
 
     // Get user information
     const user = await prisma.user.findUnique({
@@ -120,17 +133,15 @@ export async function POST(req) {
     }
     
     // Create a Stripe checkout session
+    console.log('Creating Stripe checkout session');
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
+          // Use the product ID directly
           price_data: {
             currency: "usd",
-            product_data: {
-              name: `${selectedPackage.name} - ${selectedPackage.credits} Credits`,
-              description: `Purchase ${selectedPackage.credits} credits for PlanetQAi`,
-              images: ["https://planetqproductions.com/images/logo.png"],
-            },
+            product: packageId, // Use the product ID from Stripe
             unit_amount: selectedPackage.price * 100, // Stripe uses cents
           },
           quantity: 1,

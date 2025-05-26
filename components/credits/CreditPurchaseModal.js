@@ -24,10 +24,10 @@ const CreditPurchaseModal = ({
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [packages, setPackages] = useState([
-    { id: "small", name: "Small Pack", credits: 100, price: 5 },
-    { id: "medium", name: "Medium Pack", credits: 300, price: 12 },
-    { id: "large", name: "Large Pack", credits: 700, price: 25 },
-    { id: "xl", name: "Extra Large Pack", credits: 1500, price: 45 },
+    { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
+    { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
+    { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
+    { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
   ])
 
   // Fetch available credit packages when the modal opens

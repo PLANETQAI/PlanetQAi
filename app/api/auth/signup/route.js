@@ -3,6 +3,19 @@ import { signInSchema } from '@/lib/zod'
 import { saltAndHashPassword } from '@/utils/password'
 import { ZodError } from 'zod'
 import prisma from '@/lib/prisma'
+import crypto from 'crypto'
+import { sendEmail } from '@/utils/email/emailService'
+import { accountVerificationTemplate } from '@/utils/email/emailTemplates'
+
+// Function to generate a random 6-digit code
+function generateVerificationCode() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Function to generate a secure token
+function generateToken() {
+  return crypto.randomBytes(32).toString('hex');
+}
 
 export async function POST(req) {
 	try {
@@ -40,61 +53,82 @@ export async function POST(req) {
 			throw new Error('Password hashing failed')
 		}
 
-		// Create the new user in the database with a try-catch to handle schema differences
-		let result;
-		try {
-			// First try with credits field (for when the migration has been applied)
-			result = await prisma.user.create({
-				data: {
-					fullName,
-					email,
-					password: hashedPassword,
-					role: 'Basic',
-					credits: 50, // Initial credits
-				},
-			});
-		} catch (createError) {
-			// If the credits field doesn't exist yet, try without it
-			if (createError.code === 'P2022') {
-				console.log('Credits field not found in schema, creating user without credits');
-				result = await prisma.user.create({
-					data: {
-						fullName,
-						email,
-						password: hashedPassword,
-						role: 'Basic',
-					},
-				});
-			} else {
-				// If it's a different error, rethrow it
-				throw createError;
-			}
-		}
-		
-		// Create a credit log entry for the initial credits with error handling
-		try {
-			await prisma.creditLog.create({
-				data: {
-					userId: result.id,
-					amount: 50,
-					balanceAfter: 50,
-					description: 'Welcome bonus credits',
-				},
-			});
-			console.log('Credit log created successfully for user:', result.id);
-		} catch (creditLogError) {
-			// Log the error but don't fail the signup process
-			console.error('Failed to create credit log, but user was created:', {
-				userId: result.id,
-				error: creditLogError.message,
-				code: creditLogError.code
-			});
-			// We'll continue the signup process even if credit log creation fails
-		}
-		
-		console.log('User Created:', result)
+		// Get the redirectUrl if provided, or default to home
+		const redirectUrl = body.redirectUrl || '/aistudio';
 
-		return NextResponse.json({ message: 'User Created!' }, { status: 201 })
+		// Create the new user in the database
+		const result = await prisma.user.create({
+			data: {
+				fullName,
+				email,
+				password: hashedPassword,
+				role: 'Basic',
+				isVerified: false, // User starts as unverified
+				credits: 50, // Initial credits as per requirements
+			},
+		});
+		
+		// Create a credit log entry for the initial credits
+		await prisma.creditLog.create({
+			data: {
+				userId: result.id,
+				amount: 50,
+				balanceAfter: 50,
+				description: 'Welcome bonus credits',
+			},
+		});
+
+		// Generate a verification code and token
+		const verificationCode = generateVerificationCode();
+		const verificationToken = generateToken();
+		const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+
+		// Create a verification record
+		await prisma.verification.create({
+			data: {
+				userId: result.id,
+				code: verificationCode,
+				token: verificationToken,
+				type: 'SIGNUP',
+				expiresAt: expiresAt,
+				redirectUrl: redirectUrl,
+			},
+		});
+
+		console.log('User Created:', result);
+		
+		// Generate email template
+		const { html, text } = accountVerificationTemplate(fullName, verificationToken, result.id);
+		
+		// Send verification email
+		try {
+			await sendEmail(
+				result.email,
+				'Verify Your PlanetQAi Account',
+				html,
+				text
+			);
+			console.log(`Verification email sent to ${result.email}`);
+		} catch (emailError) {
+			console.error('Error sending verification email:', emailError);
+			// Continue execution even if email fails - we'll show the code in development mode
+		}
+		
+		// For development purposes, log verification details
+		if (process.env.NODE_ENV === 'development') {
+			console.log('Verification code:', verificationCode);
+			console.log('Verification token:', verificationToken);
+			console.log(`Verification link: ${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/verify-account?token=${verificationToken}&userId=${result.id}`);
+		}
+
+		return NextResponse.json({ 
+			message: 'User created! Please check your email to verify your account.', 
+			userId: result.id,
+			email: result.email,
+			// Only include the verification details in development
+			verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
+			verificationToken: process.env.NODE_ENV === 'development' ? verificationToken : undefined
+		}, { status: 201 })
 	} catch (error) {
 		if (error instanceof ZodError) {
 			return NextResponse.json({ message: error.errors }, { status: 422 })

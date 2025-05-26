@@ -5,7 +5,11 @@ import Image from "next/image";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from "next/link";
-import dynamic from "next/dynamic";
+import dynamic from 'next/dynamic';
+
+// Import client-side components
+const PlanetQGamesCard = dynamic(() => import('../components/PlanetQGamesCard'), { ssr: false });
+const PlanetQVideoCard = dynamic(() => import('../components/PlanetQVideoCard'), { ssr: false });
 import CircleTypeText from "@/components/circleTypeText";
 import { cn } from "@/lib/utils";
 
@@ -268,8 +272,8 @@ const RootPage = () => {
       let newDirection = direction;
 
       if (direction === "forward") {
-        if (clickSteps < 5) {
-          // Updated to include new card
+        if (clickSteps < 6) {
+          // Updated to include new video games card
           newStep = clickSteps + 1;
         } else {
           newDirection = "backward";
@@ -462,98 +466,86 @@ const RootPage = () => {
 
   // SWAPPED: Productions moved to studio position (was radioPlayer)
   const planetQProductions = (
-    <Link
-      href={
-        "https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions"
-      }
-      className="p-1 block"
-    >
-      <div
-        className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto card-content"
-        onClick={preventPropagation}
+    <div className="p-1 block card-content" onClick={preventPropagation}>
+      <Link
+        href={
+          "https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions"
+        }
+        className="block"
       >
-        <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-          <h1 className="text-xl">Planet Q Productions</h1>
+        <div
+          className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto"
+        >
+          <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+            <h1 className="text-xl">Planet Q Productions</h1>
+          </div>
+          <Image
+            src="/images/V_center.jpg"
+            alt="Planet Q Productions"
+            width={300}
+            height={200}
+            className="w-full h-auto rounded-lg"
+          />
         </div>
-        <Image
-          src="/images/V_center.jpg"
-          alt="Planet Q Productions"
-          width={300}
-          height={200}
-          className="w-full h-auto rounded-lg"
-        />
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 
   // SWAPPED: Radio moved to store position (was roboCard)
   const planetQRadio = (
-    <Link
-      href={"https://planetqproductions.wixsite.com/planet-q-productions/faqs"}
-      className="h-full p-1 block"
-    >
-      <div
-        className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
-        onClick={preventPropagation}
+    <div className="h-full p-1 block card-content" onClick={preventPropagation}>
+      <Link
+        href={"https://planetqproductions.wixsite.com/planet-q-productions/faqs"}
+        className="block"
       >
-        <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-          <h1 className="text-xl">Planet Q Radio</h1>
+        <div
+          className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all"
+        >
+          <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+            <h1 className="text-xl">Planet Q Radio</h1>
+          </div>
+          <video
+            src="/videos/V_left-compressed.mp4"
+            autoPlay
+            muted
+            loop
+            className="w-full h-auto rounded-lg"
+          ></video>
         </div>
-        <video
-          src="/videos/V_left-compressed.mp4"
-          autoPlay
-          muted
-          loop
-          className="w-full h-auto rounded-lg"
-        ></video>
-      </div>
-    </Link>
+      </Link>
+    </div>
   );
 
   // SWAPPED: Studio moved to productions position (was fifthLink)
   const studioCard = (
-    <Link href={"/aistudio"} className="p-1">
-      <div
-        className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
-        onClick={preventPropagation}
-      >
-        <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-          <h1 className="text-xl">Q World Studios</h1>
+    <div className="p-1 card-content" onClick={preventPropagation}>
+      <Link href={"/aistudio"} className="block">
+        <div
+          className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all"
+        >
+          <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
+            <h1 className="text-xl">Q World Studios</h1>
+          </div>
+          <Image
+            src="/images/V_right.jpg"
+            alt="Q World Studios"
+            width={300}
+            height={200}
+            className="w-full h-auto rounded-lg"
+          />
         </div>
-        <Image
-          src="/images/V_right.jpg"
-          alt="Q World Studios"
-          width={300}
-          height={200}
-          className="w-full h-auto rounded-lg"
-        />
-      </div>
-    </Link>
+      </Link>
+    </div>
+  );
+
+  // New PlanetQVideo games card with Coming Soon label
+  const planetQGames = (
+    <PlanetQGamesCard onClick={preventPropagation} />
   );
 
   // New PlanetQVideo player card
   const planetQVideo = (
-    <div
-      className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all card-content"
-      onClick={preventPropagation}
-    >
-      <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
-        <h1 className="text-xl">Planet Q Video</h1>
-      </div>
-      <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-      <video
-        className="w-full h-auto rounded-lg"
-        controls
-        poster="/images/chat-bot/bot-icon.png"
-        >
-        <source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      </div>
-      <div className="mt-2 text-center text-sm text-gray-300">
-        Featuring futuristic music videos and content
-      </div>
-    </div>
+    <PlanetQVideoCard onClick={preventPropagation} />
   );
 
   // Add CSS for marquee animation if needed
@@ -685,6 +677,19 @@ const RootPage = () => {
                 {planetQVideo}
               </div>
 
+              <div
+                className={cn(
+                  "absolute w-full transition-all duration-500 ease-in-out",
+                  clickSteps === 6
+                    ? "opacity-100 translate-x-0"
+                    : clickSteps < 6
+                    ? "opacity-0 -translate-x-full"
+                    : "opacity-0 translate-x-full"
+                )}
+              >
+                {planetQGames}
+              </div>
+
               {/* Spacer div to maintain container height */}
               <div
                 className={cn(
@@ -734,11 +739,19 @@ const RootPage = () => {
               >
                 {planetQVideo}
               </div>
+              <div
+                className={cn(
+                  "w-full opacity-0 pointer-events-none",
+                  clickSteps === 6 ? "block" : "hidden"
+                )}
+              >
+                {planetQGames}
+              </div>
             </div>
 
             {/* Indicators */}
             <div className="mt-8 flex justify-center gap-2">
-              {[0, 1, 2, 3, 4, 5].map((index) => (
+              {[0, 1, 2, 3, 4, 5, 6].map((index) => (
                 <div
                   key={index}
                   className={cn(

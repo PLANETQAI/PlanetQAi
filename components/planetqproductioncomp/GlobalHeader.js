@@ -31,7 +31,9 @@ export default function GlobalHeader({ session }) {
 	// Function to fetch user credits
 	const fetchUserCredits = async () => {
 		try {
-			const response = await fetch('/api/credits-api', {
+			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+			console.log('GlobalHeader: Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
+			const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
 				method: 'GET',
 				credentials: 'include',
 				headers: {

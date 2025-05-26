@@ -130,7 +130,9 @@ const DiffrhymGenerator = ({
 			}
 			
 			// Fetch all user songs and filter locally
-			const response = await fetch('/api/songs', {
+			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+			console.log('Fetching songs from:', `${apiBaseUrl}/api/songs`)
+			const response = await fetch(`${apiBaseUrl}/api/songs`, {
 				method: 'GET',
 				credentials: 'include',
 				headers: {
@@ -241,7 +243,9 @@ const DiffrhymGenerator = ({
 			}
 			
 			// Now fetch credits with the authenticated session
-			const response = await fetch('/api/credits-api', {
+			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+			console.log('Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
+			const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
 				method: 'GET',
 				credentials: 'include', // This ensures cookies are sent with the request
 				headers: {
@@ -252,7 +256,8 @@ const DiffrhymGenerator = ({
 			if (!response.ok) {
 				// If unauthorized, redirect to login
 				if (response.status === 401) {
-					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+					const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+					window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
 					return
 				}
 				throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
