@@ -1,17 +1,16 @@
-import { buffer } from 'micro'
 import Stripe from 'stripe'
-import prisma from '@/lib/prisma' // Assuming Prisma client is set up
+import { PrismaClient } from '@prisma/client'
 import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
+
+const prisma = new PrismaClient()
 
 // Make sure to use the correct environment variable name
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY)
 
-export const config = {
-	api: {
-		bodyParser: false,
-	},
-}
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+export const preferredRegion = 'auto';
 
 export async function POST(req) {
 	const sig = req.headers.get('stripe-signature')

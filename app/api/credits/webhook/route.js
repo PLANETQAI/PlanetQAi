@@ -94,8 +94,8 @@ export async function POST(req) {
 }
 
 // Disable body parsing, we need the raw body for signature verification
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+export const runtime = 'edge';
+export const dynamic = 'force-dynamic';
+
+// This tells Next.js to not parse the body
+export const preferredRegion = 'auto';
