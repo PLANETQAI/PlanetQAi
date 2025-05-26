@@ -282,7 +282,7 @@ const SunoGenerator = ({
 	const calculateEstimatedCredits = () => {
 		// Get the prompt text
 		const promptText = selectedPrompt.text || '';
-		// Count words in the prompt
+		// Count words in the prompt - use the same algorithm as the backend
 		const wordCount = promptText.split(/\s+/).filter(word => word.length > 0).length;
 		
 		// Base cost: 80 credits for Suno generation
@@ -295,8 +295,9 @@ const SunoGenerator = ({
 			credits += excessWordPacks * 5;
 		}
 		
-		// Only log the calculation, don't show to user
+		// Log the calculation for debugging
 		console.log(`Suno credit calculation: ${wordCount} words = ${credits} credits`);
+		console.log(`User has ${userCredits?.credits || 0} credits available`);
 		
 		return credits;
 	}
@@ -350,7 +351,24 @@ const SunoGenerator = ({
 			}
 		} catch (err) {
 			console.error('Error generating audio:', err)
-			setError(err.message || 'Failed to generate music. Please try again.')
+			
+			// Check if this is a credit-related error
+			if (err.response && err.response.status === 403 && err.response.data) {
+				const { creditsNeeded, creditsAvailable, shortfall } = err.response.data
+				
+				// Set the credits needed for the purchase modal
+				setCreditsNeeded(shortfall || (creditsNeeded - creditsAvailable))
+				
+				// Show a more helpful error message
+				setError(`You need ${shortfall || (creditsNeeded - creditsAvailable)} more credits to generate this music.`)
+				
+				// Open the credit purchase modal
+				setShowCreditPurchaseModal(true)
+			} else {
+				// Handle other types of errors
+				setError(err.response?.data?.error || err.message || 'Failed to generate music. Please try again.')
+			}
+			
 			setLoading(false)
 			setGenerationStatus(null)
 		}
@@ -684,7 +702,7 @@ const SunoGenerator = ({
 			{generatedSongs && generatedSongs.length > 0 && (
 				<div className="mt-6 space-y-6">
 					<div>
-						<h4 className="text-white font-semibold mb-3">Your Suno Songs</h4>
+						<h4 className="text-white font-semibold mb-3">Your PlanetQAi Songs</h4>
 						
 						{/* Use the reusable SongList component */}
 						<SongList 

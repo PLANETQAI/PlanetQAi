@@ -279,10 +279,10 @@ const DiffrhymGenerator = ({
 	const calculateEstimatedCredits = () => {
 		// Get the prompt text
 		const promptText = selectedPrompt.text || '';
-		// Count words in the prompt
+		// Count words in the prompt - use the same algorithm as the backend
 		const wordCount = promptText.split(/\s+/).filter(word => word.length > 0).length;
 		
-		// Base cost: 50 credits for Diffrhythm generation
+		// Base cost: 50 credits for Q_World Studio generation
 		let credits = 50;
 		
 		// Additional cost: 4 credits for every 10 words (or fraction) over 200 words
@@ -292,8 +292,9 @@ const DiffrhymGenerator = ({
 			credits += excessWordPacks * 4;
 		}
 		
-		// Only log the calculation, don't show to user
-		console.log(`Diffrhythm credit calculation: ${wordCount} words = ${credits} credits`);
+		// Log the calculation for debugging
+		console.log(`Q_World Studio credit calculation: ${wordCount} words = ${credits} credits`);
+		console.log(`User has ${userCredits?.credits || 0} credits available`);
 		
 		return credits;
 	}
@@ -347,7 +348,24 @@ const DiffrhymGenerator = ({
 			}
 		} catch (err) {
 			console.error('Error generating audio:', err)
-			setError(err.message || 'Failed to generate music. Please try again.')
+			
+			// Check if this is a credit-related error
+			if (err.response && err.response.status === 403 && err.response.data) {
+				const { creditsNeeded, creditsAvailable, shortfall } = err.response.data
+				
+				// Set the credits needed for the purchase modal
+				setCreditsNeeded(shortfall || (creditsNeeded - creditsAvailable))
+				
+				// Show a more helpful error message
+				setError(`You need ${shortfall || (creditsNeeded - creditsAvailable)} more credits to generate this music.`)
+				
+				// Open the credit purchase modal
+				setShowCreditPurchaseModal(true)
+			} else {
+				// Handle other types of errors
+				setError(err.response?.data?.error || err.message || 'Failed to generate music. Please try again.')
+			}
+			
 			setLoading(false)
 			setGenerationStatus(null)
 		}
@@ -710,7 +728,7 @@ const DiffrhymGenerator = ({
 			{generatedSongs.length > 0 && (
 				<div className="mt-6 space-y-6">
 					<div>
-						<h4 className="text-white font-semibold mb-3">Your Diffrhym Songs</h4>
+						<h4 className="text-white font-semibold mb-3">Your Q_World Studio Songs</h4>
 						
 						{/* Use the reusable SongList component */}
 						<SongList 

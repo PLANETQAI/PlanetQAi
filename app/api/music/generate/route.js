@@ -7,13 +7,13 @@ import axios from "axios";
 const prisma = new PrismaClient();
 
 // Constants for credit calculation
-const DIFFRHYTHM_BASE_CREDITS = 50; // Base cost for Diffrhythm generation (50 cents in credits)
+const STUDIO_BASE_CREDITS = 50; // Base cost for Q_World Studio generation (50 cents in credits)
 const EXCESS_WORDS_PACK_SIZE = 10; // Additional credits for every 10 words over 200
-const DIFFRHYTHM_EXCESS_WORDS_COST = 4; // Cost per pack of excess words
+const STUDIO_EXCESS_WORDS_COST = 4; // Cost per pack of excess words
 const WORD_COUNT_THRESHOLD = 200; // Threshold for additional credit costs
 
 /**
- * Format lyrics with timestamps for the Diffrhythm API
+ * Format lyrics with timestamps for the Q_World Studio API
  * This creates a simple timestamp format [mm:ss.ms] before each line
  * @param {string} text - The raw lyrics or prompt text
  * @returns {string} - Formatted lyrics with timestamps
@@ -69,30 +69,48 @@ export async function POST(req) {
     // Count words in the prompt
     const wordCount = prompt.split(/\s+/).filter(word => word.length > 0).length;
     
-    // Base cost: 15 credits for prompts up to 200 words
-    let estimatedCredits = DIFFRHYTHM_BASE_CREDITS;
+    // Base cost: 50 credits for prompts up to 200 words
+    let estimatedCredits = STUDIO_BASE_CREDITS;
     
     // Additional cost: 4 credits for every 10 words (or fraction) over 200 words
     if (wordCount > WORD_COUNT_THRESHOLD) {
       const excessWords = wordCount - WORD_COUNT_THRESHOLD;
       const excessWordPacks = Math.ceil(excessWords / EXCESS_WORDS_PACK_SIZE);
-      estimatedCredits += excessWordPacks * DIFFRHYTHM_EXCESS_WORDS_COST;
+      estimatedCredits += excessWordPacks * STUDIO_EXCESS_WORDS_COST;
     }
     
-    console.log(`Diffrhythm backend credit calculation: ${wordCount} words = ${estimatedCredits} credits`);
+    console.log(`Q_World Studio credit calculation: ${wordCount} words = ${estimatedCredits} credits`);
 
     // Check if user has enough credits
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { credits: true },
+      select: { credits: true, email: true },
     });
 
-    if (!user || user.credits < estimatedCredits) {
+    // Add detailed logging to debug credit issues
+    console.log(`Credit check for user ${userId} (${user?.email}):`)
+    console.log(`- Available credits: ${user?.credits || 0}`)
+    console.log(`- Required credits: ${estimatedCredits}`)
+    console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`)
+    
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "User not found",
+          creditsNeeded: estimatedCredits,
+          creditsAvailable: 0,
+        },
+        { status: 404 }
+      );
+    }
+    
+    if (user.credits < estimatedCredits) {
       return NextResponse.json(
         {
           error: "Insufficient credits",
           creditsNeeded: estimatedCredits,
-          creditsAvailable: user?.credits || 0,
+          creditsAvailable: user.credits,
+          shortfall: estimatedCredits - user.credits
         },
         { status: 403 }
       );
@@ -103,7 +121,7 @@ export async function POST(req) {
     let songTags = tags ? tags.split(",").map(tag => tag.trim()) : [];
     
     // Add style, tempo, mood, and provider as tags
-    songTags.push(`provider:diffrhym`);
+    songTags.push(`provider:q_world_studio`);
     songTags.push(`style:${style || "pop"}`);
     songTags.push(`tempo:${tempo || "medium"}`);
     songTags.push(`mood:${mood || "neutral"}`);
@@ -121,16 +139,18 @@ export async function POST(req) {
       },
     });
 
-    // URL and API key for the GoAPI Diffrhythm API
+    // URL and API key for the Q_World Studio API
     const url = process.env.DIFFRHYM_API_URL;
     const apiKey = process.env.DIFFRHYM_API_KEY;
 
     if (!url || !apiKey) {
-      throw new Error("Diffrhythm API configuration missing");
+      throw new Error("Q_World Studio API configuration missing");
     }
 
-    // Determine task type based on estimated duration
-    const taskType = estimatedDuration > 30 ? "txt2audio-full" : "txt2audio-base";
+    // Determine task type based on prompt length
+    // Default to base version for shorter prompts, full version for longer ones
+    // Using the already calculated wordCount from above
+    const taskType = wordCount > 50 ? "txt2audio-full" : "txt2audio-base";
 
     // Create style prompt based on style, tempo, and mood
     const stylePrompt = `${style} music with ${tempo} tempo and ${mood} mood`;

@@ -54,15 +54,33 @@ export async function POST(req) {
     // Check if user has enough credits
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { credits: true },
+      select: { credits: true, email: true },
     });
 
-    if (!user || user.credits < estimatedCredits) {
+    // Add detailed logging to debug credit issues
+    console.log(`Credit check for user ${userId} (${user?.email}):`);
+    console.log(`- Available credits: ${user?.credits || 0}`);
+    console.log(`- Required credits: ${estimatedCredits}`);
+    console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`);
+    
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "User not found",
+          creditsNeeded: estimatedCredits,
+          creditsAvailable: 0,
+        },
+        { status: 404 }
+      );
+    }
+    
+    if (user.credits < estimatedCredits) {
       return NextResponse.json(
         {
           error: "Insufficient credits",
           creditsNeeded: estimatedCredits,
-          creditsAvailable: user?.credits || 0,
+          creditsAvailable: user.credits,
+          shortfall: estimatedCredits - user.credits
         },
         { status: 403 }
       );
