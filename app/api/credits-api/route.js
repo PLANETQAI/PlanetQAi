@@ -6,10 +6,10 @@ const prisma = new PrismaClient();
 
 // Define credit packages
 const CREDIT_PACKAGES = [
-  { id: "small", name: "Small Pack", credits: 100, price: 5 },
-  { id: "medium", name: "Medium Pack", credits: 300, price: 12 },
-  { id: "large", name: "Large Pack", credits: 700, price: 25 },
-  { id: "xl", name: "Extra Large Pack", credits: 1500, price: 45 },
+  { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
+  { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
+  { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
+  { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
 ];
 
 // GET handler to retrieve user credits and available credit packages
@@ -30,20 +30,20 @@ export async function GET(req) {
         role: true,
       },
     });
-    
+
     if (!user) {
-      return NextResponse.json({ error: 'User not found' }, { status: 404 });
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
-    
+
     // Get credit logs for the user to calculate current balance
     const creditLogs = await prisma.creditLog.findMany({
       where: { userId },
-      orderBy: { createdAt: 'desc' },
+      orderBy: { createdAt: "desc" },
     });
-    
+
     // Calculate current credit balance from logs
     const credits = creditLogs.length > 0 ? creditLogs[0].balanceAfter : 0;
-    
+
     // Default values for fields that might not exist in the schema yet
     const userCredits = {
       credits,
@@ -51,8 +51,8 @@ export async function GET(req) {
       totalCreditsUsed: 0, // Calculate this if needed
       role: user.role,
       subscription: {
-        planName: 'Free',
-        status: 'active',
+        planName: "Free",
+        status: "active",
         currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
       },
     };
@@ -117,7 +117,7 @@ export async function POST(req) {
     const { packageId } = body;
 
     // Validate package ID
-    const selectedPackage = CREDIT_PACKAGES.find(pkg => pkg.id === packageId);
+    const selectedPackage = CREDIT_PACKAGES.find((pkg) => pkg.id === packageId);
     if (!selectedPackage) {
       return NextResponse.json(
         { error: "Invalid package selected" },
@@ -128,12 +128,12 @@ export async function POST(req) {
     // Get current user data
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { 
+      select: {
         id: true,
         email: true,
         fullName: true,
         credits: true,
-        stripeCustomerId: true
+        stripeCustomerId: true,
       },
     });
 
@@ -142,8 +142,8 @@ export async function POST(req) {
     }
 
     // Import Stripe
-    const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-    
+    const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
+
     // Create or get Stripe customer
     let customerId = user.stripeCustomerId;
     if (!customerId) {
@@ -151,51 +151,51 @@ export async function POST(req) {
         email: user.email,
         name: user.fullName,
         metadata: {
-          userId: user.id
-        }
+          userId: user.id,
+        },
       });
       customerId = customer.id;
-      
+
       // Save the Stripe customer ID to the user
       await prisma.user.update({
         where: { id: userId },
-        data: { stripeCustomerId: customerId }
+        data: { stripeCustomerId: customerId },
       });
     }
-    
+
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
-      payment_method_types: ['card'],
+      payment_method_types: ["card"],
       line_items: [
         {
           price_data: {
-            currency: 'usd',
+            currency: "usd",
             product_data: {
               name: selectedPackage.name,
               description: `${selectedPackage.credits} credits for PlanetQAi`,
               metadata: {
-                packageId: selectedPackage.id
-              }
+                packageId: selectedPackage.id,
+              },
             },
             unit_amount: selectedPackage.price * 100, // Convert to cents
           },
           quantity: 1,
         },
       ],
-      mode: 'payment',
+      mode: "payment",
       success_url: `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?canceled=true`,
       metadata: {
         userId: userId,
         packageId: selectedPackage.id,
-        credits: selectedPackage.credits.toString()
-      }
+        credits: selectedPackage.credits.toString(),
+      },
     });
 
     return NextResponse.json({
       success: true,
-      url: checkoutSession.url
+      url: checkoutSession.url,
     });
   } catch (error) {
     console.error("Credit purchase error:", error);
