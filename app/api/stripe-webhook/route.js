@@ -33,11 +33,9 @@ function logToFile(message, isError = false) {
   fs.appendFileSync(logFile, logMessage);
 }
 
-// Configure the route options using the new Next.js 14 format
+// Route segment config
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
 
 export async function POST(request) {
   logToFile(`🔔 Stripe webhook received at ${new Date().toISOString()}`);

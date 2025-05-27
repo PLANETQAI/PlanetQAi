@@ -2,11 +2,9 @@ import prisma from '@/lib/prisma'
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
 
-// Configure the route options using the new Next.js 14 format
+// Route segment config
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
 
 export async function GET(req, res) {
 	try {

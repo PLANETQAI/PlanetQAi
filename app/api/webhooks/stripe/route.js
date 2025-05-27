@@ -5,11 +5,9 @@ import fs from 'fs';
 import path from 'path';
 import { headers } from 'next/headers';
 
-// Configure the route options using the new Next.js 14 format
+// Route segment config
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
 
 const prisma = new PrismaClient();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
