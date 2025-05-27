@@ -4,6 +4,12 @@ import { PrismaClient } from "@prisma/client";
 import { CreditManager } from "@/lib/credit-stripe-utils";
 import axios from "axios";
 
+// Configure the route options using the new Next.js 14 format
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
 const prisma = new PrismaClient();
 
 /**
