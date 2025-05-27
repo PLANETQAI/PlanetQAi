@@ -32,15 +32,13 @@ function logToFile(message, isError = false) {
   fs.appendFileSync(logFile, logMessage);
 }
 
-// Disable auth requirement for this route
+// Configure the route options using the new Next.js 14 format
 export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
 
-// This is needed to disable the default body parsing
-export const config = {
-  api: {
-    bodyParser: false,
-  },
-};
+// This is the new way to disable body parsing in Next.js 14
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
 
 export async function POST(req) {
   logToFile(`🔔 Webhook received at ${new Date().toISOString()}`);
