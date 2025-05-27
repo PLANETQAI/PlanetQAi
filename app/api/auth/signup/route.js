@@ -195,32 +195,34 @@ export async function POST(req) {
 			verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
 			verificationToken: process.env.NODE_ENV === 'development' ? verificationToken : undefined
 		}, { status: 201 })
-	} catch (error) {
-		if (error instanceof ZodError) {
-			return NextResponse.json({ message: error.errors }, { status: 422 })
-		}
-
+	} 	catch (error) {
 		// Log detailed error information for debugging
 		console.error('Signup Error:', {
 			message: error.message,
 			code: error.code,
 			meta: error.meta,
 			stack: error.stack
-		})
+		});
+		
+		if (error instanceof ZodError) {
+			return NextResponse.json({ message: error.errors }, { status: 422 })
+		}
 		
 		// Handle specific Prisma errors with user-friendly messages
 		if (error.code === 'P2022') {
 			return NextResponse.json({ 
 				message: 'We\'re experiencing technical difficulties with our user registration system.', 
-				detail: 'Our team has been notified. Please try again later.' 
+				detail: 'Our team has been notified. Please try again later.',
+				error: process.env.NODE_ENV === 'development' ? error.message : undefined
 			}, { status: 500 })
 		}
 		
-		// Handle database connection errors (like the URL format issue)
+		// Handle database connection errors
 		if (error.code === 'P6001' || error.message.includes('URL must start with the protocol')) {
 			return NextResponse.json({ 
 				message: 'We\'re currently experiencing database connectivity issues.', 
-				detail: 'Our team has been notified. Please try again later or contact support if the issue persists.' 
+				detail: 'Our team has been notified. Please try again later or contact support if the issue persists.',
+				error: process.env.NODE_ENV === 'development' ? error.message : undefined
 			}, { status: 503 })
 		}
 		
@@ -232,10 +234,14 @@ export async function POST(req) {
 			}, { status: 409 })
 		}
 		
-		// Generic error for all other cases
+		// Default error response
 		return NextResponse.json({ 
 			message: 'Registration failed. Please try again later.', 
-			detail: 'If this issue persists, please contact our support team.'
+			detail: 'If this issue persists, please contact our support team.',
+			error: process.env.NODE_ENV === 'development' ? error.message : undefined,
+			stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+			code: process.env.NODE_ENV === 'development' ? error.code : undefined,
+			meta: process.env.NODE_ENV === 'development' ? error.meta : undefined
 		}, { status: 500 })
 	}
 }
