@@ -4,10 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma migrate deploy && next build",
+    "build": "npx prisma generate && npx prisma migrate deploy && node scripts/verify-schema.js && next build",
     "start": "next start",
     "lint": "next lint",
-    "postinstall": "npx prisma generate --no-engine"
+    "postinstall": "npx prisma generate",
+    "verify-schema": "node scripts/verify-schema.js"
   },
   "dependencies": {
     "@ai-sdk/openai": "^1.3.7",

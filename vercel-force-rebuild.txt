@@ -1,2 +1,0 @@
-Force Vercel rebuild - timestamp: 2025-05-27T20:22:30
-This file is used to force Vercel to rebuild the project with the latest commit.
