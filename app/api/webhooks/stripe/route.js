@@ -5,6 +5,12 @@ import fs from 'fs';
 import path from 'path';
 import { headers } from 'next/headers';
 
+// Configure the route options using the new Next.js 14 format
+export const dynamic = 'force-dynamic';
+export const runtime = 'nodejs';
+export const fetchCache = 'force-no-store';
+export const revalidate = 0;
+
 const prisma = new PrismaClient();
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
@@ -31,14 +37,6 @@ function logToFile(message, isError = false) {
   const logFile = path.join(logDir, 'stripe-webhooks.log');
   fs.appendFileSync(logFile, logMessage);
 }
-
-// Configure the route options using the new Next.js 14 format
-export const dynamic = 'force-dynamic';
-export const runtime = 'nodejs';
-
-// This is the new way to disable body parsing in Next.js 14
-export const fetchCache = 'force-no-store';
-export const revalidate = 0;
 
 export async function POST(req) {
   logToFile(`🔔 Webhook received at ${new Date().toISOString()}`);
