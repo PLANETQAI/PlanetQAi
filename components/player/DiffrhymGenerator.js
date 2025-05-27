@@ -354,21 +354,35 @@ const DiffrhymGenerator = ({
 		} catch (err) {
 			console.error('Error generating audio:', err)
 			
-			// Check if this is a credit-related error
+			// Log the full error for debugging
+			console.error('Full error response:', err.response?.data)
+			
+			// Check if this is a credit-related error from our system
 			if (err.response && err.response.status === 403 && err.response.data) {
-				const { creditsNeeded, creditsAvailable, shortfall } = err.response.data
+				const { creditsNeeded, creditsAvailable, shortfall, error: errorMsg } = err.response.data
 				
 				// Set the credits needed for the purchase modal
 				setCreditsNeeded(shortfall || (creditsNeeded - creditsAvailable))
 				
-				// Show a more helpful error message
-				setError(`You need ${shortfall || (creditsNeeded - creditsAvailable)} more credits to generate this music.`)
+				// Show the exact error message from the server
+				setError(errorMsg || `You need ${shortfall || (creditsNeeded - creditsAvailable)} more credits to generate this music.`)
 				
 				// Open the credit purchase modal
 				setShowCreditPurchaseModal(true)
+			} else if (err.response?.data?.error && err.response.data.error.includes('insufficient credits')) {
+				// This is likely an error from GoAPI about insufficient credits
+				// Don't show this to the user, just log it and show a generic error
+				console.error('GoAPI credit error:', err.response.data.error)
+				setError('There was an issue with the music generation service. Please try again.')
 			} else {
-				// Handle other types of errors
-				setError(err.response?.data?.error || err.message || 'Failed to generate music. Please try again.')
+				// Handle other types of errors with more detailed information
+				// Filter out any GoAPI errors that mention credits
+				const errorMsg = err.response?.data?.error || err.message || 'Failed to generate music. Please try again.'
+				if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('insufficient')) {
+					setError('There was an issue with the music generation service. Please try again.')
+				} else {
+					setError(errorMsg)
+				}
 			}
 			
 			setLoading(false)
@@ -398,9 +412,6 @@ const DiffrhymGenerator = ({
 			}
 
 			if (data.status === 'completed' && data.output && data.output.audio_url) {
-				// Update user credits after successful generation
-				fetchUserCredits()
-
 				// Set the generated audio
 				setGeneratedAudio(data.output.audio_url)
 				

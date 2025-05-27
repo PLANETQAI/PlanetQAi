@@ -123,9 +123,10 @@ export const passwordResetTemplate = (userName, resetToken, userId) => {
  * @param {string} userName - User's full name
  * @param {string} verificationToken - Verification token
  * @param {string} userId - User ID for verification
+ * @param {string} verificationCode - The 6-digit verification code
  * @returns {Object} - HTML and text versions of the email
  */
-export const accountVerificationTemplate = (userName, verificationToken, userId) => {
+export const accountVerificationTemplate = (userName, verificationToken, userId, verificationCode) => {
   const baseUrl = getBaseUrl();
   const verificationLink = `${baseUrl}/verify-account?token=${verificationToken}&userId=${userId}`;
   
@@ -199,6 +200,13 @@ export const accountVerificationTemplate = (userName, verificationToken, userId)
       <p>Or copy and paste this link into your browser:</p>
       <p style="word-break: break-all;"><a href="${verificationLink}">${verificationLink}</a></p>
       
+      <p>Alternatively, you can enter this verification code manually:</p>
+      <div style="text-align: center; margin: 20px 0;">
+        <div style="font-family: monospace; background-color: #f5f5f5; padding: 15px; border-radius: 4px; display: inline-block; font-size: 24px; letter-spacing: 5px; font-weight: bold;">
+          ${verificationCode || '------'}
+        </div>
+      </div>
+      
       <div class="credits">
         <p>You've received <strong>50 free credits</strong> to start creating music right away!</p>
       </div>
@@ -223,6 +231,8 @@ export const accountVerificationTemplate = (userName, verificationToken, userId)
     Thank you for signing up with PlanetQAi! To complete your registration and start generating amazing music, please visit this link to verify your account:
     
     ${verificationLink}
+    
+    Alternatively, you can use this verification code: ${verificationCode || '------'}
     
     You've received 50 free credits to start creating music right away!
     

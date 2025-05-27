@@ -43,7 +43,7 @@ export default function VerifyAccountForm() {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/auth/verify-reset-code', {
+      const response = await fetch('/api/auth/verify-account', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -90,7 +90,7 @@ export default function VerifyAccountForm() {
         },
         body: JSON.stringify({
           userId,
-          code,
+          code: code.trim(),
         }),
       });
 
@@ -191,9 +191,35 @@ export default function VerifyAccountForm() {
             <button
               type="button"
               className="text-indigo-400 hover:text-indigo-300 focus:outline-none"
-              onClick={() => {
-                // Implement resend code functionality here
-                toast.success('A new verification code has been sent to your email');
+              onClick={async () => {
+                try {
+                  // Use our new resend-verification API endpoint
+                  const response = await fetch('/api/auth/resend-verification', {
+                    method: 'POST',
+                    headers: {
+                      'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                      userId: userId || undefined,
+                      email: email || undefined
+                    }),
+                  });
+                  
+                  const data = await response.json();
+                  
+                  if (!response.ok) {
+                    throw new Error(data.error || 'Failed to resend verification code');
+                  }
+                  
+                  // Update state with any returned data
+                  if (data.userId) setUserId(data.userId);
+                  if (data.email) setEmail(data.email);
+                  if (data.verificationCode) setCode(data.verificationCode);
+                  
+                  toast.success('A new verification code has been sent to your email');
+                } catch (error) {
+                  toast.error(error.message || 'Failed to resend verification code');
+                }
               }}
             >
               Resend Code

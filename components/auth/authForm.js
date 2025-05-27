@@ -9,14 +9,30 @@ import Image from 'next/image'
 import 'react-toastify/dist/ReactToastify.css'
 import { useSearchParams } from 'next/navigation'
 
-export default function AuthForm() {
-	const searchParams = useSearchParams()
-	const redirectTo =
-		searchParams.get('redirectTo') && decodeURIComponent(searchParams.get('redirectTo'))
-	const text = searchParams.get('text') && decodeURIComponent(searchParams.get('text'))
-	const tags = searchParams.get('tags') && decodeURIComponent(searchParams.get('tags'))
-	const title = searchParams.get('title') && decodeURIComponent(searchParams.get('title'))
-	const error = searchParams.get('error')
+export default function AuthForm({ searchParams: propSearchParams }) {
+	// Use both props and URL search params to ensure we catch the redirect in all cases
+	const urlSearchParams = useSearchParams()
+	
+	// First check props (passed from server component), then URL params (for client-side navigation)
+	const redirectTo = 
+		(propSearchParams?.redirectTo && decodeURIComponent(propSearchParams.redirectTo)) ||
+		(urlSearchParams.get('redirectTo') && decodeURIComponent(urlSearchParams.get('redirectTo')))
+	
+	const text = 
+		(propSearchParams?.text && decodeURIComponent(propSearchParams.text)) ||
+		(urlSearchParams.get('text') && decodeURIComponent(urlSearchParams.get('text')))
+	
+	const tags = 
+		(propSearchParams?.tags && decodeURIComponent(propSearchParams.tags)) ||
+		(urlSearchParams.get('tags') && decodeURIComponent(urlSearchParams.get('tags')))
+	
+	const title = 
+		(propSearchParams?.title && decodeURIComponent(propSearchParams.title)) ||
+		(urlSearchParams.get('title') && decodeURIComponent(urlSearchParams.get('title')))
+	
+	const error = 
+		(propSearchParams?.error) ||
+		(urlSearchParams.get('error'))
 
 	const router = useRouter()
 	const [email, setEmail] = useState('')
@@ -68,6 +84,8 @@ export default function AuthForm() {
 		setIsLoading(true)
 
 		try {
+			console.log('Login attempt with redirectTo:', redirectTo);
+				
 			// Perform login
 			const result = await signIn('credentials', {
 				redirect: false,
@@ -87,10 +105,12 @@ export default function AuthForm() {
 			// Get user info from the result to check role
 			const userResponse = await fetch('/api/auth/session');
 			const session = await userResponse.json();
-			
+				
 			// Determine redirect URL based on user role
 			let redirectUrl;
-			
+				
+			console.log('Determining redirect URL. Role:', session?.user?.role, 'RedirectTo:', redirectTo);
+				
 			if (session?.user?.role === 'Admin') {
 				// Admin users go to admin dashboard
 				redirectUrl = '/admin';
@@ -104,18 +124,31 @@ export default function AuthForm() {
 				].filter(Boolean).join('&')
 				
 				redirectUrl = queryParams ? `${redirectTo}?${queryParams}` : redirectTo;
+				console.log('Redirecting to original page:', redirectUrl);
 				toast.success('Logged in successfully!');
 			} else {
 				// Standard login with callback
-				const callbackUrl = searchParams.get('callbackUrl') || '/aistudio';
+				const callbackUrl = urlSearchParams.get('callbackUrl') || '/aistudio';
 				redirectUrl = callbackUrl;
 				toast.success('Logged in successfully!');
 			}
-			
-			// Redirect after a short delay to allow toast to be seen
-			setTimeout(() => {
+		
+			// Reduce timeout to make redirection faster
+			const redirectTimer = setTimeout(() => {
+				console.log('Redirecting via router.push to:', redirectUrl);
 				router.push(redirectUrl);
-			}, 1000);
+				
+				// Add a fallback direct navigation in case router.push doesn't work
+				const fallbackTimer = setTimeout(() => {
+					console.log('Fallback redirection via window.location to:', redirectUrl);
+					window.location.href = redirectUrl;
+				}, 500);
+				
+				return () => clearTimeout(fallbackTimer);
+			}, 500); // Reduced from 1000ms to 500ms
+			
+			// Cleanup function
+			return () => clearTimeout(redirectTimer);
 		} catch (error) {
 			console.error('Login error:', error)
 			// Show user-friendly error message

@@ -119,11 +119,15 @@ export default function ForgotPasswordForm() {
           <div className="mt-6">
             <button
               onClick={() => {
-                // If we have verification data, pass it as URL parameters
-                if (verificationData) {
-                  router.push(`/reset-password?userId=${verificationData.userId}&email=${encodeURIComponent(verificationData.email)}&code=${verificationData.code}`)
+                // Only pass verification data in development mode for testing
+                // In production, users should get the code from their email
+                if (process.env.NODE_ENV === 'development' && verificationData) {
+                  console.log('DEV MODE: Auto-filling verification code for testing');
+                  router.push(`/reset-password?userId=${verificationData.userId}&email=${encodeURIComponent(verificationData.email)}&code=${verificationData.code}`);
                 } else {
-                  router.push('/reset-password')
+                  // In production, just redirect to reset password page without the code
+                  // User will need to get the code from their email
+                  router.push(`/reset-password?userId=${verificationData?.userId || ''}&email=${encodeURIComponent(verificationData?.email || '')}`);
                 }
               }}
               className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-purple-600 hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-purple-500"

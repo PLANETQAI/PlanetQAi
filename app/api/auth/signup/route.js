@@ -38,12 +38,78 @@ export async function POST(req) {
 		// Check if the user already exists
 		const existingUser = await prisma.user.findUnique({ 
 			where: { email },
-			select: { email: true }
+			select: { id: true, email: true, isVerified: true }
 		})
 		console.log('Existing User:', existingUser)
 		
 		if (existingUser) {
-			return NextResponse.json({ message: 'User exists already!' }, { status: 422 })
+			// If user exists but is not verified, we can resend verification
+			if (!existingUser.isVerified) {
+				// Generate a new verification code and token
+				const verificationCode = generateVerificationCode();
+				const verificationToken = generateToken();
+				const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
+				
+				// Update the existing verification record or create a new one
+				await prisma.verification.upsert({
+					where: { userId: existingUser.id },
+					update: {
+						code: verificationCode,
+						token: verificationToken,
+						expiresAt: expiresAt,
+						isUsed: false,
+						redirectUrl: body.redirectUrl || '/aistudio',
+					},
+					create: {
+						userId: existingUser.id,
+						code: verificationCode,
+						token: verificationToken,
+						type: 'SIGNUP',
+						expiresAt: expiresAt,
+						redirectUrl: body.redirectUrl || '/aistudio',
+					},
+				});
+				
+				// Get user details for email
+				const userDetails = await prisma.user.findUnique({
+					where: { id: existingUser.id },
+					select: { fullName: true, email: true }
+				});
+				
+				// Generate email template
+				const { html, text } = accountVerificationTemplate(userDetails.fullName, verificationToken, existingUser.id, verificationCode);
+				
+				// Send verification email
+				try {
+					await sendEmail(
+						userDetails.email,
+						'Verify Your PlanetQAi Account',
+						html,
+						text
+					);
+					console.log(`Verification email resent to ${userDetails.email}`);
+				} catch (emailError) {
+					console.error('Error sending verification email:', emailError);
+				}
+				
+				// For development purposes, log verification details
+				if (process.env.NODE_ENV === 'development') {
+					console.log('Verification code:', verificationCode);
+					console.log('Verification token:', verificationToken);
+					console.log(`Verification link: ${process.env.NEXT_PUBLIC_APP_URL}/verify-account?token=${verificationToken}&userId=${existingUser.id}`);
+				}
+				
+				return NextResponse.json({ 
+					message: 'We noticed you already have an account. A new verification email has been sent.',
+					userId: existingUser.id,
+					email: userDetails.email,
+					verificationCode: process.env.NODE_ENV === 'development' ? verificationCode : undefined,
+					verificationToken: process.env.NODE_ENV === 'development' ? verificationToken : undefined
+				}, { status: 200 });
+			}
+			
+			// If user is already verified, return error
+			return NextResponse.json({ message: 'User exists already! Please login instead.' }, { status: 422 })
 		}
 
 		// Hash the password before saving
@@ -98,7 +164,7 @@ export async function POST(req) {
 		console.log('User Created:', result);
 		
 		// Generate email template
-		const { html, text } = accountVerificationTemplate(fullName, verificationToken, result.id);
+		const { html, text } = accountVerificationTemplate(fullName, verificationToken, result.id, verificationCode);
 		
 		// Send verification email
 		try {
