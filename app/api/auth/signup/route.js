@@ -81,15 +81,31 @@ export async function POST(req) {
 				
 				// Send verification email
 				try {
+					console.log('⏳ SIGNUP RESEND: Attempting to send verification email to:', userDetails.email);
+					console.log('⏳ SIGNUP RESEND: Email configuration:', {
+						EMAIL_FROM: process.env.EMAIL_FROM,
+						EMAIL_HOST: process.env.EMAIL_HOST,
+						EMAIL_PORT: process.env.EMAIL_PORT,
+						EMAIL_USER: process.env.EMAIL_USER,
+						EMAIL_PASSWORD: process.env.EMAIL_PASSWORD ? '***PROVIDED***' : '***MISSING***'
+					});
+					
 					await sendEmail(
 						userDetails.email,
 						'Verify Your PlanetQAi Account',
 						html,
 						text
 					);
-					console.log(`Verification email resent to ${userDetails.email}`);
+					console.log(`✅ SIGNUP RESEND: Verification email successfully resent to ${userDetails.email}`);
 				} catch (emailError) {
-					console.error('Error sending verification email:', emailError);
+					console.error('❌ SIGNUP RESEND EMAIL ERROR:', emailError);
+					console.error('❌ SIGNUP RESEND EMAIL ERROR DETAILS:', {
+						message: emailError.message,
+						code: emailError.code,
+						command: emailError.command,
+						response: emailError.response,
+						stack: emailError.stack
+					});
 				}
 				
 				// For development purposes, log verification details
@@ -168,15 +184,31 @@ export async function POST(req) {
 		
 		// Send verification email
 		try {
+			console.log('⏳ SIGNUP: Attempting to send verification email to:', result.email);
+			console.log('⏳ SIGNUP: Email configuration:', {
+				EMAIL_FROM: process.env.EMAIL_FROM,
+				EMAIL_HOST: process.env.EMAIL_HOST,
+				EMAIL_PORT: process.env.EMAIL_PORT,
+				EMAIL_USER: process.env.EMAIL_USER,
+				EMAIL_PASSWORD: process.env.EMAIL_PASSWORD ? '***PROVIDED***' : '***MISSING***'
+			});
+			
 			await sendEmail(
 				result.email,
 				'Verify Your PlanetQAi Account',
 				html,
 				text
 			);
-			console.log(`Verification email sent to ${result.email}`);
+			console.log(`✅ SIGNUP: Verification email successfully sent to ${result.email}`);
 		} catch (emailError) {
-			console.error('Error sending verification email:', emailError);
+			console.error('❌ SIGNUP EMAIL ERROR:', emailError);
+			console.error('❌ SIGNUP EMAIL ERROR DETAILS:', {
+				message: emailError.message,
+				code: emailError.code,
+				command: emailError.command,
+				response: emailError.response,
+				stack: emailError.stack
+			});
 			// Continue execution even if email fails - we'll show the code in development mode
 		}
 		
