@@ -38,6 +38,22 @@ const authConfig = {
 					// Check if the user exists in the database
 					const user = await prisma.user.findUnique({
 						where: { email: validatedCredentials.email },
+						select: {
+							id: true,
+							email: true,
+							password: true,
+							fullName: true,
+							role: true,
+							isVerified: true,
+							isSuspended: true,
+							credits: true,
+							max_download: true,
+							totalDownloads: true,
+							createdAt: true,
+							lastLoginAt: true
+							// Explicitly select only the fields we need
+							// This prevents errors if some fields are missing in the database
+						}
 					})
 					console.log(user)
 
