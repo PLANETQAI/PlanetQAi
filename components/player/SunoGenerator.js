@@ -123,6 +123,23 @@ const SunoGenerator = ({
 		}
 	}, [session])
 	
+	// Cleanup polling interval on unmount and ensure we only poll when there's an active task
+	useEffect(() => {
+		// Only start polling if we have a task ID and no active polling interval
+		if (currentTaskId && pollingInterval === null) {
+			console.log('Starting polling for task:', currentTaskId)
+			startPolling(currentTaskId)
+		}
+
+		return () => {
+			if (pollingInterval) {
+				console.log('Cleaning up Suno polling interval')
+				clearInterval(pollingInterval)
+				setPollingInterval(null)
+			}
+		}
+	}, [currentTaskId, pollingInterval])
+	
 	// Fetch user's songs from the database
 	const fetchUserSongs = async () => {
 		console.log('Starting to fetch Suno songs...')
@@ -338,14 +355,17 @@ const SunoGenerator = ({
 			const response = await axios.post('/api/music/generate-suno', payload)
 
 			// Handle the response
-			if (response.data && response.data.taskId) {
-				// Store the task ID for tracking
-				setCurrentTaskId(response.data.taskId)
-				setGenerationStatus('pending')
-				console.log('Generation started with task ID:', response.data.taskId)
+			if (response.status === 200 && response.data && response.data.taskId) {
+				const taskId = response.data.taskId
 				
-				// Start polling for the result
-				startPolling(response.data.taskId, response.data.songId || null)
+				console.log('Suno music generation started successfully', { taskId })
+				
+				// Save the current task ID
+				setCurrentTaskId(taskId)
+				setGenerationStatus('pending')
+				
+				// The polling will be started by the useEffect that watches currentTaskId
+				// This ensures we don't have multiple polling intervals running
 			} else {
 				throw new Error('Failed to generate music. Please try again.')
 			}
@@ -375,8 +395,20 @@ const SunoGenerator = ({
 	}
 
 	const startPolling = (taskId, songId) => {
-		const interval = setInterval(() => pollForResult(taskId, songId), 3000) // Poll every 3 seconds
+		// Only start polling if we have valid task ID and song ID
+		if (!taskId) {
+			console.log('Cannot start polling: missing taskId', { taskId, songId })
+			return
+		}
+
+		console.log('Starting polling for Suno task:', taskId)
+		
+		// Start polling for results every 3 seconds
+		const interval = setInterval(() => pollForResult(taskId, songId), 3000)
 		setPollingInterval(interval)
+		
+		// Record the start time
+		setGenerationStartTime(new Date())
 	}
 
 	const pollForResult = async (taskId, songId) => {

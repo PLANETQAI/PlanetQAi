@@ -221,12 +221,22 @@ const DiffrhymGenerator = ({
 		}
 	}
 
-	// Cleanup polling interval on unmount
+	// Cleanup polling interval on unmount and ensure we only poll when there's an active task
 	useEffect(() => {
-		return () => {
-			if (pollingInterval) clearInterval(pollingInterval)
+		// Only start polling if we have both a task ID and song ID
+		if (currentTaskId && pollingInterval === null) {
+			console.log('Starting polling for task:', currentTaskId)
+			startPolling(currentTaskId, generatedSongs[selectedSongIndex]?.id)
 		}
-	}, [pollingInterval])
+
+		return () => {
+			if (pollingInterval) {
+				console.log('Cleaning up polling interval')
+				clearInterval(pollingInterval)
+				setPollingInterval(null)
+			}
+		}
+	}, [currentTaskId, pollingInterval])
 
 	// Fetch user credits
 	const fetchUserCredits = async () => {
@@ -340,14 +350,18 @@ const DiffrhymGenerator = ({
 			const response = await axios.post('/api/music/generate', payload)
 
 			// Handle the response
-			if (response.data && response.data.taskId) {
-				// Store the task ID for tracking
-				setCurrentTaskId(response.data.taskId)
-				setGenerationStatus('pending')
-				console.log('Generation started with task ID:', response.data.taskId)
+			if (response.status === 200 && response.data && response.data.task_id) {
+				const taskId = response.data.task_id
+				const songId = response.data.song_id
 				
-				// Start polling for the result
-				startPolling(response.data.taskId, response.data.songId || null)
+				console.log('Music generation started successfully', { taskId, songId })
+				
+				// Save the current task ID and song ID
+				setCurrentTaskId(taskId)
+				setGenerationStatus('pending')
+				
+				// The polling will be started by the useEffect that watches currentTaskId
+				// This ensures we don't have multiple polling intervals running
 			} else {
 				throw new Error('Failed to generate music. Please try again.')
 			}
@@ -391,9 +405,18 @@ const DiffrhymGenerator = ({
 	}
 
 	const startPolling = (taskId, songId) => {
+		// Only start polling if we have valid task ID and song ID
+		if (!taskId || !songId) {
+			console.log('Cannot start polling: missing taskId or songId', { taskId, songId })
+			return
+		}
+
+		console.log('Starting polling for task:', taskId, 'song:', songId)
+		
 		// Start polling for results every 3 seconds
 		const interval = setInterval(() => pollForResult(taskId, songId), 3000)
 		setPollingInterval(interval)
+		
 		// Record the start time
 		setGenerationStartTime(new Date())
 	}
