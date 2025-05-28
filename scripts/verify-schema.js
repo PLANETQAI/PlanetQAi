@@ -37,17 +37,8 @@ async function verifySchema() {
       console.error('WARNING: isVerified column not found in User table!');
       console.log('Attempting to fix schema...');
       
-      try {
-        // Try to add the column if it doesn't exist
-        await prisma.$executeRaw`
-          ALTER TABLE "User" 
-          ADD COLUMN IF NOT EXISTS "isVerified" BOOLEAN NOT NULL DEFAULT false
-        `;
-        
-        console.log('✅ User schema fixed: isVerified column added');
-      } catch (alterError) {
-        console.error('Failed to add isVerified column:', alterError);
-      }
+      // Skip trying to alter the table since we don't have permission in Vercel
+      console.log('⚠️ Missing isVerified column. Please run prisma migrate deploy locally.');
     } else {
       console.log('✅ Schema verification successful: isVerified column exists in User table');
     }
@@ -66,17 +57,8 @@ async function verifySchema() {
       console.error('WARNING: credits column not found in User table!');
       console.log('Attempting to fix schema...');
       
-      try {
-        // Try to add the column if it doesn't exist
-        await prisma.$executeRaw`
-          ALTER TABLE "User" 
-          ADD COLUMN IF NOT EXISTS "credits" INTEGER NOT NULL DEFAULT 50
-        `;
-        
-        console.log('✅ User schema fixed: credits column added');
-      } catch (alterError) {
-        console.error('Failed to add credits column:', alterError);
-      }
+      // Skip trying to alter the table since we don't have permission in Vercel
+      console.log('⚠️ Missing credits column. Please run prisma migrate deploy locally.');
     } else {
       console.log('✅ Schema verification successful: credits column exists in User table');
     }
@@ -109,17 +91,8 @@ async function verifySchema() {
         console.error('WARNING: updatedAt default value not set in Verification table!');
         console.log('Attempting to fix schema...');
         
-        try {
-          // Try to set the default value
-          await prisma.$executeRaw`
-            ALTER TABLE "Verification" 
-            ALTER COLUMN "updatedAt" SET DEFAULT CURRENT_TIMESTAMP
-          `;
-          
-          console.log('✅ Verification schema fixed: updatedAt default added');
-        } catch (alterError) {
-          console.error('Failed to set updatedAt default:', alterError);
-        }
+        // Skip trying to alter the table since we don't have permission in Vercel
+        console.log('⚠️ Missing updatedAt default in Verification table. Please run prisma migrate deploy locally.');
       } else {
         console.log('✅ Schema verification successful: updatedAt default exists in Verification table');
       }
