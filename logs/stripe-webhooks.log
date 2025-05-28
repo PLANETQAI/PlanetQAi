@@ -15,3 +15,717 @@
 
 Learn more about webhook signing and explore webhook integration examples for various frameworks at https://docs.stripe.com/webhooks/signature
 
+[2025-05-28T22:32:39.810Z] 🔔 Stripe webhook received at 2025-05-28T22:32:39.810Z
+[2025-05-28T22:32:39.811Z] 🔔 Stripe webhook received at 2025-05-28T22:32:39.811Z
+[2025-05-28T22:32:39.812Z] 🔔 Stripe webhook received at 2025-05-28T22:32:39.812Z
+[2025-05-28T22:32:39.812Z] 🔔 Stripe webhook received at 2025-05-28T22:32:39.812Z
+[2025-05-28T22:32:39.815Z] 🔑 Stripe signature: t=1748471559,v1=6ede549186a8116656b0d0c1666c26d4d9470eceb3b82ae54cd880eaa168fb25,v0=35b76b1b80c8279f9bebdb1f5c6b07044b1798fee4c85f50a79f31f9c7b72e75
+[2025-05-28T22:32:39.815Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:32:39.815Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsWYLEbBbuiNy42F3PGmQ3",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471559,
+  "data": {
+    "object": {
+      "id": "pi_3RTsWYLEbBbuiNy422iZj80s",
+      "obj...
+[2025-05-28T22:32:39.816Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:32:39.816Z] 📦 Event type: payment_intent.succeeded
+[2025-05-28T22:32:39.816Z] 📦 Event ID: evt_3RTsWYLEbBbuiNy42F3PGmQ3
+[2025-05-28T22:32:39.817Z] ⚠️ Unhandled event type: payment_intent.succeeded
+[2025-05-28T22:32:39.817Z] ✅ Webhook processed successfully
+[2025-05-28T22:32:39.817Z] 🔑 Stripe signature: t=1748471559,v1=4c7cc5a896465aa30cfb346dd9b4650d486d38cc20a0c374ade2ccd21468ab06,v0=8b88a1fb4d6bd3ad4df39ba7bb57f94f56f39e6f3904f4816890c56b07c703ef
+[2025-05-28T22:32:39.817Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:32:39.817Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_1RTsWZLEbBbuiNy49LAoBd1O",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471559,
+  "data": {
+    "object": {
+      "id": "cs_test_a1tXaGukdFpCERarxe1tm3hmsV67WYpl...
+[2025-05-28T22:32:39.818Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:32:39.818Z] 📦 Event type: checkout.session.completed
+[2025-05-28T22:32:39.818Z] 📦 Event ID: evt_1RTsWZLEbBbuiNy49LAoBd1O
+[2025-05-28T22:32:39.818Z] 💳 Full checkout session data: {
+  "id": "cs_test_a1tXaGukdFpCERarxe1tm3hmsV67WYpldEnJLhg9W6DeVOPUgN3DUcs4Bg",
+  "object": "checkout.session",
+  "adaptive_pricing": {
+    "enabled": true
+  },
+  "after_expiration": null,
+  "allow_promotion_codes": null,
+  "amount_subtotal": 500,
+  "amount_total": 500,
+  "automatic_tax": {
+    "enabled": false,
+    "liability": null,
+    "provider": null,
+    "status": null
+  },
+  "billing_address_collection": null,
+  "cancel_url": "http://localhost:3000/aistudio?canceled=true",
+  "client_reference_id": null,
+  "client_secret": null,
+  "collected_information": {
+    "shipping_details": null
+  },
+  "consent": null,
+  "consent_collection": null,
+  "created": 1748471531,
+  "currency": "usd",
+  "currency_conversion": null,
+  "custom_fields": [],
+  "custom_text": {
+    "after_submit": null,
+    "shipping_address": null,
+    "submit": null,
+    "terms_of_service_acceptance": null
+  },
+  "customer": "cus_SOfSv16UdVb1H3",
+  "customer_creation": null,
+  "customer_details": {
+    "address": {
+      "city": null,
+      "country": "KE",
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": "tijwadev@gmail.com",
+    "name": "Achiado",
+    "phone": null,
+    "tax_exempt": "none",
+    "tax_ids": []
+  },
+  "customer_email": null,
+  "discounts": [],
+  "expires_at": 1748557930,
+  "invoice": null,
+  "invoice_creation": {
+    "enabled": false,
+    "invoice_data": {
+      "account_tax_ids": null,
+      "custom_fields": null,
+      "description": null,
+      "footer": null,
+      "issuer": null,
+      "metadata": {},
+      "rendering_options": null
+    }
+  },
+  "livemode": false,
+  "locale": null,
+  "metadata": {
+    "credits": "100",
+    "userId": "b09ae72e-cd84-427d-94cf-b9b1c34261a0",
+    "packageId": "prod_SNif9JuV1hG0Ux"
+  },
+  "mode": "payment",
+  "payment_intent": "pi_3RTsWYLEbBbuiNy422iZj80s",
+  "payment_link": null,
+  "payment_method_collection": "if_required",
+  "payment_method_configuration_details": null,
+  "payment_method_options": {
+    "card": {
+      "request_three_d_secure": "automatic"
+    }
+  },
+  "payment_method_types": [
+    "card"
+  ],
+  "payment_status": "paid",
+  "permissions": null,
+  "phone_number_collection": {
+    "enabled": false
+  },
+  "presentment_details": {
+    "presentment_amount": 67217,
+    "presentment_currency": "kes"
+  },
+  "recovered_from": null,
+  "saved_payment_method_options": {
+    "allow_redisplay_filters": [
+      "always"
+    ],
+    "payment_method_remove": "disabled",
+    "payment_method_save": null
+  },
+  "setup_intent": null,
+  "shipping": null,
+  "shipping_address_collection": null,
+  "shipping_options": [],
+  "shipping_rate": null,
+  "status": "complete",
+  "submit_type": null,
+  "subscription": null,
+  "success_url": "http://localhost:3000/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}",
+  "total_details": {
+    "amount_discount": 0,
+    "amount_shipping": 0,
+    "amount_tax": 0
+  },
+  "ui_mode": "hosted",
+  "url": null,
+  "wallet_options": null
+}
+[2025-05-28T22:32:39.818Z] 💳 Processing checkout.session.completed for user b09ae72e-cd84-427d-94cf-b9b1c34261a0
+[2025-05-28T22:32:39.819Z] 📦 Package ID: prod_SNif9JuV1hG0Ux
+[2025-05-28T22:32:39.819Z] 💰 Credits to add: 100
+[2025-05-28T22:32:39.819Z] 💳 Payment status: paid
+[2025-05-28T22:32:39.819Z] 🔍 Looking up user b09ae72e-cd84-427d-94cf-b9b1c34261a0 in database
+[2025-05-28T22:32:39.819Z] 🔑 Stripe signature: t=1748471559,v1=f1347ae5c17c755f7c3948b3633234f56f7e5b7fa3e0bbdbc7b71fdbfa65301b,v0=41d08fade01d998df02dfa8f059b68c7e660317f3f6fde006b4bf10f7892a1a9
+[2025-05-28T22:32:39.819Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:32:39.819Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsWYLEbBbuiNy42ZDZpFHv",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471558,
+  "data": {
+    "object": {
+      "id": "pi_3RTsWYLEbBbuiNy422iZj80s",
+      "obj...
+[2025-05-28T22:32:39.820Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:32:39.820Z] 📦 Event type: payment_intent.created
+[2025-05-28T22:32:39.820Z] 📦 Event ID: evt_3RTsWYLEbBbuiNy42ZDZpFHv
+[2025-05-28T22:32:39.820Z] ⚠️ Unhandled event type: payment_intent.created
+[2025-05-28T22:32:39.820Z] ✅ Webhook processed successfully
+[2025-05-28T22:32:39.820Z] 🔑 Stripe signature: t=1748471559,v1=d66f2521126ed7dfef387b5937efd12962ddd7384aa7bb8b12b04b72c53d88d0,v0=aedf4867ffed2638a96120e7b50753a902836eb7117f26a06dcc8ea60943cef9
+[2025-05-28T22:32:39.820Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:32:39.820Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsWYLEbBbuiNy42xWsyQnN",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471558,
+  "data": {
+    "object": {
+      "id": "ch_3RTsWYLEbBbuiNy425GvzZVx",
+      "obj...
+[2025-05-28T22:32:39.821Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:32:39.821Z] 📦 Event type: charge.succeeded
+[2025-05-28T22:32:39.821Z] 📦 Event ID: evt_3RTsWYLEbBbuiNy42xWsyQnN
+[2025-05-28T22:32:39.821Z] ⚠️ Unhandled event type: charge.succeeded
+[2025-05-28T22:32:39.821Z] ✅ Webhook processed successfully
+[2025-05-28T22:32:41.578Z] 🔔 Stripe webhook received at 2025-05-28T22:32:41.578Z
+[2025-05-28T22:32:41.578Z] 🔑 Stripe signature: t=1748471561,v1=087d913ad1cf2c0b11b8f6af421b48e6f29aa1041bed1c4541b49ba0344ba112,v0=7a6bb46edca81b58497b18603234f6739c1f498b8965d4e6ae4f08569e96123d
+[2025-05-28T22:32:41.578Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:32:41.579Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsWYLEbBbuiNy42GjZ74Wd",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471561,
+  "data": {
+    "object": {
+      "id": "ch_3RTsWYLEbBbuiNy425GvzZVx",
+      "obj...
+[2025-05-28T22:32:41.579Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:32:41.579Z] 📦 Event type: charge.updated
+[2025-05-28T22:32:41.579Z] 📦 Event ID: evt_3RTsWYLEbBbuiNy42GjZ74Wd
+[2025-05-28T22:32:41.579Z] ⚠️ Unhandled event type: charge.updated
+[2025-05-28T22:32:41.579Z] ✅ Webhook processed successfully
+[2025-05-28T22:32:42.704Z] 👤 User found: b09ae72e-cd84-427d-94cf-b9b1c34261a0, current credits: 50, email: tijwadev@gmail.com
+[2025-05-28T22:32:42.705Z] 💰 Updating user credits from 50 to 150
+[2025-05-28T22:32:43.369Z] ✅ Credits updated successfully. New balance: 150
+[2025-05-28T22:32:43.369Z] 📝 Creating credit log entry
+[2025-05-28T22:32:44.030Z] ✅ Credit log created successfully with ID: a3053533-9e91-4b26-9d08-2fe6ab108758
+[2025-05-28T22:32:44.031Z] 🎉 Successfully added 100 credits to user b09ae72e-cd84-427d-94cf-b9b1c34261a0
+[2025-05-28T22:32:44.031Z] 📧 Sending purchase receipt email to tijwadev@gmail.com
+[2025-05-28T22:32:46.887Z] ✅ Purchase receipt email sent successfully to tijwadev@gmail.com
+[2025-05-28T22:32:46.887Z] ✅ Webhook processed successfully
+[2025-05-28T22:35:00.991Z] 🔔 Stripe webhook received at 2025-05-28T22:35:00.991Z
+[2025-05-28T22:35:00.992Z] 🔑 Stripe signature: t=1748471701,v1=28545327998b47cf16919b924224b9980a5c5528b4d26add40ad86139ebd2c41,v0=6a753651fa3242bc9f11308cd7cef924b5808b5e7a0927d46953579c65fbd62e
+[2025-05-28T22:35:00.992Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:35:00.992Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsYpLEbBbuiNy42Ac0HXqr",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471700,
+  "data": {
+    "object": {
+      "id": "ch_3RTsYpLEbBbuiNy42PBrcVXj",
+      "obj...
+[2025-05-28T22:35:00.993Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:35:00.993Z] 📦 Event type: charge.succeeded
+[2025-05-28T22:35:00.993Z] 📦 Event ID: evt_3RTsYpLEbBbuiNy42Ac0HXqr
+[2025-05-28T22:35:00.993Z] ⚠️ Unhandled event type: charge.succeeded
+[2025-05-28T22:35:00.993Z] ✅ Webhook processed successfully
+[2025-05-28T22:35:01.297Z] 🔔 Stripe webhook received at 2025-05-28T22:35:01.297Z
+[2025-05-28T22:35:01.298Z] 🔔 Stripe webhook received at 2025-05-28T22:35:01.298Z
+[2025-05-28T22:35:01.298Z] 🔑 Stripe signature: t=1748471701,v1=c97b26e1636bb16bd0a6fe8836921002187d8996a0b3e2ff6a5792569c4fac48,v0=051de93a27f3e40554738178d49361e9b7844d340922054940f2bc640268091d
+[2025-05-28T22:35:01.298Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:35:01.298Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsYpLEbBbuiNy42Tuwyqaj",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471700,
+  "data": {
+    "object": {
+      "id": "pi_3RTsYpLEbBbuiNy42iOlrCPe",
+      "obj...
+[2025-05-28T22:35:01.299Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:35:01.299Z] 📦 Event type: payment_intent.succeeded
+[2025-05-28T22:35:01.299Z] 📦 Event ID: evt_3RTsYpLEbBbuiNy42Tuwyqaj
+[2025-05-28T22:35:01.299Z] ⚠️ Unhandled event type: payment_intent.succeeded
+[2025-05-28T22:35:01.299Z] ✅ Webhook processed successfully
+[2025-05-28T22:35:01.299Z] 🔑 Stripe signature: t=1748471701,v1=c6f769aaec2af1ebddd5f2019fa1b87f99a8c55c25ef30627c78854cade044b1,v0=ec5bbb41fa27dba7d1ef8045a2fd08f9ba7996d3339e202c674e1dae208d7745
+[2025-05-28T22:35:01.300Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:35:01.300Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_1RTsYrLEbBbuiNy4YxVQmVF6",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471701,
+  "data": {
+    "object": {
+      "id": "cs_test_a1Xcp34ERFsvENIsb8uAKxfHcZEMkTii...
+[2025-05-28T22:35:01.300Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:35:01.300Z] 📦 Event type: checkout.session.completed
+[2025-05-28T22:35:01.300Z] 📦 Event ID: evt_1RTsYrLEbBbuiNy4YxVQmVF6
+[2025-05-28T22:35:01.300Z] 💳 Full checkout session data: {
+  "id": "cs_test_a1Xcp34ERFsvENIsb8uAKxfHcZEMkTiiXgGOG5dTIJMMhWuFVZdR51k3Lt",
+  "object": "checkout.session",
+  "adaptive_pricing": {
+    "enabled": true
+  },
+  "after_expiration": null,
+  "allow_promotion_codes": null,
+  "amount_subtotal": 1200,
+  "amount_total": 1200,
+  "automatic_tax": {
+    "enabled": false,
+    "liability": null,
+    "provider": null,
+    "status": null
+  },
+  "billing_address_collection": null,
+  "cancel_url": "http://localhost:3000/aistudio?canceled=true",
+  "client_reference_id": null,
+  "client_secret": null,
+  "collected_information": {
+    "shipping_details": null
+  },
+  "consent": null,
+  "consent_collection": null,
+  "created": 1748471659,
+  "currency": "usd",
+  "currency_conversion": null,
+  "custom_fields": [],
+  "custom_text": {
+    "after_submit": null,
+    "shipping_address": null,
+    "submit": null,
+    "terms_of_service_acceptance": null
+  },
+  "customer": "cus_SOfSv16UdVb1H3",
+  "customer_creation": null,
+  "customer_details": {
+    "address": {
+      "city": null,
+      "country": "KE",
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": "tijwadev@gmail.com",
+    "name": "Achiado",
+    "phone": null,
+    "tax_exempt": "none",
+    "tax_ids": []
+  },
+  "customer_email": null,
+  "discounts": [],
+  "expires_at": 1748558059,
+  "invoice": null,
+  "invoice_creation": {
+    "enabled": false,
+    "invoice_data": {
+      "account_tax_ids": null,
+      "custom_fields": null,
+      "description": null,
+      "footer": null,
+      "issuer": null,
+      "metadata": {},
+      "rendering_options": null
+    }
+  },
+  "livemode": false,
+  "locale": null,
+  "metadata": {
+    "credits": "300",
+    "userId": "b09ae72e-cd84-427d-94cf-b9b1c34261a0",
+    "packageId": "prod_SNihFWLdp5m3Uj"
+  },
+  "mode": "payment",
+  "payment_intent": "pi_3RTsYpLEbBbuiNy42iOlrCPe",
+  "payment_link": null,
+  "payment_method_collection": "if_required",
+  "payment_method_configuration_details": null,
+  "payment_method_options": {
+    "card": {
+      "request_three_d_secure": "automatic"
+    }
+  },
+  "payment_method_types": [
+    "card"
+  ],
+  "payment_status": "paid",
+  "permissions": null,
+  "phone_number_collection": {
+    "enabled": false
+  },
+  "presentment_details": {
+    "presentment_amount": 161320,
+    "presentment_currency": "kes"
+  },
+  "recovered_from": null,
+  "saved_payment_method_options": {
+    "allow_redisplay_filters": [
+      "always"
+    ],
+    "payment_method_remove": "disabled",
+    "payment_method_save": null
+  },
+  "setup_intent": null,
+  "shipping": null,
+  "shipping_address_collection": null,
+  "shipping_options": [],
+  "shipping_rate": null,
+  "status": "complete",
+  "submit_type": null,
+  "subscription": null,
+  "success_url": "http://localhost:3000/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}",
+  "total_details": {
+    "amount_discount": 0,
+    "amount_shipping": 0,
+    "amount_tax": 0
+  },
+  "ui_mode": "hosted",
+  "url": null,
+  "wallet_options": null
+}
+[2025-05-28T22:35:01.300Z] 💳 Processing checkout.session.completed for user b09ae72e-cd84-427d-94cf-b9b1c34261a0
+[2025-05-28T22:35:01.301Z] 📦 Package ID: prod_SNihFWLdp5m3Uj
+[2025-05-28T22:35:01.301Z] 💰 Credits to add: 300
+[2025-05-28T22:35:01.301Z] 💳 Payment status: paid
+[2025-05-28T22:35:01.301Z] 🔍 Looking up user b09ae72e-cd84-427d-94cf-b9b1c34261a0 in database
+[2025-05-28T22:35:01.306Z] 🔔 Stripe webhook received at 2025-05-28T22:35:01.306Z
+[2025-05-28T22:35:01.306Z] 🔑 Stripe signature: t=1748471701,v1=5dce46966e0ec00ac9b0b0c3ede9ee08c2e905bb2d38424827438bd7186917e6,v0=2b86b1a92e20c6bf5b20b32455d3f559a5be5e302f5c6abd8a08b75460e84599
+[2025-05-28T22:35:01.306Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:35:01.306Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsYpLEbBbuiNy42zDwLl1h",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471699,
+  "data": {
+    "object": {
+      "id": "pi_3RTsYpLEbBbuiNy42iOlrCPe",
+      "obj...
+[2025-05-28T22:35:01.307Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:35:01.307Z] 📦 Event type: payment_intent.created
+[2025-05-28T22:35:01.307Z] 📦 Event ID: evt_3RTsYpLEbBbuiNy42zDwLl1h
+[2025-05-28T22:35:01.307Z] ⚠️ Unhandled event type: payment_intent.created
+[2025-05-28T22:35:01.307Z] ✅ Webhook processed successfully
+[2025-05-28T22:35:03.258Z] 🔔 Stripe webhook received at 2025-05-28T22:35:03.258Z
+[2025-05-28T22:35:03.259Z] 🔑 Stripe signature: t=1748471703,v1=f6a2c1a243a21bc618714cab1fd7c23829e6362f4d258f0018246c6afa79a6e4,v0=3b4fbb51501d3e855e4cfc4b05efb6bb81388d1650ee600153c9b52454d8c06c
+[2025-05-28T22:35:03.259Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:35:03.259Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsYpLEbBbuiNy42BujA8ik",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471703,
+  "data": {
+    "object": {
+      "id": "ch_3RTsYpLEbBbuiNy42PBrcVXj",
+      "obj...
+[2025-05-28T22:35:03.259Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:35:03.260Z] 📦 Event type: charge.updated
+[2025-05-28T22:35:03.260Z] 📦 Event ID: evt_3RTsYpLEbBbuiNy42BujA8ik
+[2025-05-28T22:35:03.260Z] ⚠️ Unhandled event type: charge.updated
+[2025-05-28T22:35:03.260Z] ✅ Webhook processed successfully
+[2025-05-28T22:35:11.306Z] ERROR: ❌ Database error while processing webhook: 
+Invalid `prisma.user.findUnique()` invocation:
+
+
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)
+[2025-05-28T22:35:11.307Z] ERROR: Stack trace: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation:
+
+
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)
+    at Zn.handleRequestError (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:121:7459)
+    at Zn.handleAndLogRequestError (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:121:6784)
+    at Zn.request (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:121:6491)
+    at async l (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:130:9778)
+    at async POST (webpack-internal:///(rsc)/./app/api/stripe-webhook/route.ts:162:34)
+    at async /Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:55831
+    at async eO.execute (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46527)
+    at async eO.handle (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57165)
+    at async doRender (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1353:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1575:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1483:28)
+    at async DevServer.renderPageComponent (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1911:24)
+    at async DevServer.renderToResponseImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1949:32)
+    at async DevServer.pipeImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:921:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:817:17)
+    at async /Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/router-server.js:173:21)
+    at async handleRequest (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/router-server.js:350:24)
+    at async requestHandlerImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/router-server.js:374:13)
+    at async Server.requestListener (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/start-server.js:141:13)
+[2025-05-28T22:35:11.307Z] ERROR: ❌ Webhook error: 
+Invalid `prisma.user.findUnique()` invocation:
+
+
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)
+[2025-05-28T22:35:11.307Z] ERROR: Stack trace: PrismaClientKnownRequestError: 
+Invalid `prisma.user.findUnique()` invocation:
+
+
+Timed out fetching a new connection from the connection pool. More info: http://pris.ly/d/connection-pool (Current connection pool timeout: 10, connection limit: 17)
+    at Zn.handleRequestError (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:121:7459)
+    at Zn.handleAndLogRequestError (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:121:6784)
+    at Zn.request (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:121:6491)
+    at async l (/Users/mac/Documents/Projects/PlanetQAi/node_modules/@prisma/client/runtime/library.js:130:9778)
+    at async POST (webpack-internal:///(rsc)/./app/api/stripe-webhook/route.ts:162:34)
+    at async /Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:55831
+    at async eO.execute (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:46527)
+    at async eO.handle (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/compiled/next-server/app-route.runtime.dev.js:6:57165)
+    at async doRender (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1353:42)
+    at async cacheEntry.responseCache.get.routeKind (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1575:28)
+    at async DevServer.renderToResponseWithComponentsImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1483:28)
+    at async DevServer.renderPageComponent (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1911:24)
+    at async DevServer.renderToResponseImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:1949:32)
+    at async DevServer.pipeImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:921:25)
+    at async NextNodeServer.handleCatchallRenderRequest (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/next-server.js:272:17)
+    at async DevServer.handleRequestImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/base-server.js:817:17)
+    at async /Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/dev/next-dev-server.js:339:20
+    at async Span.traceAsyncFn (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/trace/trace.js:154:20)
+    at async DevServer.handleRequest (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/dev/next-dev-server.js:336:24)
+    at async invokeRender (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/router-server.js:173:21)
+    at async handleRequest (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/router-server.js:350:24)
+    at async requestHandlerImpl (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/router-server.js:374:13)
+    at async Server.requestListener (/Users/mac/Documents/Projects/PlanetQAi/node_modules/next/dist/server/lib/start-server.js:141:13)
+[2025-05-28T22:36:49.741Z] 🔔 Stripe webhook received at 2025-05-28T22:36:49.741Z
+[2025-05-28T22:36:49.742Z] 🔑 Stripe signature: t=1748471810,v1=0258bc896cd8ded027f63a100b4a63a11f1ee2319f257324a7cefd378d496b50,v0=b2b4869dea696be095121ad8960e4362a6b35503dcc2a42c2eeb0715e2e894b7
+[2025-05-28T22:36:49.742Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:36:49.742Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsaaLEbBbuiNy408Dsi2kn",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471809,
+  "data": {
+    "object": {
+      "id": "ch_3RTsaaLEbBbuiNy40kysoJQa",
+      "obj...
+[2025-05-28T22:36:49.743Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:36:49.743Z] 📦 Event type: charge.succeeded
+[2025-05-28T22:36:49.743Z] 📦 Event ID: evt_3RTsaaLEbBbuiNy408Dsi2kn
+[2025-05-28T22:36:49.743Z] ⚠️ Unhandled event type: charge.succeeded
+[2025-05-28T22:36:49.743Z] ✅ Webhook processed successfully
+[2025-05-28T22:36:50.012Z] 🔔 Stripe webhook received at 2025-05-28T22:36:50.012Z
+[2025-05-28T22:36:50.013Z] 🔔 Stripe webhook received at 2025-05-28T22:36:50.013Z
+[2025-05-28T22:36:50.013Z] 🔑 Stripe signature: t=1748471810,v1=58adab1f88b121bc58b43c517731f2ba533ae541740a43288d56b0bff7f4b982,v0=51503a951491e1b2f1b05af3d3f0f39df6f067d308aa9e8747b6586670a68474
+[2025-05-28T22:36:50.014Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:36:50.014Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsaaLEbBbuiNy40oE7IQvP",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471809,
+  "data": {
+    "object": {
+      "id": "pi_3RTsaaLEbBbuiNy40NBbx3GE",
+      "obj...
+[2025-05-28T22:36:50.014Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:36:50.014Z] 📦 Event type: payment_intent.succeeded
+[2025-05-28T22:36:50.014Z] 📦 Event ID: evt_3RTsaaLEbBbuiNy40oE7IQvP
+[2025-05-28T22:36:50.014Z] ⚠️ Unhandled event type: payment_intent.succeeded
+[2025-05-28T22:36:50.014Z] ✅ Webhook processed successfully
+[2025-05-28T22:36:50.015Z] 🔑 Stripe signature: t=1748471810,v1=eac3a36ed59f57266563845dfb2b4b67ac44e31e06cc0ce83a9294672219fac0,v0=ec3a2a99d8fc89b5b4f964f31eab1fd0db1a25e7579a7b7b1ea505e4110c0287
+[2025-05-28T22:36:50.015Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:36:50.015Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsaaLEbBbuiNy40s7rwyFw",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471808,
+  "data": {
+    "object": {
+      "id": "pi_3RTsaaLEbBbuiNy40NBbx3GE",
+      "obj...
+[2025-05-28T22:36:50.015Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:36:50.015Z] 📦 Event type: payment_intent.created
+[2025-05-28T22:36:50.015Z] 📦 Event ID: evt_3RTsaaLEbBbuiNy40s7rwyFw
+[2025-05-28T22:36:50.015Z] ⚠️ Unhandled event type: payment_intent.created
+[2025-05-28T22:36:50.015Z] ✅ Webhook processed successfully
+[2025-05-28T22:36:50.240Z] 🔔 Stripe webhook received at 2025-05-28T22:36:50.240Z
+[2025-05-28T22:36:50.241Z] 🔑 Stripe signature: t=1748471810,v1=5d6f89ec56ecbc0d03f1d70f6f5973c424dad7a8b224c305b45beb73d269eebc,v0=17f5575582ec19dc20976283f968db9d445dcfc031c20c2ebf0571fe9532caa0
+[2025-05-28T22:36:50.241Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:36:50.241Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_1RTsacLEbBbuiNy4FvOIqjU3",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471809,
+  "data": {
+    "object": {
+      "id": "cs_test_a1LDOHQ4W0PqQR7wZgjbt4cK5BlFqdO5...
+[2025-05-28T22:36:50.242Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:36:50.242Z] 📦 Event type: checkout.session.completed
+[2025-05-28T22:36:50.242Z] 📦 Event ID: evt_1RTsacLEbBbuiNy4FvOIqjU3
+[2025-05-28T22:36:50.242Z] 💳 Full checkout session data: {
+  "id": "cs_test_a1LDOHQ4W0PqQR7wZgjbt4cK5BlFqdO5IQUuwARJ7NwgqyHu7SdlSBVJ2U",
+  "object": "checkout.session",
+  "adaptive_pricing": {
+    "enabled": true
+  },
+  "after_expiration": null,
+  "allow_promotion_codes": null,
+  "amount_subtotal": 1200,
+  "amount_total": 1200,
+  "automatic_tax": {
+    "enabled": false,
+    "liability": null,
+    "provider": null,
+    "status": null
+  },
+  "billing_address_collection": null,
+  "cancel_url": "http://localhost:3000/aistudio?canceled=true",
+  "client_reference_id": null,
+  "client_secret": null,
+  "collected_information": {
+    "shipping_details": null
+  },
+  "consent": null,
+  "consent_collection": null,
+  "created": 1748471764,
+  "currency": "usd",
+  "currency_conversion": null,
+  "custom_fields": [],
+  "custom_text": {
+    "after_submit": null,
+    "shipping_address": null,
+    "submit": null,
+    "terms_of_service_acceptance": null
+  },
+  "customer": "cus_SOfSv16UdVb1H3",
+  "customer_creation": null,
+  "customer_details": {
+    "address": {
+      "city": null,
+      "country": "KE",
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": "tijwadev@gmail.com",
+    "name": "Achiado",
+    "phone": null,
+    "tax_exempt": "none",
+    "tax_ids": []
+  },
+  "customer_email": null,
+  "discounts": [],
+  "expires_at": 1748558164,
+  "invoice": null,
+  "invoice_creation": {
+    "enabled": false,
+    "invoice_data": {
+      "account_tax_ids": null,
+      "custom_fields": null,
+      "description": null,
+      "footer": null,
+      "issuer": null,
+      "metadata": {},
+      "rendering_options": null
+    }
+  },
+  "livemode": false,
+  "locale": null,
+  "metadata": {
+    "credits": "300",
+    "userId": "b09ae72e-cd84-427d-94cf-b9b1c34261a0",
+    "packageId": "prod_SNihFWLdp5m3Uj"
+  },
+  "mode": "payment",
+  "payment_intent": "pi_3RTsaaLEbBbuiNy40NBbx3GE",
+  "payment_link": null,
+  "payment_method_collection": "if_required",
+  "payment_method_configuration_details": null,
+  "payment_method_options": {
+    "card": {
+      "request_three_d_secure": "automatic"
+    }
+  },
+  "payment_method_types": [
+    "card"
+  ],
+  "payment_status": "paid",
+  "permissions": null,
+  "phone_number_collection": {
+    "enabled": false
+  },
+  "presentment_details": {
+    "presentment_amount": 161320,
+    "presentment_currency": "kes"
+  },
+  "recovered_from": null,
+  "saved_payment_method_options": {
+    "allow_redisplay_filters": [
+      "always"
+    ],
+    "payment_method_remove": "disabled",
+    "payment_method_save": null
+  },
+  "setup_intent": null,
+  "shipping": null,
+  "shipping_address_collection": null,
+  "shipping_options": [],
+  "shipping_rate": null,
+  "status": "complete",
+  "submit_type": null,
+  "subscription": null,
+  "success_url": "http://localhost:3000/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}",
+  "total_details": {
+    "amount_discount": 0,
+    "amount_shipping": 0,
+    "amount_tax": 0
+  },
+  "ui_mode": "hosted",
+  "url": null,
+  "wallet_options": null
+}
+[2025-05-28T22:36:50.243Z] 💳 Processing checkout.session.completed for user b09ae72e-cd84-427d-94cf-b9b1c34261a0
+[2025-05-28T22:36:50.243Z] 📦 Package ID: prod_SNihFWLdp5m3Uj
+[2025-05-28T22:36:50.243Z] 💰 Credits to add: 300
+[2025-05-28T22:36:50.243Z] 💳 Payment status: paid
+[2025-05-28T22:36:50.243Z] 🔍 Looking up user b09ae72e-cd84-427d-94cf-b9b1c34261a0 in database
+[2025-05-28T22:36:52.176Z] 🔔 Stripe webhook received at 2025-05-28T22:36:52.176Z
+[2025-05-28T22:36:52.177Z] 🔑 Stripe signature: t=1748471812,v1=23f0c6472aa6949e65b34a893c699418733e0d69db3750b51b58cd2165affc64,v0=bc9876aeca26bda7db3d23ae56ef95a65dd56ce84aae4199941dbf2bbc97bde5
+[2025-05-28T22:36:52.177Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-28T22:36:52.177Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTsaaLEbBbuiNy408oUUX1E",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748471812,
+  "data": {
+    "object": {
+      "id": "ch_3RTsaaLEbBbuiNy40kysoJQa",
+      "obj...
+[2025-05-28T22:36:52.177Z] ✅ Webhook signature verified successfully
+[2025-05-28T22:36:52.178Z] 📦 Event type: charge.updated
+[2025-05-28T22:36:52.178Z] 📦 Event ID: evt_3RTsaaLEbBbuiNy408oUUX1E
+[2025-05-28T22:36:52.178Z] ⚠️ Unhandled event type: charge.updated
+[2025-05-28T22:36:52.178Z] ✅ Webhook processed successfully
+[2025-05-28T22:36:53.104Z] 👤 User found: b09ae72e-cd84-427d-94cf-b9b1c34261a0, current credits: 150, email: tijwadev@gmail.com
+[2025-05-28T22:36:53.104Z] 💰 Updating user credits from 150 to 450
+[2025-05-28T22:36:53.745Z] ✅ Credits updated successfully. New balance: 450
+[2025-05-28T22:36:53.746Z] 📝 Creating credit log entry
+[2025-05-28T22:36:54.384Z] ✅ Credit log created successfully with ID: b88de03f-dde5-44e3-8ff0-4ecb1ece324e
+[2025-05-28T22:36:54.384Z] 🎉 Successfully added 300 credits to user b09ae72e-cd84-427d-94cf-b9b1c34261a0
+[2025-05-28T22:36:54.385Z] 📧 Sending purchase receipt email to tijwadev@gmail.com
+[2025-05-28T22:36:56.891Z] ✅ Purchase receipt email sent successfully to tijwadev@gmail.com
+[2025-05-28T22:36:56.891Z] ✅ Webhook processed successfully

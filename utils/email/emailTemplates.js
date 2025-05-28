@@ -247,7 +247,168 @@ export const accountVerificationTemplate = (userName, verificationToken, userId,
   return { html, text };
 };
 
+/**
+ * Generate purchase receipt email template
+ * @param {string} userName - User's full name
+ * @param {number} creditsAmount - Amount of credits purchased
+ * @param {number} paymentAmount - Amount paid in dollars
+ * @param {string} transactionId - Stripe transaction ID
+ * @param {string} packageName - Name of the credit package purchased
+ * @returns {Object} - HTML and text versions of the email
+ */
+export const purchaseReceiptTemplate = (userName, creditsAmount, paymentAmount, transactionId, packageName) => {
+  const baseUrl = getBaseUrl();
+  const date = new Date().toLocaleDateString('en-US', { 
+    year: 'numeric', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Thank You for Your Purchase</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .logo {
+          max-width: 150px;
+          margin-bottom: 20px;
+        }
+        .receipt {
+          border: 1px solid #ddd;
+          border-radius: 8px;
+          padding: 20px;
+          margin: 20px 0;
+          background-color: #f9f9f9;
+        }
+        .receipt-header {
+          border-bottom: 1px solid #eee;
+          padding-bottom: 10px;
+          margin-bottom: 15px;
+          font-weight: bold;
+        }
+        .receipt-row {
+          display: flex;
+          justify-content: space-between;
+          margin-bottom: 10px;
+        }
+        .receipt-total {
+          border-top: 1px solid #eee;
+          margin-top: 15px;
+          padding-top: 10px;
+          font-weight: bold;
+        }
+        .button {
+          display: inline-block;
+          background-color: #4F46E5;
+          color: white;
+          text-decoration: none;
+          padding: 12px 24px;
+          border-radius: 4px;
+          margin: 20px 0;
+          font-weight: bold;
+        }
+        .footer {
+          margin-top: 40px;
+          font-size: 12px;
+          color: #666;
+          text-align: center;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>Thank You for Your Purchase!</h1>
+      </div>
+      
+      <p>Hello ${userName || 'there'},</p>
+      
+      <p>Thank you for purchasing credits on PlanetQAi. Your account has been successfully credited, and you can start using them right away to generate amazing music!</p>
+      
+      <div class="receipt">
+        <div class="receipt-header">RECEIPT</div>
+        
+        <div class="receipt-row">
+          <span>Date:</span>
+          <span>${date}</span>
+        </div>
+        
+        <div class="receipt-row">
+          <span>Transaction ID:</span>
+          <span>${transactionId.substring(0, 8)}...${transactionId.substring(transactionId.length - 4)}</span>
+        </div>
+        
+        <div class="receipt-row">
+          <span>Package:</span>
+          <span>${packageName || 'Credit Package'}</span>
+        </div>
+        
+        <div class="receipt-row">
+          <span>Credits Added:</span>
+          <span>${creditsAmount}</span>
+        </div>
+        
+        <div class="receipt-total">
+          <div class="receipt-row">
+            <span>Total:</span>
+            <span>$${(paymentAmount / 100).toFixed(2)}</span>
+          </div>
+        </div>
+      </div>
+      
+      <div style="text-align: center;">
+        <a href="${baseUrl}/dashboard" class="button">Go to Dashboard</a>
+      </div>
+      
+      <p>If you have any questions about your purchase, please contact our support team.</p>
+      
+      <div class="footer">
+        <p>&copy; ${new Date().getFullYear()} PlanetQAi. All rights reserved.</p>
+        <p>This is an automated email, please do not reply.</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  const text = `
+    Thank You for Your Purchase!
+    
+    Hello ${userName || 'there'},
+    
+    Thank you for purchasing credits on PlanetQAi. Your account has been successfully credited, and you can start using them right away to generate amazing music!
+    
+    RECEIPT
+    Date: ${date}
+    Transaction ID: ${transactionId}
+    Package: ${packageName || 'Credit Package'}
+    Credits Added: ${creditsAmount}
+    Total: $${(paymentAmount / 100).toFixed(2)}
+    
+    If you have any questions about your purchase, please contact our support team.
+    
+    © ${new Date().getFullYear()} PlanetQAi. All rights reserved.
+    This is an automated email, please do not reply.
+  `;
+  
+  return { html, text };
+};
+
 export default {
   passwordResetTemplate,
-  accountVerificationTemplate
+  accountVerificationTemplate,
+  purchaseReceiptTemplate
 };
