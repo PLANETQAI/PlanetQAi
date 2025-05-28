@@ -7,9 +7,25 @@ async function verifySchema() {
   const prisma = new PrismaClient();
   
   try {
+    // First, check if the User table exists
+    const userTableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'User'
+      );
+    `;
+    
+    console.log('User table exists check:', userTableExists);
+    
+    if (!userTableExists[0].exists) {
+      console.error('ERROR: User table does not exist! Migrations may not have been applied.');
+      console.log('Please run prisma migrate deploy to apply migrations.');
+      return;
+    }
+
     // Verify isVerified field in User table
     const userVerifiedField = await prisma.$queryRaw`
-      SELECT column_name, data_type 
+      SELECT column_name, data_type, column_default 
       FROM information_schema.columns 
       WHERE table_name = 'User' 
       AND column_name = 'isVerified'
@@ -21,63 +37,111 @@ async function verifySchema() {
       console.error('WARNING: isVerified column not found in User table!');
       console.log('Attempting to fix schema...');
       
-      // Try to add the column if it doesn't exist
-      await prisma.$executeRaw`
-        ALTER TABLE "User" 
-        ADD COLUMN IF NOT EXISTS "isVerified" BOOLEAN NOT NULL DEFAULT false
-      `;
-      
-      console.log('User schema fix attempted. Please verify.');
+      try {
+        // Try to add the column if it doesn't exist
+        await prisma.$executeRaw`
+          ALTER TABLE "User" 
+          ADD COLUMN IF NOT EXISTS "isVerified" BOOLEAN NOT NULL DEFAULT false
+        `;
+        
+        console.log('✅ User schema fixed: isVerified column added');
+      } catch (alterError) {
+        console.error('Failed to add isVerified column:', alterError);
+      }
     } else {
       console.log('✅ Schema verification successful: isVerified column exists in User table');
     }
 
-    // Verify UUID default values are working
-    const verificationIdDefault = await prisma.$queryRaw`
-      SELECT column_default
-      FROM information_schema.columns
-      WHERE table_name = 'Verification'
-      AND column_name = 'id'
+    // Verify credits field in User table
+    const userCreditsField = await prisma.$queryRaw`
+      SELECT column_name, data_type, column_default 
+      FROM information_schema.columns 
+      WHERE table_name = 'User' 
+      AND column_name = 'credits'
     `;
-
-    console.log('Verification id default check:', verificationIdDefault);
-
-    if (verificationIdDefault.length === 0 || !verificationIdDefault[0].column_default) {
-      console.error('WARNING: UUID default function may not be set up correctly for Verification table!');
-      console.log('Attempting to ensure UUID extension is enabled...');
-      
-      // Enable UUID extension if not already enabled
-      await prisma.$executeRaw`CREATE EXTENSION IF NOT EXISTS "uuid-ossp"`;
-      
-      console.log('UUID extension enabled. Please verify.');
-    } else {
-      console.log('✅ Schema verification successful: UUID defaults are properly configured');
-    }
-
-    // Verify updatedAt default in Verification table
-    const verificationUpdatedAt = await prisma.$queryRaw`
-      SELECT column_default
-      FROM information_schema.columns
-      WHERE table_name = 'Verification'
-      AND column_name = 'updatedAt'
-    `;
-
-    console.log('Verification updatedAt default check:', verificationUpdatedAt);
-
-    if (verificationUpdatedAt.length === 0 || !verificationUpdatedAt[0].column_default) {
-      console.error('WARNING: updatedAt default value not set correctly in Verification table!');
+    
+    console.log('User credits field check:', userCreditsField);
+    
+    if (userCreditsField.length === 0) {
+      console.error('WARNING: credits column not found in User table!');
       console.log('Attempting to fix schema...');
       
-      // Try to set the default value if it doesn't exist
-      await prisma.$executeRaw`
-        ALTER TABLE "Verification" 
-        ALTER COLUMN "updatedAt" SET DEFAULT now()
+      try {
+        // Try to add the column if it doesn't exist
+        await prisma.$executeRaw`
+          ALTER TABLE "User" 
+          ADD COLUMN IF NOT EXISTS "credits" INTEGER NOT NULL DEFAULT 50
+        `;
+        
+        console.log('✅ User schema fixed: credits column added');
+      } catch (alterError) {
+        console.error('Failed to add credits column:', alterError);
+      }
+    } else {
+      console.log('✅ Schema verification successful: credits column exists in User table');
+    }
+
+    // Check if Verification table exists
+    const verificationTableExists = await prisma.$queryRaw`
+      SELECT EXISTS (
+        SELECT FROM information_schema.tables 
+        WHERE table_name = 'Verification'
+      );
+    `;
+    
+    if (!verificationTableExists[0].exists) {
+      console.error('WARNING: Verification table does not exist!');
+      console.log('This is expected if this is a new database. Migrations should create it.');
+    } else {
+      // Verify updatedAt default in Verification table
+      const verificationUpdatedAt = await prisma.$queryRaw`
+        SELECT column_name, column_default
+        FROM information_schema.columns
+        WHERE table_name = 'Verification'
+        AND column_name = 'updatedAt'
+      `;
+
+      console.log('Verification updatedAt check:', verificationUpdatedAt);
+
+      if (verificationUpdatedAt.length === 0) {
+        console.error('WARNING: updatedAt column not found in Verification table!');
+      } else if (!verificationUpdatedAt[0].column_default) {
+        console.error('WARNING: updatedAt default value not set in Verification table!');
+        console.log('Attempting to fix schema...');
+        
+        try {
+          // Try to set the default value
+          await prisma.$executeRaw`
+            ALTER TABLE "Verification" 
+            ALTER COLUMN "updatedAt" SET DEFAULT CURRENT_TIMESTAMP
+          `;
+          
+          console.log('✅ Verification schema fixed: updatedAt default added');
+        } catch (alterError) {
+          console.error('Failed to set updatedAt default:', alterError);
+        }
+      } else {
+        console.log('✅ Schema verification successful: updatedAt default exists in Verification table');
+      }
+    }
+
+    // Verify all required tables exist
+    const requiredTables = ['User', 'CreditLog', 'Verification', 'Song', 'Payment', 'Subscription'];
+    for (const table of requiredTables) {
+      const tableExists = await prisma.$queryRaw`
+        SELECT EXISTS (
+          SELECT FROM information_schema.tables 
+          WHERE table_name = ${table}
+        );
       `;
       
-      console.log('Verification schema fix attempted. Please verify.');
-    } else {
-      console.log('✅ Schema verification successful: updatedAt default exists in Verification table');
+      if (!tableExists[0].exists) {
+        console.error(`WARNING: ${table} table does not exist!`);
+      } else {
+        console.log(`✅ Table ${table} exists`);
+      }
     }
+
   } catch (error) {
     console.error('Schema verification error:', error);
   } finally {
