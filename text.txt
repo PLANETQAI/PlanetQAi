@@ -9,3 +9,7 @@ MongoDB_DATABASE_URL="mongodb+srv://root:randompassword@cluster0.ab1cd.mongodb.n
 node scripts/verify-admin.js
 Email: admin@planetqai.com
 Password: Admin123!
+
+
+###
+thhhttttttty
