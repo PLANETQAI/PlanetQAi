@@ -34,7 +34,7 @@ async function createAdminUser() {
       data: {
         fullName: 'Admin User',
         email: 'admin@planetqai.com',
-        password: bcrypt.hashSync('Admin123!', 10), // Change this password
+        password: bcrypt.hashSync('Admin123#S!', 10), // Change this password
         role: 'Admin',
         isVerified: true,
         credits: 1000,
