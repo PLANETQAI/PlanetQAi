@@ -38,7 +38,7 @@ export async function GET(req, res) {
 					isLive: true,
 				},
 				include: {
-					user: {
+					User: {
 						select: {
 							id: true,
 							role: true,
