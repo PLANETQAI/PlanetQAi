@@ -20,7 +20,7 @@ export async function GET(req, res) {
 				// Fetch all video links if admin
 				videoLinks = await prisma.videoLinks.findMany({
 					include: {
-						user: {
+						User: {
 							select: {
 								id: true,
 								role: true,
