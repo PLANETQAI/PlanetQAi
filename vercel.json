@@ -1,5 +1,10 @@
 {
-    "env": {
-      "PRISMA_GENERATE_SKIP_AUTOINSTALL": "false"
-    }
-  }
+  "env": {
+    "PRISMA_GENERATE_SKIP_AUTOINSTALL": "false"
+  },
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install --legacy-peer-deps",
+  "framework": "nextjs",
+  "outputDirectory": ".next"
+}
