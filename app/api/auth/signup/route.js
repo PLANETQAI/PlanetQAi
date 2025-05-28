@@ -50,25 +50,38 @@ export async function POST(req) {
 				const verificationToken = generateToken();
 				const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000); // 24 hours from now
 				
-				// Update the existing verification record or create a new one
-				await prisma.verification.upsert({
-					where: { userId: existingUser.id },
-					update: {
-						code: verificationCode,
-						token: verificationToken,
-						expiresAt: expiresAt,
-						isUsed: false,
-						redirectUrl: body.redirectUrl || '/aistudio',
-					},
-					create: {
-						userId: existingUser.id,
-						code: verificationCode,
-						token: verificationToken,
-						type: 'SIGNUP',
-						expiresAt: expiresAt,
-						redirectUrl: body.redirectUrl || '/aistudio',
-					},
+				// First check if a verification record exists
+				const existingVerification = await prisma.verification.findUnique({
+					where: { userId: existingUser.id }
 				});
+				
+				if (existingVerification) {
+					// Update the existing verification record
+					await prisma.verification.update({
+						where: { userId: existingUser.id },
+						data: {
+							code: verificationCode,
+							token: verificationToken,
+							expiresAt: expiresAt,
+							isUsed: false,
+							redirectUrl: body.redirectUrl || '/aistudio',
+							updatedAt: new Date()
+						},
+					});
+				} else {
+					// Create a new verification record
+					await prisma.verification.create({
+						data: {
+							userId: existingUser.id,
+							code: verificationCode,
+							token: verificationToken,
+							type: 'SIGNUP',
+							expiresAt: expiresAt,
+							redirectUrl: body.redirectUrl || '/aistudio',
+							updatedAt: new Date()
+						},
+					});
+				}
 				
 				// Get user details for email
 				const userDetails = await prisma.user.findUnique({
@@ -138,7 +151,7 @@ export async function POST(req) {
 		// Get the redirectUrl if provided, or default to home
 		const redirectUrl = body.redirectUrl || '/aistudio';
 
-		// Create the new user in the database
+		// Create the new user in the database (ID will be auto-generated)
 		const result = await prisma.user.create({
 			data: {
 				fullName,
@@ -147,6 +160,7 @@ export async function POST(req) {
 				role: 'Basic',
 				isVerified: false, // User starts as unverified
 				credits: 50, // Initial credits as per requirements
+				updatedAt: new Date(), // Required field based on schema
 			},
 		});
 		
@@ -174,6 +188,7 @@ export async function POST(req) {
 				type: 'SIGNUP',
 				expiresAt: expiresAt,
 				redirectUrl: redirectUrl,
+				updatedAt: new Date(), // Required field based on schema
 			},
 		});
 
