@@ -729,3 +729,222 @@ Timed out fetching a new connection from the connection pool. More info: http://
 [2025-05-28T22:36:54.385Z] 📧 Sending purchase receipt email to tijwadev@gmail.com
 [2025-05-28T22:36:56.891Z] ✅ Purchase receipt email sent successfully to tijwadev@gmail.com
 [2025-05-28T22:36:56.891Z] ✅ Webhook processed successfully
+[2025-05-29T00:32:37.931Z] 🔔 Stripe webhook received at 2025-05-29T00:32:37.931Z
+[2025-05-29T00:32:37.932Z] 🔔 Stripe webhook received at 2025-05-29T00:32:37.932Z
+[2025-05-29T00:32:37.932Z] 🔔 Stripe webhook received at 2025-05-29T00:32:37.932Z
+[2025-05-29T00:32:37.932Z] 🔔 Stripe webhook received at 2025-05-29T00:32:37.932Z
+[2025-05-29T00:32:37.935Z] 🔑 Stripe signature: t=1748478756,v1=fec6ad5c1dba0287c64a11bb0033acad04bb38fa6bc59a2cb71a2f26eae2c54a,v0=06817d82e9171490c92fe4eede730810c65716367621e0d12f8f0a1b85c2a010
+[2025-05-29T00:32:37.935Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-29T00:32:37.935Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTuOcLEbBbuiNy40DDAevXo",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748478755,
+  "data": {
+    "object": {
+      "id": "pi_3RTuOcLEbBbuiNy40Z7s7soO",
+      "obj...
+[2025-05-29T00:32:37.936Z] ✅ Webhook signature verified successfully
+[2025-05-29T00:32:37.936Z] 📦 Event type: payment_intent.succeeded
+[2025-05-29T00:32:37.936Z] 📦 Event ID: evt_3RTuOcLEbBbuiNy40DDAevXo
+[2025-05-29T00:32:37.936Z] ⚠️ Unhandled event type: payment_intent.succeeded
+[2025-05-29T00:32:37.936Z] ✅ Webhook processed successfully
+[2025-05-29T00:32:37.937Z] 🔑 Stripe signature: t=1748478756,v1=ec04456282c2b869d9b5147bc5673f8a49698d9a42c0b034b437e49291a05c04,v0=f26b91514b1ffc86ac83948ead45120f4d87e37b7dbe1a2d8e8ad4c14ca41723
+[2025-05-29T00:32:37.937Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-29T00:32:37.937Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTuOcLEbBbuiNy40q8xI6k6",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748478754,
+  "data": {
+    "object": {
+      "id": "pi_3RTuOcLEbBbuiNy40Z7s7soO",
+      "obj...
+[2025-05-29T00:32:37.937Z] ✅ Webhook signature verified successfully
+[2025-05-29T00:32:37.937Z] 📦 Event type: payment_intent.created
+[2025-05-29T00:32:37.937Z] 📦 Event ID: evt_3RTuOcLEbBbuiNy40q8xI6k6
+[2025-05-29T00:32:37.938Z] ⚠️ Unhandled event type: payment_intent.created
+[2025-05-29T00:32:37.938Z] ✅ Webhook processed successfully
+[2025-05-29T00:32:37.938Z] 🔑 Stripe signature: t=1748478756,v1=9d6923e65d5afbf683ddcc8c3b0a092ec1d994670b524b279fee1443d1a6afaf,v0=2ff07650e68d5a84c0a538494962d9fab8f6bf3c7c3eee4ca79963086ebb0eab
+[2025-05-29T00:32:37.938Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-29T00:32:37.938Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_1RTuOeLEbBbuiNy44KjfLNir",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748478756,
+  "data": {
+    "object": {
+      "id": "cs_test_a178xuJBUeMjJ4McLGxo4eMzlm04hoGG...
+[2025-05-29T00:32:37.938Z] ✅ Webhook signature verified successfully
+[2025-05-29T00:32:37.938Z] 📦 Event type: checkout.session.completed
+[2025-05-29T00:32:37.939Z] 📦 Event ID: evt_1RTuOeLEbBbuiNy44KjfLNir
+[2025-05-29T00:32:37.939Z] 💳 Full checkout session data: {
+  "id": "cs_test_a178xuJBUeMjJ4McLGxo4eMzlm04hoGGx2qu9p0lZF7nDR05UlTjvowseO",
+  "object": "checkout.session",
+  "adaptive_pricing": {
+    "enabled": true
+  },
+  "after_expiration": null,
+  "allow_promotion_codes": null,
+  "amount_subtotal": 500,
+  "amount_total": 500,
+  "automatic_tax": {
+    "enabled": false,
+    "liability": null,
+    "provider": null,
+    "status": null
+  },
+  "billing_address_collection": null,
+  "cancel_url": "https://www.planetqradio.com/aistudio?canceled=true",
+  "client_reference_id": null,
+  "client_secret": null,
+  "collected_information": {
+    "shipping_details": null
+  },
+  "consent": null,
+  "consent_collection": null,
+  "created": 1748478698,
+  "currency": "usd",
+  "currency_conversion": null,
+  "custom_fields": [],
+  "custom_text": {
+    "after_submit": null,
+    "shipping_address": null,
+    "submit": null,
+    "terms_of_service_acceptance": null
+  },
+  "customer": "cus_SOfSv16UdVb1H3",
+  "customer_creation": null,
+  "customer_details": {
+    "address": {
+      "city": null,
+      "country": "KE",
+      "line1": null,
+      "line2": null,
+      "postal_code": null,
+      "state": null
+    },
+    "email": "tijwadev@gmail.com",
+    "name": "Achiado",
+    "phone": null,
+    "tax_exempt": "none",
+    "tax_ids": []
+  },
+  "customer_email": null,
+  "discounts": [],
+  "expires_at": 1748565098,
+  "invoice": null,
+  "invoice_creation": {
+    "enabled": false,
+    "invoice_data": {
+      "account_tax_ids": null,
+      "custom_fields": null,
+      "description": null,
+      "footer": null,
+      "issuer": null,
+      "metadata": {},
+      "rendering_options": null
+    }
+  },
+  "livemode": false,
+  "locale": null,
+  "metadata": {
+    "credits": "100",
+    "userId": "b09ae72e-cd84-427d-94cf-b9b1c34261a0",
+    "packageId": "prod_SNif9JuV1hG0Ux"
+  },
+  "mode": "payment",
+  "payment_intent": "pi_3RTuOcLEbBbuiNy40Z7s7soO",
+  "payment_link": null,
+  "payment_method_collection": "if_required",
+  "payment_method_configuration_details": null,
+  "payment_method_options": {
+    "card": {
+      "request_three_d_secure": "automatic"
+    }
+  },
+  "payment_method_types": [
+    "card"
+  ],
+  "payment_status": "paid",
+  "permissions": null,
+  "phone_number_collection": {
+    "enabled": false
+  },
+  "presentment_details": {
+    "presentment_amount": 65284,
+    "presentment_currency": "kes"
+  },
+  "recovered_from": null,
+  "saved_payment_method_options": {
+    "allow_redisplay_filters": [
+      "always"
+    ],
+    "payment_method_remove": "disabled",
+    "payment_method_save": null
+  },
+  "setup_intent": null,
+  "shipping": null,
+  "shipping_address_collection": null,
+  "shipping_options": [],
+  "shipping_rate": null,
+  "status": "complete",
+  "submit_type": null,
+  "subscription": null,
+  "success_url": "https://www.planetqradio.com/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}",
+  "total_details": {
+    "amount_discount": 0,
+    "amount_shipping": 0,
+    "amount_tax": 0
+  },
+  "ui_mode": "hosted",
+  "url": null,
+  "wallet_options": null
+}
+[2025-05-29T00:32:37.939Z] 💳 Processing checkout.session.completed for user b09ae72e-cd84-427d-94cf-b9b1c34261a0
+[2025-05-29T00:32:37.939Z] 📦 Package ID: prod_SNif9JuV1hG0Ux
+[2025-05-29T00:32:37.939Z] 💰 Credits to add: 100
+[2025-05-29T00:32:37.939Z] 💳 Payment status: paid
+[2025-05-29T00:32:37.939Z] 🔍 Looking up user b09ae72e-cd84-427d-94cf-b9b1c34261a0 in database
+[2025-05-29T00:32:37.940Z] 🔑 Stripe signature: t=1748478756,v1=8b40263a028bcd4351ba07d9e26d37c617cf7e45ab7485375f01fa7ebc6f25ca,v0=64f41d2335aacef370132b412e914e97d441e386465c5fa25d42dc267c320be6
+[2025-05-29T00:32:37.940Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-29T00:32:37.940Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTuOcLEbBbuiNy40oJpFn3e",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748478755,
+  "data": {
+    "object": {
+      "id": "ch_3RTuOcLEbBbuiNy40AGh6K9N",
+      "obj...
+[2025-05-29T00:32:37.940Z] ✅ Webhook signature verified successfully
+[2025-05-29T00:32:37.940Z] 📦 Event type: charge.succeeded
+[2025-05-29T00:32:37.940Z] 📦 Event ID: evt_3RTuOcLEbBbuiNy40oJpFn3e
+[2025-05-29T00:32:37.940Z] ⚠️ Unhandled event type: charge.succeeded
+[2025-05-29T00:32:37.940Z] ✅ Webhook processed successfully
+[2025-05-29T00:32:38.944Z] 🔔 Stripe webhook received at 2025-05-29T00:32:38.944Z
+[2025-05-29T00:32:38.949Z] 🔑 Stripe signature: t=1748478758,v1=15eb533ad104ba7869a16890922c6c3b1f1e14119da7b323533fca68a9216750,v0=3d88bdfea0cc517eba7e020bcc8ed290685bae0559bd58f0fdec7f4bcb52826c
+[2025-05-29T00:32:38.949Z] 📝 Webhook secret: Present (not showing for security)
+[2025-05-29T00:32:38.950Z] 📝 Raw request body (first 200 chars): {
+  "id": "evt_3RTuOcLEbBbuiNy40uvpFtiV",
+  "object": "event",
+  "api_version": "2018-11-08",
+  "created": 1748478758,
+  "data": {
+    "object": {
+      "id": "ch_3RTuOcLEbBbuiNy40AGh6K9N",
+      "obj...
+[2025-05-29T00:32:38.950Z] ✅ Webhook signature verified successfully
+[2025-05-29T00:32:38.950Z] 📦 Event type: charge.updated
+[2025-05-29T00:32:38.951Z] 📦 Event ID: evt_3RTuOcLEbBbuiNy40uvpFtiV
+[2025-05-29T00:32:38.951Z] ⚠️ Unhandled event type: charge.updated
+[2025-05-29T00:32:38.951Z] ✅ Webhook processed successfully
+[2025-05-29T00:32:40.351Z] 👤 User found: b09ae72e-cd84-427d-94cf-b9b1c34261a0, current credits: 450, email: tijwadev@gmail.com
+[2025-05-29T00:32:40.351Z] 💰 Updating user credits from 450 to 550
+[2025-05-29T00:32:41.029Z] ✅ Credits updated successfully. New balance: 550
+[2025-05-29T00:32:41.030Z] 📝 Creating credit log entry
+[2025-05-29T00:32:41.538Z] ✅ Credit log created successfully with ID: c6138504-00a6-4b73-9237-72e319fb32e1
+[2025-05-29T00:32:41.539Z] 🎉 Successfully added 100 credits to user b09ae72e-cd84-427d-94cf-b9b1c34261a0
+[2025-05-29T00:32:41.539Z] 📧 Sending purchase receipt email to tijwadev@gmail.com
+[2025-05-29T00:32:44.490Z] ✅ Purchase receipt email sent successfully to tijwadev@gmail.com
+[2025-05-29T00:32:44.491Z] ✅ Webhook processed successfully

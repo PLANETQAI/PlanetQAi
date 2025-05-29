@@ -133,7 +133,7 @@ const SunoGenerator = ({
 
 		return () => {
 			if (pollingInterval) {
-				console.log('Cleaning up Suno polling interval')
+				console.log('Cleaning up PlanetQ AI polling interval')
 				clearInterval(pollingInterval)
 				setPollingInterval(null)
 			}
@@ -686,7 +686,7 @@ const SunoGenerator = ({
 						) : (
 							<div className="flex items-center justify-center gap-2">
 								<Music className="w-5 h-5" />
-								<span>Generate Music with Suno</span>
+								<span>Generate Music with PlanetQ AI</span>
 							</div>
 						)}
 					</button>
@@ -780,7 +780,7 @@ const SunoGenerator = ({
 				<div className="flex items-start gap-2">
 					<TbInfoHexagonFilled className="text-gray-400 flex-shrink-0 mt-1" size={20} />
 					<p className="text-gray-400 text-sm">
-						Music generation uses credits from your account. Suno provides high-quality music with vocals and lyrics. 
+						Music generation uses credits from your account. PlanetQAi provides high-quality music with vocals and lyrics. 
 						<button onClick={() => router.push('/payment')} className="text-blue-400 hover:text-blue-300 ml-1">
 							View pricing plans
 						</button>
