@@ -134,6 +134,8 @@ export async function POST(req) {
       // Store user and song info for later use
       userInfo = user;
       songRecord = song;
+
+      console.log(song)
       
       console.log(`Checked credits for Diffrhym generation with ${wordCount} words - will deduct ${estimatedCredits} credits on success`);
     } catch (error) {

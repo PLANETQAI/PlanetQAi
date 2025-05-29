@@ -218,7 +218,7 @@ export async function GET(req) {
           data: {
             userId: session.user.id,
             audioLink: audioUrl,
-            isPaid: "true", // Credits have been deducted now
+            isPaid: "true", 
           },
         });
       }
