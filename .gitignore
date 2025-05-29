@@ -21,6 +21,7 @@ cache
 
 # planet qa i
 /PlanetQAi_API_Collection.json
+PlanetQAi_API_Collection.json
 
 # stripe
 /stripe_api_postman_collection.json
@@ -57,4 +58,4 @@ next-env.d.ts.env.backup
 
 .vscode/
 query.sql
-text.txt
+text.txt/
