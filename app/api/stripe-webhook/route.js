@@ -96,15 +96,15 @@ export async function POST(request) {
       }
       
       // Use the simplest possible approach for signature verification
-      logToFile(`🔄 Attempting to verify webhook signature...`);
+      console.log(`🔄 Attempting to verify webhook signature...`);
       try {
         // Get the raw buffer directly from the request
         const rawBuffer = Buffer.from(await request.arrayBuffer());
         
         // Log the signature and buffer details for debugging
-        logToFile(`🔑 Signature (first 20 chars): ${signature ? signature.substring(0, 20) : 'missing'}...`);
-        logToFile(`📝 Buffer length: ${rawBuffer.length}`);
-        logToFile(`📝 Buffer sample (first 20 bytes): ${rawBuffer.slice(0, 20).toString('hex')}`);
+        console.log(`🔑 Signature (first 20 chars): ${signature ? signature.substring(0, 20) : 'missing'}...`);
+        console.log(`📝 Buffer length: ${rawBuffer.length}`);
+        console.log(`📝 Buffer sample (first 20 bytes): ${rawBuffer.slice(0, 20).toString('hex')}`);
        
         // Use the standard approach recommended by Stripe
         event = await stripe.webhooks.constructEventAsync(
@@ -113,20 +113,20 @@ export async function POST(request) {
           webhookSecret
         );
         
-        logToFile(`✅ Webhook signature verified successfully`);
+        console.log(`✅ Webhook signature verified successfully`);
       } catch (verifyError) {
-        logToFile(`⚠️ Webhook verification error details: ${verifyError.message}`, true);
-        logToFile(`⚠️ Error stack: ${verifyError.stack}`, true);
+        console.log(`⚠️ Webhook verification error details: ${verifyError.message}`, true);
+        console.log(`⚠️ Error stack: ${verifyError.stack}`, true);
         throw verifyError;
       }
     } catch (err) {
-      logToFile(`⚠️ Webhook signature verification failed: ${err.message}`, true);
+      console.log(`⚠️ Webhook signature verification failed: ${err.message}`, true);
       return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
     }
     
     // Log the event type
-    logToFile(`📦 Event type: ${event.type}`);
-    logToFile(`📦 Event ID: ${event.id}`);
+    console.log(`📦 Event type: ${event.type}`);
+    console.log(`📦 Event ID: ${event.id}`);
     
     // Handle different event types
     switch (event.type) {
@@ -142,39 +142,39 @@ export async function POST(request) {
         const packageId = session.metadata?.packageId;
         const creditsToAdd = parseInt(session.metadata?.credits, 10) || 0;
         
-        logToFile(`💳 Processing checkout.session.completed for user ${userId}`);
-        logToFile(`📦 Package ID: ${packageId}`);
-        logToFile(`💰 Credits to add: ${creditsToAdd}`);
-        logToFile(`💳 Payment status: ${session.payment_status}`);
+        // logToFile(`💳 Processing checkout.session.completed for user ${userId}`);
+        // logToFile(`📦 Package ID: ${packageId}`);
+        // logToFile(`💰 Credits to add: ${creditsToAdd}`);
+        // logToFile(`💳 Payment status: ${session.payment_status}`);
         
         // Only process if payment is successful
         if (session.payment_status !== 'paid') {
-          logToFile(`⚠️ Payment not completed. Status: ${session.payment_status}`);
+          console.log(`⚠️ Payment not completed. Status: ${session.payment_status}`);
           return new NextResponse(JSON.stringify({ received: true }));
         }
         
         if (!userId || !creditsToAdd) {
-          logToFile(`❌ Missing required metadata in Stripe session. userId: ${userId}, credits: ${creditsToAdd}`, true);
+          console.log(`❌ Missing required metadata in Stripe session. userId: ${userId}, credits: ${creditsToAdd}`, true);
           return new NextResponse(JSON.stringify({ error: 'Missing metadata' }), { status: 400 });
         }
         
         // Get current user credits
         try {
-          logToFile(`🔍 Looking up user ${userId} in database`);
+          console.log(`🔍 Looking up user ${userId} in database`);
           const user = await prisma.user.findUnique({
             where: { id: userId },
             select: { credits: true, email: true, fullName: true },
           });
           
           if (!user) {
-            logToFile(`❌ User not found: ${userId}`, true);
+            console.log(`❌ User not found: ${userId}`, true);
             return new NextResponse(JSON.stringify({ error: 'User not found' }), { status: 404 });
           }
           
-          logToFile(`👤 User found: ${userId}, current credits: ${user.credits}, email: ${user.email}`);
+          console.log(`👤 User found: ${userId}, current credits: ${user.credits}, email: ${user.email}`);
           
           // Add credits to user account
-          logToFile(`💰 Updating user credits from ${user.credits} to ${user.credits + creditsToAdd}`);
+          console.log(`💰 Updating user credits from ${user.credits} to ${user.credits + creditsToAdd}`);
           const updatedUser = await prisma.user.update({
             where: { id: userId },
             data: {
@@ -182,10 +182,10 @@ export async function POST(request) {
             },
           });
           
-          logToFile(`✅ Credits updated successfully. New balance: ${updatedUser.credits}`);
+          console.log(`✅ Credits updated successfully. New balance: ${updatedUser.credits}`);
           
           // Create a credit log entry
-          logToFile(`📝 Creating credit log entry`);
+          console.log(`📝 Creating credit log entry`);
           const creditLog = await prisma.creditLog.create({
             data: {
               userId,
@@ -197,12 +197,12 @@ export async function POST(request) {
             },
           });
           
-          logToFile(`✅ Credit log created successfully with ID: ${creditLog.id}`);
-          logToFile(`🎉 Successfully added ${creditsToAdd} credits to user ${userId}`);
+          console.log(`✅ Credit log created successfully with ID: ${creditLog.id}`);
+          console.log(`🎉 Successfully added ${creditsToAdd} credits to user ${userId}`);
           
           // Send purchase receipt email
           try {
-            logToFile(`📧 Sending purchase receipt email to ${user.email}`);
+            console.log(`📧 Sending purchase receipt email to ${user.email}`);
             
             // Get package details from product ID or metadata
             let packageName = `${creditsToAdd} Credits Package`;
@@ -250,14 +250,14 @@ export async function POST(request) {
               text
             );
             
-            logToFile(`✅ Purchase receipt email sent successfully to ${user.email}`);
+            console.log(`✅ Purchase receipt email sent successfully to ${user.email}`);
           } catch (emailError) {
-            logToFile(`⚠️ Failed to send purchase receipt email: ${emailError.message}`, true);
+            console.log(`⚠️ Failed to send purchase receipt email: ${emailError.message}`, true);
             // Don't throw the error, just log it - we don't want to fail the webhook if email fails
           }
         } catch (dbError) {
-          logToFile(`❌ Database error while processing webhook: ${dbError.message}`, true);
-          logToFile(`Stack trace: ${dbError.stack}`, true);
+          console.log(`❌ Database error while processing webhook: ${dbError.message}`, true);
+          console.log(`Stack trace: ${dbError.stack}`, true);
           throw dbError;
         }
         break;
@@ -266,8 +266,8 @@ export async function POST(request) {
         const paymentIntent = event.data.object;
         const failedUserId = paymentIntent.metadata?.userId;
         
-        logToFile(`❌ Payment failed for user ${failedUserId}`);  
-        logToFile(`❌ Payment failure reason: ${paymentIntent.last_payment_error?.message || 'Unknown'}`);  
+        console.log(`❌ Payment failed for user ${failedUserId}`);  
+        console.log(`❌ Payment failure reason: ${paymentIntent.last_payment_error?.message || 'Unknown'}`);  
         
         // You could implement notification logic here
         // For example, update a user record or send an email
@@ -278,7 +278,7 @@ export async function POST(request) {
         const expiredSession = event.data.object;
         const expiredUserId = expiredSession.metadata?.userId;
         
-        logToFile(`⏰ Checkout session expired for user ${expiredUserId}`);  
+        console.log(`⏰ Checkout session expired for user ${expiredUserId}`);  
         
         // You could implement cleanup or notification logic here
         
@@ -290,8 +290,8 @@ export async function POST(request) {
         const subscription = event.data.object;
         const subscriptionUserId = subscription.metadata?.userId;
         
-        logToFile(`📦 Processing subscription event for user ${subscriptionUserId}`);
-        logToFile(`📦 Subscription status: ${subscription.status}`);
+        console.log(`📦 Processing subscription event for user ${subscriptionUserId}`);
+        console.log(`📦 Subscription status: ${subscription.status}`);
         
         // Handle subscription events here
         // This could update the user's subscription status in your database
@@ -303,11 +303,11 @@ export async function POST(request) {
         logToFile(`⚠️ Unhandled event type: ${event.type}`);
     }
     
-    logToFile(`✅ Webhook processed successfully`);
+    console.log(`✅ Webhook processed successfully`);
     return new NextResponse(JSON.stringify({ received: true }));
   } catch (error) {
-    logToFile(`❌ Webhook error: ${error.message}`, true);
-    logToFile(`Stack trace: ${error.stack}`, true);
+    console.log(`❌ Webhook error: ${error.message}`, true);
+    console.log(`Stack trace: ${error.stack}`, true);
     return new NextResponse(JSON.stringify({ error: 'Webhook handler failed' }), { status: 500 });
   }
 }
