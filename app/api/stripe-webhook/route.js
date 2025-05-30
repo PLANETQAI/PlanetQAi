@@ -77,6 +77,8 @@ export async function POST(request) {
   try {
     // Get the raw request body
     const text = await request.text();
+  
+   
     
     // Get the Stripe signature from headers
     const headersList = headers();
@@ -89,7 +91,7 @@ export async function POST(request) {
     // Verify the webhook signature
     let event;
     try {
-      if (!webhookSecret) {
+      if (!signature || !webhookSecret) {
         throw new Error('Missing STRIPE_WEBHOOK_SECRET environment variable');
       }
       
