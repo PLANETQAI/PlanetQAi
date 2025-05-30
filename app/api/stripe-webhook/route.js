@@ -103,22 +103,28 @@ export async function POST(request) {
         throw new Error('Missing STRIPE_WEBHOOK_SECRET environment variable');
       }
       
-      // Use the async version of constructEvent with the raw buffer
+      // Use the simplest possible approach for signature verification
       logToFile(`🔄 Attempting to verify webhook signature...`);
       try {
-        // Use the raw buffer for signature verification
+        // Get the raw buffer directly from the request
         const rawBuffer = Buffer.from(await request.arrayBuffer());
+        
+        // Log the signature and buffer details for debugging
+        logToFile(`🔑 Signature (first 20 chars): ${signature ? signature.substring(0, 20) : 'missing'}...`);
+        logToFile(`📝 Buffer length: ${rawBuffer.length}`);
+        logToFile(`📝 Buffer sample (first 20 bytes): ${rawBuffer.slice(0, 20).toString('hex')}`);
+        
+        // Use the standard approach recommended by Stripe
         event = await stripe.webhooks.constructEventAsync(
           rawBuffer, 
           signature, 
-          webhookSecret,
-          undefined,
-          // Important: Use the buffer directly without any processing
-          { payload: rawBuffer }
+          webhookSecret
         );
+        
         logToFile(`✅ Webhook signature verified successfully`);
       } catch (verifyError) {
-        logToFile(`⚠️ Webhook verification error details: ${verifyError.stack}`, true);
+        logToFile(`⚠️ Webhook verification error details: ${verifyError.message}`, true);
+        logToFile(`⚠️ Error stack: ${verifyError.stack}`, true);
         throw verifyError;
       }
     } catch (err) {
