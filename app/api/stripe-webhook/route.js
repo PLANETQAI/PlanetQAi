@@ -67,26 +67,18 @@ export async function POST(request) {
   logToFile(`🔔 Stripe webhook received at ${new Date().toISOString()}`);
   
   try {
-    // Get the raw request body as a buffer to preserve exact format
+    // Get the raw request body as a buffer to preserve exact format - ONLY READ ONCE
     const buffer = await request.arrayBuffer();
-    const text = Buffer.from(buffer).toString('utf8');
+    const rawBuffer = Buffer.from(buffer);
+    const text = rawBuffer.toString('utf8');
     
     // Get the Stripe signature from headers
     const headersList = headers();
     const signature = headersList.get('stripe-signature');
 
-     console.log('Raw buffer length:', buffer.byteLength);
-     console.log('Signature present:', !!signature);
-     console.log('Webhook secret present:', !!webhookSecret);
-    
-    // Enhanced logging for debugging
-    // logToFile(`🔑 Stripe signature length: ${signature ? signature.length : 0}`);
-    // logToFile(`🔑 Stripe signature present: ${!!signature}`);
-    // logToFile(`📝 Webhook secret present: ${!!webhookSecret}`);
-    // logToFile(`📝 Webhook secret length: ${webhookSecret ? webhookSecret.length : 0}`);
-    // logToFile(`📝 Raw request body length: ${text ? text.length : 0}`);
-    // logToFile(`📝 Raw request body format: ${typeof text}`);
-    // logToFile(`📝 Raw request body (first 100 chars): ${text ? text.substring(0, 100) : 'Empty'}...`);
+    console.log('Raw buffer length:', buffer.byteLength);
+    console.log('Signature present:', !!signature);
+    console.log('Webhook secret present:', !!webhookSecret);
     
     // Verify the webhook signature
     let event;
@@ -102,9 +94,6 @@ export async function POST(request) {
       // Use the simplest possible approach for signature verification
       console.log(`🔄 Attempting to verify webhook signature...`);
       try {
-        // Get the raw buffer directly from the request
-        const rawBuffer = Buffer.from(await request.arrayBuffer());
-        
         // Log the signature and buffer details for debugging
         console.log(`🔑 Signature (first 20 chars): ${signature ? signature.substring(0, 20) : 'missing'}...`);
         console.log(`📝 Buffer length: ${rawBuffer.length}`);
