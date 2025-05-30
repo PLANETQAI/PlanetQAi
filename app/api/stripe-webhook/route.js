@@ -93,7 +93,8 @@ export async function POST(request) {
         throw new Error('Missing STRIPE_WEBHOOK_SECRET environment variable');
       }
       
-      event = stripe.webhooks.constructEvent(text, signature, webhookSecret);
+      // Use the async version of constructEvent
+      event = await stripe.webhooks.constructEventAsync(text, signature, webhookSecret);
       logToFile(`✅ Webhook signature verified successfully`);
     } catch (err) {
       logToFile(`⚠️ Webhook signature verification failed: ${err.message}`, true);
