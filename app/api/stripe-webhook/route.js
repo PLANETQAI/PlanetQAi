@@ -82,6 +82,10 @@ export async function POST(request) {
     // Get the Stripe signature from headers
     const headersList = headers();
     const signature = headersList.get('stripe-signature');
+
+     console.log('Raw buffer length:', buffer.byteLength);
+     console.log('Signature present:', !!signature);
+      sconsole.log('Webhook secret present:', !!process.env.STRIPE_WEBHOOK_SECRET);
     
     // Enhanced logging for debugging
     logToFile(`🔑 Stripe signature length: ${signature ? signature.length : 0}`);
@@ -113,7 +117,7 @@ export async function POST(request) {
         logToFile(`🔑 Signature (first 20 chars): ${signature ? signature.substring(0, 20) : 'missing'}...`);
         logToFile(`📝 Buffer length: ${rawBuffer.length}`);
         logToFile(`📝 Buffer sample (first 20 bytes): ${rawBuffer.slice(0, 20).toString('hex')}`);
-        
+       
         // Use the standard approach recommended by Stripe
         event = await stripe.webhooks.constructEventAsync(
           rawBuffer, 
