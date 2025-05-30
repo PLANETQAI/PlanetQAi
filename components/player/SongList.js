@@ -69,7 +69,7 @@ const SongList = ({
           
           {/* Generator badge */}
           <div className="ml-2 px-2 py-0.5 bg-gray-700 text-gray-300 text-xs rounded-full">
-            {generator === 'diffrhym' ? 'Diffrhym' : 'Suno'}
+            {generator === 'diffrhym' ? 'Q_World Studio' : 'Planet Q AI'}
           </div>
           
           {/* Pending indicator */}
