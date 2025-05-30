@@ -77,27 +77,39 @@ export async function POST(request) {
   try {
     // Get the raw request body
     const text = await request.text();
-  
-   
     
     // Get the Stripe signature from headers
     const headersList = headers();
     const signature = headersList.get('stripe-signature');
     
-    logToFile(`🔑 Stripe signature: ${signature}`);
-    logToFile(`📝 Webhook secret: ${webhookSecret ? 'Present (not showing for security)' : 'Missing!'}`); 
-    logToFile(`📝 Raw request body (first 200 chars): ${text.substring(0, 200)}...`);
+    // Enhanced logging for debugging
+    logToFile(`🔑 Stripe signature length: ${signature ? signature.length : 0}`);
+    logToFile(`🔑 Stripe signature present: ${!!signature}`);
+    logToFile(`📝 Webhook secret present: ${!!webhookSecret}`);
+    logToFile(`📝 Webhook secret length: ${webhookSecret ? webhookSecret.length : 0}`);
+    logToFile(`📝 Raw request body length: ${text ? text.length : 0}`);
+    logToFile(`📝 Raw request body (first 100 chars): ${text ? text.substring(0, 100) : 'Empty'}...`);
     
     // Verify the webhook signature
     let event;
     try {
-      if (!signature || !webhookSecret) {
+      if (!signature) {
+        throw new Error('Missing Stripe signature in request headers');
+      }
+      
+      if (!webhookSecret) {
         throw new Error('Missing STRIPE_WEBHOOK_SECRET environment variable');
       }
       
       // Use the async version of constructEvent
-      event = await stripe.webhooks.constructEventAsync(text, signature, webhookSecret);
-      logToFile(`✅ Webhook signature verified successfully`);
+      logToFile(`🔄 Attempting to verify webhook signature...`);
+      try {
+        event = await stripe.webhooks.constructEventAsync(text, signature, webhookSecret);
+        logToFile(`✅ Webhook signature verified successfully`);
+      } catch (verifyError) {
+        logToFile(`⚠️ Webhook verification error details: ${verifyError.stack}`, true);
+        throw verifyError;
+      }
     } catch (err) {
       logToFile(`⚠️ Webhook signature verification failed: ${err.message}`, true);
       return new NextResponse(`Webhook Error: ${err.message}`, { status: 400 });
