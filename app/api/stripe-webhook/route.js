@@ -3,8 +3,6 @@ import { NextRequest } from 'next/server';
 import { PrismaClient } from '@prisma/client';
 import Stripe from 'stripe';
 import { headers } from 'next/headers';
-import fs from 'fs';
-import path from 'path';
 import sendEmail from '../../../utils/email/emailService';
 import { purchaseReceiptTemplate } from '../../../utils/email/emailTemplates';
 
@@ -44,27 +42,17 @@ function getPackageByProductId(productId) {
   return CREDIT_PACKAGES.find(pkg => pkg.id === productId) || null;
 }
 
-// Create a log directory if it doesn't exist
-const logDir = path.join(process.cwd(), 'logs');
-if (!fs.existsSync(logDir)) {
-  fs.mkdirSync(logDir, { recursive: true });
-}
-
-// Function to log webhook events to a file
+// Function to log safely (console only, no file logging)
 function logToFile(message, isError = false) {
   const timestamp = new Date().toISOString();
-  const logMessage = `[${timestamp}] ${isError ? 'ERROR: ' : ''}${message}\n`;
+  const logMessage = `[${timestamp}] ${isError ? 'ERROR: ' : ''}${message}`;
   
-  // Log to console
+  // Log to console only
   if (isError) {
     console.error(logMessage);
   } else {
     console.log(logMessage);
   }
-  
-  // Log to file
-  const logFile = path.join(logDir, 'stripe-webhooks.log');
-  fs.appendFileSync(logFile, logMessage);
 }
 
 // Route segment config - ensure we're using Node.js runtime and force dynamic rendering
@@ -85,16 +73,16 @@ export async function POST(request) {
 
      console.log('Raw buffer length:', buffer.byteLength);
      console.log('Signature present:', !!signature);
-      sconsole.log('Webhook secret present:', !!process.env.STRIPE_WEBHOOK_SECRET);
+     console.log('Webhook secret present:', !!webhookSecret);
     
     // Enhanced logging for debugging
-    logToFile(`🔑 Stripe signature length: ${signature ? signature.length : 0}`);
-    logToFile(`🔑 Stripe signature present: ${!!signature}`);
-    logToFile(`📝 Webhook secret present: ${!!webhookSecret}`);
-    logToFile(`📝 Webhook secret length: ${webhookSecret ? webhookSecret.length : 0}`);
-    logToFile(`📝 Raw request body length: ${text ? text.length : 0}`);
-    logToFile(`📝 Raw request body format: ${typeof text}`);
-    logToFile(`📝 Raw request body (first 100 chars): ${text ? text.substring(0, 100) : 'Empty'}...`);
+    // logToFile(`🔑 Stripe signature length: ${signature ? signature.length : 0}`);
+    // logToFile(`🔑 Stripe signature present: ${!!signature}`);
+    // logToFile(`📝 Webhook secret present: ${!!webhookSecret}`);
+    // logToFile(`📝 Webhook secret length: ${webhookSecret ? webhookSecret.length : 0}`);
+    // logToFile(`📝 Raw request body length: ${text ? text.length : 0}`);
+    // logToFile(`📝 Raw request body format: ${typeof text}`);
+    // logToFile(`📝 Raw request body (first 100 chars): ${text ? text.substring(0, 100) : 'Empty'}...`);
     
     // Verify the webhook signature
     let event;
