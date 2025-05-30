@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server'
 const prisma = new PrismaClient()
 
 // Make sure to use the correct environment variable name
+const webhookSecret = 'whsec_0lcDHiRhvKzhk6A6x7qk8TD6z6ZC1cfA'
 const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY)
 
 export const runtime = 'edge';
