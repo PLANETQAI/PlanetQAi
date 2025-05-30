@@ -94,7 +94,7 @@ export async function POST(request) {
       // Use the simplest possible approach for signature verification
       console.log(`🔄 Attempting to verify webhook signature...`);
       try {
-        // Log the signature and buffer details for debugging
+       
         console.log(`🔑 Signature (first 20 chars): ${signature ? signature.substring(0, 20) : 'missing'}...`);
         console.log(`📝 Buffer length: ${rawBuffer.length}`);
         console.log(`📝 Buffer sample (first 20 bytes): ${rawBuffer.slice(0, 20).toString('hex')}`);
