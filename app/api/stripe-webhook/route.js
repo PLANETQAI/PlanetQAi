@@ -58,6 +58,10 @@ function logToFile(message, isError = false) {
 // Route segment config - ensure we're using Node.js runtime and force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
+export const preferredRegion = 'auto';
+
+// Configure the allowed methods
+export const allowedMethods = ['POST'];
 
 export async function POST(request) {
   logToFile(`🔔 Stripe webhook received at ${new Date().toISOString()}`);
