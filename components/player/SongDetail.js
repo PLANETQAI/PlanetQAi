@@ -7,6 +7,15 @@ const SongDetail = ({
   song, 
   onEditTitle 
 }) => {
+  // Helper function to check if a song is pending
+  const isSongPending = (song) => {
+    // Check if the song has a status tag indicating it's pending
+    if (song.tags && song.tags.some(tag => tag === 'status:pending')) {
+      return true
+    }
+    // Check if the song has an empty audioUrl or a status property set to pending
+    return (!song.audioUrl || song.audioUrl === '') || song.status === 'pending'
+  }
   const [editingSongTitle, setEditingSongTitle] = useState(false)
   const [editedSongTitle, setEditedSongTitle] = useState(song?.title || '')
 
@@ -80,22 +89,36 @@ const SongDetail = ({
         )}
       </div>
       
-      {/* Audio player */}
-      <AudioPlayer src={song.audioUrl} />
+      {/* Audio player or pending indicator */}
+      {isSongPending(song) ? (
+        <div className="bg-amber-600/20 border border-amber-600/30 rounded-lg p-4 my-3">
+          <div className="flex items-center gap-3">
+            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-amber-500"></div>
+            <div>
+              <p className="text-amber-300 font-medium">Your music is being generated</p>
+              <p className="text-amber-300/70 text-sm">This may take a few minutes. The song will appear automatically when ready.</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <AudioPlayer src={song.audioUrl} />
+      )}
       
-      {/* Download button */}
-      <div className="mt-3 flex justify-end">
-        <a 
-          href={song.audioUrl} 
-          download={`${song.title.replace(/\s+/g, '_')}.mp3`}
-          className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-          </svg>
-          Download
-        </a>
-      </div>
+      {/* Download button - only show if song is not pending */}
+      {!isSongPending(song) && (
+        <div className="mt-3 flex justify-end">
+          <a 
+            href={song.audioUrl} 
+            download={`${song.title.replace(/\s+/g, '_')}.mp3`}
+            className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md flex items-center gap-2 text-sm font-medium transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+            </svg>
+            Download
+          </a>
+        </div>
+      )}
       
       {/* Song details */}
       <div className="mt-3 grid grid-cols-2 gap-2 text-sm">

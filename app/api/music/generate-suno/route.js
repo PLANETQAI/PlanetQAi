@@ -51,39 +51,56 @@ export async function POST(req) {
     
     console.log(`Suno backend credit calculation: ${wordCount} words = ${estimatedCredits} credits`);
 
-    // Check if user has enough credits
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      select: { credits: true, email: true },
-    });
+    // Check if user has enough credits but don't deduct them yet
+    // We'll only deduct credits when the generation is successful
+    let userInfo, songRecord;
+    
+    try {
+      // First, check if the user exists and has enough credits
+      const user = await prisma.user.findUnique({
+        where: { id: userId },
+        select: { id: true, credits: true, email: true },
+      });
 
-    // Add detailed logging to debug credit issues
-    console.log(`Credit check for user ${userId} (${user?.email}):`);
-    console.log(`- Available credits: ${user?.credits || 0}`);
-    console.log(`- Required credits: ${estimatedCredits}`);
-    console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`);
-    
-    if (!user) {
-      return NextResponse.json(
-        {
-          error: "User not found",
-          creditsNeeded: estimatedCredits,
-          creditsAvailable: 0,
-        },
-        { status: 404 }
-      );
-    }
-    
-    if (user.credits < estimatedCredits) {
-      return NextResponse.json(
-        {
-          error: "Insufficient credits",
-          creditsNeeded: estimatedCredits,
-          creditsAvailable: user.credits,
-          shortfall: estimatedCredits - user.credits
-        },
-        { status: 403 }
-      );
+      // Add detailed logging to debug credit issues
+      console.log(`Credit check for user ${userId} (${user?.email}):`);      console.log(`- Available credits: ${user?.credits || 0}`);
+      console.log(`- Required credits: ${estimatedCredits}`);
+      console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`);
+      
+      if (!user) {
+        throw new Error("User not found");
+      }
+      
+      // Check if user has enough credits
+      if (user.credits < estimatedCredits) {
+        throw new Error(`Insufficient credits: needed ${estimatedCredits}, have ${user.credits}`);
+      }
+      
+      // Store user info for later use
+      userInfo = user;
+    } catch (error) {
+      // Handle transaction errors
+      if (error.message.includes("User not found")) {
+        return NextResponse.json(
+          {
+            error: "User not found",
+            creditsNeeded: estimatedCredits,
+            creditsAvailable: 0,
+          },
+          { status: 404 }
+        );
+      } else if (error.message.includes("Insufficient credits")) {
+        return NextResponse.json(
+          {
+            error: "Insufficient credits",
+            creditsNeeded: estimatedCredits,
+            creditsAvailable: error.message.match(/have (\d+)/)?.[1] || 0,
+            shortfall: estimatedCredits - (error.message.match(/have (\d+)/)?.[1] || 0)
+          },
+          { status: 403 }
+        );
+      }
+      throw error; // Re-throw other errors
     }
 
     // Create initial song record
@@ -109,6 +126,9 @@ export async function POST(req) {
         tags: songTags,
       },
     });
+    
+    // Store song record for later use
+    songRecord = song;
 
     // URL and API key for the PiAPI Suno API
     // You'll need to add these to your .env file
@@ -171,26 +191,23 @@ export async function POST(req) {
     // Update the song record with the task ID as a tag
     const updatedTags = [...songTags, `taskId:${taskId}`];
     await prisma.song.update({
-      where: { id: song.id },
+      where: { id: songRecord.id },
       data: {
         tags: updatedTags
       }
     });
 
-    // Deduct credits based on word count (handled by CreditManager)
-    await CreditManager.deductCreditsForSongGeneration(
-      userId,
-      0, // Duration parameter is not used anymore but kept for backward compatibility
-      song.id
-    );
+    // We don't deduct credits here - they will be deducted when generation is successful
+    console.log(`Checked credits for Suno generation with ${wordCount} words - will deduct ${estimatedCredits} credits on success`);
 
     // Return the song ID and task ID for the frontend to poll
     return NextResponse.json({
       success: true,
       message: "Suno music generation started",
-      songId: song.id,
+      songId: songRecord.id,
       estimatedCredits,
       taskId: taskId,
+      status: "pending"
     });
   } catch (error) {
     console.error("Suno music generation error:", error);

@@ -67,6 +67,14 @@ const DiffrhymGenerator = ({
 	const [generationStartTime, setGenerationStartTime] = useState(null)
 	const [generationEndTime, setGenerationEndTime] = useState(null)
 	const [generationDuration, setGenerationDuration] = useState(null)
+	
+	// Timer state for real-time tracking
+	const [timerInterval, setTimerInterval] = useState(null)
+	const [currentTime, setCurrentTime] = useState(0)
+	
+	// Status tracking
+	const [statusCheckCount, setStatusCheckCount] = useState(0)
+	const [lastStatusResponse, setLastStatusResponse] = useState(null)
 	// State for generated songs
 	const [generatedSongs, setGeneratedSongs] = useState([])
 	const [selectedSongIndex, setSelectedSongIndex] = useState(0)
@@ -113,8 +121,31 @@ const DiffrhymGenerator = ({
 		if (session?.user) {
 			fetchUserCredits()
 			fetchUserSongs()
+			
+			// Check for any pending songs that might have completed
+			checkPendingSongs()
+		}
+		
+		// Cleanup function to clear any intervals when component unmounts
+		return () => {
+			if (pollingInterval) {
+				console.log('Clearing polling interval on unmount')
+				clearInterval(pollingInterval)
+			}
 		}
 	}, [session])
+	
+	// Function to check for any pending songs that might have completed
+	const checkPendingSongs = async () => {
+		try {
+			// Simply refresh the songs list to get any newly completed songs
+			console.log('Checking for completed songs...')
+			await fetchUserSongs()
+			await fetchUserCredits()
+		} catch (error) {
+			console.error('Error checking pending songs:', error)
+		}
+	}
 	
 	// Fetch user's songs from the database
 	const fetchUserSongs = async () => {
@@ -147,16 +178,33 @@ const DiffrhymGenerator = ({
 			const data = await response.json()
 			console.log('All songs from API:', data)
 			if (data.songs && Array.isArray(data.songs)) {
-				// Filter songs for Diffrhym
+				// Log all songs for debugging
+				console.log('All songs from database:', data.songs);
+				
+				// Filter songs for Diffrhym with more detailed logging
 				const diffrhymSongs = data.songs.filter(song => {
+					// Check if song has required fields
+					if (!song.id || !song.audioUrl) {
+						console.log('Skipping song with missing required fields:', song.id);
+						return false;
+					}
+					
 					// Check provider field
-					if (song.provider === 'diffrhym') return true;
+					if (song.provider === 'diffrhym') {
+						console.log('Including song with provider=diffrhym:', song.id, song.title);
+						return true;
+					}
 					
 					// Check tags array
 					if (song.tags && Array.isArray(song.tags)) {
-						return song.tags.some(tag => tag === 'provider:diffrhym');
+						const isDiffrhym = song.tags.some(tag => tag === 'provider:diffrhym');
+						if (isDiffrhym) {
+							console.log('Including song with provider:diffrhym tag:', song.id, song.title);
+							return true;
+						}
 					}
 					
+					console.log('Excluding song (not diffrhym):', song.id, song.title);
 					return false;
 				});
 				
@@ -221,22 +269,13 @@ const DiffrhymGenerator = ({
 		}
 	}
 
-	// Cleanup polling interval on unmount and ensure we only poll when there's an active task
+	// Cleanup function for component unmount
 	useEffect(() => {
-		// Only start polling if we have both a task ID and song ID
-		if (currentTaskId && pollingInterval === null) {
-			console.log('Starting polling for task:', currentTaskId)
-			startPolling(currentTaskId, generatedSongs[selectedSongIndex]?.id)
-		}
-
 		return () => {
-			if (pollingInterval) {
-				console.log('Cleaning up polling interval')
-				clearInterval(pollingInterval)
-				setPollingInterval(null)
-			}
+			// Any cleanup needed when component unmounts
+			console.log('DiffrhymGenerator component unmounting')
 		}
-	}, [currentTaskId, pollingInterval])
+	}, [])
 
 	// Fetch user credits
 	const fetchUserCredits = async () => {
@@ -314,14 +353,142 @@ const DiffrhymGenerator = ({
 		return credits;
 	}
 
+	// Start timer function
+	const startTimer = () => {
+		// Reset any existing timer
+		if (timerInterval) {
+			clearInterval(timerInterval)
+		}
+		
+		const now = Date.now()
+		setGenerationStartTime(now)
+		setGenerationEndTime(null)
+		setGenerationDuration(null)
+		setCurrentTime(0)
+		setStatusCheckCount(0)
+		
+		// Start a new timer that updates every 100ms
+		const interval = setInterval(() => {
+			const elapsed = Date.now() - now
+			setCurrentTime(elapsed)
+		}, 100)
+		
+		setTimerInterval(interval)
+		console.log(`Timer started at ${new Date(now).toLocaleTimeString()}`)
+	}
+	
+	// Stop timer function
+	const stopTimer = () => {
+		if (timerInterval) {
+			clearInterval(timerInterval)
+			setTimerInterval(null)
+		}
+		
+		const now = Date.now()
+		setGenerationEndTime(now)
+		
+		if (generationStartTime) {
+			const elapsed = now - generationStartTime
+			setGenerationDuration(elapsed)
+			console.log(`Timer stopped. Total time: ${formatTime(elapsed)}`)
+		}
+	}
+	
+	// Check status of a task
+	const checkStatus = async (taskId, songId) => {
+		try {
+			setStatusCheckCount(prev => prev + 1)
+			console.log(`Checking status for task ${taskId}... (Check #${statusCheckCount + 1})`)
+			
+			// Call the status API
+			const response = await axios.get(`/api/music/status?taskId=${taskId}&songId=${songId}`)
+			
+			const statusData = response.data
+			setLastStatusResponse(statusData)
+			setGenerationStatus(statusData.status || 'unknown')
+			
+			console.log(`Status: ${statusData.status || 'unknown'}`)
+			
+			// If completed, get the audio URL and stop the timer
+			if (statusData.status === 'completed' && statusData.output && statusData.output.audio_url) {
+				setGeneratedAudio(statusData.output.audio_url)
+				console.log(`Audio URL: ${statusData.output.audio_url}`)
+				
+				// Stop the timer
+				stopTimer()
+				
+				// Update loading state and clear error message
+				setLoading(false)
+				setError('')
+				
+				// Refresh the songs list
+				await fetchUserSongs()
+				await fetchUserCredits()
+				
+				// Stop polling
+				if (pollingInterval) {
+					clearInterval(pollingInterval)
+					setPollingInterval(null)
+					console.log('Status polling stopped - song is ready')
+				}
+			}
+			
+			// Also check if the song has been updated in our database
+			if (songId) {
+				try {
+					const songResponse = await axios.get(`/api/songs/${songId}`)
+					if (songResponse.data && songResponse.data.audioUrl) {
+						setGeneratedAudio(songResponse.data.audioUrl)
+						console.log(`Song updated in database with audio URL: ${songResponse.data.audioUrl}`)
+						
+						// Update generation status
+						setGenerationStatus('completed')
+						
+						// Update loading state
+						setLoading(false)
+						setError('')
+						
+						// Stop the timer if it's still running
+						if (timerInterval) {
+							stopTimer()
+						}
+						
+						// Stop polling
+						if (pollingInterval) {
+							clearInterval(pollingInterval)
+							setPollingInterval(null)
+							console.log('Status polling stopped - song is ready in database')
+						}
+					}
+				} catch (songErr) {
+					console.error('Error checking song in database:', songErr)
+				}
+			}
+			
+			return statusData
+		} catch (err) {
+			console.error('Error checking status:', err)
+			return null
+		}
+	}
+
 	const generateAudio = async () => {
 		setLoading(true)
 		setError('')
 		setGeneratedAudio(null)
 		setGeneratedLyrics(null)
 		setCoverImage(null)
-		setGenerationStatus(null)
+		setGenerationStatus('starting')
 		setEstimatedCredits(null)
+		
+		// Stop any existing polling
+		if (pollingInterval) {
+			clearInterval(pollingInterval)
+			setPollingInterval(null)
+		}
+		
+		// Start the timer
+		startTimer()
 
 		try {
 			// Calculate estimated credits
@@ -333,6 +500,8 @@ const DiffrhymGenerator = ({
 				setCreditsNeeded(estimatedCredits - userCredits.credits)
 				setShowCreditPurchaseModal(true)
 				setLoading(false)
+				setGenerationStatus(null)
+				stopTimer() // Stop the timer if we don't have enough credits
 				return
 			}
 
@@ -346,22 +515,71 @@ const DiffrhymGenerator = ({
 				title: selectedPrompt.title,
 			}
 
-			// Make the API request
-			const response = await axios.post('/api/music/generate', payload)
+			// Show generating status
+			setGenerationStatus('generating')
+			console.log('Starting music generation with new API...')
+
+			// Make the API request to the new generate_v1 endpoint
+			const response = await axios.post('/api/music/generate_v1', payload)
+			console.log('Generation response:', response.data)
 
 			// Handle the response
-			if (response.status === 200 && response.data && response.data.task_id) {
-				const taskId = response.data.task_id
-				const songId = response.data.song_id
+			if (response.data && response.data.success) {
+				const { taskId, songId, status } = response.data
 				
-				console.log('Music generation started successfully', { taskId, songId })
+				console.log('Music generation initiated successfully', { taskId, songId, status })
 				
-				// Save the current task ID and song ID
+				// Update generation status
+				setGenerationStatus(status || 'pending')
+				
+				// Store the task ID for status checking
 				setCurrentTaskId(taskId)
-				setGenerationStatus('pending')
 				
-				// The polling will be started by the useEffect that watches currentTaskId
-				// This ensures we don't have multiple polling intervals running
+				// Immediately check the status once
+				await checkStatus(taskId, songId)
+				
+				// Set up an interval to check the status every 10 seconds
+				const statusInterval = setInterval(async () => {
+					const statusData = await checkStatus(taskId, songId)
+					
+					// If the status is completed or failed, clear the interval
+					if (statusData && (statusData.status === 'completed' || statusData.status === 'failed')) {
+						clearInterval(statusInterval)
+						setPollingInterval(null)
+						console.log('Status polling stopped - song is ready or failed')
+						
+						// Update loading state based on status
+						if (statusData.status === 'completed') {
+							// Stop the timer when completed
+							stopTimer()
+							setLoading(false)
+							setError('')
+						} else if (statusData.status === 'failed') {
+							// Handle failure
+							stopTimer()
+							setLoading(false)
+							setError('Music generation failed. Please try again.')
+						}
+					}
+				}, 10000) // Check every 10 seconds
+				
+				// Clear the interval after 10 minutes (safety timeout)
+				setTimeout(() => {
+					if (statusInterval) {
+						clearInterval(statusInterval)
+						setPollingInterval(null)
+						console.log('Status polling stopped due to timeout')
+					}
+				}, 600000) // 10 minutes
+				
+				// Store the interval ID so we can clear it if the component unmounts
+				setPollingInterval(statusInterval)
+				
+				// Refresh the songs list to show the pending song
+				await fetchUserSongs()
+				
+				// Set a message to inform the user
+				setError('Your music is being generated. It will appear in your song list automatically when ready. This may take a few minutes.')
 			} else {
 				throw new Error('Failed to generate music. Please try again.')
 			}
@@ -383,14 +601,8 @@ const DiffrhymGenerator = ({
 				
 				// Open the credit purchase modal
 				setShowCreditPurchaseModal(true)
-			} else if (err.response?.data?.error && err.response.data.error.includes('insufficient credits')) {
-				// This is likely an error from GoAPI about insufficient credits
-				// Don't show this to the user, just log it and show a generic error
-				console.error('GoAPI credit error:', err.response.data.error)
-				setError('There was an issue with the music generation service. Please try again.')
 			} else {
-				// Handle other types of errors with more detailed information
-				// Filter out any GoAPI errors that mention credits
+				// Generic error
 				const errorMsg = err.response?.data?.error || err.message || 'Failed to generate music. Please try again.'
 				if (errorMsg.toLowerCase().includes('credit') || errorMsg.toLowerCase().includes('insufficient')) {
 					setError('There was an issue with the music generation service. Please try again.')
@@ -404,117 +616,8 @@ const DiffrhymGenerator = ({
 		}
 	}
 
-	const startPolling = (taskId, songId) => {
-		// Only start polling if we have valid task ID and song ID
-		if (!taskId || !songId) {
-			console.log('Cannot start polling: missing taskId or songId', { taskId, songId })
-			return
-		}
-
-		console.log('Starting polling for task:', taskId, 'song:', songId)
-		
-		// Start polling for results every 3 seconds
-		const interval = setInterval(() => pollForResult(taskId, songId), 3000)
-		setPollingInterval(interval)
-		
-		// Record the start time
-		setGenerationStartTime(new Date())
-	}
-
-	const pollForResult = async (taskId, songId) => {
-		try {
-			const response = await axios.get(`/api/music/status?taskId=${taskId}&songId=${songId}`)
-			const data = response.data
-
-			// Update generation status
-			setGenerationStatus(data.status)
-
-			// Check if we have start time information
-			if (data.meta && data.meta.started_at && data.meta.started_at !== "0001-01-01T00:00:00Z" && !generationStartTime) {
-				setGenerationStartTime(new Date(data.meta.started_at))
-			}
-
-			if (data.status === 'completed' && data.output && data.output.audio_url) {
-				// Set the generated audio
-				setGeneratedAudio(data.output.audio_url)
-				
-				// Set lyrics if available
-				let lyrics = null
-				if (data.input && data.input.lyrics) {
-					lyrics = data.input.lyrics
-					setGeneratedLyrics(lyrics)
-				}
-
-				// Calculate duration
-				let durationSec = 0
-				// Record end time and calculate duration
-				if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
-					const endTime = new Date(data.meta.ended_at)
-					setGenerationEndTime(endTime)
-					
-					if (generationStartTime) {
-						const durationMs = endTime - generationStartTime
-						durationSec = Math.round(durationMs / 1000)
-						setGenerationDuration(durationSec)
-					}
-				}
-
-				// Create a new song object
-				const newSong = {
-					id: songId || `song-${Date.now()}`,
-					title: selectedPrompt.title || `Generated Song ${generatedSongs.length + 1}`,
-					audioUrl: data.output.audio_url,
-					lyrics: lyrics,
-					duration: durationSec,
-					createdAt: new Date().toISOString(),
-					style: selectedPrompt.style || 'pop',
-					tempo: selectedPrompt.tempo || 'medium',
-					mood: selectedPrompt.mood || 'neutral',
-					prompt: selectedPrompt.text,
-					generator: 'diffrhym'
-				}
-
-				// Add the new song to the list
-				setGeneratedSongs(prevSongs => [...prevSongs, newSong])
-
-				// Select the new song
-				setSelectedSongIndex(generatedSongs.length)
-				setEditedSongTitle(newSong.title)
-
-				// Clear the polling interval
-				if (pollingInterval) {
-					clearInterval(pollingInterval)
-					setPollingInterval(null)
-				}
-
-				// Set loading to false
-				setLoading(false)
-			} else if (data.status === 'failed') {
-				// Handle failed generation
-				setError(data.error?.message || 'Failed to generate music. Please try again.')
-				
-				// Clear the polling interval
-				if (pollingInterval) {
-					clearInterval(pollingInterval)
-					setPollingInterval(null)
-				}
-
-				// Set loading to false
-				setLoading(false)
-			}
-		} catch (err) {
-			console.error('Error polling for result:', err)
-			setError('Failed to check generation status. Please try again.')
-			setGenerationStatus('failed')
-			setLoading(false)
-
-			// Clear polling interval
-			if (pollingInterval) {
-				clearInterval(pollingInterval)
-				setPollingInterval(null)
-			}
-		}
-	}
+	// Helper function to get a human-readable progress message based on generation status
+	// This is used in the UI to show the current status of the generation process
 
 	// Function to handle song selection
 	const selectSong = (index) => {
@@ -549,11 +652,17 @@ const DiffrhymGenerator = ({
 	// Format progress message based on status
 	const getProgressMessage = () => {
 		switch (generationStatus) {
+			case 'starting':
+				return 'Preparing generation...'
+			case 'generating':
+				return 'Generating your music...'
 			case 'initializing':
 				return 'Preparing generation...'
 			case 'pending':
 				return 'Waiting in queue...'
 			case 'processing':
+				return 'Creating your music...'
+			case 'running':
 				return 'Creating your music...'
 			case 'rendering':
 				return 'Finalizing your track...'
@@ -561,17 +670,29 @@ const DiffrhymGenerator = ({
 				return 'Analyzing audio quality...'
 			case 'completed':
 				return 'Generation complete!'
+			case 'failed':
+				return 'Generation failed'
 			default:
 				return 'Generating music...'
 		}
 	}
-
+	
+	// Format time in mm:ss.ms format for the timer
+	const formatTime = (ms) => {
+		const totalSeconds = ms / 1000
+		const minutes = Math.floor(totalSeconds / 60)
+		const seconds = Math.floor(totalSeconds % 60)
+		const milliseconds = Math.floor((ms % 1000) / 10)
+		
+		return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`
+	}
+	
 	// Format time duration in a readable format
 	const formatDuration = (seconds) => {
-		if (!seconds) return ''
-		const minutes = Math.floor(seconds / 60)
-		const remainingSeconds = seconds % 60
-		return `${minutes}m ${remainingSeconds}s`
+		if (!seconds) return '0:00'
+		const mins = Math.floor(seconds / 60)
+		const secs = Math.floor(seconds % 60)
+		return `${mins}:${secs.toString().padStart(2, '0')}`
 	}
 
 	return (
@@ -586,7 +707,31 @@ const DiffrhymGenerator = ({
 					</div>
 				)}
 			</div>
-
+			
+			{/* Timer display when generation is in progress */}
+			{loading && (
+				<div className="mb-4 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+					<div className="flex items-center justify-between">
+						<div className="flex items-center gap-2 text-blue-300">
+							<Clock size={18} />
+							<p className="text-sm">Generation time:</p>
+						</div>
+						<div className="text-white font-mono text-lg">
+							{generationStartTime ? (
+								timerInterval ? formatTime(currentTime) : formatTime(generationDuration || 0)
+							) : (
+								"00:00.00"
+							)}
+						</div>
+					</div>
+					{statusCheckCount > 0 && (
+						<div className="mt-2 text-xs text-blue-300">
+							Status checks: {statusCheckCount} | Current status: {generationStatus || 'pending'}
+						</div>
+					)}
+				</div>
+			)}
+			
 			{/* Credit information */}
 			{estimatedCredits && (
 				<div className="mb-4 p-3 bg-purple-500/20 border border-purple-500/30 rounded-lg">

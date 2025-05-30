@@ -135,7 +135,7 @@ export async function POST(req) {
       userInfo = user;
       songRecord = song;
 
-      console.log(song)
+    
       
       console.log(`Checked credits for Diffrhym generation with ${wordCount} words - will deduct ${estimatedCredits} credits on success`);
     } catch (error) {
@@ -213,6 +213,7 @@ export async function POST(req) {
     // Extract the task ID from the response
     // The API returns a structure with code, data, and message fields
     const responseData = response.data;
+    console.log('Music generation response:', responseData)
     
     if (responseData.code !== 200) {
       throw new Error(`API Error: ${responseData.message || 'Unknown error'}`); 

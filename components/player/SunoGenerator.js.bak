@@ -621,101 +621,62 @@ setGenerationStartTime(new Date())
 }
 
 const pollForResult = async (taskId, songId) => {
-	try {
-		// Use currentSongId if songId is not provided or undefined
-		const effectiveSongId = songId || currentSongId
+try {
+// Use currentSongId if songId is not provided or undefined
+const effectiveSongId = songId || currentSongId
 		
-		if (!effectiveSongId) {
-			console.error('Cannot poll for result: missing songId', { taskId, songId, currentSongId })
-			return null
-		}
+if (!effectiveSongId) {
+console.error('Cannot poll for result: missing songId', { taskId, songId, currentSongId })
+return null
+}
 		
-		const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${effectiveSongId}`)
-		const data = response.data
+const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${effectiveSongId}`)
+const data = response.data
 
-		// Update generation status
-		setGenerationStatus(data.status)
+// Update generation status
+setGenerationStatus(data.status)
 
-		// Check if we have start time information
-		if (data.meta && data.meta.started_at && data.meta.started_at !== "0001-01-01T00:00:00Z" && !generationStartTime) {
-			setGenerationStartTime(new Date(data.meta.started_at))
-		}
+// Check if we have start time information
+if (data.meta && data.meta.started_at && data.meta.started_at !== "0001-01-01T00:00:00Z" && !generationStartTime) {
+setGenerationStartTime(new Date(data.meta.started_at))
+}
 
 if (data.status === 'completed' && data.output && data.output.songs && data.output.songs.length > 0) {
-			// Update user credits after successful generation
-			fetchUserCredits()
+// Update user credits after successful generation
+fetchUserCredits()
 
-			// Store all generated songs
-			setGeneratedSongs(data.output.songs)
+// Store all generated songs
+setGeneratedSongs(data.output.songs)
 
-			// Set the first song as selected by default
-			const firstSong = data.output.songs[0]
-			setGeneratedAudio(firstSong.song_path)
-			setGeneratedLyrics(firstSong.lyrics)
-			setCoverImage(firstSong.image_path)
+// Set the first song as selected by default
+const firstSong = data.output.songs[0]
+setGeneratedAudio(firstSong.song_path)
+setGeneratedLyrics(firstSong.lyrics)
+setCoverImage(firstSong.image_path)
 			
-			// Refresh the songs list to show the completed song
-			fetchUserSongs()
+// Refresh the songs list to show the completed song
+fetchUserSongs()
 
-			// Record end time and calculate duration
-			if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
-				const endTime = new Date(data.meta.ended_at)
-				setGenerationEndTime(endTime)
-				
-				if (generationStartTime) {
-					const durationMs = endTime - generationStartTime
-					const durationSec = Math.round(durationMs / 1000)
-					setGenerationDuration(durationSec)
-				}
-			}
-
-			// Clear the polling interval
-			if (pollingInterval) {
-				clearInterval(pollingInterval)
-				setPollingInterval(null)
-			}
-
-			// Set loading to false
-			setLoading(false)
-		} else if (data.status === 'failed') {
-			// Handle failed generation
-			setError(data.error?.message || 'Failed to generate music. Please try again.')
-			
-			// Clear the polling interval
-			if (pollingInterval) {
-				clearInterval(pollingInterval)
-				setPollingInterval(null)
-			}
-
-			// Set loading to false
-			setLoading(false)
+// Record end time and calculate duration
+if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
+const endTime = new Date(data.meta.ended_at)
+setGenerationEndTime(endTime)
+			case 'initializing':
+				return 'Preparing generation...'
+			case 'pending':
+				return 'Waiting in queue...'
+			case 'processing':
+				return 'Creating your music...'
+			case 'rendering':
+				return 'Finalizing your track...'
+			case 'analyzing':
+				return 'Analyzing audio quality...'
+			case 'completed':
+				return 'Generation complete!'
+			default:
+				return 'Generating music...'
 		}
-		return data;
-	} catch (err) {
-		console.error('Error polling for result:', err)
-		return null;
 	}
-}
-
-// Format progress message based on status
-const getProgressMessage = () => {
-	switch (generationStatus) {
-		case 'initializing':
-			return 'Preparing generation...'
-		case 'pending':
-			return 'Waiting in queue...'
-		case 'processing':
-			return 'Creating your music...'
-		case 'rendering':
-			return 'Finalizing your track...'
-		case 'analyzing':
-			return 'Analyzing audio quality...'
-		case 'completed':
-			return 'Generation complete!'
-		default:
-			return 'Generating music...'
-	}
-}
 
 	// Format time duration in a readable format
 	const formatDuration = (seconds) => {

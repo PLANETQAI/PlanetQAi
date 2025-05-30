@@ -9,6 +9,15 @@ const SongList = ({
   onSelectSong, 
   generator 
 }) => {
+  // Helper function to check if a song is pending
+  const isSongPending = (song) => {
+    // Check if the song has a status tag indicating it's pending
+    if (song.tags && song.tags.some(tag => tag === 'status:pending')) {
+      return true
+    }
+    // Check if the song has an empty audioUrl or a status property set to pending
+    return (!song.audioUrl || song.audioUrl === '') || song.status === 'pending'
+  }
   // Format duration in a readable format (mm:ss)
   const formatDuration = (seconds) => {
     if (!seconds) return '~1:00'
@@ -63,8 +72,16 @@ const SongList = ({
             {generator === 'diffrhym' ? 'Diffrhym' : 'Suno'}
           </div>
           
+          {/* Pending indicator */}
+          {isSongPending(song) && (
+            <div className="ml-2 px-2 py-0.5 bg-amber-600 text-white text-xs rounded-full flex items-center">
+              <div className="animate-pulse mr-1 h-2 w-2 rounded-full bg-white"></div>
+              Generating
+            </div>
+          )}
+          
           {/* New song indicator */}
-          {index === 0 && (
+          {!isSongPending(song) && index === 0 && (
             <div className="ml-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
               Latest
             </div>

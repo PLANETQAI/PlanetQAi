@@ -107,11 +107,102 @@ export async function GET(req) {
           }
         }
         
+        // Check if song exists before update and if credits have been deducted
+        const songBeforeUpdate = await prisma.song.findUnique({
+          where: { id: songId },
+          select: { id: true, userId: true, tags: true, creditsUsed: true }
+        });
+        
+        if (!songBeforeUpdate) {
+          throw new Error(`Song not found with ID: ${songId}`);
+        }
+        
+        // Check if credits have already been deducted
+        const creditsDeducted = songBeforeUpdate.tags?.some(tag => tag.startsWith('credits_deducted:'));
+        
+        // Get the estimated credits from the tags
+        const estimatedCreditsTag = songBeforeUpdate.tags?.find(tag => tag.startsWith('estimated_credits:'));
+        const estimatedCredits = estimatedCreditsTag ? 
+          parseInt(estimatedCreditsTag.split(':')[1], 10) : 
+          80; // Default to base cost if not found
+        
+        console.log(`Song generation successful. Credits deducted: ${creditsDeducted}, Estimated credits: ${estimatedCredits}`);
+        
+        // Only deduct credits if they haven't been deducted yet
+        if (!creditsDeducted) {
+          try {
+            // Use a transaction to ensure atomicity
+            await prisma.$transaction(async (tx) => {
+              // Get the user
+              const user = await tx.user.findUnique({
+                where: { id: songBeforeUpdate.userId },
+                select: { id: true, credits: true }
+              });
+              
+              if (!user) {
+                console.error(`User not found for song ${songId}`);
+                return; // Skip credit deduction but don't fail the request
+              }
+              
+              console.log(`Deducting ${estimatedCredits} credits for successful generation. User has ${user.credits} credits.`);
+              
+              // Deduct credits - make sure not to go below zero
+              const creditsToDeduct = Math.min(estimatedCredits, user.credits);
+              const updatedUser = await tx.user.update({
+                where: { id: user.id },
+                data: {
+                  credits: { decrement: creditsToDeduct },
+                  totalCreditsUsed: { increment: creditsToDeduct }
+                }
+              });
+              
+              // Log the credit usage
+              await tx.creditLog.create({
+                data: {
+                  userId: user.id,
+                  amount: -creditsToDeduct,
+                  balanceAfter: updatedUser.credits,
+                  description: "Suno song generation (successful)",
+                  relatedEntityId: songId,
+                  relatedEntityType: "Song"
+                }
+              });
+              
+              // Update the song with credits used
+              await tx.song.update({
+                where: { id: songId },
+                data: {
+                  creditsUsed: creditsToDeduct
+                }
+              });
+            });
+          } catch (error) {
+            // Log the error but don't fail the request
+            console.error('Error deducting credits:', error);
+            // We'll still continue with the song update
+          }
+        }
+        
         // Store all alternative songs as JSON
         const alternativeSongs = taskData.output.songs.length > 1 ? 
           JSON.stringify(taskData.output.songs) : null;
         
+        // Debug log before update
+        console.log('Updating song in database:', {
+          songId,
+          audioUrl,
+          lyrics: lyrics ? 'Has lyrics' : 'No lyrics',
+          duration: actualDuration,
+          thumbnailUrl: coverImageUrl ? 'Has thumbnail' : 'No thumbnail',
+        });
+        
         // Update the song with the audio URL and other details
+        const updatedTags = [
+          ...(songBeforeUpdate.tags || []).filter(tag => !tag.startsWith('credits_deducted:')),
+          'credits_deducted:true',
+          'updated_by_status_suno_endpoint'
+        ];
+        
         await prisma.song.update({
           where: { id: songId },
           data: {
@@ -121,13 +212,17 @@ export async function GET(req) {
             isPublic: false,
             thumbnailUrl: coverImageUrl,
             title: firstSong.title || song.title,
-            tags: firstSong.tags || [],
+            tags: updatedTags,
             completedAt: new Date(),
             generationTime,
             generationId: taskData.output.generation_id || null,
-            alternativeSongs
+            alternativeSongs,
+            provider: 'suno' // Explicitly set provider
           },
         });
+        
+        // Debug log after update
+        console.log('Song updated successfully');
         
         // Add the song to the user's gallery
         await prisma.gallery.create({
