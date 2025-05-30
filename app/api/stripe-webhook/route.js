@@ -67,7 +67,7 @@ function logToFile(message, isError = false) {
   fs.appendFileSync(logFile, logMessage);
 }
 
-// Route segment config
+// Route segment config - ensure we're using Node.js runtime and force dynamic rendering
 export const dynamic = 'force-dynamic';
 export const runtime = 'nodejs';
 
@@ -75,8 +75,9 @@ export async function POST(request) {
   logToFile(`🔔 Stripe webhook received at ${new Date().toISOString()}`);
   
   try {
-    // Get the raw request body
-    const text = await request.text();
+    // Get the raw request body as a buffer to preserve exact format
+    const buffer = await request.arrayBuffer();
+    const text = Buffer.from(buffer).toString('utf8');
     
     // Get the Stripe signature from headers
     const headersList = headers();
@@ -88,6 +89,7 @@ export async function POST(request) {
     logToFile(`📝 Webhook secret present: ${!!webhookSecret}`);
     logToFile(`📝 Webhook secret length: ${webhookSecret ? webhookSecret.length : 0}`);
     logToFile(`📝 Raw request body length: ${text ? text.length : 0}`);
+    logToFile(`📝 Raw request body format: ${typeof text}`);
     logToFile(`📝 Raw request body (first 100 chars): ${text ? text.substring(0, 100) : 'Empty'}...`);
     
     // Verify the webhook signature
@@ -101,10 +103,19 @@ export async function POST(request) {
         throw new Error('Missing STRIPE_WEBHOOK_SECRET environment variable');
       }
       
-      // Use the async version of constructEvent
+      // Use the async version of constructEvent with the raw buffer
       logToFile(`🔄 Attempting to verify webhook signature...`);
       try {
-        event = await stripe.webhooks.constructEventAsync(text, signature, webhookSecret);
+        // Use the raw buffer for signature verification
+        const rawBuffer = Buffer.from(await request.arrayBuffer());
+        event = await stripe.webhooks.constructEventAsync(
+          rawBuffer, 
+          signature, 
+          webhookSecret,
+          undefined,
+          // Important: Use the buffer directly without any processing
+          { payload: rawBuffer }
+        );
         logToFile(`✅ Webhook signature verified successfully`);
       } catch (verifyError) {
         logToFile(`⚠️ Webhook verification error details: ${verifyError.stack}`, true);
