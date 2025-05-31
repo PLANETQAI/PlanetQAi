@@ -5,16 +5,20 @@ import AudioPlayer from './audioPlayer'
 
 const SongDetail = ({ 
   song, 
-  onEditTitle 
+  onEditTitle,
+  onDeleteSong
 }) => {
   // Helper function to check if a song is pending
   const isSongPending = (song) => {
-    // Check if the song has a status tag indicating it's pending
+    // Only consider a song pending if it has an explicit pending status
+    // This prevents showing the "generating" message for songs without audio URLs
+    if (song.status === 'pending') {
+      return true
+    }
     if (song.tags && song.tags.some(tag => tag === 'status:pending')) {
       return true
     }
-    // Check if the song has an empty audioUrl or a status property set to pending
-    return (!song.audioUrl || song.audioUrl === '') || song.status === 'pending'
+    return false
   }
   const [editingSongTitle, setEditingSongTitle] = useState(false)
   const [editedSongTitle, setEditedSongTitle] = useState(song?.title || '')
@@ -77,13 +81,25 @@ const SongDetail = ({
             <h3 className="text-white font-semibold text-lg">
               {song.title}
             </h3>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-3">
               <button 
                 onClick={startEditingTitle}
                 className="text-purple-400 hover:text-purple-300 text-sm"
               >
                 Edit Title
               </button>
+              {onDeleteSong && (
+                <button 
+                  onClick={() => {
+                    if (window.confirm(`Are you sure you want to delete "${song.title}"?`)) {
+                      onDeleteSong(song.id);
+                    }
+                  }}
+                  className="text-red-400 hover:text-red-300 text-sm"
+                >
+                  Delete
+                </button>
+              )}
             </div>
           </div>
         )}

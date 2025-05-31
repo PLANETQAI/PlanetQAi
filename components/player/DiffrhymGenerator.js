@@ -520,7 +520,7 @@ const DiffrhymGenerator = ({
 			console.log('Starting music generation with new API...')
 
 			// Make the API request to the new generate_v1 endpoint
-			const response = await axios.post('/api/music/generate_v1', payload)
+			const response = await axios.post('/api/music/generate', payload)
 			console.log('Generation response:', response.data)
 
 			// Handle the response
@@ -688,12 +688,45 @@ const DiffrhymGenerator = ({
 	}
 	
 	// Format time duration in a readable format
-	const formatDuration = (seconds) => {
-		if (!seconds) return '0:00'
-		const mins = Math.floor(seconds / 60)
-		const secs = Math.floor(seconds % 60)
-		return `${mins}:${secs.toString().padStart(2, '0')}`
+// Handle song deletion
+const deleteSong = async (songId) => {
+	try {
+		// Delete the song from the database
+		const response = await fetch(`/api/songs/${songId}`, {
+			method: 'DELETE',
+			headers: {
+				'Content-Type': 'application/json'
+			}
+		})
+		
+		if (!response.ok) {
+			throw new Error(`Failed to delete song: ${response.status} ${response.statusText}`)
+		}
+		
+		console.log(`Song ${songId} deleted successfully`)
+		
+		// Remove the song from the local state
+		const updatedSongs = generatedSongs.filter(song => song.id !== songId)
+		setGeneratedSongs(updatedSongs)
+		
+		// If the deleted song was selected, select another song
+		if (generatedSongs[selectedSongIndex]?.id === songId) {
+			if (updatedSongs.length > 0) {
+				// Select the first song if available
+				selectSong(0)
+			} else {
+				// Clear the selected song if no songs are left
+				setSelectedSongIndex(null)
+				setGeneratedAudio(null)
+				setGeneratedLyrics(null)
+				setCoverImage(null)
+			}
+		}
+	} catch (error) {
+		console.error('Error deleting song:', error)
+		alert('Failed to delete song. Please try again.')
 	}
+}
 
 	return (
 		<div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg shadow-xl">
@@ -948,6 +981,7 @@ const DiffrhymGenerator = ({
 									console.error('Error updating song title:', error)
 								})
 							}} 
+							onDeleteSong={deleteSong}
 						/>
 					)}
 				</div>

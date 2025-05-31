@@ -21,6 +21,7 @@ import {
 import { Slider } from "@/components/ui/slider"
 import { Music, Zap, Clock, CreditCard, AlertCircle } from 'lucide-react'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
+import fetchUserSongsUtil from './fetchUserSongs'
 
 const SunoGenerator = ({
 	session,
@@ -124,6 +125,34 @@ const SunoGenerator = ({
 		setIsVisible(!isVisible)
 	}
 	
+	useEffect(() => {
+		if (session?.user) {
+			fetchUserCredits()
+			fetchUserSongs()
+			
+			// Check for any pending songs that might have completed
+			checkPendingSongs()
+		}
+		
+		// Cleanup function to clear any intervals when component unmounts
+		return () => {
+			if (pollingInterval) {
+				console.log('Clearing polling interval on unmount')
+				clearInterval(pollingInterval)
+			}
+		}
+	}, [session])
+
+	const checkPendingSongs = async () => {
+		try {
+			// Simply refresh the songs list to get any newly completed songs
+			console.log('Checking for completed songs...')
+			await fetchUserSongs()
+			await fetchUserCredits()
+		} catch (error) {
+			console.error('Error checking pending songs:', error)
+		}
+	}
 	// Format time in mm:ss.ms format for the timer
 	const formatTime = (ms) => {
 		const totalSeconds = ms / 1000
@@ -181,7 +210,7 @@ const SunoGenerator = ({
 			setStatusCheckCount(prev => prev + 1)
 			console.log(`Checking status for task ${taskId}... (Check #${statusCheckCount + 1})`)
 			
-			// Call the status-suno API for Suno tasks
+			// Call the status_suno API for Suno tasks
 			const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${songId}`)
 			
 			const statusData = response.data
@@ -190,10 +219,30 @@ const SunoGenerator = ({
 			
 			console.log(`Status: ${statusData.status || 'unknown'}`)
 			
-			// If completed, get the audio URL and stop the timer
-			if (statusData.status === 'completed' && statusData.output && statusData.output.audio_url) {
-				setGeneratedAudio(statusData.output.audio_url)
-				console.log(`Audio URL: ${statusData.output.audio_url}`)
+			// If completed, handle the Suno-specific response format
+			if (statusData.status === 'completed' && statusData.output) {
+				// Handle Suno response which includes songs array with audio, lyrics, and image
+				if (statusData.output.songs && statusData.output.songs.length > 0) {
+					const songs = statusData.output.songs
+					console.log(`Received ${songs.length} songs from Suno`)
+					
+					// Set the generated songs
+					setGeneratedSongs(songs)
+					
+					// Set the first song as the selected one
+					if (songs[0]) {
+						setGeneratedAudio(songs[0].song_path)
+						setGeneratedLyrics(songs[0].lyrics)
+						setCoverImage(songs[0].image_path)
+						console.log(`Audio URL: ${songs[0].song_path}`)
+						console.log(`Lyrics: ${songs[0].lyrics.substring(0, 100)}...`)
+						console.log(`Cover Image: ${songs[0].image_path}`)
+					}
+				} else if (statusData.output.audio_url) {
+					// Fallback to simple audio_url if songs array is not available
+					setGeneratedAudio(statusData.output.audio_url)
+					console.log(`Audio URL: ${statusData.output.audio_url}`)
+				}
 				
 				// Update loading state and clear error message
 				setLoading(false)
@@ -205,7 +254,6 @@ const SunoGenerator = ({
 				// Refresh the songs list
 				await fetchUserSongs()
 				await fetchUserCredits()
-				
 				// Stop polling
 				if (pollingInterval) {
 					clearInterval(pollingInterval)
@@ -253,30 +301,136 @@ const SunoGenerator = ({
 		}
 	}
 
-	// Fetch user credits and songs on component mount
-	useEffect(() => {
-		if (session?.user) {
-			fetchUserCredits()
-			fetchUserSongs()
-		}
-	}, [session])
-	
-	// Cleanup polling interval on unmount and ensure we only poll when there's an active task
-	useEffect(() => {
-		// Only start polling if we have a task ID and no active polling interval
-		if (currentTaskId && pollingInterval === null) {
-			console.log('Starting polling for task:', currentTaskId)
-			startPolling(currentTaskId)
-		}
-
-		return () => {
-			if (pollingInterval) {
-				console.log('Cleaning up PlanetQ AI polling interval')
-				clearInterval(pollingInterval)
-				setPollingInterval(null)
+	// Poll for result
+	const pollForResult = async (taskId, songId) => {
+		try {
+			// Use currentSongId if songId is not provided or undefined
+			const effectiveSongId = songId || currentSongId
+			
+			if (!effectiveSongId) {
+				console.error('Cannot poll for result: missing songId', { taskId, songId, currentSongId })
+				return null
 			}
+			
+			const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${effectiveSongId}`)
+			const data = response.data
+			console.log('Poll result data:', data)
+
+			// Update generation status
+			setGenerationStatus(data.status)
+
+			// Check if we have start time information
+			if (data.meta && data.meta.started_at && data.meta.started_at !== "0001-01-01T00:00:00Z" && !generationStartTime) {
+				setGenerationStartTime(new Date(data.meta.started_at))
+			}
+
+			if ((data.status === 'completed' || data.status === 'succeeded') && data.output && data.output.songs && data.output.songs.length > 0) {
+				console.log('Song generation completed successfully', data.output.songs)
+				
+				// Update user credits after successful generation
+				fetchUserCredits()
+
+				// Process the songs to ensure they have all required fields
+				const processedSongs = data.output.songs.map(song => ({
+					...song,
+					audioUrl: song.song_path, // Ensure audioUrl is set for SongList component
+					song_path: song.song_path, // Make sure song_path is available
+					status: 'completed', // Explicitly mark as completed
+					tags: Array.isArray(song.tags) ? song.tags : [] // Ensure tags exists and is an array
+				}))
+
+				// Set the first song as selected by default
+				const firstSong = processedSongs[0]
+				setGeneratedAudio(firstSong.song_path)
+				setGeneratedLyrics(firstSong.lyrics)
+				setCoverImage(firstSong.image_path)
+				
+				// Store processed songs in state
+				setGeneratedSongs(processedSongs)
+				
+				// Record end time and calculate duration
+				if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
+					const endTime = new Date(data.meta.ended_at)
+					setGenerationEndTime(endTime)
+					
+					if (generationStartTime) {
+						const durationMs = endTime - generationStartTime
+						const durationSec = Math.round(durationMs / 1000)
+						setGenerationDuration(durationSec)
+					}
+				}
+
+				// Clear the polling interval
+				if (pollingInterval) {
+					clearInterval(pollingInterval)
+					setPollingInterval(null)
+					console.log('Status polling stopped - song is ready')
+				}
+
+				// Set loading to false
+				setLoading(false)
+				setError('') // Clear any error messages
+				
+				// Force a re-render by updating the selected song index
+				setSelectedSongIndex(0)
+				
+				// Refresh the songs list to show the completed song
+				// This ensures we have the latest data including the new song
+				await fetchUserSongs()
+				
+				// Notify parent about credits update
+				if (onCreditsUpdate) {
+					onCreditsUpdate()
+				}
+			} else if (data.status === 'failed') {
+				// Handle failed generation
+				setError(data.error?.message || 'Failed to generate music. Please try again.')
+				
+				// Clear the polling interval
+				if (pollingInterval) {
+					clearInterval(pollingInterval)
+					setPollingInterval(null)
+				}
+
+				// Set loading to false
+				setLoading(false)
+			}
+			return data;
+		} catch (err) {
+			console.error('Error polling for result:', err)
+			return null;
 		}
-	}, [currentTaskId, pollingInterval])
+	}
+
+	// Start polling for result
+	const startPolling = (taskId, songId) => {
+		// Use currentSongId if songId is not provided or undefined
+		const effectiveSongId = songId || currentSongId
+		
+		if (!effectiveSongId) {
+			console.error('Cannot start polling: missing songId', { taskId, songId, currentSongId })
+			return null
+		}
+		
+		// Start polling for results
+		console.log(`Starting polling for task ${taskId} with song ID ${effectiveSongId}`)
+		
+		// Clear any existing polling interval
+		if (pollingInterval) {
+			clearInterval(pollingInterval)
+			setPollingInterval(null)
+		}
+		
+		// Set up a new polling interval (every 10 seconds to match DiffrhymGenerator)
+		const interval = setInterval(() => pollForResult(taskId, effectiveSongId), 10000)
+		setPollingInterval(interval)
+		
+		// Record the start time
+		setGenerationStartTime(new Date())
+		
+		// Do an initial check immediately
+		pollForResult(taskId, effectiveSongId)
+	}
 	
 	// Fetch user's songs from the database
 	const fetchUserSongs = async () => {
@@ -307,23 +461,32 @@ const SunoGenerator = ({
 			const data = await response.json()
 			console.log('All songs from API:', data)
 			if (data.songs && Array.isArray(data.songs)) {
-				// Filter songs for Suno and only include completed songs with audio URLs
+				// Filter songs for Suno provider
 				const sunoSongs = data.songs.filter(song => {
-					// First check if the song has an audio URL (completed generation)
-					if (!song.audioUrl) return false;
+					// Check if it's a Suno song
+					let isSunoSong = false;
 					
 					// Check provider field
-					if (song.provider === 'suno') return true;
+					if (song.provider === 'suno') isSunoSong = true;
 					
 					// Check tags array
 					if (song.tags && Array.isArray(song.tags)) {
-						return song.tags.some(tag => tag === 'provider:suno');
+						if (song.tags.some(tag => tag === 'provider:suno')) {
+							isSunoSong = true;
+						}
 					}
 					
-					return false;
+					// Only include songs that are Suno songs AND have an audio URL
+					// This is the key change - only include songs that have an audio URL
+					const hasAudioUrl = song.audioUrl || song.song_path;
+					
+					// Special case: if this is the current song being generated and we have audio in memory
+					const isCurrentSongWithAudio = song.id === currentSongId && generatedAudio;
+					
+					return isSunoSong && (hasAudioUrl || isCurrentSongWithAudio);
 				});
 				
-				console.log(`Filtered ${sunoSongs.length} Suno songs from ${data.songs.length} total songs`);
+				console.log(`Filtered ${sunoSongs.length} completed Suno songs from ${data.songs.length} total songs`);
 				
 				// Sort songs by creation date (newest first)
 				const sortedSongs = sunoSongs.sort((a, b) => {
@@ -352,41 +515,55 @@ const SunoGenerator = ({
 						});
 					}
 					
+					// Check if this is the current song being generated
+					const isCurrentSong = song.id === currentSongId;
+					
+					// If song has song_path but no audioUrl, use song_path as audioUrl
+					const audioUrl = song.audioUrl || song.song_path || (isCurrentSong ? generatedAudio : null);
+					
+					// All songs in this list are completed since we filtered out pending ones
+					const status = 'completed';
+					
 					return {
 						id: song.id,
 						title: song.title || 'Untitled Song',
-						audioUrl: song.audioUrl,
+						audioUrl: audioUrl,
+						song_path: song.song_path || audioUrl, // Ensure song_path is available
 						lyrics: song.lyrics,
-						coverImageUrl: song.thumbnailUrl || song.coverImageUrl,
+						coverImageUrl: song.thumbnailUrl || song.coverImageUrl || song.image_path,
+						image_path: song.image_path || song.coverImageUrl || song.thumbnailUrl,
 						duration: song.duration || 0,
 						createdAt: song.createdAt,
 						generator: provider,
 						prompt: song.prompt,
 						style: song.style || style,
 						tempo: song.tempo || tempo,
-						mood: song.mood || mood
+						mood: song.mood || mood,
+						status: status // All songs are completed
 					};
-				})
+				});
 				
-				setGeneratedSongs(formattedSongs)
+				// Update the songs state
+				setGeneratedSongs(formattedSongs);
 				
-				// If songs exist, select the first (newest) one
-				if (formattedSongs.length > 0) {
-					selectSong(0)
+				// If songs exist, select the first (newest) one if none is selected
+				if (formattedSongs.length > 0 && selectedSongIndex === null) {
+					selectSong(0);
+				}
+				
+				// If we have a current song ID, find and select it
+				if (currentSongId) {
+					const currentSongIndex = formattedSongs.findIndex(song => song.id === currentSongId);
+					if (currentSongIndex >= 0) {
+						selectSong(currentSongIndex);
+					}
 				}
 			}
 		} catch (error) {
-			console.error('Error fetching user songs:', error)
+			console.error('Error fetching user songs:', error);
 		}
 	}
-
-	// Cleanup polling interval on unmount
-	useEffect(() => {
-		return () => {
-			if (pollingInterval) clearInterval(pollingInterval)
-		}
-	}, [pollingInterval])
-
+	
 	// Fetch user credits
 	const fetchUserCredits = async () => {
 		try {
@@ -507,7 +684,7 @@ const SunoGenerator = ({
 			// Show generating status
 			setGenerationStatus('generating')
 			console.log('Starting music generation with Suno API...')
-
+			
 			// Make the API request to the Suno endpoint
 			const response = await axios.post('/api/music/generate-suno', payload)
 			console.log('Generation response:', response.data)
@@ -528,42 +705,19 @@ const SunoGenerator = ({
 				// Immediately check the status once
 				await checkStatus(taskId, songId)
 				
-				// Set up an interval to check the status every 10 seconds
-				const statusInterval = setInterval(async () => {
-					const statusData = await checkStatus(taskId, songId)
-					
-					// If the status is completed or failed, clear the interval
-					if (statusData && (statusData.status === 'completed' || statusData.status === 'failed')) {
-						clearInterval(statusInterval)
-						setPollingInterval(null)
-						console.log('Status polling stopped - song is ready or failed')
-						
-						// Update loading state based on status
-						if (statusData.status === 'completed') {
-							// Stop the timer when completed
-							stopTimer()
-							setLoading(false)
-							setError('')
-						} else if (statusData.status === 'failed') {
-							// Handle failure
-							stopTimer()
-							setLoading(false)
-							setError('Music generation failed. Please try again.')
-						}
-					}
-				}, 10000) // Check every 10 seconds
+				// Start polling for status
+				startPolling(taskId, songId)
 				
 				// Clear the interval after 10 minutes (safety timeout)
 				setTimeout(() => {
-					if (statusInterval) {
-						clearInterval(statusInterval)
+					if (pollingInterval) {
+						clearInterval(pollingInterval)
 						setPollingInterval(null)
 						console.log('Status polling stopped due to timeout')
 					}
 				}, 600000) // 10 minutes
 				
-				// Store the interval ID so we can clear it if the component unmounts
-				setPollingInterval(statusInterval)
+				// The polling interval is already set in startPolling function
 				
 				// Refresh the songs list to show the pending song
 				await fetchUserSongs()
@@ -600,145 +754,27 @@ const SunoGenerator = ({
 		}
 	}
 
-	const startPolling = (taskId, songId) => {
-		// Only start polling if we have valid task ID
-		if (!taskId) {
-			console.log('Cannot start polling: missing taskId', { taskId, songId })
-			return
+	// Format progress message based on status
+	const getProgressMessage = () => {
+		switch (generationStatus) {
+			case 'initializing':
+				return 'Preparing generation...'
+			case 'pending':
+				return 'Waiting in queue...'
+			case 'processing':
+				return 'Creating your music...'
+			case 'rendering':
+				return 'Finalizing your track...'
+			case 'analyzing':
+				return 'Analyzing audio quality...'
+			case 'completed':
+				return 'Generation complete!'
+			default:
+				return 'Generating music...'
 		}
-		
-		// Use currentSongId if songId is not provided
-		const effectiveSongId = songId || currentSongId
-		
-		console.log('Starting polling for Suno task:', taskId)
-		
-		// Start polling for results every 3 seconds
-		const interval = setInterval(() => pollForResult(taskId, effectiveSongId), 3000)
-		setPollingInterval(interval)
-		
-// Record the start time
-setGenerationStartTime(new Date())
-}
-
-const pollForResult = async (taskId, songId) => {
-	try {
-		// Use currentSongId if songId is not provided or undefined
-		const effectiveSongId = songId || currentSongId
-		
-		if (!effectiveSongId) {
-			console.error('Cannot poll for result: missing songId', { taskId, songId, currentSongId })
-			return null
-		}
-		
-		const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${effectiveSongId}`)
-		const data = response.data
-		console.log('Poll result data:', data)
-
-		// Update generation status
-		setGenerationStatus(data.status)
-
-		// Check if we have start time information
-		if (data.meta && data.meta.started_at && data.meta.started_at !== "0001-01-01T00:00:00Z" && !generationStartTime) {
-			setGenerationStartTime(new Date(data.meta.started_at))
-		}
-
-		if (data.status === 'completed' && data.output && data.output.songs && data.output.songs.length > 0) {
-			console.log('Song generation completed successfully', data.output.songs)
-			
-			// Update user credits after successful generation
-			fetchUserCredits()
-
-			// Process the songs to ensure they have all required fields
-			const processedSongs = data.output.songs.map(song => ({
-				...song,
-				audioUrl: song.song_path, // Ensure audioUrl is set for SongList component
-				status: 'completed', // Explicitly mark as completed
-				tags: song.tags || [] // Ensure tags exists
-			}))
-
-			// Store all generated songs with processed data
-			setGeneratedSongs(processedSongs)
-
-			// Set the first song as selected by default
-			const firstSong = processedSongs[0]
-			setGeneratedAudio(firstSong.song_path)
-			setGeneratedLyrics(firstSong.lyrics)
-			setCoverImage(firstSong.image_path)
-			
-			// Refresh the songs list to show the completed song
-			await fetchUserSongs()
-
-			// Record end time and calculate duration
-			if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
-				const endTime = new Date(data.meta.ended_at)
-				setGenerationEndTime(endTime)
-				
-				if (generationStartTime) {
-					const durationMs = endTime - generationStartTime
-					const durationSec = Math.round(durationMs / 1000)
-					setGenerationDuration(durationSec)
-				}
-			}
-
-			// Clear the polling interval
-			if (pollingInterval) {
-				clearInterval(pollingInterval)
-				setPollingInterval(null)
-				console.log('Status polling stopped - song is ready')
-			}
-
-			// Set loading to false
-			setLoading(false)
-			setError('') // Clear any error messages
-			
-			// Force a re-render by updating a state variable
-			setSelectedSongIndex(0)
-			
-			// Notify parent about credits update
-			if (onCreditsUpdate) {
-				onCreditsUpdate()
-			}
-		} else if (data.status === 'failed') {
-			// Handle failed generation
-			setError(data.error?.message || 'Failed to generate music. Please try again.')
-			
-			// Clear the polling interval
-			if (pollingInterval) {
-				clearInterval(pollingInterval)
-				setPollingInterval(null)
-			}
-
-			// Set loading to false
-			setLoading(false)
-		}
-		return data;
-	} catch (err) {
-		console.error('Error polling for result:', err)
-		return null;
 	}
-}
 
-// Format progress message based on status
-const getProgressMessage = () => {
-	switch (generationStatus) {
-		case 'initializing':
-			return 'Preparing generation...'
-		case 'pending':
-			return 'Waiting in queue...'
-		case 'processing':
-			return 'Creating your music...'
-		case 'rendering':
-			return 'Finalizing your track...'
-		case 'analyzing':
-			return 'Analyzing audio quality...'
-		case 'completed':
-			return 'Generation complete!'
-		default:
-			return 'Generating music...'
-	}
-}
-
-	// Format time duration in a readable format
+	// Format duration in a readable format
 	const formatDuration = (seconds) => {
 		if (!seconds) return ''
 		const minutes = Math.floor(seconds / 60)
@@ -746,14 +782,56 @@ const getProgressMessage = () => {
 		return `${minutes}m ${remainingSeconds}s`
 	}
 	
+
+
 	// Handle song selection
 	const selectSong = (index) => {
-		if (generatedSongs && generatedSongs.length > index) {
+		if (index >= 0 && index < generatedSongs.length) {
 			setSelectedSongIndex(index)
 			const song = generatedSongs[index]
-			setGeneratedAudio(song.song_path)
+			setGeneratedAudio(song.audioUrl || song.song_path)
 			setGeneratedLyrics(song.lyrics)
-			setCoverImage(song.image_path)
+			setCoverImage(song.coverImageUrl || song.image_path)
+		}
+	}
+
+	// Handle song deletion
+	const deleteSong = async (songId) => {
+		try {
+			// Delete the song from the database
+			const response = await fetch(`/api/songs/${songId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			
+			if (!response.ok) {
+				throw new Error(`Failed to delete song: ${response.status} ${response.statusText}`)
+			}
+			
+			console.log(`Song ${songId} deleted successfully`)
+			
+			// Remove the song from the local state
+			const updatedSongs = generatedSongs.filter(song => song.id !== songId)
+			setGeneratedSongs(updatedSongs)
+			
+			// If the deleted song was selected, select another song
+			if (generatedSongs[selectedSongIndex]?.id === songId) {
+				if (updatedSongs.length > 0) {
+					// Select the first song if available
+					selectSong(0)
+				} else {
+					// Clear the selected song if no songs are left
+					setSelectedSongIndex(null)
+					setGeneratedAudio(null)
+					setGeneratedLyrics(null)
+					setCoverImage(null)
+				}
+			}
+		} catch (error) {
+			console.error('Error deleting song:', error)
+			alert('Failed to delete song. Please try again.')
 		}
 	}
 
@@ -889,7 +967,7 @@ const getProgressMessage = () => {
 			</div>
 
 			{/* Lyrics Type Selector */}
-			<div className="mb-6">
+			{/* <div className="mb-6">
 				<label htmlFor="lyricsType" className="block text-sm font-medium text-gray-300 mb-1">
 					Lyrics Type
 				</label>
@@ -913,7 +991,7 @@ const getProgressMessage = () => {
 					{lyricsType === 'instrumental' && "Create music without vocals"}
 					{lyricsType === 'user' && "Your description will be used as lyrics"}
 				</p>
-			</div>
+			</div> */}
 
 			<div className="flex justify-center items-center mb-4">
 				{session ? (
@@ -1012,7 +1090,8 @@ const getProgressMessage = () => {
 								}).catch(error => {
 									console.error('Error updating song title:', error)
 								})
-							}} 
+							}}
+							onDeleteSong={deleteSong} 
 						/>
 					)}
 				</div>
