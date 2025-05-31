@@ -16,7 +16,15 @@ const SongList = ({
       return true
     }
     // Check if the song has an empty audioUrl or a status property set to pending
-    return (!song.audioUrl || song.audioUrl === '') || song.status === 'pending'
+    if (song.status === 'pending') {
+      return true
+    }
+    // For Suno songs, check if song_path exists and is not empty
+    if (song.song_path) {
+      return false
+    }
+    // For other songs, check audioUrl
+    return !song.audioUrl || song.audioUrl === ''
   }
   // Format duration in a readable format (mm:ss)
   const formatDuration = (seconds) => {

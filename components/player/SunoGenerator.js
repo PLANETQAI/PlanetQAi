@@ -632,6 +632,7 @@ const pollForResult = async (taskId, songId) => {
 		
 		const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${effectiveSongId}`)
 		const data = response.data
+		console.log('Poll result data:', data)
 
 		// Update generation status
 		setGenerationStatus(data.status)
@@ -641,21 +642,31 @@ const pollForResult = async (taskId, songId) => {
 			setGenerationStartTime(new Date(data.meta.started_at))
 		}
 
-if (data.status === 'completed' && data.output && data.output.songs && data.output.songs.length > 0) {
+		if (data.status === 'completed' && data.output && data.output.songs && data.output.songs.length > 0) {
+			console.log('Song generation completed successfully', data.output.songs)
+			
 			// Update user credits after successful generation
 			fetchUserCredits()
 
-			// Store all generated songs
-			setGeneratedSongs(data.output.songs)
+			// Process the songs to ensure they have all required fields
+			const processedSongs = data.output.songs.map(song => ({
+				...song,
+				audioUrl: song.song_path, // Ensure audioUrl is set for SongList component
+				status: 'completed', // Explicitly mark as completed
+				tags: song.tags || [] // Ensure tags exists
+			}))
+
+			// Store all generated songs with processed data
+			setGeneratedSongs(processedSongs)
 
 			// Set the first song as selected by default
-			const firstSong = data.output.songs[0]
+			const firstSong = processedSongs[0]
 			setGeneratedAudio(firstSong.song_path)
 			setGeneratedLyrics(firstSong.lyrics)
 			setCoverImage(firstSong.image_path)
 			
 			// Refresh the songs list to show the completed song
-			fetchUserSongs()
+			await fetchUserSongs()
 
 			// Record end time and calculate duration
 			if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
@@ -673,10 +684,20 @@ if (data.status === 'completed' && data.output && data.output.songs && data.outp
 			if (pollingInterval) {
 				clearInterval(pollingInterval)
 				setPollingInterval(null)
+				console.log('Status polling stopped - song is ready')
 			}
 
 			// Set loading to false
 			setLoading(false)
+			setError('') // Clear any error messages
+			
+			// Force a re-render by updating a state variable
+			setSelectedSongIndex(0)
+			
+			// Notify parent about credits update
+			if (onCreditsUpdate) {
+				onCreditsUpdate()
+			}
 		} else if (data.status === 'failed') {
 			// Handle failed generation
 			setError(data.error?.message || 'Failed to generate music. Please try again.')
