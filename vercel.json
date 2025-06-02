@@ -1,7 +1,6 @@
 {
   "env": {
-    "PRISMA_GENERATE_SKIP_AUTOINSTALL": "false",
-    "NODE_OPTIONS": "--no-oxide"
+    "PRISMA_GENERATE_SKIP_AUTOINSTALL": "false"
   },
   "buildCommand": "npm run build",
   "devCommand": "npm run dev",
