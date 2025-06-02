@@ -5,8 +5,16 @@ import { NextResponse } from 'next/server'
 
 const prisma = new PrismaClient()
 
+// Make sure we have a Stripe secret key
+const stripeSecretKey = process.env.STRIPE_SUBSCRIPTION_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SUBSCRIPTION_SECRET_KEY
 
-const stripe = new Stripe(process.env.STRIPE_SUBSCRIPTION_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SUBSCRIPTION_SECRET_KEY)
+if (!stripeSecretKey) {
+  console.error('Missing Stripe secret key')
+}
+
+const stripe = new Stripe(stripeSecretKey, {
+  apiVersion: '2023-10-16' // Specify the API version explicitly
+})
 
 // Route segment config
 export const dynamic = 'force-dynamic';
