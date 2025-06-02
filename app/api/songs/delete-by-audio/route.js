@@ -17,7 +17,17 @@ export async function DELETE(request) {
     }
 
     // Get the audioUrl from the request body
-    const { audioUrl } = await request.json()
+    let audioUrl
+    try {
+      const body = await request.json()
+      audioUrl = body.audioUrl
+    } catch (error) {
+      console.error('Error parsing request body:', error)
+      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      })
+    }
     
     if (!audioUrl) {
       return new Response(JSON.stringify({ error: 'Audio URL is required' }), {
