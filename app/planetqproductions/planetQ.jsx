@@ -118,7 +118,7 @@ export default function PlanetQProductions({ session, songData }) {
 											<h2 className="text-xl font-semibold mb-2 text-white hover:underline">{song.title}</h2>
 										</Link>
 										<p className="text-gray-400 flex items-center gap-1">
-											<CiUser /> {song.user?.fullName || 'Not-Available'}
+											<CiUser /> {song.User?.fullName || 'Not-Available'}
 										</p>
 									</div>
 								</div>

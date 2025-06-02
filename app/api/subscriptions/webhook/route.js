@@ -5,20 +5,19 @@ import { NextResponse } from 'next/server'
 
 const prisma = new PrismaClient()
 
-// Make sure to use the correct environment variable name
-const webhookSecret = 'whsec_0lcDHiRhvKzhk6A6x7qk8TD6z6ZC1cfA'
-const stripe = new Stripe(process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY)
 
-export const runtime = 'edge';
+const stripe = new Stripe(process.env.STRIPE_SUBSCRIPTION_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SUBSCRIPTION_SECRET_KEY)
+
+// Route segment config
 export const dynamic = 'force-dynamic';
-export const preferredRegion = 'auto';
+export const runtime = 'nodejs';
 
 export async function POST(req) {
 	const sig = req.headers.get('stripe-signature')
 	// In App Router, we need to get the raw body differently
 	const buf = await req.text()
 
-	const endpointSecret = 'whsec_0lcDHiRhvKzhk6A6x7qk8TD6z6ZC1cfA'
+	const endpointSecret = process.env.STRIPE_SUBSCRIPTION_WEBHOOK_SECRET
 
 	let event
 

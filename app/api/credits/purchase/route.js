@@ -24,6 +24,16 @@ const CREDIT_PACKAGES = [
   { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
 ];
 
+// Define subscription plans
+const SUBSCRIPTION_PLANS = [
+  { id: "prod_SQJRcw0CvcrPLc", name: "Starter Plan", credits: 20000, price: 10, isSubscription: true },
+  { id: "prod_SQJSScMORjkNzM", name: "Pro Plan", credits: 40000, price: 20, isSubscription: true },
+  { id: "prod_SQJSn9xSxfYUwq", name: "Premium Plan", credits: 80000, price: 30, isSubscription: true },
+];
+
+// Combined packages for lookup
+const ALL_PACKAGES = [...CREDIT_PACKAGES, ...SUBSCRIPTION_PLANS];
+
 // GET handler to retrieve available credit packages
 export async function GET(req) {
   try {
@@ -33,10 +43,11 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Return available credit packages
+    // Return available credit packages and subscription plans
     return NextResponse.json({
       success: true,
       packages: CREDIT_PACKAGES,
+      subscriptionPlans: SUBSCRIPTION_PLANS,
     });
   } catch (error) {
     console.error("Error fetching credit packages:", error);
@@ -69,9 +80,9 @@ export async function POST(req) {
 
     // Validate package ID
     console.log('Looking for package with ID:', packageId);
-    console.log('Available packages:', CREDIT_PACKAGES);
+    console.log('Available packages:', ALL_PACKAGES);
     
-    const selectedPackage = CREDIT_PACKAGES.find(pkg => pkg.id === packageId);
+    const selectedPackage = ALL_PACKAGES.find(pkg => pkg.id === packageId);
     if (!selectedPackage) {
       console.log('Invalid package selected:', packageId);
       return NextResponse.json(
@@ -85,7 +96,7 @@ export async function POST(req) {
     // Get user information
     const user = await prisma.user.findUnique({
       where: { id: userId },
-      select: { id: true, email: true, name: true, credits: true },
+      select: { id: true, email: true, credits: true },
     });
 
     if (!user) {
@@ -134,24 +145,36 @@ export async function POST(req) {
     
     // Create a Stripe checkout session
     console.log('Creating Stripe checkout session');
+    const isSubscription = selectedPackage.isSubscription === true;
+    
     const stripeSession = await stripe.checkout.sessions.create({
       payment_method_types: ["card"],
       line_items: [
         {
-          // Use the product ID directly
           price_data: {
             currency: "usd",
-            product: packageId, // Use the product ID from Stripe
-            unit_amount: selectedPackage.price * 100, // Stripe uses cents
+            product_data: {
+              name: selectedPackage.name,
+              description: isSubscription
+                ? `${selectedPackage.name} - ${selectedPackage.credits} credits per month`
+                : `${selectedPackage.credits} credits for PlanetQAi`,
+            },
+            unit_amount: selectedPackage.price * 100, // Convert to cents
+            recurring: isSubscription ? { interval: 'month' } : undefined,
           },
           quantity: 1,
         },
       ],
-      mode: "payment",
-      success_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/payment?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXTAUTH_URL || 'http://localhost:3000'}/payment?canceled=true`,
-      customer_email: user.email,
-      metadata: metadata,
+      mode: isSubscription ? "subscription" : "payment",
+      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment?success=true`,
+      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/payment?canceled=true`,
+      metadata: {
+        userId: userId,
+        packageId: packageId,
+        credits: selectedPackage.credits,
+        type: isSubscription ? "subscription" : "credit_purchase",
+        planName: isSubscription ? selectedPackage.name : undefined,
+      },
     });
 
     // Return the Stripe checkout URL
@@ -164,10 +187,6 @@ export async function POST(req) {
     console.error("Credit purchase error:", error.message);
     return NextResponse.json(
       { error: "Failed to process credit purchase", details: error.message },
-      { status: 500 }
-    );
-    return NextResponse.json(
-      { error: "Failed to process credit purchase" },
       { status: 500 }
     );
   }

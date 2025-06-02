@@ -22,7 +22,7 @@ const Page = async () => {
 			// Fetch all video links if admin
 			videoLinks = await prisma.videoLinks.findMany({
 				include: {
-					user: {
+					User: {
 						select: {
 							id: true,
 							role: true,
@@ -40,7 +40,7 @@ const Page = async () => {
 					isLive: true,
 				},
 				include: {
-					user: {
+					User: {
 						select: {
 							id: true,
 							role: true,

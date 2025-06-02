@@ -836,7 +836,7 @@ const SunoGenerator = ({
 	}
 
 	return (
-		<div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-blue-800 to-blue-900 rounded-lg shadow-xl">
+		<div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg shadow-xl">
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-bold text-white">Generate Music with PlanetQAi</h3>
 				
@@ -869,7 +869,7 @@ const SunoGenerator = ({
 					placeholder="Describe your desired music or enter lyrics. Be specific about the style, mood, and instruments you want."
 					value={selectedPrompt.text}
 					onChange={e => handleInputChange('text', e.target.value)}
-					className="bg-gradient-to-t from-blue-700 to-blue-600 p-3 border border-blue-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+					className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
 					rows="5"
 				/>
 			</div>
@@ -885,7 +885,7 @@ const SunoGenerator = ({
 						placeholder="Enter a title for your song"
 						value={selectedPrompt.title}
 						onChange={e => handleInputChange('title', e.target.value)}
-						className="bg-gradient-to-t from-blue-700 to-blue-600 p-3 border border-blue-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+						className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
 					/>
 				</div>
 				<div>
@@ -898,7 +898,7 @@ const SunoGenerator = ({
 						placeholder="e.g., dance, energetic, futuristic"
 						value={selectedPrompt.tags}
 						onChange={e => handleInputChange('tags', e.target.value)}
-						className="bg-gradient-to-t from-blue-700 to-blue-600 p-3 border border-blue-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 w-full"
+						className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
 					/>
 				</div>
 			</div>
@@ -912,7 +912,7 @@ const SunoGenerator = ({
 						value={selectedPrompt.style}
 						onValueChange={(value) => handleInputChange('style', value)}
 					>
-						<SelectTrigger className="bg-gradient-to-t from-blue-700 to-blue-600 border border-blue-500 text-white">
+						<SelectTrigger className="bg-gradient-to-t from-slate-700 to-slate-600 border border-slate-500 text-white">
 							<SelectValue placeholder="Select style" />
 						</SelectTrigger>
 						<SelectContent>
@@ -932,7 +932,7 @@ const SunoGenerator = ({
 						value={selectedPrompt.tempo}
 						onValueChange={(value) => handleInputChange('tempo', value)}
 					>
-						<SelectTrigger className="bg-gradient-to-t from-blue-700 to-blue-600 border border-blue-500 text-white">
+						<SelectTrigger className="bg-gradient-to-t from-slate-700 to-slate-600 border border-slate-500 text-white">
 							<SelectValue placeholder="Select tempo" />
 						</SelectTrigger>
 						<SelectContent>
@@ -952,7 +952,7 @@ const SunoGenerator = ({
 						value={selectedPrompt.mood}
 						onValueChange={(value) => handleInputChange('mood', value)}
 					>
-						<SelectTrigger className="bg-gradient-to-t from-blue-700 to-blue-600 border border-blue-500 text-white">
+						<SelectTrigger className="bg-gradient-to-t from-slate-700 to-slate-600 border border-slate-500 text-white">
 							<SelectValue placeholder="Select mood" />
 						</SelectTrigger>
 						<SelectContent>
@@ -975,7 +975,7 @@ const SunoGenerator = ({
 					value={lyricsType}
 					onValueChange={setLyricsType}
 				>
-					<SelectTrigger className="bg-gradient-to-t from-blue-700 to-blue-600 border border-blue-500 text-white">
+					<SelectTrigger className="bg-gradient-to-t from-slate-700 to-slate-600 border border-slate-500 text-white">
 						<SelectValue placeholder="Select lyrics type" />
 					</SelectTrigger>
 					<SelectContent>

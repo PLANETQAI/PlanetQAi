@@ -13,9 +13,9 @@ export default function PlanetQVideoCard({ onClick }) {
           <video
             className="absolute top-0 left-0 w-full h-full rounded-lg"
             controls
-            poster="/images/chat-bot/bot-icon.png"
+            poster="/images/client.png"
           >
-            <source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
+            <source src="/images/bg-video-compressed.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
         </div>

@@ -159,7 +159,7 @@ export async function POST(req) {
 				password: hashedPassword,
 				role: 'Basic',
 				isVerified: false, // User starts as unverified
-				credits: 50, // Initial credits as per requirements
+				credits: 400, // Initial credits as per requirements
 				updatedAt: new Date(), // Required field based on schema
 			},
 		});

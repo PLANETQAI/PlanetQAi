@@ -10,7 +10,8 @@ import { LuLoader } from 'react-icons/lu'
 
 export default function Gallery({ session, prevSongs }) {
 	const [songs, setSongs] = useState([...prevSongs])
-	const [loadingDelete, setIsLoadingDelete] = useState(false)
+	const [deletingSongIds, setDeletingSongIds] = useState({})
+	const [deletingGalleryIds, setDeletingGalleryIds] = useState({})
 	const [currentAudio, setCurrentAudio] = useState(null)
 
 	const handleAudioPlay = audioRef => {
@@ -19,7 +20,7 @@ export default function Gallery({ session, prevSongs }) {
 		}
 		setCurrentAudio(audioRef) // Set the new playing audio
 	}
-
+console.log(songs)
 	const backgroundImageStyle = {
 		backgroundImage: 'url("/images/back.png")',
 		backgroundSize: 'cover',
@@ -29,33 +30,51 @@ export default function Gallery({ session, prevSongs }) {
 		minHeight: '100vh',
 	}
 
-	const handleDelete = async id => {
+	const deleteSong = async (songId, audioLink) => {
 		try {
-			setIsLoadingDelete(true)
-			const response = await fetch(`/api/gallery/delete/${id}`, {
+			// Set loading state for this specific song
+			setDeletingSongIds(prev => ({ ...prev, [songId]: true }))
+			
+			// Delete the song from the database using the audio URL
+			const response = await fetch(`/api/songs/delete-by-audio`, {
 				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ audioUrl: audioLink })
 			})
-
-			if (response.ok) {
-				const data = await response.json()
-
-				// Update the local state to remove the deleted song
-				setSongs(prevSongs => prevSongs.filter(song => song.id !== id))
-
-				toast.success('Song successfully deleted.', {
-					position: 'top-right',
-					autoClose: 1500,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					progress: undefined,
-					theme: 'dark',
-				})
-			} else {
-				throw new Error('Failed to delete the song')
+			
+			if (!response.ok) {
+				throw new Error(`Failed to delete song: ${response.status} ${response.statusText}`)
 			}
+			
+			console.log(`Song ${songId} deleted successfully`)
+			
+			// Remove the song from the local state
+			const updatedSongs = songs.filter(song => song.id !== songId)
+			setSongs(updatedSongs)
+			
+			// If the song was currently playing, stop it
+			if (currentAudio && currentAudio.src.includes(songId)) {
+				currentAudio.pause()
+				setCurrentAudio(null)
+			}
+			
+			// Also remove from gallery if needed
+			deleteGallery(songId)
+			
+			toast.success('Song successfully deleted.', {
+				position: 'top-right',
+				autoClose: 1500,
+				hideProgressBar: false,
+				closeOnClick: true,
+				pauseOnHover: true,
+				draggable: true,
+				progress: undefined,
+				theme: 'dark',
+			})
 		} catch (error) {
+			console.error('Error deleting song:', error)
 			toast.error('An error occurred while deleting song.', {
 				position: 'top-right',
 				autoClose: 1500,
@@ -67,7 +86,43 @@ export default function Gallery({ session, prevSongs }) {
 				theme: 'dark',
 			})
 		} finally {
-			setIsLoadingDelete(false)
+			// Clear loading state for this specific song
+			setDeletingSongIds(prev => {
+				const updated = { ...prev }
+				delete updated[songId]
+				return updated
+			})
+		}
+	}
+
+	// Handle gallery deletion separately
+	const deleteGallery = async (galleryId) => {
+		try {
+			// Set loading state for this specific gallery
+			setDeletingGalleryIds(prev => ({ ...prev, [galleryId]: true }))
+			
+			// Delete the gallery entry from the database
+			const response = await fetch(`/api/gallery/delete/${galleryId}`, {
+				method: 'DELETE',
+				headers: {
+					'Content-Type': 'application/json'
+				}
+			})
+			
+			if (!response.ok) {
+				console.log(`Gallery deletion API call completed but song deletion will handle UI update`)
+			}
+			
+			console.log(`Gallery ${galleryId} deletion API call completed`)
+		} catch (error) {
+			console.error('Error deleting gallery entry:', error)
+		} finally {
+			// Clear loading state for this specific gallery
+			setDeletingGalleryIds(prev => {
+				const updated = { ...prev }
+				delete updated[galleryId]
+				return updated
+			})
 		}
 	}
 
@@ -83,7 +138,7 @@ export default function Gallery({ session, prevSongs }) {
 							<div key={indx} style={{ display: 'flex', alignItems: 'center' }}>
 								<AudioPlayer src={song?.audioLink} onAudioPlay={handleAudioPlay} />
 
-								{loadingDelete ? (
+								{deletingSongIds[song.id] ? (
 									<LuLoader
 										style={{
 											fontSize: '3rem',
@@ -92,7 +147,7 @@ export default function Gallery({ session, prevSongs }) {
 									/>
 								) : (
 									<RiDeleteBin6Line
-										onClick={() => handleDelete(song.id)}
+										onClick={() => deleteSong(song.id, song.audioLink)}
 										style={{
 											fontSize: '3rem',
 											color: 'white',
