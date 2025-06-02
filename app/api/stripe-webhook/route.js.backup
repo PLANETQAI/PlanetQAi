@@ -37,19 +37,9 @@ const CREDIT_PACKAGES = [
   { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
 ];
 
-// Define subscription plans (same as in credits-api/route.js)
-const SUBSCRIPTION_PLANS = [
-  { id: "prod_SQJRcw0CvcrPLc", name: "Starter Plan", credits: 20000, price: 10, isSubscription: true },
-  { id: "prod_SQJSScMORjkNzM", name: "Pro Plan", credits: 40000, price: 20, isSubscription: true },
-  { id: "prod_SQJSn9xSxfYUwq", name: "Premium Plan", credits: 80000, price: 30, isSubscription: true },
-];
-
-// Combined packages for lookup
-const ALL_PACKAGES = [...CREDIT_PACKAGES, ...SUBSCRIPTION_PLANS];
-
 // Helper function to get package details by product ID
 function getPackageByProductId(productId) {
-  return ALL_PACKAGES.find(pkg => pkg.id === productId) || null;
+  return CREDIT_PACKAGES.find(pkg => pkg.id === productId) || null;
 }
 
 // Function to log safely (console only, no file logging)
@@ -289,172 +279,16 @@ export async function POST(request) {
         
       case 'customer.subscription.created':
       case 'customer.subscription.updated':
+      case 'customer.subscription.deleted':
         const subscription = event.data.object;
         const subscriptionUserId = subscription.metadata?.userId;
-        const planName = subscription.metadata?.planName;
-        const creditsPerPeriod = parseInt(subscription.metadata?.credits, 10) || 0;
         
         console.log(`📦 Processing subscription event for user ${subscriptionUserId}`);
         console.log(`📦 Subscription status: ${subscription.status}`);
-        console.log(`📦 Plan name: ${planName}`);
-        console.log(`📦 Credits per period: ${creditsPerPeriod}`);
         
-        if (!subscriptionUserId) {
-          console.log(`❌ Missing user ID in subscription metadata`, true);
-          return new NextResponse(JSON.stringify({ error: 'Missing user ID in metadata' }), { status: 400 });
-        }
-        
-        try {
-          // Get the user
-          const user = await prisma.user.findUnique({
-            where: { id: subscriptionUserId },
-            select: { id: true, email: true, credits: true },
-          });
-          
-          if (!user) {
-            console.log(`❌ User not found: ${subscriptionUserId}`, true);
-            return new NextResponse(JSON.stringify({ error: 'User not found' }), { status: 404 });
-          }
-          
-          // Update user's subscription status
-          if (subscription.status === 'active') {
-            // For new subscriptions, add the initial credits
-            if (event.type === 'customer.subscription.created') {
-              // Add subscription credits to user account
-              console.log(`💰 Adding ${creditsPerPeriod} subscription credits to user ${subscriptionUserId}`);
-              
-              const updatedUser = await prisma.user.update({
-                where: { id: subscriptionUserId },
-                data: {
-                  credits: user.credits + creditsPerPeriod,
-                },
-              });
-              
-              // Create a credit log entry for the subscription credits
-              await prisma.creditLog.create({
-                data: {
-                  userId: subscriptionUserId,
-                  amount: creditsPerPeriod,
-                  balanceBefore: user.credits,
-                  balanceAfter: updatedUser.credits,
-                  description: `Added ${creditsPerPeriod} credits from ${planName} subscription`,
-                  relatedEntityId: subscription.id,
-                  relatedEntityType: 'stripe_subscription',
-                },
-              });
-              
-              console.log(`✅ Added ${creditsPerPeriod} subscription credits to user ${subscriptionUserId}`);
-            }
-            
-            // Update the user's subscription record
-            await prisma.user.update({
-              where: { id: subscriptionUserId },
-              data: {
-                stripeSubscriptionId: subscription.id,
-                planName: planName,
-                currentPeriodEnd: new Date(subscription.current_period_end * 1000),
-                cancelAtPeriodEnd: subscription.cancel_at_period_end,
-                status: 'Active',
-              },
-            });
-            
-            console.log(`✅ Updated subscription status for user ${subscriptionUserId}`);
-          }
-        } catch (dbError) {
-          console.log(`❌ Database error while processing subscription: ${dbError.message}`, true);
-          console.log(`Stack trace: ${dbError.stack}`, true);
-          throw dbError;
-        }
-        
-        break;
-        
-      case 'customer.subscription.deleted':
-        const canceledSubscription = event.data.object;
-        const canceledUserId = canceledSubscription.metadata?.userId;
-        
-        console.log(`📦 Processing subscription cancellation for user ${canceledUserId}`);
-        
-        if (!canceledUserId) {
-          console.log(`❌ Missing user ID in canceled subscription metadata`, true);
-          return new NextResponse(JSON.stringify({ error: 'Missing user ID in metadata' }), { status: 400 });
-        }
-        
-        try {
-          // Update the user's subscription status to canceled
-          await prisma.user.update({
-            where: { id: canceledUserId },
-            data: {
-              status: 'Canceled',
-              cancelAtPeriodEnd: true,
-            },
-          });
-          
-          console.log(`✅ Updated subscription status to canceled for user ${canceledUserId}`);
-        } catch (dbError) {
-          console.log(`❌ Database error while processing subscription cancellation: ${dbError.message}`, true);
-          console.log(`Stack trace: ${dbError.stack}`, true);
-          throw dbError;
-        }
-        
-        break;
-        
-      case 'invoice.payment_succeeded':
-        const invoice = event.data.object;
-        const invoiceUserId = invoice.metadata?.userId || invoice.customer_metadata?.userId;
-        const subscriptionId = invoice.subscription;
-        
-        // Only process subscription invoices
-        if (subscriptionId && invoiceUserId) {
-          console.log(`📦 Processing subscription renewal for user ${invoiceUserId}`);
-          
-          try {
-            // Get subscription details
-            const subscriptionDetails = await stripe.subscriptions.retrieve(subscriptionId);
-            const planName = subscriptionDetails.metadata?.planName;
-            const creditsPerPeriod = parseInt(subscriptionDetails.metadata?.credits, 10) || 0;
-            
-            // Get the user
-            const user = await prisma.user.findUnique({
-              where: { id: invoiceUserId },
-              select: { id: true, email: true, credits: true },
-            });
-            
-            if (!user) {
-              console.log(`❌ User not found: ${invoiceUserId}`, true);
-              return new NextResponse(JSON.stringify({ error: 'User not found' }), { status: 404 });
-            }
-            
-            // Add subscription credits to user account for the renewal
-            console.log(`💰 Adding ${creditsPerPeriod} renewal credits to user ${invoiceUserId}`);
-            
-            const updatedUser = await prisma.user.update({
-              where: { id: invoiceUserId },
-              data: {
-                credits: user.credits + creditsPerPeriod,
-                currentPeriodEnd: new Date(subscriptionDetails.current_period_end * 1000),
-              },
-            });
-            
-            // Create a credit log entry for the renewal credits
-            await prisma.creditLog.create({
-              data: {
-                userId: invoiceUserId,
-                amount: creditsPerPeriod,
-                balanceBefore: user.credits,
-                balanceAfter: updatedUser.credits,
-                description: `Renewal: Added ${creditsPerPeriod} credits from ${planName} subscription`,
-                relatedEntityId: invoice.id,
-                relatedEntityType: 'stripe_invoice',
-              },
-            });
-            
-            console.log(`✅ Added ${creditsPerPeriod} renewal credits to user ${invoiceUserId}`);
-          } catch (dbError) {
-            console.log(`❌ Database error while processing invoice: ${dbError.message}`, true);
-            console.log(`Stack trace: ${dbError.stack}`, true);
-            throw dbError;
-          }
-        }
+        // Handle subscription events here
+        // This could update the user's subscription status in your database
+        // For now, we'll just log it
         
         break;
         

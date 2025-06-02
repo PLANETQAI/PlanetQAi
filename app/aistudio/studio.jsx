@@ -10,9 +10,10 @@ import SunoGenerator from '@/components/player/SunoGenerator'
 import React from 'react'
 import 'react-h5-audio-player/lib/styles.css'
 import { useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { normalizeValue } from '@/utils/functions'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { CreditCard, Zap, Plus } from 'lucide-react'
+import { CreditCard, Zap, Plus, ShieldCheck } from 'lucide-react'
 import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal'
 
 
@@ -114,28 +115,17 @@ export default function Studio({ session }) {
 		<>
 			<div style={backgroundImageStyle}>
 				<GlobalHeader session={session} />
-{/* <div className="flex justify-between items-center mb-6">
-				
-				
-				{session && (
-					<div className="flex items-center gap-4">
-						<div className="bg-slate-800 rounded-lg px-4 py-2 flex items-center gap-2">
-							<CreditCard className="text-blue-400 w-5 h-5" />
-							<span className="text-white font-medium">
-								{userCredits ? userCredits.credits.toLocaleString() : '...'} Credits
-							</span>
-						</div>
-						<button 
-							onClick={() => setShowCreditPurchaseModal(true)}
-							className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg px-3 py-2 flex items-center gap-1 transition-colors duration-200"
+                {session?.user?.role === 'admin' && (
+					<div className="flex justify-center mb-4">
+						<Link 
+							href="/admin" 
+							className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center gap-2 transition-all duration-200 shadow-lg"
 						>
-							<Plus className="w-4 h-4" />
-							Buy Credits
-						</button>
+							<ShieldCheck className="w-5 h-5" />
+							Admin Dashboard
+						</Link>
 					</div>
 				)}
-			</div> */}
-
 				<p className="text-center text-gray-300 mb-8">Choose your preferred AI music generator</p>
 
 				<Tabs defaultValue="diffrhym" className="w-full mb-8" onValueChange={setActiveGenerator}>
