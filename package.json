@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && npx prisma migrate deploy && node scripts/verify-schema.js && NODE_OPTIONS='--no-oxide' next build",
+    "build": "npx prisma generate && npx prisma migrate deploy && node scripts/verify-schema.js &&  next build",
     "start": "next start",
     "lint": "next lint",
     "postinstall": "npx prisma generate",
