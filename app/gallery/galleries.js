@@ -35,9 +35,9 @@ console.log(songs)
 			// Set loading state for this specific song
 			setDeletingSongIds(prev => ({ ...prev, [songId]: true }))
 			
-			// Delete the song from the database using the audio URL
-			const response = await fetch(`/api/songs/delete-by-audio`, {
-				method: 'DELETE',
+			// Use simplified API endpoint with POST method
+			const response = await fetch('/api/deletesong', {
+				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
 				},
@@ -45,6 +45,11 @@ console.log(songs)
 			})
 			
 			if (!response.ok) {
+				// Try to delete from gallery even if song deletion fails
+				console.log(`Failed to delete song ${songId}, attempting to delete from gallery`)
+				await deleteGallery(songId, audioLink)
+				
+				// Now throw the error
 				throw new Error(`Failed to delete song: ${response.status} ${response.statusText}`)
 			}
 			
@@ -61,7 +66,7 @@ console.log(songs)
 			}
 			
 			// Also remove from gallery if needed
-			deleteGallery(songId)
+			deleteGallery(songId, audioLink)
 			
 			toast.success('Song successfully deleted.', {
 				position: 'top-right',
@@ -95,32 +100,48 @@ console.log(songs)
 		}
 	}
 
-	// Handle gallery deletion separate
-	const deleteGallery = async (galleryId) => {
+	// Handle gallery deletion by audioLink
+	const deleteGallery = async (songId, audioLink) => {
 		try {
-			// Set loading state for this specific gallery
-			setDeletingGalleryIds(prev => ({ ...prev, [galleryId]: true }))
+			// If audioLink is not provided, try to find the song by ID
+			const songToDelete = songs.find(song => song.id === songId)
+			if (!songToDelete && !audioLink) {
+				console.log(`Cannot delete gallery: no song found with ID ${songId} and no audioLink provided`)
+				return
+			}
 			
-			// Delete the gallery entry from the database
-			const response = await fetch(`/api/gallery/delete/${galleryId}`, {
-				method: 'DELETE',
+			// Use the audioLink from the song if not provided directly
+			const audioLinkToDelete = audioLink || songToDelete?.audioLink
+			if (!audioLinkToDelete) {
+				console.log(`Cannot delete gallery: no audioLink found for song ${songId}`)
+				return
+			}
+			
+			// Set loading state for this specific gallery
+			setDeletingGalleryIds(prev => ({ ...prev, [songId]: true }))
+			
+			// Delete the gallery entry from the database using the new API endpoint
+			const response = await fetch('/api/gallery/delete-by-audio', {
+				method: 'POST',
 				headers: {
 					'Content-Type': 'application/json'
-				}
+				},
+				body: JSON.stringify({ audioUrl: audioLinkToDelete })
 			})
 			
 			if (!response.ok) {
-				console.log(`Gallery deletion API call completed but song deletion will handle UI update`)
+				console.log(`Gallery deletion failed but song deletion will handle UI update`)
+			} else {
+				const result = await response.json()
+				console.log(`Gallery items deleted: ${result.count} for audio: ${audioLinkToDelete}`)
 			}
-			
-			console.log(`Gallery ${galleryId} deletion API call completed`)
 		} catch (error) {
 			console.error('Error deleting gallery entry:', error)
 		} finally {
 			// Clear loading state for this specific gallery
 			setDeletingGalleryIds(prev => {
 				const updated = { ...prev }
-				delete updated[galleryId]
+				delete updated[songId]
 				return updated
 			})
 		}

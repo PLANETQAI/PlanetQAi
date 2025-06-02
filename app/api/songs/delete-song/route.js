@@ -1,39 +1,27 @@
 import { auth } from '@/auth'
 import prisma from '@/lib/prisma'
+import { NextResponse } from 'next/server'
 
 // Route segment config
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-export async function DELETE(request) {
+// Use POST method instead of DELETE since DELETE with bodies can be problematic
+export async function POST(request) {
   try {
     // Authenticate the user
     const session = await auth()
     if (!session) {
-      return new Response(JSON.stringify({ error: 'Unauthorized' }), {
-        status: 401,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }
 
     // Get the audioUrl from the request body
-    let audioUrl
-    try {
-      const body = await request.json()
-      audioUrl = body.audioUrl
-    } catch (error) {
-      console.error('Error parsing request body:', error)
-      return new Response(JSON.stringify({ error: 'Invalid request body' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
-    }
+    const { audioUrl } = await request.json()
+    
+    console.log('Received delete request for audioUrl:', audioUrl)
     
     if (!audioUrl) {
-      return new Response(JSON.stringify({ error: 'Audio URL is required' }), {
-        status: 400,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return NextResponse.json({ error: 'Audio URL is required' }, { status: 400 })
     }
 
     // Find the song by audioUrl
@@ -45,10 +33,7 @@ export async function DELETE(request) {
     })
 
     if (!song) {
-      return new Response(JSON.stringify({ error: 'Song not found' }), {
-        status: 404,
-        headers: { 'Content-Type': 'application/json' }
-      })
+      return NextResponse.json({ error: 'Song not found' }, { status: 404 })
     }
 
     // Delete the song
@@ -71,18 +56,12 @@ export async function DELETE(request) {
       // Continue even if gallery deletion fails
     }
 
-    return new Response(JSON.stringify({ 
+    return NextResponse.json({ 
       message: 'Song deleted successfully',
       songId: song.id
-    }), {
-      status: 200,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    }, { status: 200 })
   } catch (error) {
     console.error('Error deleting song by audio URL:', error)
-    return new Response(JSON.stringify({ error: 'Failed to delete song' }), {
-      status: 500,
-      headers: { 'Content-Type': 'application/json' }
-    })
+    return NextResponse.json({ error: 'Failed to delete song' }, { status: 500 })
   }
 }

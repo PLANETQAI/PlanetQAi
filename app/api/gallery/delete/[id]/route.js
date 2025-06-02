@@ -1,5 +1,10 @@
 import { auth } from '@/auth'
 import { NextResponse } from 'next/server'
+import prisma from '@/lib/prisma'
+
+// Route segment config
+export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 export async function DELETE(req, { params }) {
 	try {
@@ -19,20 +24,30 @@ export async function DELETE(req, { params }) {
 		// Get the user's ID from the session
 		const userId = session.user.id
 
-		// Delete the song with the specified ID for the authenticated user
-		const result = await prisma.gallery.deleteMany({
+		// Find the gallery item first to get its audioLink
+		const galleryItem = await prisma.gallery.findUnique({
 			where: {
-				id,
-				user: userId,
-			},
+				id: id
+			}
 		})
 
-		if (result.count === 0) {
-			return NextResponse.json(
-				{ message: 'Song not found or not authorized to delete' },
-				{ status: 404 }
-			)
+		if (!galleryItem) {
+			return NextResponse.json({ message: 'Gallery item not found' }, { status: 404 })
 		}
+
+		// Verify the gallery item belongs to the user
+		if (galleryItem.userId !== userId) {
+			return NextResponse.json({ message: 'Unauthorized' }, { status: 401 })
+		}
+
+		// Delete the gallery item by ID
+		const result = await prisma.gallery.delete({
+			where: {
+				id: id
+			}
+		})
+
+		// No need to check result.count since delete will throw if not found
 
 		// Return a success response
 		return NextResponse.json({ message: 'Song deleted successfully' }, { status: 200 })

@@ -297,14 +297,14 @@ const SubscriptionPlans = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8">
       {/* Debug Test Button */}
-      <div className="max-w-7xl mx-auto mb-4">
+      {/* <div className="max-w-7xl mx-auto mb-4">
         <Button 
           onClick={testStripeCheckout}
           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
         >
           Test Credit Purchase API
         </Button>
-      </div>
+      </div> */}
       
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Title and Description */}
