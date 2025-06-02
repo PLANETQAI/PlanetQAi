@@ -95,7 +95,7 @@ console.log(songs)
 		}
 	}
 
-	// Handle gallery deletion separately
+	// Handle gallery deletion separate
 	const deleteGallery = async (galleryId) => {
 		try {
 			// Set loading state for this specific gallery
