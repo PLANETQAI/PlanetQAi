@@ -6,7 +6,7 @@ import { NextResponse } from 'next/server'
 const prisma = new PrismaClient()
 
 // Make sure we have a Stripe secret key
-const stripeSecretKey = process.env.STRIPE_SUBSCRIPTION_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SUBSCRIPTION_SECRET_KEY
+const stripeSecretKey = process.env.STRIPE_SECRET_KEY || process.env.NEXT_PUBLIC_STRIPE_SECRET_KEY
 
 if (!stripeSecretKey) {
   console.error('Missing Stripe secret key')
@@ -25,7 +25,7 @@ export async function POST(req) {
 	// In App Router, we need to get the raw body differently
 	const buf = await req.text()
 
-	const endpointSecret = process.env.STRIPE_SUBSCRIPTION_WEBHOOK_SECRET
+	const endpointSecret = process.env.STRIPE_WEBHOOK_SECRET
 
 	let event
 
