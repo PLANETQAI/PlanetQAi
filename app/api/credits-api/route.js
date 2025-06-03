@@ -145,24 +145,25 @@ export async function POST(req) {
     // Import Stripe
     const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 
-    // Create or get Stripe customer
-    let customerId = user.stripeCustomerId;
-    if (!customerId) {
-      const customer = await stripe.customers.create({
-        email: user.email,
-        name: user.fullName,
-        metadata: {
-          userId: user.id,
-        },
-      });
-      customerId = customer.id;
+    // Always create a new Stripe customer to avoid test/live mode conflicts
+    // Delete existing customer ID and create a new one
+    let customerId;
+    
+    // Create a new customer regardless of existing ID
+    const customer = await stripe.customers.create({
+      email: user.email,
+      name: user.fullName,
+      metadata: {
+        userId: user.id,
+      },
+    });
+    customerId = customer.id;
 
-      // Save the Stripe customer ID to the user
-      await prisma.user.update({
-        where: { id: userId },
-        data: { stripeCustomerId: customerId },
-      });
-    }
+    // Save the new Stripe customer ID to the user
+    await prisma.user.update({
+      where: { id: userId },
+      data: { stripeCustomerId: customerId },
+    });
 
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
