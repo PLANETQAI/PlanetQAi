@@ -42,7 +42,7 @@ const SUBSCRIPTION_PLANS = [
       "Commercial usage rights",
       "Ideal for independent artists"
     ],
-    packageId: "prod_SQJRcw0CvcrPLc"
+    packageId: "prod_SQkSzKD1bvmB7e"
   },
   {
     id: "pro-plan",
@@ -60,7 +60,7 @@ const SUBSCRIPTION_PLANS = [
       "Priority access",
       "Perfect for content creators"
     ],
-    packageId: "prod_SQJSScMORjkNzM"
+    packageId: "prod_SQkSDQBT6vs18R"
   },
   {
     id: "premium-plan",
@@ -78,7 +78,7 @@ const SUBSCRIPTION_PLANS = [
       "Priority support",
       "Best value per song"
     ],
-    packageId: "prod_SQJSZOlL876gkv"
+    packageId: "prod_SQkSPecauChp8L"
   }
 ];
 

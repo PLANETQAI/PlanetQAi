@@ -1,16 +1,17 @@
 import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
+import { CREDIT_PACKAGES } from "@/lib/stripe_package";
 
 const prisma = new PrismaClient();
 
 // Define credit packages
-const CREDIT_PACKAGES = [
-  { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
-  { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
-  { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
-  { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
-];
+// const CREDIT_PACKAGES = [
+//   { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
+//   { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
+//   { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
+//   { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
+// ];
 
 // GET handler to retrieve user credits and available credit packages
 export async function GET(req) {

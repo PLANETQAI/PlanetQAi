@@ -1,0 +1,17 @@
+Price ID,Product ID,Product Name,Product Statement Descriptor,Product Tax Code,Description,Created (UTC),Amount,Currency,Interval,Interval Count,Usage Type,Aggregate Usage,Billing Scheme,Trial Period Days,Tax Behavior
+price_1RVsy3LEbBbuiNy4PoAOMmzQ,prod_SQkSJupfhKVv6Q,Starter Plan – Great for Beginners,,,,2025-06-03 11:25,10.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsy0LEbBbuiNy4paKXAOVv,prod_SQkSnKyIK6CDnF,Free Plan – Try Before You Buy,,,,2025-06-03 11:25,0.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxxLEbBbuiNy4LgEn75bZ,prod_SQkSdYmHXPO6On,Extra Large Pack,,,,2025-06-03 11:25,45.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxtLEbBbuiNy4lMD0T6D5,prod_SQkSqQOKv7Y3IN,"Large Pack""",,,,2025-06-03 11:25,25.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxnLEbBbuiNy4Rq6L1TbM,prod_SQkShxszzVfSea,Small Pack,,,,2025-06-03 11:25,5.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxkLEbBbuiNy4i77bPKWt,prod_SQkSMOMbFVZIqD,Medium Pack,,,,2025-06-03 11:25,12.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxgLEbBbuiNy4F9our97o,prod_SQkSp27RBVKsWG,Small Pack,,,,2025-06-03 11:24,5.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxdLEbBbuiNy4RGYS4gLt,prod_SQkSemW9YYNuto,"Large Pack""",,,,2025-06-03 11:24,25.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxYLEbBbuiNy4IRDl5vXg,prod_SQkSmmaeLkOgSY,Extra Large Pack,,,,2025-06-03 11:24,45.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxULEbBbuiNy4GfkyKBJh,prod_SQkS3xyFGA407x,Free Plan – Try Before You Buy,,,,2025-06-03 11:24,0.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxPLEbBbuiNy4suS9k33e,prod_SQkSzKD1bvmB7e,Starter Plan – Great for Beginners,,,,2025-06-03 11:24,10.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxLLEbBbuiNy4tTRBgQfK,prod_SQkSDQBT6vs18R,Pro Plan – For Serious Creators,,,,2025-06-03 11:24,20.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RVsxELEbBbuiNy4wFIusPmK,prod_SQkSPecauChp8L,Premium Plan – Studio-Level Access,,,,2025-06-03 11:24,30.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1RPpmlLEbBbuiNy4wxJMlZPK,prod_SKUm9QGU3PfyL7,PREMIUM,,,,2025-05-17 18:48,50.00,usd,month,1,licensed,,per_unit,,unspecified
+price_1PxIxbLEbBbuiNy43UdJQWoL,prod_QowrUnxWozL6Hi,Premium Package,,,,2024-09-10 01:33,10.00,usd,,,,,per_unit,,unspecified
+price_1PxIuaLEbBbuiNy4cxkk52Fn,prod_Qowoig1MjOtPzV,Basic Package,,,,2024-09-10 01:30,0.99,usd,,,,,per_unit,,unspecified

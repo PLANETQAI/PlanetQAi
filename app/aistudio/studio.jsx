@@ -186,7 +186,7 @@ export default function Studio({ session }) {
 						}}
 					/>
 				)}
-				<MusicPlayer initialVideoLink={initialVideoLink} />
+				{/* <MusicPlayer initialVideoLink={initialVideoLink} /> */}
 
 				<h1 className="animate-text text-center bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-2xl font-black md:text-4xl pb-10">
 					AI Audio Player Presented By Planet Q Productions

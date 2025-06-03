@@ -5,6 +5,7 @@ import Stripe from 'stripe';
 import { headers } from 'next/headers';
 import sendEmail from '../../../utils/email/emailService';
 import { purchaseReceiptTemplate } from '../../../utils/email/emailTemplates';
+import { CREDIT_PACKAGES, SUBSCRIPTION_PLANS, ALL_PACKAGES } from '../../../lib/stripe_package';
 
 /**
  * STRIPE WEBHOOK CONFIGURATION
@@ -30,22 +31,23 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY);
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
 // Define credit packages (same as in credits-api/route.js)
-const CREDIT_PACKAGES = [
-  { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
-  { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
-  { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
-  { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
-];
+// const CREDIT_PACKAGES = [
+//   { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
+//   { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
+//   { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
+//   { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
+// ];
+
+
 
 // Define subscription plans (same as in credits-api/route.js)
-const SUBSCRIPTION_PLANS = [
-  { id: "prod_SQJRcw0CvcrPLc", name: "Starter Plan", credits: 20000, price: 10, isSubscription: true },
-  { id: "prod_SQJSScMORjkNzM", name: "Pro Plan", credits: 40000, price: 20, isSubscription: true },
-  { id: "prod_SQJSn9xSxfYUwq", name: "Premium Plan", credits: 80000, price: 30, isSubscription: true },
-];
+// const SUBSCRIPTION_PLANS = [
+//   { id: "prod_SQJRcw0CvcrPLc", name: "Starter Plan", credits: 20000, price: 10, isSubscription: true },
+//   { id: "prod_SQJSScMORjkNzM", name: "Pro Plan", credits: 40000, price: 20, isSubscription: true },
+//   { id: "prod_SQJSn9xSxfYUwq", name: "Premium Plan", credits: 80000, price: 30, isSubscription: true },
+// ];
 
-// Combined packages for lookup
-const ALL_PACKAGES = [...CREDIT_PACKAGES, ...SUBSCRIPTION_PLANS];
+// Using ALL_PACKAGES imported from stripe_package.js
 
 // Helper function to get package details by product ID
 function getPackageByProductId(productId) {

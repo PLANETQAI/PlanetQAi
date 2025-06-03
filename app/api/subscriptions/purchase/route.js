@@ -35,7 +35,7 @@ const SUBSCRIPTION_PLANS = [
     price: 10,
     credits: 20000,
     songs: 250,
-    packageId: "prod_SQJRcw0CvcrPLc"
+    packageId: "prod_SQkSzKD1bvmB7e"
   },
   {
     id: "pro-plan",
@@ -44,7 +44,7 @@ const SUBSCRIPTION_PLANS = [
     price: 20,
     credits: 40000,
     songs: 500,
-    packageId: "prod_SQJSScMORjkNzM"
+    packageId: "prod_SQkSDQBT6vs18R"
   },
   {
     id: "premium-plan",
@@ -53,7 +53,7 @@ const SUBSCRIPTION_PLANS = [
     price: 30,
     credits: 80000,
     songs: 1000,
-    packageId: "prod_SQJSZOlL876gkv"
+    packageId: "prod_SQkSPecauChp8L"
   }
 ];
 

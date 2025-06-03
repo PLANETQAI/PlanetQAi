@@ -248,7 +248,7 @@ const SubscriptionPlans = () => {
             buttonClassName:
               "bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600",
             mostPopular: false,
-            packageId: "prod_SQJRcw0CvcrPLc"
+            packageId: "prod_SQkSzKD1bvmB7e"
           },
           {
             id: "pro-plan",
@@ -269,7 +269,7 @@ const SubscriptionPlans = () => {
             buttonClassName:
               "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600",
             mostPopular: true,
-            packageId: "prod_SQJSScMORjkNzM"
+            packageId: "prod_SQkSDQBT6vs18R"
           },
           {
             id: "premium-plan",
@@ -290,7 +290,7 @@ const SubscriptionPlans = () => {
             buttonClassName:
               "bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-600 hover:to-rose-600",
             mostPopular: false,
-            packageId: "prod_SQJSZOlL876gkv"
+            packageId: "prod_SQkSPecauChp8L"
           },
         ];
 

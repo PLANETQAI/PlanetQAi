@@ -16,6 +16,7 @@ import { cn } from "@/lib/utils";
 // Import the improved stars component
 import StarsWrapper from "@/components/canvas/StarsWrapper";
 import StarsCanvas from "@/components/canvas/RandomStars";
+import MusicPlayer from "@/components/planetqproductioncomp/musicplayer";
 
 const CustomRadioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -244,12 +245,13 @@ const CustomRadioPlayer = () => {
 };
 
 const RootPage = () => {
-  const [clickSteps, setClickSteps] = useState(2);
+  const [clickSteps, setClickSteps] = useState(3);
   const [direction, setDirection] = useState("forward");
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [showTime, setShowTime] = useState(true);
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
+  const [initialVideoLink, setInitialVideoLink] = useState('https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG')
 
   useEffect(() => {
     setTimeout(() => {
@@ -545,7 +547,8 @@ const RootPage = () => {
 
   // New PlanetQVideo player card
   const planetQVideo = (
-    <PlanetQVideoCard onClick={preventPropagation} />
+    // <PlanetQVideoCard onClick={preventPropagation} />
+    <MusicPlayer initialVideoLink={initialVideoLink} />
   );
 
   // Add CSS for marquee animation if needed
@@ -577,13 +580,13 @@ const RootPage = () => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        <CircleTypeText
+        {/* <CircleTypeText
           text={"Play Futuristic Music"}
           className={cn(
             "absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24 left-1/2 -translate-x-[50%]",
             showTime ? "opacity-100" : "opacity-0"
           )}
-        />
+        /> */}
         <CircleTypeText
           text={"Tap Anywhere"}
           className={cn(
@@ -635,12 +638,12 @@ const RootPage = () => {
                     : "opacity-0 translate-x-full"
                 )}
               >
-                {qWorldStudios}
+                {planetQRadio}
               </div>
 
               <div
                 className={cn(
-                  "absolute w-full transition-all duration-500 ease-in-out",
+                  "absolute w-full h-full transition-all duration-500 ease-in-out",
                   clickSteps === 3
                     ? "opacity-100 translate-x-0"
                     : clickSteps < 3
@@ -648,9 +651,8 @@ const RootPage = () => {
                     : "opacity-0 translate-x-full"
                 )}
               >
-                {planetQRadio}
+                {qWorldStudios}
               </div>
-
               <div
                 className={cn(
                   "absolute w-full transition-all duration-500 ease-in-out",
@@ -707,13 +709,14 @@ const RootPage = () => {
               >
                 {planetQProductions}
               </div>
+             
               <div
                 className={cn(
                   "w-full opacity-0 pointer-events-none",
                   clickSteps === 2 ? "block" : "hidden"
                 )}
               >
-                {qWorldStudios}
+                {planetQRadio}
               </div>
               <div
                 className={cn(
@@ -721,7 +724,7 @@ const RootPage = () => {
                   clickSteps === 3 ? "block" : "hidden"
                 )}
               >
-                {planetQRadio}
+                {qWorldStudios}
               </div>
               <div
                 className={cn(
