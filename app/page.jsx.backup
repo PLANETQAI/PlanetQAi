@@ -240,7 +240,8 @@ const CustomRadioPlayer = () => {
           Friday Futuristic Mornings Futuristic Hip Hop{" "}
         </div>
       </div>
-    </div>  );
+    </div>
+  );
 };
 
 const RootPage = () => {
@@ -253,7 +254,7 @@ const RootPage = () => {
   const [loading, setLoading] = useState(true);
   const [showScrollUp, setShowScrollUp] = useState(false);
   const [initialVideoLink, setInitialVideoLink] = useState('https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG');
-  const [showTime, setShowTime] = useState(false);
+  const [showTime, setShowTime] = useState(false)
 
   // Scroll to top function
   const scrollToTop = () => {
@@ -827,7 +828,7 @@ const RootPage = () => {
             </div>
           </div>
         </div>
-      </div> 
+      </div>
     </div>
   );
 };
