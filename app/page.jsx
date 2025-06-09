@@ -5,11 +5,17 @@ import Image from "next/image";
 import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from "next/link";
-import dynamic from 'next/dynamic';
+import dynamic from "next/dynamic";
 
 // Import client-side components
-const PlanetQGamesCard = dynamic(() => import('../components/PlanetQGamesCard'), { ssr: false });
-const PlanetQVideoCard = dynamic(() => import('../components/PlanetQVideoCard'), { ssr: false });
+const PlanetQGamesCard = dynamic(
+  () => import("../components/PlanetQGamesCard"),
+  { ssr: false }
+);
+const PlanetQVideoCard = dynamic(
+  () => import("../components/PlanetQVideoCard"),
+  { ssr: false }
+);
 import CircleTypeText from "@/components/circleTypeText";
 import { cn } from "@/lib/utils";
 
@@ -240,7 +246,8 @@ const CustomRadioPlayer = () => {
           Friday Futuristic Mornings Futuristic Hip Hop{" "}
         </div>
       </div>
-    </div>  );
+    </div>
+  );
 };
 
 const RootPage = () => {
@@ -252,14 +259,16 @@ const RootPage = () => {
   const [credits, setCredits] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showScrollUp, setShowScrollUp] = useState(false);
-  const [initialVideoLink, setInitialVideoLink] = useState('https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG');
+  const [initialVideoLink, setInitialVideoLink] = useState(
+    "https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG"
+  );
   const [showTime, setShowTime] = useState(false);
 
   // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
 
@@ -267,10 +276,10 @@ const RootPage = () => {
   const scrollToBottom = () => {
     window.scrollTo({
       top: document.documentElement.scrollHeight,
-      behavior: 'smooth'
+      behavior: "smooth",
     });
   };
-  
+
   useEffect(() => {
     // Add scroll event listener to show/hide scroll up button
     const handleScroll = () => {
@@ -281,8 +290,8 @@ const RootPage = () => {
       }
     };
 
-    window.addEventListener('scroll', handleScroll);
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const handleClickSteps = (e) => {
@@ -497,9 +506,7 @@ const RootPage = () => {
         }
         className="block"
       >
-        <div
-          className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto"
-        >
+        <div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto">
           <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
             <h1 className="text-xl">Planet Q Productions</h1>
           </div>
@@ -519,12 +526,12 @@ const RootPage = () => {
   const planetQRadio = (
     <div className="h-full p-1 block card-content" onClick={preventPropagation}>
       <Link
-        href={"https://planetqproductions.wixsite.com/planet-q-productions/faqs"}
+        href={
+          "https://planetqproductions.wixsite.com/planet-q-productions/faqs"
+        }
         className="block"
       >
-        <div
-          className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all"
-        >
+        <div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
           <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
             <h1 className="text-xl">Planet Q Radio</h1>
           </div>
@@ -544,9 +551,7 @@ const RootPage = () => {
   const studioCard = (
     <div className="p-1 card-content" onClick={preventPropagation}>
       <Link href={"/aistudio"} className="block">
-        <div
-          className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all"
-        >
+        <div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
           <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
             <h1 className="text-xl">Q World Studios</h1>
           </div>
@@ -563,9 +568,7 @@ const RootPage = () => {
   );
 
   // New PlanetQVideo games card with Coming Soon label
-  const planetQGames = (
-    <PlanetQGamesCard onClick={preventPropagation} />
-  );
+  const planetQGames = <PlanetQGamesCard onClick={preventPropagation} />;
 
   // New PlanetQVideo player card
   const planetQVideo = (
@@ -592,23 +595,42 @@ const RootPage = () => {
       document.head.appendChild(style);
     }
   }, []);
-
   return (
     <div className="w-full overflow-y-scroll min-h-screen h-full relative">
       {/* Scroll arrows */}
       {showScrollUp && (
         <div className="scroll-arrow scroll-arrow-up" onClick={scrollToTop}>
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M18 15l-6-6-6 6"/>
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M18 15l-6-6-6 6" />
           </svg>
         </div>
       )}
       <div className="scroll-arrow scroll-arrow-down" onClick={scrollToBottom}>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-          <path d="M6 9l6 6 6-6"/>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          width="24"
+          height="24"
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          strokeWidth="2"
+          strokeLinecap="round"
+          strokeLinejoin="round"
+        >
+          <path d="M6 9l6 6 6-6" />
         </svg>
       </div>
-      
+
       <div
         className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-scroll"
         onClick={(e) => handleClickSteps(e)}
@@ -639,195 +661,204 @@ const RootPage = () => {
           {/* Scroll arrows */}
           {showScrollUp && (
             <div className="scroll-arrow scroll-arrow-up" onClick={scrollToTop}>
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M18 15l-6-6-6 6"/>
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="24"
+                height="24"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M18 15l-6-6-6 6" />
               </svg>
             </div>
           )}
-          
+
           <div className="relative w-full">
-              <div
-                className={cn(
-                  "absolute w-full transition-all duration-500 ease-in-out",
-                  clickSteps === 0
-                    ? "opacity-100 translate-x-0"
-                    : "opacity-0 translate-x-full"
-                )}
-              >
-                {planetQStore}
-              </div>
-
-              <div
-                className={cn(
-                  "absolute w-full transition-all duration-500 ease-in-out",
-                  clickSteps === 1
-                    ? "opacity-100 translate-x-0"
-                    : clickSteps < 1
-                    ? "opacity-0 -translate-x-full"
-                    : "opacity-0 translate-x-full"
-                )}
-              >
-                {planetQProductions}
-              </div>
-
-              <div
-                className={cn(
-                  "absolute w-full transition-all duration-500 ease-in-out",
-                  clickSteps === 2
-                    ? "opacity-100 translate-x-0"
-                    : clickSteps < 2
-                    ? "opacity-0 -translate-x-full"
-                    : "opacity-0 translate-x-full"
-                )}
-              >
-                {planetQRadio}
-              </div>
-
-              <div
-                className={cn(
-                  "absolute w-full h-full transition-all duration-500 ease-in-out",
-                  clickSteps === 3
-                    ? "opacity-100 translate-x-0"
-                    : clickSteps < 3
-                    ? "opacity-0 -translate-x-full"
-                    : "opacity-0 translate-x-full"
-                )}
-              >
-                {qWorldStudios}
-              </div>
-              <div
-                className={cn(
-                  "absolute w-full transition-all duration-500 ease-in-out",
-                  clickSteps === 4
-                    ? "opacity-100 translate-x-0"
-                    : clickSteps < 4
-                    ? "opacity-0 -translate-x-full"
-                    : "opacity-0 translate-x-full"
-                )}
-              >
-                {studioCard}
-              </div>
-
-              <div
-                className={cn(
-                  "absolute w-full transition-all duration-500 ease-in-out",
-                  clickSteps === 5
-                    ? "opacity-100 translate-x-0"
-                    : clickSteps < 5
-                    ? "opacity-0 -translate-x-full"
-                    : "opacity-0 translate-x-full"
-                )}
-              >
-                {planetQVideo}
-              </div>
-
-              <div
-                className={cn(
-                  "absolute w-full transition-all duration-500 ease-in-out",
-                  clickSteps === 6
-                    ? "opacity-100 translate-x-0"
-                    : clickSteps < 6
-                    ? "opacity-0 -translate-x-full"
-                    : "opacity-0 translate-x-full"
-                )}
-              >
-                {planetQGames}
-              </div>
-
-              {/* Spacer div to maintain container height */}
-              <div
-                className={cn(
-                  "w-full opacity-0 pointer-events-none",
-                  clickSteps === 0 ? "block" : "hidden"
-                )}
-              >
-                {planetQStore}
-              </div>
-              <div
-                className={cn(
-                  "w-full opacity-0 pointer-events-none",
-                  clickSteps === 1 ? "block" : "hidden"
-                )}
-              >
-                {planetQProductions}
-              </div>
-             
-              <div
-                className={cn(
-                  "w-full opacity-0 pointer-events-none",
-                  clickSteps === 2 ? "block" : "hidden"
-                )}
-              >
-                {planetQRadio}
-              </div>
-              <div
-                className={cn(
-                  "w-full opacity-0 pointer-events-none",
-                  clickSteps === 3 ? "block" : "hidden"
-                )}
-              >
-                {qWorldStudios}
-              </div>
-              <div
-                className={cn(
-                  "w-full opacity-0 pointer-events-none",
-                  clickSteps === 4 ? "block" : "hidden"
-                )}
-              >
-                {studioCard}
-              </div>
-              <div
-                className={cn(
-                  "w-full opacity-0 pointer-events-none",
-                  clickSteps === 5 ? "block" : "hidden"
-                )}
-              >
-                {planetQVideo}
-              </div>
-              <div
-                className={cn(
-                  "w-full opacity-0 pointer-events-none",
-                  clickSteps === 6 ? "block" : "hidden"
-                )}
-              >
-                {planetQGames}
-              </div>
+            <div
+              className={cn(
+                "absolute w-full transition-all duration-500 ease-in-out",
+                clickSteps === 0
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {planetQStore}
             </div>
 
-            {/* Indicators */}
-            <div className="mt-8 flex justify-center gap-2">
-              {[0, 1, 2, 3, 4, 5, 6].map((index) => (
-                <div
-                  key={index}
-                  className={cn(
-                    "w-2 h-2 rounded-full transition-all duration-300 cursor-pointer",
-                    clickSteps === index
-                      ? "bg-white scale-125"
-                      : "bg-gray-500 hover:bg-gray-400"
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    if (!isTransitioning) {
-                      setIsTransitioning(true);
-                      setDirection(index > clickSteps ? "forward" : "backward");
-                      setClickSteps(index);
-                      setTimeout(() => setIsTransitioning(false), 400);
-                    }
-                  }}
-                />
-              ))}
+            <div
+              className={cn(
+                "absolute w-full transition-all duration-500 ease-in-out",
+                clickSteps === 1
+                  ? "opacity-100 translate-x-0"
+                  : clickSteps < 1
+                  ? "opacity-0 -translate-x-full"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {planetQProductions}
+            </div>
+
+            <div
+              className={cn(
+                "absolute w-full transition-all duration-500 ease-in-out",
+                clickSteps === 2
+                  ? "opacity-100 translate-x-0"
+                  : clickSteps < 2
+                  ? "opacity-0 -translate-x-full"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {planetQRadio}
+            </div>
+
+            <div
+              className={cn(
+                "absolute w-full h-full transition-all duration-500 ease-in-out",
+                clickSteps === 3
+                  ? "opacity-100 translate-x-0"
+                  : clickSteps < 3
+                  ? "opacity-0 -translate-x-full"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {qWorldStudios}
+            </div>
+            <div
+              className={cn(
+                "absolute w-full transition-all duration-500 ease-in-out",
+                clickSteps === 4
+                  ? "opacity-100 translate-x-0"
+                  : clickSteps < 4
+                  ? "opacity-0 -translate-x-full"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {studioCard}
+            </div>
+
+            <div
+              className={cn(
+                "absolute w-full transition-all duration-500 ease-in-out",
+                clickSteps === 5
+                  ? "opacity-100 translate-x-0"
+                  : clickSteps < 5
+                  ? "opacity-0 -translate-x-full"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {planetQVideo}
+            </div>
+
+            <div
+              className={cn(
+                "absolute w-full transition-all duration-500 ease-in-out",
+                clickSteps === 6
+                  ? "opacity-100 translate-x-0"
+                  : clickSteps < 6
+                  ? "opacity-0 -translate-x-full"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {planetQGames}
+            </div>
+
+            {/* Spacer div to maintain container height */}
+            <div
+              className={cn(
+                "w-full opacity-0 pointer-events-none",
+                clickSteps === 0 ? "block" : "hidden"
+              )}
+            >
+              {planetQStore}
+            </div>
+            <div
+              className={cn(
+                "w-full opacity-0 pointer-events-none",
+                clickSteps === 1 ? "block" : "hidden"
+              )}
+            >
+              {planetQProductions}
+            </div>
+
+            <div
+              className={cn(
+                "w-full opacity-0 pointer-events-none",
+                clickSteps === 2 ? "block" : "hidden"
+              )}
+            >
+              {planetQRadio}
+            </div>
+            <div
+              className={cn(
+                "w-full opacity-0 pointer-events-none",
+                clickSteps === 3 ? "block" : "hidden"
+              )}
+            >
+              {qWorldStudios}
+            </div>
+            <div
+              className={cn(
+                "w-full opacity-0 pointer-events-none",
+                clickSteps === 4 ? "block" : "hidden"
+              )}
+            >
+              {studioCard}
+            </div>
+            <div
+              className={cn(
+                "w-full opacity-0 pointer-events-none",
+                clickSteps === 5 ? "block" : "hidden"
+              )}
+            >
+              {planetQVideo}
+            </div>
+            <div
+              className={cn(
+                "w-full opacity-0 pointer-events-none",
+                clickSteps === 6 ? "block" : "hidden"
+              )}
+            >
+              {planetQGames}
+            </div>
+          </div>
+
+          {/* Indicators */}
+          <div className="mt-8 flex justify-center gap-2">
+            {[0, 1, 2, 3, 4, 5, 6].map((index) => (
               <div
+                key={index}
                 className={cn(
-                  "ml-2 text-xs transition-all duration-300",
-                  isTransitioning ? "opacity-0" : "opacity-70"
+                  "w-2 h-2 rounded-full transition-all duration-300 cursor-pointer",
+                  clickSteps === index
+                    ? "bg-white scale-125"
+                    : "bg-gray-500 hover:bg-gray-400"
                 )}
-              >
-                {direction === "forward" ? "→" : "←"}
-              </div>
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (!isTransitioning) {
+                    setIsTransitioning(true);
+                    setDirection(index > clickSteps ? "forward" : "backward");
+                    setClickSteps(index);
+                    setTimeout(() => setIsTransitioning(false), 400);
+                  }
+                }}
+              />
+            ))}
+            <div
+              className={cn(
+                "ml-2 text-xs transition-all duration-300",
+                isTransitioning ? "opacity-0" : "opacity-70"
+              )}
+            >
+              {direction === "forward" ? "→" : "←"}
             </div>
           </div>
         </div>
-      </div> 
+      </div>
     </div>
   );
 };
