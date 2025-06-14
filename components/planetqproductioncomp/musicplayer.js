@@ -21,16 +21,16 @@ export default function MusicPlayer() {
 				setIsVideoLink(shuffledLinks)
 				// console.log(shuffledLinks)
 				if (links && links.length > 0) {
-					toast.success('Music successfully retrieved.', {
-						position: 'top-right',
-						autoClose: 1500,
-						hideProgressBar: false,
-						closeOnClick: true,
-						pauseOnHover: true,
-						draggable: true,
-						progress: undefined,
-						theme: 'dark',
-					})
+					// toast.success('Music successfully retrieved.', {
+					// 	position: 'top-right',
+					// 	autoClose: 1500,
+					// 	hideProgressBar: false,
+					// 	closeOnClick: true,
+					// 	pauseOnHover: true,
+					// 	draggable: true,
+					// 	progress: undefined,
+					// 	theme: 'dark',
+					// })
 
 					const storedLinkValue = JSON.parse(localStorage.getItem('linkvalue'))
 
@@ -45,16 +45,16 @@ export default function MusicPlayer() {
 				}
 			})
 			.catch(error => {
-				toast.error('An error occurred while fetching data.', {
-					position: 'top-right',
-					autoClose: 1500,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					progress: undefined,
-					theme: 'dark',
-				})
+				// toast.error('An error occurred while fetching data.', {
+				// 	position: 'top-right',
+				// 	autoClose: 1500,
+				// 	hideProgressBar: false,
+				// 	closeOnClick: true,
+				// 	pauseOnHover: true,
+				// 	draggable: true,
+				// 	progress: undefined,
+				// 	theme: 'dark',
+				// })
 			})
 
 		fetch('/api/thumbnail/modifythumbnail')
@@ -62,29 +62,29 @@ export default function MusicPlayer() {
 			.then(newthumbnail => {
 				if (newthumbnail && newthumbnail.length > 0) {
 					setIsThumbnail(newthumbnail[0].ThumbnailImage)
-					toast.success('New Thumbnail added!', {
-						position: 'top-right',
-						autoClose: 1500,
-						hideProgressBar: false,
-						closeOnClick: true,
-						pauseOnHover: true,
-						draggable: true,
-						progress: undefined,
-						theme: 'dark',
-					})
+					// toast.success('New Thumbnail added!', {
+					// 	position: 'top-right',
+					// 	autoClose: 1500,
+					// 	hideProgressBar: false,
+					// 	closeOnClick: true,
+					// 	pauseOnHover: true,
+					// 	draggable: true,
+					// 	progress: undefined,
+					// 	theme: 'dark',
+					// })
 				}
 			})
 			.catch(error => {
-				toast.error(error.message, {
-					position: 'top-right',
-					autoClose: 1500,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					progress: undefined,
-					theme: 'dark',
-				})
+				// toast.error(error.message, {
+				// 	position: 'top-right',
+				// 	autoClose: 1500,
+				// 	hideProgressBar: false,
+				// 	closeOnClick: true,
+				// 	pauseOnHover: true,
+				// 	draggable: true,
+				// 	progress: undefined,
+				// 	theme: 'dark',
+				// })
 			})
 
 		const storedIndex = localStorage.getItem('currentVideoIndex')

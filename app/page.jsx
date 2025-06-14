@@ -251,7 +251,7 @@ const CustomRadioPlayer = () => {
 };
 
 const RootPage = () => {
-  const [clickSteps, setClickSteps] = useState(0);
+  const [clickSteps, setClickSteps] = useState(3); // Start with Q World Studios (index 3)
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [direction, setDirection] = useState("forward");
   const [touchStart, setTouchStart] = useState(null);
@@ -595,6 +595,8 @@ const RootPage = () => {
       document.head.appendChild(style);
     }
   }, []);
+
+  
   return (
     <div className="w-full overflow-y-scroll min-h-screen h-full relative">
       {/* Scroll arrows */}
@@ -683,12 +685,13 @@ const RootPage = () => {
                 "absolute w-full transition-all duration-500 ease-in-out",
                 clickSteps === 0
                   ? "opacity-100 translate-x-0"
+                  : clickSteps < 0
+                  ? "opacity-0 -translate-x-full"
                   : "opacity-0 translate-x-full"
               )}
             >
-              {planetQStore}
+              {planetQVideo}
             </div>
-
             <div
               className={cn(
                 "absolute w-full transition-all duration-500 ease-in-out",
@@ -739,8 +742,18 @@ const RootPage = () => {
             >
               {studioCard}
             </div>
-
             <div
+              className={cn(
+                "absolute w-full transition-all duration-500 ease-in-out",
+                clickSteps === 5
+                  ? "opacity-100 translate-x-0"
+                  : "opacity-0 translate-x-full"
+              )}
+            >
+              {planetQStore}
+            </div>
+
+            {/* <div
               className={cn(
                 "absolute w-full transition-all duration-500 ease-in-out",
                 clickSteps === 5
@@ -751,7 +764,7 @@ const RootPage = () => {
               )}
             >
               {planetQVideo}
-            </div>
+            </div> */}
 
             <div
               className={cn(
@@ -767,14 +780,16 @@ const RootPage = () => {
             </div>
 
             {/* Spacer div to maintain container height */}
+          
             <div
               className={cn(
                 "w-full opacity-0 pointer-events-none",
                 clickSteps === 0 ? "block" : "hidden"
               )}
             >
-              {planetQStore}
+              {planetQVideo}
             </div>
+            
             <div
               className={cn(
                 "w-full opacity-0 pointer-events-none",
@@ -814,7 +829,7 @@ const RootPage = () => {
                 clickSteps === 5 ? "block" : "hidden"
               )}
             >
-              {planetQVideo}
+              {planetQStore}
             </div>
             <div
               className={cn(
