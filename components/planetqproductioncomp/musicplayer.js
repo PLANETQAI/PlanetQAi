@@ -107,7 +107,7 @@ export default function MusicPlayer() {
 
 	const handleVideoEnd = () => {
 		const totalVideos = isVideoLink.length
-		const lastPlayedSongs = [] // Store the last two played songs
+		const lastPlayedSongs = [] 
 
 		let randomIndex = Math.floor(Math.random() * totalVideos)
 
