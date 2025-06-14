@@ -181,7 +181,6 @@ export default function Studio({ session }) {
 						onClose={() => setShowCreditPurchaseModal(false)}
 						creditsNeeded={0}
 						onSuccess={() => {
-							// Refresh user credits after successful purchase
 							fetchUserCredits()
 						}}
 					/>

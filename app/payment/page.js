@@ -1,495 +1,255 @@
-"use client";
+'use client'
 
-import React, { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { loadStripe } from "@stripe/stripe-js";
-import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import {
-  CheckCircle,
-  Users,
-  Zap,
-  Music,
-  CreditCard,
-  AlertCircle,
-} from "lucide-react";
-import { cn } from "@/lib/utils";
+import React, { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { Zap, Package, CheckCircle, Loader2 } from 'lucide-react'
+import { Button } from '@/components/ui/button'
 
-// Load Stripe outside of component render to avoid recreating Stripe object on each render
-// Use null-check to avoid 'match' error in SSR context
-let stripePromise;
-if (typeof window !== 'undefined' && process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY) {
-  stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-}
+export default function PaymentPage() {
+  const router = useRouter()
+  const [selectedPackage, setSelectedPackage] = useState(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState(null)
+  const [packages, setPackages] = useState([
+    { id: "prod_SQkShxszzVfSea", name: "Small Pack", credits: 100, price: 5 },
+    { id: "prod_SQkSMOMbFVZIqD", name: "Medium Pack", credits: 300, price: 12 },
+    { id: "prod_SQkSemW9YYNuto", name: "Large Pack", credits: 700, price: 25 },
+    { id: "prod_SQkSmmaeLkOgSY", name: "Extra Large Pack", credits: 1500, price: 45 },
+  ])
+  const [isClient, setIsClient] = useState(false)
 
-// CSS classes for animations are defined in global.css
-
-const SubscriptionPlans = () => {
-  const { data: session, status } = useSession();
-  const router = useRouter();
-  const [loading, setLoading] = useState(false);
-  const [loadingPlanId, setLoadingPlanId] = useState(null);
-  const [userSubscription, setUserSubscription] = useState(null);
-  const [error, setError] = useState(null);
-
-  // Fetch user subscription on component mount
+  // Set client-side rendering
   useEffect(() => {
-    const fetchUserSubscription = async () => {
-      try {
-        if (session?.user) {
-          const subRes = await fetch("/api/subscriptions/plans", {
-            method: "GET",
-            headers: { 
-              "Content-Type": "application/json"
-            },
-            cache: "no-store" // Ensure fresh data
-          });
-          
-          if (!subRes.ok) {
-            throw new Error(`Failed to load subscription data: ${subRes.status}`);
-          }
-          
-          const subData = await subRes.json();
-          // Set the userSubscription to the userSubscription property from the response
-          // If userSubscription is null, set it to an empty object to avoid null reference errors
-          setUserSubscription(subData.userSubscription || {});
-        }
-      } catch (err) {
-        console.error("Error fetching subscription data:", err);
-        setError("Failed to load subscription information");
-      }
-    };
+    setIsClient(true)
+    fetchCreditPackages()
+  }, [])
 
-    if (status !== "loading") {
-      fetchUserSubscription();
-    }
-  }, [session, status]);
-
-  // Direct test function to open Stripe checkout
-  const testStripeCheckout = async () => {
+  const fetchCreditPackages = async () => {
     try {
-      console.log('Testing direct Stripe checkout');
+      // Check if user is authenticated
+      const sessionResponse = await fetch('/api/auth/session')
+      const sessionData = await sessionResponse.json()
       
-      const response = await fetch("/api/credits/purchase", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ 
-          amount: 10
-        }),
-      });
+      // If not authenticated, redirect to login page
+      if (!sessionData || !sessionData.user) {
+        window.location.href = '/login?redirectTo=' + encodeURIComponent('/payment')
+        return
+      }
       
-      console.log('API response status:', response.status);
+      // Fetch credit packages with the authenticated session
+      const response = await fetch('/api/credits-api', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
       
       if (!response.ok) {
-        throw new Error('Failed to create checkout session');
+        if (response.status === 401) {
+          window.location.href = '/login?redirectTo=' + encodeURIComponent('/payment')
+          return
+        }
+        throw new Error(`Failed to fetch credit packages: ${response.status} ${response.statusText}`)
       }
       
-      const data = await response.json();
-      console.log('Checkout data:', data);
-      
-      if (data.url) {
-        console.log('Opening URL:', data.url);
-        window.open(data.url, '_blank');
-      } else {
-        throw new Error('No checkout URL returned');
+      const data = await response.json()
+      if (data.packages && data.packages.length > 0) {
+        setPackages(data.packages)
+        setSelectedPackage(data.packages[0].id) // Select first package by default
       }
     } catch (error) {
-      console.error('Test checkout error:', error);
-      alert('Error: ' + error.message);
+      console.error('Error fetching credit packages:', error)
+      setError(error.message || 'Failed to load credit packages')
     }
-  };
+  }
 
-  // Handle subscription checkout using the credits purchase API
-  const handleSubscribe = async (packageId) => {
-    console.log('handleSubscribe called with packageId:', packageId);
-    if (!session) {
-      // Redirect to login if not authenticated
-      router.push(`/login?redirect=${encodeURIComponent("/payment")}`);
-      return;
-    }
-
-    // Don't allow subscribing to the current plan
-    const selectedPlan = displayPlans.find(plan => plan.id === packageId || plan.packageId === packageId);
-    if (selectedPlan && isCurrentPlan(selectedPlan.title)) {
-      setError("You are already subscribed to this plan.");
-      return;
-    }
-
-    setLoading(true);
-    setLoadingPlanId(packageId);
-    setError(null);
-
+  const handlePurchase = async () => {
+    if (!selectedPackage) return
+    
+    setLoading(true)
+    setError(null)
+    
     try {
-      // Find the selected plan by packageId
-      console.log('Selected plan:', selectedPlan);
+      // Check if user is authenticated
+      const sessionResponse = await fetch('/api/auth/session')
+      const sessionData = await sessionResponse.json()
       
-      if (!selectedPlan) {
-        throw new Error("Invalid plan selected");
+      // If not authenticated, redirect to login page
+      if (!sessionData || !sessionData.user) {
+        window.location.href = '/login?redirectTo=' + encodeURIComponent('/payment')
+        return
       }
-
-      // If it's the free plan, show a message that it's automatically provided on signup
-      if (packageId === "free-plan") {
-        setError("The free plan with 400 credits is automatically provided when you sign up. No purchase needed.");
-        setLoading(false);
-        setLoadingPlanId(null);
-        return;
-      }
-
-      // Create checkout session
-      try {
-        console.log('Creating checkout session for plan:', selectedPlan.title);
-        
-        // Use the credits purchase API to handle subscription checkout
-        // Make sure we're sending the correct packageId that matches what's in the API
-        const actualPackageId = selectedPlan.packageId || selectedPlan.id;
-        
-        const response = await fetch("/api/credits/purchase", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ 
-            packageId: actualPackageId,
-            planTitle: selectedPlan.title
-          }),
-        });
-        
-        console.log('API response status:', response.status);
-        
-        if (!response.ok) {
-          const errorText = await response.text();
-          console.error('Error response text:', errorText);
-          
-          let errorData;
-          try {
-            errorData = JSON.parse(errorText);
-          } catch (e) {
-            throw new Error(`Failed to parse error response: ${errorText}`);
-          }
-          
-          throw new Error(errorData.error || "Failed to initiate subscription");
+      
+      // Process purchase with the authenticated session
+      const response = await fetch('/api/credits-api', {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          packageId: selectedPackage,
+        }),
+      })
+      
+      const data = await response.json()
+      
+      if (!response.ok) {
+        if (response.status === 401) {
+          window.location.href = '/login?redirectTo=' + encodeURIComponent('/payment')
+          return
         }
-
-        const responseData = await response.json();
-        console.log('API response data:', responseData);
-        
-        // Get checkout URL from response
-        const { url } = responseData;
-        
-        if (!url) {
-          throw new Error("No checkout URL returned from the server");
-        }
-        
-        setLoading(false);
-        setLoadingPlanId(null);
-        
-        // Open in a new tab
-        console.log('Opening URL in new tab:', url);
-        window.open(url, '_blank');
-      } catch (fetchError) {
-        console.error('Fetch error during subscription purchase:', fetchError);
-        throw fetchError;
+        throw new Error(data.error || 'Failed to create checkout session')
       }
-    } catch (err) {
-      console.error("Subscription error:", err);
-      setError(err.message || "Failed to initiate subscription process");
+      
+      // Redirect to Stripe checkout
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+      
+      // Handle direct success (should not happen with Stripe integration)
+      if (data.success) {
+        router.push('/dashboard?purchase=success')
+      }
+    } catch (error) {
+      console.error('Purchase error:', error)
+      setError(error.message || 'Failed to process purchase')
     } finally {
-      setLoading(false);
-      setLoadingPlanId(null);
+      setLoading(false)
     }
-  };
+  }
 
-  // Determine if user is already subscribed to a plan
-  const isCurrentPlan = (planTitle) => {
+  const getPackageById = (id) => {
+    return packages.find(pkg => pkg.id === id) || null
+  }
+
+  if (!isClient) {
     return (
-      userSubscription && 
-      userSubscription.planName && 
-      userSubscription.planName.toLowerCase() === planTitle.toLowerCase() &&
-      (!userSubscription.status || userSubscription.status === "Active")
-    );
-  };
-
-  // Predefined subscription plans
-  // Define subscription plans with details
-  const displayPlans = [
-          {
-            id: "free-plan",
-            title: "Free Plan",
-            description: "Try Before You Buy",
-            price: "$0",
-            frequency: "/month",
-            features: [
-              "400 credits (5 songs)",
-              "Credits available upon signup",
-              "Standard audio quality",
-              "Basic usage rights",
-              "Explore the platform"
-            ],
-            buttonText: "Start Free Trial",
-            buttonVariant: "outline",
-            buttonClassName:
-              "bg-transparent text-white border-white/20 hover:bg-white/10 hover:border-white/30",
-            mostPopular: false,
-            packageId: "free-plan"
-          },
-          {
-            id: "starter-plan",
-            title: "Starter Plan",
-            description: "Great for Beginners",
-            price: "$10",
-            frequency: "/month",
-            features: [
-              "20,000 credits (250 songs)",
-              "Credits refresh monthly",
-              "Standard audio quality",
-              "Commercial usage rights",
-              "Ideal for independent artists"
-            ],
-            buttonText: "Get Started",
-            buttonVariant: "default",
-            buttonClassName:
-              "bg-gradient-to-r from-green-500 to-teal-500 text-white hover:from-green-600 hover:to-teal-600",
-            mostPopular: false,
-            packageId: "prod_SQkSzKD1bvmB7e"
-          },
-          {
-            id: "pro-plan",
-            title: "Pro Plan",
-            description: "For Serious Creators",
-            price: "$20",
-            frequency: "/month",
-            features: [
-              "40,000 credits (500 songs)",
-              "Credits refresh monthly",
-              "High audio quality",
-              "Commercial usage rights",
-              "Priority access",
-              "Perfect for content creators"
-            ],
-            buttonText: "Upgrade to Pro",
-            buttonVariant: "default",
-            buttonClassName:
-              "bg-gradient-to-r from-purple-500 to-blue-500 text-white hover:from-purple-600 hover:to-blue-600",
-            mostPopular: true,
-            packageId: "prod_SQkSDQBT6vs18R"
-          },
-          {
-            id: "premium-plan",
-            title: "Premium Plan",
-            description: "Studio-Level Access",
-            price: "$30",
-            frequency: "/month",
-            features: [
-              "80,000 credits (1,000 songs)",
-              "Credits refresh monthly",
-              "Highest audio quality",
-              "Full commercial usage rights",
-              "Priority support",
-              "Best value per song"
-            ],
-            buttonText: "Go Premium",
-            buttonVariant: "default",
-            buttonClassName:
-              "bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:from-pink-600 hover:to-rose-600",
-            mostPopular: false,
-            packageId: "prod_SQkSPecauChp8L"
-          },
-        ];
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-b from-slate-900 to-slate-800">
+        <div className="text-center">
+          <Loader2 className="h-12 w-12 animate-spin text-white mx-auto mb-4" />
+          <p className="text-white">Loading payment options...</p>
+        </div>
+      </div>
+    )
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black p-4 md:p-8">
-      {/* Debug Test Button */}
-      {/* <div className="max-w-7xl mx-auto mb-4">
-        <Button 
-          onClick={testStripeCheckout}
-          className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-md"
-        >
-          Test Credit Purchase API
-        </Button>
-      </div> */}
-      
-      <div className="max-w-7xl mx-auto space-y-12">
-        {/* Title and Description */}
-        <div className="text-center space-y-4">
-          <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-white to-purple-400">
-            Subscription Plans
-          </h1>
-          <p className="text-gray-400 text-lg sm:text-xl max-w-2xl mx-auto">
-            Choose the plan that&apos;s right for you. Start with our free credits, or
-            subscribe to generate more music with our premium plans.
+    <div className="min-h-screen bg-gradient-to-b from-slate-800 to-slate-900 text-white p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <div className="text-center mb-12">
+          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-purple-900/50 mb-6">
+            <Zap className="h-8 w-8 text-yellow-400" />
+          </div>
+          <h1 className="text-4xl font-bold mb-3">Purchase Credits</h1>
+          <p className="text-lg text-gray-300 max-w-2xl mx-auto">
+            Get more credits to continue generating amazing music. Choose a package that fits your needs.
           </p>
         </div>
+
         {error && (
-          <div className="bg-red-500/20 border border-red-500/50 text-red-100 rounded-lg p-4 max-w-lg mx-auto flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 mt-0.5 flex-shrink-0" />
-            <p>{error}</p>
+          <div className="bg-red-900/50 border border-red-700 text-red-100 px-4 py-3 rounded-lg mb-8 max-w-2xl mx-auto">
+            {error}
           </div>
         )}
-      </div>
-
-      {/* Current subscription notice */}
-      {userSubscription && userSubscription.status === "Active" && (
-        <div className="bg-purple-500/20 border border-purple-500 rounded-lg p-4 max-w-2xl mx-auto">
-          <div className="flex items-center gap-2 text-purple-300">
-            <CreditCard size={20} />
-            <p>
-              You&apos;re currently on the{" "}
-              <span className="font-bold">{userSubscription.planName}</span>{" "}
-              plan.
-              {userSubscription.cancelAtPeriodEnd
-                ? ` Your subscription will end on ${new Date(
-                    userSubscription.currentPeriodEnd
-                  ).toLocaleDateString()}.`
-                : ` Renews on ${new Date(
-                    userSubscription.currentPeriodEnd
-                  ).toLocaleDateString()}.`}
-            </p>
-          </div>
-        </div>
-      )}
-
-      {/* Pricing Cards Container */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 fade-in">
-        {displayPlans && displayPlans.map((plan, index) => (
-          <div
-            key={index}
-            className={cn(
-              "fade-in-up",
-              "bg-white/5 backdrop-blur-lg rounded-xl p-6 sm:p-8 shadow-2xl border border-white/10",
-              "transition-all duration-300 hover:scale-[1.02] hover:shadow-purple-500/20",
-              plan.mostPopular && "border-purple-500/30 shadow-purple-500/20",
-              isCurrentPlan(plan.title) &&
-                "border-green-500/30 shadow-green-500/20",
-              "space-y-6"
-            )}
-          >
-            {/* Most Popular Label */}
-            {plan.mostPopular && (
-              <div className="text-center">
-                <span className="bg-gradient-to-r from-purple-500 to-blue-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center justify-center gap-2">
-                  <Zap className="w-4 h-4" />
-                  Most Popular
-                </span>
-              </div>
-            )}
-
-            {/* Current Plan Label */}
-            {isCurrentPlan(plan.title) && (
-              <div className="text-center">
-                <span className="bg-gradient-to-r from-green-500 to-teal-500 text-white px-3 py-1 rounded-full text-sm font-semibold flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  Current Plan
-                </span>
-              </div>
-            )}
-
-            {/* Title, Price, and Description */}
-            <div className="text-center space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white">
-                {plan.title}
-              </h2>
-              <div className="flex items-center justify-center gap-2">
-                <span className="text-4xl sm:text-5xl font-extrabold text-white">
-                  {plan.price}
-                </span>
-                <span className="text-gray-400 text-lg sm:text-xl">
-                  {plan.frequency}
-                </span>
-              </div>
-              <p className="text-gray-300 text-sm sm:text-base">
-                {plan.description}
-              </p>
-            </div>
-
-            {/* Features List */}
-            <div className="space-y-3">
-              {plan.features.map((feature, i) => {
-                const isCreditFeature = feature.includes("credits");
-                let FeatureIcon = CheckCircle;
-                if (isCreditFeature) {
-                  FeatureIcon = Users;
-                } else if (feature.includes("audio")) {
-                  FeatureIcon = Music;
-                }
-                return (
-                  <div key={i} className="flex items-center gap-3">
-                    <FeatureIcon
-                      className="w-5 h-5"
-                      style={{
-                        color: isCreditFeature ? "#3b82f6" : "#22c55e",
-                      }}
-                    />
-                    <span className="text-gray-200 text-sm sm:text-base">
-                      {feature}
-                    </span>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Call to Action Button */}
-            <Button
-              variant={isCurrentPlan(plan.title) ? "outline" : plan.buttonVariant}
-              className={cn(
-                "w-full py-3 sm:py-4 text-sm sm:text-base font-semibold",
-                isCurrentPlan(plan.title) ? "bg-green-500/20 border-green-500/30 text-white" : plan.buttonClassName,
-                "transition-all duration-300",
-                "shadow-lg"
-              )}
-              disabled={isCurrentPlan(plan.title) || loading || (plan.packageId === "free-plan" && userSubscription?.planName)}
-              onClick={() => handleSubscribe(plan.packageId)}
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          {packages.map((pkg) => (
+            <div 
+              key={pkg.id}
+              className={`p-6 rounded-xl border transition-all cursor-pointer ${
+                selectedPackage === pkg.id 
+                  ? 'bg-purple-900/50 border-purple-500 transform scale-[1.02] shadow-lg shadow-purple-900/30' 
+                  : 'bg-slate-700/30 border-slate-600 hover:border-slate-500 hover:bg-slate-700/50'
+              }`}
+              onClick={() => setSelectedPackage(pkg.id)}
             >
-              {loading && loadingPlanId === plan.packageId ? (
-                <div className="flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-                  <span>Processing...</span>
+              <div className="flex flex-col h-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <Package className={`h-6 w-6 ${
+                    selectedPackage === pkg.id ? 'text-purple-400' : 'text-gray-400'
+                  }`} />
+                  <h3 className="text-xl font-semibold">{pkg.name}</h3>
                 </div>
-              ) : isCurrentPlan(plan.title) ? (
-                <div className="flex items-center justify-center gap-2">
-                  <CheckCircle className="w-4 h-4" />
-                  <span>Current Plan</span>
+                <div className="mb-6">
+                  <p className="text-3xl font-bold mb-2">${pkg.price}</p>
+                  <p className="text-sm text-gray-300">{pkg.credits} credits</p>
                 </div>
-              ) : plan.packageId === "free-plan" && userSubscription?.planName ? (
-                "Downgrade Not Available"
-              ) : (
-                plan.buttonText || "Subscribe"
-              )}
-            </Button>
-          </div>
-        ))}
-      </div>
+                <div className="mt-auto">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-300">
+                      ${(pkg.price / pkg.credits).toFixed(3)} per credit
+                    </span>
+                    {selectedPackage === pkg.id && (
+                      <CheckCircle className="text-purple-400" size={20} />
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
 
-      {/* Credits Usage Information */}
-      <div className="bg-white/5 backdrop-blur-lg rounded-xl p-6 sm:p-8 shadow-2xl border border-white/10 max-w-3xl mx-auto mt-12">
-        <h3 className="text-2xl font-semibold text-white mb-4">
-          How Credits Work
-        </h3>
-        <div className="space-y-4 text-gray-300">
-          <p>
-            Credits are used to generate songs with our AI system. Our plans are designed to give you the best value:
+        <div className="max-w-2xl mx-auto text-center">
+          <Button 
+            onClick={handlePurchase}
+            disabled={loading || !selectedPackage}
+            className={`w-full max-w-md py-6 text-lg font-semibold ${
+              loading ? 'opacity-75' : ''
+            }`}
+          >
+            {loading ? (
+              <>
+                <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                Processing...
+              </>
+            ) : (
+              `Buy ${getPackageById(selectedPackage)?.name || 'Package'}`
+            )}
+          </Button>
+          
+          <p className="mt-4 text-sm text-gray-400">
+            Secure payment processed by Stripe. Your payment information is encrypted.
           </p>
-          <ul className="list-disc list-inside space-y-2 ml-4">
-            <li>
-              On average, each song requires about 80 credits to generate
-            </li>
-            <li>
-              New users automatically receive 400 credits (approximately 5 songs)
-            </li>
-            <li>
-              Our subscription plans provide monthly credits that refresh automatically
-            </li>
-            <li>
-              Higher tier plans offer better value per song and additional features
-            </li>
-            <li>
-              You can purchase additional credits anytime if you need more
-            </li>
-          </ul>
-          <p>
-            Your credit balance is visible in the top navigation bar, where you can also purchase more credits as needed.
-          </p>
+        </div>
+
+        <div className="mt-16 max-w-3xl mx-auto bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+          <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Zap className="text-yellow-400" /> How It Works
+          </h3>
+          <div className="grid gap-4">
+            <div className="flex items-start gap-3">
+              <div className="bg-purple-900/50 rounded-full p-1.5 mt-0.5">
+                <CheckCircle className="h-4 w-4 text-purple-300" />
+              </div>
+              <div>
+                <h4 className="font-medium">Instant Delivery</h4>
+                <p className="text-sm text-gray-400">Credits are added to your account immediately after payment.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="bg-purple-900/50 rounded-full p-1.5 mt-0.5">
+                <CheckCircle className="h-4 w-4 text-purple-300" />
+              </div>
+              <div>
+                <h4 className="font-medium">No Subscription</h4>
+                <p className="text-sm text-gray-400">Pay as you go with no recurring charges or commitments.</p>
+              </div>
+            </div>
+            <div className="flex items-start gap-3">
+              <div className="bg-purple-900/50 rounded-full p-1.5 mt-0.5">
+                <CheckCircle className="h-4 w-4 text-purple-300" />
+              </div>
+              <div>
+                <h4 className="font-medium">Secure Payment</h4>
+                <p className="text-sm text-gray-400">All transactions are encrypted and securely processed by Stripe.</p>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
-  );
-};
-
-export default SubscriptionPlans;
+  )
+}

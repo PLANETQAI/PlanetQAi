@@ -46,6 +46,98 @@
 	--color-sidebar-ring: var(--sidebar-ring);
 }
 
+/* Hide scrollbars but keep scrolling functionality */
+::-webkit-scrollbar {
+	display: none;
+}
+
+/* Hide scrollbars for Firefox */
+html, body {
+	scroll-behavior: smooth;
+	scrollbar-width: none;
+}
+
+/* Hide scrollbars for IE and Edge */
+* {
+	-ms-overflow-style: none;
+}
+
+/* Scroll arrow button styles */
+.scroll-arrow {
+	position: fixed;
+	right: 20px;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	z-index: 100;
+	transition: all 0.3s ease;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.scroll-arrow:hover {
+	background: rgba(0, 0, 0, 0.8);
+	border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.scroll-arrow-up {
+	top: 20px;
+}
+
+.scroll-arrow-down {
+	bottom: 20px;
+}
+
+/* Hide scrollbars but keep scrolling functionality */
+::-webkit-scrollbar {
+	display: none;
+}
+
+/* Hide scrollbars for Firefox */
+html, body {
+	scroll-behavior: smooth;
+	scrollbar-width: none;
+}
+
+/* Hide scrollbars for IE and Edge */
+* {
+	-ms-overflow-style: none;
+}
+
+/* Scroll arrow button styles */
+.scroll-arrow {
+	position: fixed;
+	right: 20px;
+	width: 40px;
+	height: 40px;
+	border-radius: 50%;
+	background: rgba(0, 0, 0, 0.5);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	cursor: pointer;
+	z-index: 100;
+	transition: all 0.3s ease;
+	border: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.scroll-arrow:hover {
+	background: rgba(0, 0, 0, 0.8);
+	border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.scroll-arrow-up {
+	top: 20px;
+}
+
+.scroll-arrow-down {
+	bottom: 20px;
+}
+
 :root {
 	--radius: 0.625rem;
 	--background: oklch(1 0 0);
