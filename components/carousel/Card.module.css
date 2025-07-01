@@ -1,0 +1,109 @@
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background-color: #1a1a2e;
+  border-radius: 15px;
+  cursor: pointer;
+  overflow: hidden;
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+  padding: 0;
+  margin: 0 10px;
+}
+
+.card .imageContainer {
+  position: relative;
+  width: 100%;
+  padding-top: 56.25%; /* 16:9 Aspect Ratio */
+  overflow: hidden;
+  background: #000;
+}
+
+.card img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.card:hover img {
+  transform: scale(1.05);
+}
+
+.card .playOverlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 20px;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.card:hover .playOverlay {
+  opacity: 1;
+}
+
+.card .playIcon {
+  color: white;
+  font-size: 60px;
+  width: 60px;
+  height: 60px;
+}
+
+.card h2 {
+  margin: 1rem 1rem 0.5rem;
+  color: #fff;
+  font-family: "Kavoon", sans-serif;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.card p {
+  font-family: sans-serif;
+  padding: 0 1rem;
+  color: #a0a0a0;
+  font-weight: 200;
+  text-align: center;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  margin: 0 0 1rem;
+  line-height: 1.4;
+  flex-grow: 1;
+}
+
+.card .btnn {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 1rem 1rem;
+  gap: 0.5rem;
+}
+
+.btnn button {
+  flex: 1;
+  padding: 0.5rem;
+  font-size: 0.9rem;
+  text-align: center;
+  transition: all 0.3s ease;
+}
+
+.btnn button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}

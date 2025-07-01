@@ -6,7 +6,7 @@ import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import classes from './musicplayer.module.css'
 
-export default function MusicPlayer() {
+export default function MusicPlayer({ initialVideoLink }) {
 	const [isVideoLink, setIsVideoLink] = useState([])
 	const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
 	const [isThumbnail, setIsThumbnail] = useState('')
@@ -14,77 +14,39 @@ export default function MusicPlayer() {
 	const playerRef = useRef(null)
 
 	useEffect(() => {
-		fetch('/api/link/getlink')
-			.then(response => response.json())
-			.then(links => {
-				const shuffledLinks = shuffleArray(links)
-				setIsVideoLink(shuffledLinks)
-				// console.log(shuffledLinks)
-				if (links && links.length > 0) {
-					// toast.success('Music successfully retrieved.', {
-					// 	position: 'top-right',
-					// 	autoClose: 1500,
-					// 	hideProgressBar: false,
-					// 	closeOnClick: true,
-					// 	pauseOnHover: true,
-					// 	draggable: true,
-					// 	progress: undefined,
-					// 	theme: 'dark',
-					// })
+		if (!initialVideoLink) {
+			fetch('/api/link/getlink')
+				.then(response => response.json())
+				.then(links => {
+					const shuffledLinks = shuffleArray(links)
+					setIsVideoLink(shuffledLinks)
+					if (links && links.length > 0) {
+						const storedLinkValue = JSON.parse(localStorage.getItem('linkvalue'))
 
-					const storedLinkValue = JSON.parse(localStorage.getItem('linkvalue'))
+						if (storedLinkValue) {
+							const foundIndex = shuffledLinks.findIndex(item => item.videoLink === storedLinkValue.videoLink)
 
-					if (storedLinkValue) {
-						const foundIndex = shuffledLinks.findIndex(item => item.videoLink === storedLinkValue.videoLink)
-
-						if (foundIndex !== -1) {
-							setCurrentVideoIndex(foundIndex)
-							return
+							if (foundIndex !== -1) {
+								setCurrentVideoIndex(foundIndex)
+								return
+							}
 						}
 					}
-				}
-			})
-			.catch(error => {
-				// toast.error('An error occurred while fetching data.', {
-				// 	position: 'top-right',
-				// 	autoClose: 1500,
-				// 	hideProgressBar: false,
-				// 	closeOnClick: true,
-				// 	pauseOnHover: true,
-				// 	draggable: true,
-				// 	progress: undefined,
-				// 	theme: 'dark',
-				// })
-			})
+				})
+				.catch(error => {
+					console.error('Error fetching links:', error)
+				})
+		}
 
 		fetch('/api/thumbnail/modifythumbnail')
 			.then(response => response.json())
 			.then(newthumbnail => {
 				if (newthumbnail && newthumbnail.length > 0) {
 					setIsThumbnail(newthumbnail[0].ThumbnailImage)
-					// toast.success('New Thumbnail added!', {
-					// 	position: 'top-right',
-					// 	autoClose: 1500,
-					// 	hideProgressBar: false,
-					// 	closeOnClick: true,
-					// 	pauseOnHover: true,
-					// 	draggable: true,
-					// 	progress: undefined,
-					// 	theme: 'dark',
-					// })
 				}
 			})
 			.catch(error => {
-				// toast.error(error.message, {
-				// 	position: 'top-right',
-				// 	autoClose: 1500,
-				// 	hideProgressBar: false,
-				// 	closeOnClick: true,
-				// 	pauseOnHover: true,
-				// 	draggable: true,
-				// 	progress: undefined,
-				// 	theme: 'dark',
-				// })
+				console.error('Error fetching thumbnail:', error)
 			})
 
 		const storedIndex = localStorage.getItem('currentVideoIndex')
@@ -94,7 +56,7 @@ export default function MusicPlayer() {
 		} else {
 			setCurrentVideoIndex(0)
 		}
-	}, [])
+	}, [initialVideoLink]) // Add initialVideoLink to dependency array
 
 	const shuffleArray = array => {
 		const shuffledArray = [...array]
@@ -106,24 +68,27 @@ export default function MusicPlayer() {
 	}
 
 	const handleVideoEnd = () => {
-		const totalVideos = isVideoLink.length
-		const lastPlayedSongs = [] 
+		// Only advance to next video if not using initialVideoLink
+		if (!initialVideoLink) {
+			const totalVideos = isVideoLink.length
+			const lastPlayedSongs = []
 
-		let randomIndex = Math.floor(Math.random() * totalVideos)
+			let randomIndex = Math.floor(Math.random() * totalVideos)
 
-		while (randomIndex === currentVideoIndex || lastPlayedSongs.includes(randomIndex)) {
-			randomIndex = Math.floor(Math.random() * totalVideos)
+			while (randomIndex === currentVideoIndex || lastPlayedSongs.includes(randomIndex)) {
+				randomIndex = Math.floor(Math.random() * totalVideos)
+			}
+
+			lastPlayedSongs.unshift(currentVideoIndex)
+			if (lastPlayedSongs.length > 2) {
+				lastPlayedSongs.pop()
+			}
+
+			setCurrentVideoIndex(randomIndex)
+			localStorage.setItem('currentVideoIndex', randomIndex.toString())
+			const currentValue = isVideoLink[randomIndex]
+			localStorage.setItem('linkvalue', JSON.stringify(currentValue))
 		}
-
-		lastPlayedSongs.unshift(currentVideoIndex)
-		if (lastPlayedSongs.length > 2) {
-			lastPlayedSongs.pop()
-		}
-
-		setCurrentVideoIndex(randomIndex)
-		localStorage.setItem('currentVideoIndex', randomIndex.toString())
-		const currentValue = isVideoLink[randomIndex]
-		localStorage.setItem('linkvalue', JSON.stringify(currentValue))
 	}
 
 	return (
@@ -139,23 +104,14 @@ export default function MusicPlayer() {
       `}
 			</style>
 			<section className="bg-transparent flex gap-2 flex-col justify-center items-center mt-8">
-				{/* <h2 className="animate-text bg-gradient-to-r from-teal-500 via-purple-500 to-orange-500 bg-clip-text text-transparent text-2xl font-black md:text-4xl mb-5">
-					Make A Song About Anything
-				</h2> */}
-
 				<div className="bg-transparent w-full h-auto flex justify-center items-center mb-2">
 					<ReactPlayer
 						ref={playerRef}
 						className="bg-transparent"
-						url={
-							isVideoLink?.length > 0 && isVideoLink[currentVideoIndex]?.videoLink
-								? isVideoLink[currentVideoIndex]?.videoLink
-								: 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
-						}
+						url={initialVideoLink || (isVideoLink?.length > 0 && isVideoLink[currentVideoIndex]?.videoLink) || 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'}
 						light={isThumbnail?.length ? isThumbnail : '/images/client.png'}
-						// onStart={playhandler}
 						pip={true}
-						loop={!isVideoLink?.length > 0}
+						loop={!initialVideoLink && !isVideoLink?.length > 0} // Loop only if not using initialVideoLink and no other videos
 						playing={true}
 						stopOnUnmount={false}
 						playIcon={

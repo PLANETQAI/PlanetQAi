@@ -262,8 +262,15 @@ const RootPage = () => {
   const [initialVideoLink, setInitialVideoLink] = useState(
     "https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG"
   );
-  const [showTime, setShowTime] = useState(false);
+  const [showTime, setShowTime] = useState(true);
 
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowTime(false);
+    }, 5000);
+    
+    return () => clearTimeout(timer);
+  }, []);
   // Scroll to top function
   const scrollToTop = () => {
     window.scrollTo({
@@ -640,7 +647,7 @@ const RootPage = () => {
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
       >
-        {/* <CircleTypeText
+        {/* <CircleTypeTeFTxt
           text={"Play Futuristic Music"}
           className={cn(
             "absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24 left-1/2 -translate-x-[50%]",
@@ -648,10 +655,10 @@ const RootPage = () => {
           )}
         /> */}
         <CircleTypeText
-          text={"Tap Anywhere"}
+          text={"Planet Q Productions"}
           className={cn(
-            "absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24 left-1/2 -translate-x-[50%]",
-            showTime ? "opacity-0" : "opacity-100"
+            "absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24 left-1/2 -translate-x-[50%] transition-opacity duration-500",
+            showTime ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
         />
         {/* Reintroducing the improved stars component */}
