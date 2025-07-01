@@ -1,12 +1,14 @@
-import React, { useRef, useState, useEffect } from 'react'
-import dynamic from 'next/dynamic'
-const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false })
-import Image from 'next/image'
-import { ToastContainer, toast } from 'react-toastify'
-import 'react-toastify/dist/ReactToastify.css'
-import classes from './musicplayer.module.css'
+"use client";
 
-export default function MusicPlayer({ initialVideoLink }) {
+import React, { useRef, useState, useEffect, forwardRef } from 'react';
+import dynamic from 'next/dynamic';
+const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false });
+import Image from 'next/image';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+import classes from './musicplayer.module.css';
+
+const MusicPlayer = forwardRef(({ initialVideoLink }, ref) => {
 	const [isVideoLink, setIsVideoLink] = useState([])
 	const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
 	const [isThumbnail, setIsThumbnail] = useState('')
@@ -92,45 +94,48 @@ export default function MusicPlayer({ initialVideoLink }) {
 	}
 
 	return (
-		<>
-			<ToastContainer className="bg-transparent" autoClose={1500} draggable closeOnClick />
-			<style>
-				{`
+    <div ref={ref}>
+      <ToastContainer className="bg-transparent" autoClose={1500} draggable closeOnClick />
+      <style jsx>{`
         @layer utilities {
           .rotate-custom {
             animation: spin 3s linear infinite;
           }
         }
-      `}
-			</style>
-			<section className="bg-transparent flex gap-2 flex-col justify-center items-center mt-8">
-				<div className="bg-transparent w-full h-auto flex justify-center items-center mb-2">
-					<ReactPlayer
-						ref={playerRef}
-						className="bg-transparent"
-						url={initialVideoLink || (isVideoLink?.length > 0 && isVideoLink[currentVideoIndex]?.videoLink) || 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'}
-						light={isThumbnail?.length ? isThumbnail : '/images/client.png'}
-						pip={true}
-						loop={!initialVideoLink && !isVideoLink?.length > 0} // Loop only if not using initialVideoLink and no other videos
-						playing={true}
-						stopOnUnmount={false}
-						playIcon={
-							<div className={classes.heartbeat}>
-								<Image
-									src="/images/client.png"
-									alt="Your Logo"
-									width={45}
-									height={60}
-									className="bg-transparent w-auto h-auto shadow-2xl opacity-100 transition-transform duration-200 ease-in-out transform-gpu scale-125 hover:scale-100 hover:opacity-95"
-									style={{
-										clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)',
-									}}></Image>
-							</div>
-						}
-						onEnded={handleVideoEnd}
-					/>
-				</div>
-			</section>
-		</>
-	)
-}
+      `}</style>
+      <section className="bg-transparent flex gap-2 flex-col justify-center items-center mt-8">
+        <div className="bg-transparent w-full h-auto flex justify-center items-center mb-2">
+          <ReactPlayer
+            ref={playerRef}
+            className="bg-transparent"
+            url={initialVideoLink || (isVideoLink?.length > 0 && isVideoLink[currentVideoIndex]?.videoLink) || 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'}
+            light={isThumbnail?.length ? isThumbnail : '/images/client.png'}
+            pip={true}
+            loop={!initialVideoLink && !isVideoLink?.length > 0}
+            playing={true}
+            stopOnUnmount={false}
+            playIcon={
+              <div className={classes.heartbeat}>
+                <Image
+                  src="/images/client.png"
+                  alt="Your Logo"
+                  width={45}
+                  height={60}
+                  className="bg-transparent w-auto h-auto shadow-2xl opacity-100 transition-transform duration-200 ease-in-out transform-gpu scale-125 hover:scale-100 hover:opacity-95"
+                  style={{
+                    clipPath: 'polygon(0% 0%, 100% 50%, 0% 100%)',
+                  }}
+                />
+              </div>
+            }
+            onEnded={handleVideoEnd}
+          />
+        </div>
+      </section>
+    </div>
+  );
+});
+
+MusicPlayer.displayName = 'MusicPlayer';
+
+export default MusicPlayer;

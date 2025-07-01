@@ -6,6 +6,7 @@ import "slick-carousel/slick/slick.css";
 import "slick-carousel/slick/slick-theme.css";
 import Link from "next/link";
 import dynamic from "next/dynamic";
+import { useRouter } from "next/navigation";
 
 // Import client-side components
 const PlanetQGamesCard = dynamic(
@@ -23,6 +24,7 @@ import { cn } from "@/lib/utils";
 import StarsWrapper from "@/components/canvas/StarsWrapper";
 import StarsCanvas from "@/components/canvas/RandomStars";
 import MusicPlayer from "@/components/planetqproductioncomp/musicplayer";
+
 
 const CustomRadioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -251,6 +253,7 @@ const CustomRadioPlayer = () => {
 };
 
 const RootPage = () => {
+  const router = useRouter();
   const [clickSteps, setClickSteps] = useState(3); // Start with Q World Studios (index 3)
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [direction, setDirection] = useState("forward");
@@ -374,6 +377,16 @@ const RootPage = () => {
   // Prevent click propagation on interactive elements
   const preventPropagation = (e) => {
     e.stopPropagation();
+  };
+
+  const handlePlaneqgames = (e) => {
+    e.stopPropagation();
+    router.push("/planetqgames");
+  };
+
+  const handlePlaneqvideo = (e) => {
+    e.stopPropagation();
+    router.push("/video-player");
   };
 
   // Define views - these won't be recreated on each render
@@ -575,12 +588,12 @@ const RootPage = () => {
   );
 
   // New PlanetQVideo games card with Coming Soon label
-  const planetQGames = <PlanetQGamesCard onClick={preventPropagation} />;
+  const planetQGames = <PlanetQGamesCard onClick={handlePlaneqgames} />;
 
   // New PlanetQVideo player card
   const planetQVideo = (
-    // <PlanetQVideoCard onClick={preventPropagation} />
-    <MusicPlayer initialVideoLink={initialVideoLink} />
+    <PlanetQVideoCard onClick={handlePlaneqvideo} />
+    // <MusicPlayer initialVideoLink={initialVideoLink} />
   );
 
   // Add CSS for marquee animation if needed

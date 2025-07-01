@@ -60,3 +60,4 @@ next-env.d.ts.env.backup
 query.sql
 text.txt/
 test-openai.js
+package-lock.json

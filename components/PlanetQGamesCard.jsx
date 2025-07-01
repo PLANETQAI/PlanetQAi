@@ -1,10 +1,17 @@
 "use client";
 
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 export default function PlanetQGamesCard({ onClick }) {
+  const router = useRouter();
+  const handleCardClick = (e) => {
+    e.stopPropagation();
+    if (onClick) onClick(e);
+    router.push("/planetqgames");
+  };
   return (
-    <div className="p-1 block" onClick={onClick}>
+    <div className="p-1 block" onClick={handleCardClick}>
       <div
         className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all"
       >
