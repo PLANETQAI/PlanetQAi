@@ -17,8 +17,6 @@ const Carousel = dynamic(
   { ssr: false }
 );
 
-export const dynamic = 'force-dynamic';
-
 export default function CarouselTestPage() {
   // Prevent click propagation for carousel cards
   const preventPropagation = (e) => {

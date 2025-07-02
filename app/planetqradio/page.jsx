@@ -26,8 +26,6 @@ const MusicPlayer = dynamic(
   { ssr: false }
 );
 
-export const dynamic = 'force-dynamic';
-
 const PlanetQRadioPage = () => {
   const [currentRadioStream, setCurrentRadioStream] = useState(null);
 
