@@ -1,6 +1,17 @@
-import Carousel from "react-spring-3d-carousel";
+"use client";
+
+import dynamic from 'next/dynamic';
 import { useState, useEffect, useCallback } from "react";
 import { config } from "react-spring";
+
+// Dynamically import the 3D carousel with SSR disabled
+const DynamicCarousel = dynamic(
+  () => import('react-spring-3d-carousel').then(mod => mod.default),
+  { 
+    ssr: false,
+    loading: () => <div className="w-full h-full flex items-center justify-center">Loading carousel...</div>
+  }
+);
 
 export default function Carroussel(props) {
   const [goToSlide, setGoToSlide] = useState(0);
@@ -50,13 +61,15 @@ export default function Carroussel(props) {
       onWheel={handleScroll} // Add scroll event listener
       className="relative"
     >
-      <Carousel
-        slides={cards}
-        goToSlide={goToSlide}
-        offsetRadius={offsetRadius}
-        showNavigation={showArrows}
-        animationConfig={config.gentle}
-      />
+      {typeof window !== 'undefined' && (
+        <DynamicCarousel
+          slides={cards}
+          goToSlide={goToSlide}
+          offsetRadius={offsetRadius}
+          showNavigation={showArrows}
+          animationConfig={config.gentle}
+        />
+      )}
       {/* Indicators */}
       <div className="absolute bottom-4 left-0 right-0 flex justify-center space-x-2 z-20">
         {cards.map((_, index) => (

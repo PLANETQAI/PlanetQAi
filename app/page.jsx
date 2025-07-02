@@ -268,11 +268,26 @@ const RootPage = () => {
   const [showTime, setShowTime] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setShowTime(false);
-    }, 5000);
+    // Check if we should show the text based on localStorage
+    const lastShown = localStorage.getItem('bannerLastShown');
+    const now = Date.now();
+    const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
     
-    return () => clearTimeout(timer);
+    if (!lastShown || (now - parseInt(lastShown, 10) > FIVE_MINUTES)) {
+      // Either first time or more than 5 minutes have passed
+      setShowTime(true);
+      localStorage.setItem('bannerLastShown', now.toString());
+      
+      // Hide after 5 minutes
+      const timer = setTimeout(() => {
+        setShowTime(false);
+      }, FIVE_MINUTES);
+      
+      return () => clearTimeout(timer);
+    } else {
+      // Less than 5 minutes since last show, don't show
+      setShowTime(false);
+    }
   }, []);
   // Scroll to top function
   const scrollToTop = () => {

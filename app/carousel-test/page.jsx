@@ -1,11 +1,23 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import { v4 as uuidv4 } from "uuid";
-import Card from "@/components/carousel/Card";
-import Carousel from "@/components/carousel/Carousel";
 import { cn } from "@/lib/utils";
 import Link from "next/link";
 import Image from "next/image";
+
+// Dynamically import components with SSR disabled
+const Card = dynamic(
+  () => import('@/components/carousel/Card'),
+  { ssr: false }
+);
+
+const Carousel = dynamic(
+  () => import('@/components/carousel/Carousel'),
+  { ssr: false }
+);
+
+export const dynamic = 'force-dynamic';
 
 export default function CarouselTestPage() {
   // Prevent click propagation for carousel cards

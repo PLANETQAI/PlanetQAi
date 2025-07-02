@@ -1,12 +1,32 @@
 "use client";
 
+import dynamic from 'next/dynamic';
 import React, { useState } from 'react';
-import StarsWrapper from '@/components/canvas/StarsWrapper';
 import { v4 as uuidv4 } from "uuid";
-import Card from "@/components/carousel/Card";
-import Carousel from "@/components/carousel/Carousel";
-import MusicPlayer from '@/components/planetqproductioncomp/musicplayer';
 import { useSpring, animated } from 'react-spring';
+
+// Dynamically import components with SSR disabled
+const StarsWrapper = dynamic(
+  () => import('@/components/canvas/StarsWrapper'),
+  { ssr: false, loading: () => <div className="fixed inset-0 bg-black z-0" /> }
+);
+
+const Card = dynamic(
+  () => import('@/components/carousel/Card'),
+  { ssr: false }
+);
+
+const Carousel = dynamic(
+  () => import('@/components/carousel/Carousel'),
+  { ssr: false }
+);
+
+const MusicPlayer = dynamic(
+  () => import('@/components/planetqproductioncomp/musicplayer'),
+  { ssr: false }
+);
+
+export const dynamic = 'force-dynamic';
 
 const PlanetQRadioPage = () => {
   const [currentRadioStream, setCurrentRadioStream] = useState(null);
