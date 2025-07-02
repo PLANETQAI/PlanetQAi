@@ -75,7 +75,7 @@ const PlanetQGamesPage = () => {
           <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl opacity-70 group-hover:opacity-100 blur-xl transition duration-500 group-hover:duration-200"></div>
           <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 p-1 rounded-2xl overflow-hidden">
             <Image
-              src="/images/video-game.webp"
+              src="/images/video-game.jpg"
               alt="Game in Development"
               width={800}
               height={450}

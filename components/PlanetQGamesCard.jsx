@@ -20,7 +20,7 @@ export default function PlanetQGamesCard({ onClick }) {
         </div>
         <div className="relative">
           <Image
-            src="/images/video-game.webp"
+            src="/images/video-game.jpg"
             alt="Planet Q Games"
             width={300}
             height={200}
