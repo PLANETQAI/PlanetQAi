@@ -357,37 +357,82 @@ const RootPage = () => {
 
   // Handle touch events for swipe functionality
   const handleTouchStart = (e) => {
-    setTouchStart(e.targetTouches[0].clientX);
+    // Only prevent default if it's a horizontal swipe
+    if (e.touches.length === 1) {
+      e.preventDefault();
+      setTouchStart(e.touches[0].clientX);
+      setTouchEnd(null); // Reset touch end when a new touch starts
+    }
   };
 
   const handleTouchMove = (e) => {
-    setTouchEnd(e.targetTouches[0].clientX);
+    if (touchStart !== null) {
+      // Only prevent default if we're actually handling a swipe
+      const touch = e.touches[0];
+      const diff = Math.abs(touch.clientX - touchStart);
+      
+      // If the movement is more horizontal than vertical, prevent default
+      if (diff > 10) {
+        e.preventDefault();
+      }
+      
+      setTouchEnd(touch.clientX);
+    }
   };
 
-  const handleTouchEnd = () => {
-    if (!touchStart || !touchEnd || isTransitioning) return;
+  const handleTouchEnd = (e) => {
+    if (!touchStart || touchEnd === null || isTransitioning) {
+      setTouchStart(null);
+      setTouchEnd(null);
+      return;
+    }
 
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;
-    const isRightSwipe = distance < -50;
+    const isLeftSwipe = distance > 50;  // Minimum distance for a swipe
+    const isRightSwipe = distance < -50; // Minimum distance for a swipe
 
-    if (isLeftSwipe && clickSteps < 5) {
-      // Swiped left - go forward
-      setIsTransitioning(true);
-      setDirection("forward");
-      setClickSteps((prev) => prev + 1);
-      setTimeout(() => setIsTransitioning(false), 400);
-    } else if (isRightSwipe && clickSteps > 0) {
-      // Swiped right - go backward
-      setIsTransitioning(true);
-      setDirection("backward");
-      setClickSteps((prev) => prev - 1);
-      setTimeout(() => setIsTransitioning(false), 400);
+    // Only process the swipe if it meets the minimum distance threshold
+    if (Math.abs(distance) > 50) {
+      if (isLeftSwipe && clickSteps < 5) {
+        // Swiped left - go forward
+        e.preventDefault();
+        setIsTransitioning(true);
+        setDirection("forward");
+        setClickSteps((prev) => prev + 1);
+        setTimeout(() => setIsTransitioning(false), 400);
+      } else if (isRightSwipe && clickSteps > 0) {
+        // Swiped right - go backward
+        e.preventDefault();
+        setIsTransitioning(true);
+        setDirection("backward");
+        setClickSteps((prev) => prev - 1);
+        setTimeout(() => setIsTransitioning(false), 400);
+      }
     }
 
     setTouchStart(null);
     setTouchEnd(null);
   };
+  
+  // Add passive: false to prevent default touch behavior
+  useEffect(() => {
+    const carousel = document.querySelector('.carousel-container');
+    if (carousel) {
+      carousel.addEventListener('touchmove', (e) => {
+        if (touchStart !== null) {
+          e.preventDefault();
+        }
+      }, { passive: false });
+      
+      return () => {
+        carousel.removeEventListener('touchmove', (e) => {
+          if (touchStart !== null) {
+            e.preventDefault();
+          }
+        }, { passive: false });
+      };
+    }
+  }, [touchStart]);
 
   // Prevent click propagation on interactive elements
   const preventPropagation = (e) => {
@@ -714,7 +759,22 @@ const RootPage = () => {
             </div>
           )}
 
-          <div className="relative w-full">
+          <div 
+        className="relative w-full carousel-container"
+        onTouchStart={handleTouchStart}
+        onTouchMove={handleTouchMove}
+        onTouchEnd={handleTouchEnd}
+        onClick={handleClickSteps}
+        style={{
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          KhtmlUserSelect: 'none',
+          MozUserSelect: 'none',
+          msUserSelect: 'none'
+        }}
+      >
             <div
               className={cn(
                 "absolute w-full transition-all duration-500 ease-in-out",

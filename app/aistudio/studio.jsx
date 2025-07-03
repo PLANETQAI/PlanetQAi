@@ -129,8 +129,7 @@ export default function Studio({ session }) {
 				<p className="text-center text-gray-300 mb-8">Choose your preferred AI music generator</p>
 
 				<Tabs defaultValue="suno" className="w-full mb-8" onValueChange={setActiveGenerator}>
-					<TabsList className="grid w-full grid-cols-2 mb-6">
-						
+					<TabsList className="grid w-full grid-cols-2 mb-6">			
 					<TabsTrigger value="suno" className="text-lg">
 							<span className="flex items-center gap-2">
 								<span className="h-3 w-3 rounded-full bg-blue-500"></span>
@@ -143,7 +142,6 @@ export default function Studio({ session }) {
 								Q_World Studio
 							</span>
 						</TabsTrigger>
-						
 					</TabsList>
 
 					<TabsContent value="diffrhym" className="mt-0">
