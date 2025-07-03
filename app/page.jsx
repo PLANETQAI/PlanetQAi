@@ -714,16 +714,23 @@ const RootPage = () => {
       </div>
 
       <div
-        className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-scroll"
+        className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-auto"
         onClick={(e) => handleClickSteps(e)}
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
         style={{
-          touchAction: 'pan-y',
+          // Allow vertical scrolling but prevent horizontal scrollbar
+          overflowX: 'hidden',
+          // Prevent iOS rubber band effect
+          overscrollBehaviorY: 'contain',
+          // Enable smooth scrolling on iOS
           WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain',
-          overflowX: 'hidden'
+          // Prevent text selection during swipe
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          // Prevent tap highlight on mobile
+          WebkitTapHighlightColor: 'transparent'
         }}
       >
         {/* <CircleTypeTeFTxt
@@ -774,16 +781,16 @@ const RootPage = () => {
             style={{
               touchAction: 'pan-y',
               WebkitOverflowScrolling: 'touch',
-              overscrollBehavior: 'contain',
               userSelect: 'none',
               WebkitUserSelect: 'none',
-              KhtmlUserSelect: 'none',
-              MozUserSelect: 'none',
-              msUserSelect: 'none',
-              overflow: 'hidden',
+              overflowX: 'hidden',
               width: '100%',
-              height: '100%',
-              position: 'relative'
+              position: 'relative',
+              // Prevent iOS rubber band effect
+              overscrollBehaviorX: 'none',
+              WebkitOverflowScrolling: 'touch',
+              WebkitTouchCallout: 'none',
+              WebkitTapHighlightColor: 'transparent'
             }}
           >
             <div
