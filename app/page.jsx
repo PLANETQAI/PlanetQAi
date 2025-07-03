@@ -719,6 +719,12 @@ const RootPage = () => {
         onTouchStart={handleTouchStart}
         onTouchMove={handleTouchMove}
         onTouchEnd={handleTouchEnd}
+        style={{
+          touchAction: 'pan-y',
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+          overflowX: 'hidden'
+        }}
       >
         {/* <CircleTypeTeFTxt
           text={"Play Futuristic Music"}
@@ -760,21 +766,26 @@ const RootPage = () => {
           )}
 
           <div 
-        className="relative w-full carousel-container"
-        onTouchStart={handleTouchStart}
-        onTouchMove={handleTouchMove}
-        onTouchEnd={handleTouchEnd}
-        onClick={handleClickSteps}
-        style={{
-          touchAction: 'pan-y',
-          WebkitOverflowScrolling: 'touch',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-          KhtmlUserSelect: 'none',
-          MozUserSelect: 'none',
-          msUserSelect: 'none'
-        }}
-      >
+            className="relative w-full carousel-container"
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+            onClick={handleClickSteps}
+            style={{
+              touchAction: 'pan-y',
+              WebkitOverflowScrolling: 'touch',
+              overscrollBehavior: 'contain',
+              userSelect: 'none',
+              WebkitUserSelect: 'none',
+              KhtmlUserSelect: 'none',
+              MozUserSelect: 'none',
+              msUserSelect: 'none',
+              overflow: 'hidden',
+              width: '100%',
+              height: '100%',
+              position: 'relative'
+            }}
+          >
             <div
               className={cn(
                 "absolute w-full transition-all duration-500 ease-in-out",
