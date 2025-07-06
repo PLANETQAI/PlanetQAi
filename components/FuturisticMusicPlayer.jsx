@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from "react"
-import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2 } from "lucide-react"
+import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2, MessageCircle, Facebook, Twitter } from "lucide-react"
 
 const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showShareButton = true }) => {
   const [currentSong, setCurrentSong] = useState(0)
@@ -660,34 +660,66 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
               </div>
 
               {shareLink && (
-                <div className="mt-6">
+                <div className="mt-6 space-y-4">
                   <div className="flex items-center space-x-2">
                     <input
                       type="text"
                       value={shareLink}
                       readOnly
-                      className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                     <button
                       onClick={handleCopyToClipboard}
-                      className="py-2 px-4 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-all duration-300"
+                      className="py-2 px-4 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-all duration-300 whitespace-nowrap"
                     >
-                      {isLinkCopied ? "Copied!" : "Copy"}
+                      {isLinkCopied ? "Copied!" : "Copy Link"}
                     </button>
                   </div>
-                  <div className="flex items-center space-x-2 mt-4">
+                  
+                  {/* Social Sharing Buttons */}
+                  <div className="flex justify-center space-x-4 py-2">
+                    <a
+                      href={`https://wa.me/?text=${encodeURIComponent(`Check out this playlist: ${shareLink}`)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors"
+                      title="Share on WhatsApp"
+                    >
+                      <MessageCircle className="w-5 h-5 text-green-400" />
+                    </a>
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors"
+                      title="Share on Facebook"
+                    >
+                      <Facebook className="w-5 h-5 text-blue-400" />
+                    </a>
+                    <a
+                      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareLink)}&text=Check%20out%20this%20awesome%20playlist!`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-3 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 transition-colors"
+                      title="Share on Twitter"
+                    >
+                      <Twitter className="w-5 h-5 text-cyan-400" />
+                    </a>
+                  </div>
+                  
+                  <div className="flex items-center space-x-2 mt-2">
                     <input
                       type="email"
                       placeholder="Enter email to share"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white"
+                      className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
                     />
                     <button
                       onClick={handleSendEmail}
-                      className="py-2 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:scale-105 transition-all duration-300"
+                      className="py-2 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:scale-105 transition-all duration-300 whitespace-nowrap"
                     >
-                      Send
+                      Send Email
                     </button>
                   </div>
                 </div>
