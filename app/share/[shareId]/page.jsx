@@ -78,10 +78,60 @@ const SharedSongsPage = () => {
 
   if (isSessionLoading || loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black">
-        <div className="flex items-center justify-center min-h-screen">
-          <div className="animate-pulse text-white">Loading playlist...</div>
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 via-purple-900 to-black">
+        <div className="flex flex-col items-center justify-center min-h-screen space-y-8">
+          <div className="relative w-40 h-40 perspective-1000">
+            {/* 3D Vinyl Record */}
+            <div className="absolute w-full h-full rounded-full border-4 border-purple-500/30 bg-gradient-to-br from-purple-900/50 to-gray-900/90 shadow-2xl shadow-purple-500/20 animate-spin-slow">
+              <div className="absolute inset-4 rounded-full bg-gradient-to-br from-gray-900 to-black flex items-center justify-center">
+                <div className="w-8 h-8 rounded-full bg-purple-500/20 border-2 border-purple-500/50"></div>
+              </div>
+              {/* Record grooves */}
+              <div className="absolute inset-0 rounded-full border-2 border-purple-500/10"></div>
+              <div className="absolute inset-2 rounded-full border-2 border-purple-500/10"></div>
+              <div className="absolute inset-4 rounded-full border-2 border-purple-500/10"></div>
+            </div>
+            
+            {/* 3D Needle */}
+            <div className="absolute top-0 left-1/2 w-1 h-16 bg-gradient-to-b from-gray-400 to-gray-600 transform -translate-x-1/2 origin-bottom rotate-12 z-10">
+              <div className="absolute -bottom-1 left-1/2 w-3 h-3 rounded-full bg-purple-500 transform -translate-x-1/2"></div>
+            </div>
+          </div>
+          
+          <div className="text-center space-y-2">
+            <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-400 to-pink-300">Loading Your Playlist</h2>
+            <p className="text-purple-200/70 text-sm">Preparing your musical journey...</p>
+          </div>
+          
+          {/* Pulsing dots */}
+          <div className="flex space-x-2">
+            {[...Array(3)].map((_, i) => (
+              <div 
+                key={i}
+                className="w-3 h-3 rounded-full bg-purple-500 animate-bounce"
+                style={{
+                  animationDelay: `${i * 0.15}s`,
+                  animationDuration: '1s',
+                  animationIterationCount: 'infinite'
+                }}
+              />
+            ))}
+          </div>
         </div>
+        
+        <style jsx global>{`
+          @keyframes spin-slow {
+            0% { transform: rotateY(0deg) rotate(0deg); }
+            100% { transform: rotateY(360deg) rotate(360deg); }
+          }
+          .animate-spin-slow {
+            animation: spin-slow 4s linear infinite;
+            transform-style: preserve-3d;
+          }
+          .perspective-1000 {
+            perspective: 1000px;
+          }
+        `}</style>
       </div>
     );
   }
