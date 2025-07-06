@@ -407,8 +407,133 @@ export const purchaseReceiptTemplate = (userName, creditsAmount, paymentAmount, 
   return { html, text };
 };
 
+/**
+ * Generate share email template
+ * @param {string} sharerName - User's full name
+ * @param {string} shareUrl - The URL to the shared songs
+ * @param {Array} songs - The list of songs being shared
+ * @returns {Object} - HTML and text versions of the email
+ */
+export const shareEmailTemplate = (sharerName, shareUrl, songs) => {
+  const baseUrl = getBaseUrl();
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>You've been sent some music!</title>
+      <style>
+        body {
+          font-family: Arial, sans-serif;
+          line-height: 1.6;
+          color: #333;
+          max-width: 600px;
+          margin: 0 auto;
+          padding: 20px;
+        }
+        .header {
+          text-align: center;
+          margin-bottom: 30px;
+        }
+        .button {
+          display: inline-block;
+          background-color: #4F46E5;
+          color: white;
+          text-decoration: none;
+          padding: 12px 24px;
+          border-radius: 4px;
+          margin: 20px 0;
+          font-weight: bold;
+        }
+        .footer {
+          margin-top: 40px;
+          font-size: 12px;
+          color: #666;
+          text-align: center;
+        }
+        .song-list {
+          list-style: none;
+          padding: 0;
+        }
+        .song-item {
+          display: flex;
+          align-items: center;
+          margin-bottom: 15px;
+          padding: 10px;
+          border: 1px solid #ddd;
+          border-radius: 8px;
+        }
+        .song-thumbnail {
+          width: 60px;
+          height: 60px;
+          border-radius: 4px;
+          margin-right: 15px;
+        }
+        .song-title {
+          font-weight: bold;
+        }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>You've been sent some music!</h1>
+      </div>
+      
+      <p>Hello there,</p>
+      
+      <p>${sharerName} has shared the following songs with you from PlanetQAi:</p>
+      
+      <ul class="song-list">
+        ${songs.map(song => `
+          <li class="song-item">
+            <img src="${song.thumbnailUrl || ''}" alt="${song.title}" class="song-thumbnail" />
+            <div>
+              <div class="song-title">${song.title}</div>
+            </div>
+          </li>
+        `).join('')}
+      </ul>
+      
+      <div style="text-align: center;">
+        <a href="${shareUrl}" class="button">Listen Now</a>
+      </div>
+      
+      <p>Enjoy the music!</p>
+      
+      <div class="footer">
+        <p>&copy; ${new Date().getFullYear()} PlanetQAi. All rights reserved.</p>
+        <p>This is an automated email, please do not reply.</p>
+      </div>
+    </body>
+    </html>
+  `;
+  
+  const text = `
+    You've been sent some music!
+    
+    Hello there,
+    
+    ${sharerName} has shared the following songs with you from PlanetQAi:
+    
+    ${songs.map(song => `- ${song.title}`).join('\n')}
+    
+    Listen to the songs here:
+    ${shareUrl}
+    
+    Enjoy the music!
+    
+    © ${new Date().getFullYear()} PlanetQAi. All rights reserved.
+    This is an automated email, please do not reply.
+  `;
+  
+  return { html, text };
+};
+
 export default {
   passwordResetTemplate,
   accountVerificationTemplate,
-  purchaseReceiptTemplate
+  purchaseReceiptTemplate,
+  shareEmailTemplate
 };

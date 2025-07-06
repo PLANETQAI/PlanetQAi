@@ -3,17 +3,24 @@ import { auth } from './auth'
 
 const CUSTOM_DOMAIN = 'https://www.planetqradio.com/'
 
-// Define webhook paths that should be excluded from middleware processing
-const WEBHOOK_PATHS = [
+// Define paths that should be excluded from middleware processing
+const EXCLUDED_PATHS = [
 	'/api/stripe-webhook',
 	'/api/credits/webhook',
-	'/api/subscriptions/webhook'
+	'/api/subscriptions/webhook',
+	'/api/share', // Exclude all share API routes
+	'/share'      // Exclude share page routes
 ];
 
 // Create a middleware handler that excludes webhook paths
 export default auth(async req => {
-	// Check if the current path is a webhook path
-	if (WEBHOOK_PATHS.includes(req.nextUrl.pathname)) {
+	// Check if the current path is in the excluded paths
+	const isExcludedPath = EXCLUDED_PATHS.some(path => 
+		req.nextUrl.pathname === path || 
+		req.nextUrl.pathname.startsWith(path + '/')
+	);
+	
+	if (isExcludedPath) {
 		// Skip all middleware processing for webhook paths
 		const response = NextResponse.next()
 		// Add CORS headers to webhook responses
@@ -55,11 +62,15 @@ export default auth(async req => {
 
 	// 🔐 Auth logic for protected routes
 	if (!req.auth && 
-		!WEBHOOK_PATHS.includes(req.nextUrl.pathname) &&
+		!EXCLUDED_PATHS.some(path => 
+			req.nextUrl.pathname === path || 
+			req.nextUrl.pathname.startsWith(path + '/')
+		) &&
 		req.nextUrl.pathname !== '/login' && 
 		req.nextUrl.pathname !== '/signup' && 
 		req.nextUrl.pathname !== '/forgot-password' && 
 		req.nextUrl.pathname !== '/reset-password' && 
+		!req.nextUrl.pathname.startsWith('/share/') && 
 		req.nextUrl.pathname !== '/verify-account') {
 		const redirectTo = req.nextUrl.pathname
 		const newUrl = new URL(redirectTo ? `/login?redirectTo=${redirectTo}` : '/login', req.nextUrl.origin)
@@ -79,7 +90,7 @@ export default auth(async req => {
 
 export const config = {
 	matcher: [
-		'/((?!api/auth|auth|images|api/link/getlink|videos/*|robot|aistudio|api/gallery/create|api/thumbnail/modifythumbnail|vidoes|_next/static|_next/image|favicon.ico|api/webhooks|api/stripe-webhook|api/credits/webhook|api/subscriptions/webhook|forgot-password|reset-password|verify-account|^/$).+)',
+		'/((?!api/auth|auth|images|api/link/getlink|videos/*|robot|aistudio|api/gallery/create|api/thumbnail/modifythumbnail|vidoes|_next/static|_next/image|favicon.ico|api/webhooks|api/stripe-webhook|api/credits/webhook|api/subscriptions/webhook|forgot-password|reset-password|verify-account|^/|/share/).+)',
 		'/admin/:path*',
 		'/api/admin/:path*'
 	]

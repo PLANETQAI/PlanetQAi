@@ -28,7 +28,7 @@ export async function GET(request) {
     console.log('Fetching all songs for user:', session.user.id)
     
     // Fetch songs with pagination
-    const songs = await prisma.song.findMany({
+    const songsFromDb = await prisma.song.findMany({
       where: filters,
       orderBy: {
         createdAt: 'desc'
@@ -37,7 +37,23 @@ export async function GET(request) {
       skip: offset
     })
     
-    console.log(`Found ${songs.length} songs matching the filters`)
+    console.log(`Found ${songsFromDb.length} songs matching the filters`)
+
+    // Helper function to format duration from seconds to "mm:ss"
+    const formatDuration = (seconds) => {
+      if (seconds === null || seconds === undefined) {
+        return '0:00';
+      }
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.round(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    };
+
+    // Format the duration for each song
+    const songs = songsFromDb.map(song => ({
+      ...song,
+      duration: formatDuration(song.duration),
+    }));
     
     // Get total count for pagination
     const totalCount = await prisma.song.count({

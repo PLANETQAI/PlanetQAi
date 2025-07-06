@@ -95,6 +95,7 @@ model Song {
   tempo            String?
   quality          String?   @default("pending")
   User             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  shares           SongsOnShares[]
 }
 
 model Subscription {
@@ -142,6 +143,8 @@ model User {
   Subscription      Subscription?
   Verification      Verification?
   videoLinks        videoLinks[]
+  createdShares   Share[] @relation("CreatedShares")
+  sharesReceived  UsersOnShares[]
 }
 
 model Verification {
@@ -166,6 +169,38 @@ model videoLinks {
   title         String
   thumbnailLink String
   User          User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model Share {
+  id            String   @id @default(uuid())
+  name          String?
+  isPublic      Boolean  @default(false)
+  shareableLink String   @unique @default(uuid())
+  sharedById    String
+  sharedBy      User     @relation("CreatedShares", fields: [sharedById], references: [id], onDelete: Cascade)
+  songs         SongsOnShares[]
+  sharedWith    UsersOnShares[]
+  createdAt     DateTime @default(now())
+}
+
+model SongsOnShares {
+  shareId   String
+  share     Share    @relation(fields: [shareId], references: [id], onDelete: Cascade)
+  songId    String
+  song      Song     @relation(fields: [songId], references: [id], onDelete: Cascade)
+  addedAt   DateTime @default(now())
+
+  @@id([shareId, songId])
+}
+
+model UsersOnShares {
+    shareId String
+    share   Share @relation(fields: [shareId], references: [id], onDelete: Cascade)
+    userId  String
+    user    User @relation(fields: [userId], references: [id], onDelete: Cascade)
+    sharedAt DateTime @default(now())
+
+    @@id([shareId, userId])
 }
 
 enum Role {
