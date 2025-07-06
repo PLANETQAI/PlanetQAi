@@ -91,7 +91,7 @@ export default function GlobalHeader({ session }) {
 
 						{/* Downloads Button */}
 						<Link
-							href="/gallery"
+							href="/my-songs"
 							className="flex items-center gap-1 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg px-3 py-2 font-medium transition-colors duration-200"
 						>
 							<FaArrowAltCircleDown className="text-blue-400" />
