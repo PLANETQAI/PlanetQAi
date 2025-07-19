@@ -9,7 +9,11 @@ const EXCLUDED_PATHS = [
 	'/api/credits/webhook',
 	'/api/subscriptions/webhook',
 	'/api/share', // Exclude all share API routes
-	'/share'      // Exclude share page routes
+	'/share',      // Exclude share page routes
+	'/radio',
+	'/radio/faqs',
+	'/radio/about',
+	'/radio/contact'
 ];
 
 // Create a middleware handler that excludes webhook paths

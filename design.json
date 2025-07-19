@@ -1,0 +1,85 @@
+{
+    "site_info": {
+      "name": "Planet Q Productions",
+      "tagline": "The Sci Fi Channel Of Hip Hop and R&B",
+      "copyright": "©2020 Planet Q-Productions",
+      "platform": "Wix-based design"
+    },
+    "branding": {
+      "theme": "sci-fi_hip_hop_fusion",
+      "color_palette": {
+        "primary": "#000000",
+        "secondary": "#FFFFFF", 
+        "accent_1": "#00FFFF",
+        "accent_2": "#FF00FF",
+        "accent_3": "#FFFF00",
+        "background": "#0D0D0D",
+        "text_primary": "#FFFFFF",
+        "text_secondary": "#CCCCCC"
+      },
+      "typography": {
+        "primary_font": "Futuristic/Tech sans-serif",
+        "secondary_font": "Modern sans-serif",
+        "heading_style": "bold, uppercase, letter-spacing",
+        "body_style": "clean, readable"
+      }
+    },
+    "navigation": {
+      "type": "horizontal_menu",
+      "items": [
+        "Home",
+        "About Us", 
+        "Radio",
+        "Contact Us"
+      ],
+      "style": "minimalist, centered"
+    },
+    "layout_structure": {
+      "header": {
+        "logo_position": "center",
+        "navigation_position": "below_logo",
+        "style": "clean, spacious"
+      },
+      "main_content": {
+        "layout": "single_column",
+        "max_width": "1200px",
+        "padding": "60px 20px",
+        "alignment": "center"
+      },
+      "footer": {
+        "content": "copyright_notice",
+        "style": "minimal, centered"
+      }
+    },
+    "visual_elements": {
+      "background": {
+        "type": "solid_color_or_subtle_gradient",
+        "style": "dark_space_theme"
+      },
+      "effects": {
+        "glow_elements": true,
+        "neon_accents": true,
+        "subtle_animations": true
+      }
+    },
+    "content_sections": {
+      "hero": {
+        "title": "Planet Q Productions",
+        "subtitle": "The Sci Fi Channel Of Hip Hop and R&B",
+        "style": "large, centered, impactful"
+      },
+      "faqs": {
+        "layout": "expandable_sections",
+        "style": "clean, organized"
+      }
+    },
+    "responsive_design": {
+      "mobile_first": true,
+      "breakpoints": ["768px", "1024px", "1200px"]
+    },
+    "interactive_elements": {
+      "hover_effects": "glow, color_shift",
+      "transitions": "smooth, 0.3s ease",
+      "buttons": "futuristic_style_with_borders"
+    }
+  }
