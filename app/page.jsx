@@ -25,7 +25,6 @@ import StarsWrapper from "@/components/canvas/StarsWrapper";
 import StarsCanvas from "@/components/canvas/RandomStars";
 import MusicPlayer from "@/components/planetqproductioncomp/musicplayer";
 
-
 const CustomRadioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
@@ -256,6 +255,9 @@ const RootPage = () => {
   const router = useRouter();
   const [clickSteps, setClickSteps] = useState(3); // Start with Q World Studios (index 3)
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [showIntroVideo, setShowIntroVideo] = useState(true);
+  const [needsUserAction, setNeedsUserAction] = useState(true);
+  const videoRef = useRef(null);
   const [direction, setDirection] = useState("forward");
   const [touchStart, setTouchStart] = useState(null);
   const [touchEnd, setTouchEnd] = useState(null);
@@ -268,21 +270,50 @@ const RootPage = () => {
   const [showTime, setShowTime] = useState(true);
 
   useEffect(() => {
+    if (showIntroVideo) {
+      // Play the video when showIntroVideo becomes true
+      if (videoRef.current) {
+        videoRef.current.play().catch((error) => {
+          setNeedsUserAction(true);
+          console.log("Autoplay failed:", error);
+        });
+      }
+
+      // Set timer to hide intro video after 17 seconds
+      const timer = setTimeout(() => setShowIntroVideo(false), 15000);
+      setNeedsUserAction(false);
+      return () => clearTimeout(timer);
+    } else {
+      // Pause the video when showIntroVideo becomes false
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    }
+  }, [showIntroVideo]);
+
+  const handlePlayClick = () => {
+    if (videoRef.current) {
+      videoRef.current.play();
+      setNeedsUserAction(false);
+    }
+  };
+
+  useEffect(() => {
     // Check if we should show the text based on localStorage
-    const lastShown = localStorage.getItem('bannerLastShown');
+    const lastShown = localStorage.getItem("bannerLastShown");
     const now = Date.now();
     const FIVE_MINUTES = 5 * 60 * 1000; // 5 minutes in milliseconds
-    
-    if (!lastShown || (now - parseInt(lastShown, 10) > FIVE_MINUTES)) {
+
+    if (!lastShown || now - parseInt(lastShown, 10) > FIVE_MINUTES) {
       // Either first time or more than 5 minutes have passed
       setShowTime(true);
-      localStorage.setItem('bannerLastShown', now.toString());
-      
+      localStorage.setItem("bannerLastShown", now.toString());
+
       // Hide after 5 minutes
       const timer = setTimeout(() => {
         setShowTime(false);
       }, FIVE_MINUTES);
-      
+
       return () => clearTimeout(timer);
     } else {
       // Less than 5 minutes since last show, don't show
@@ -370,12 +401,12 @@ const RootPage = () => {
       // Only prevent default if we're actually handling a swipe
       const touch = e.touches[0];
       const diff = Math.abs(touch.clientX - touchStart);
-      
+
       // If the movement is more horizontal than vertical, prevent default
       if (diff > 10) {
         e.preventDefault();
       }
-      
+
       setTouchEnd(touch.clientX);
     }
   };
@@ -388,7 +419,7 @@ const RootPage = () => {
     }
 
     const distance = touchStart - touchEnd;
-    const isLeftSwipe = distance > 50;  // Minimum distance for a swipe
+    const isLeftSwipe = distance > 50; // Minimum distance for a swipe
     const isRightSwipe = distance < -50; // Minimum distance for a swipe
 
     // Only process the swipe if it meets the minimum distance threshold
@@ -413,23 +444,31 @@ const RootPage = () => {
     setTouchStart(null);
     setTouchEnd(null);
   };
-  
+
   // Add passive: false to prevent default touch behavior
   useEffect(() => {
-    const carousel = document.querySelector('.carousel-container');
+    const carousel = document.querySelector(".carousel-container");
     if (carousel) {
-      carousel.addEventListener('touchmove', (e) => {
-        if (touchStart !== null) {
-          e.preventDefault();
-        }
-      }, { passive: false });
-      
-      return () => {
-        carousel.removeEventListener('touchmove', (e) => {
+      carousel.addEventListener(
+        "touchmove",
+        (e) => {
           if (touchStart !== null) {
             e.preventDefault();
           }
-        }, { passive: false });
+        },
+        { passive: false }
+      );
+
+      return () => {
+        carousel.removeEventListener(
+          "touchmove",
+          (e) => {
+            if (touchStart !== null) {
+              e.preventDefault();
+            }
+          },
+          { passive: false }
+        );
       };
     }
   }, [touchStart]);
@@ -511,14 +550,54 @@ const RootPage = () => {
             href={"/chat"}
             className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer mx-2"
           >
-            <video
+            {showIntroVideo ? (
+              <div className="w-full h-full relative">
+                <video
+                  ref={videoRef}
+                  playsInline
+                  loop
+                  controls={true}
+                  autoPlay
+                  className="rounded-full w-full h-full object-cover"
+                >
+                  <source src="/videos/intro_video.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+                {/* {needsUserAction && (
+                  <button
+                    onClick={handlePlayClick}
+                    className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-40 rounded-full"
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      className="h-16 w-16 text-white"
+                      viewBox="0 0 24 24"
+                      fill="currentColor"
+                    >
+                      <path d="M8 5v14l11-7z" />
+                    </svg>
+                  </button>
+                )} */}
+              </div>
+            ) : (
+              <video
+                loop
+                autoPlay
+                muted
+                className="rounded-full w-full h-full object-cover"
+              >
+                <source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
+                Your browser does not support the video tag.
+              </video>
+            )}
+            {/* <video
               loop
               autoPlay
               muted
               className="rounded-full w-full h-full object-cover"
             >
               <source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
-            </video>
+            </video> */}
           </Link>
           <p className="text-blue-500 text-lg font-bold animate-pulse">
             Chat Bot
@@ -580,12 +659,7 @@ const RootPage = () => {
   // SWAPPED: Productions moved to studio position (was radioPlayer)
   const planetQProductions = (
     <div className="p-1 block card-content" onClick={preventPropagation}>
-      <Link
-        href={
-          "https://planetqproductions.wixsite.com/planet-q-productions/aboutplanetqproductions"
-        }
-        className="block"
-      >
+      <Link href={"/productions"} className="block">
         <div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all col-span-1 xs:col-span-2 sm:col-span-1 mx-auto w-full sm:w-auto">
           <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
             <h1 className="text-xl">Planet Q Productions</h1>
@@ -605,12 +679,7 @@ const RootPage = () => {
   // SWAPPED: Radio moved to store position (was roboCard)
   const planetQRadio = (
     <div className="h-full p-1 block card-content" onClick={preventPropagation}>
-      <Link
-        href={
-          "https://planetqproductions.wixsite.com/planet-q-productions/faqs"
-        }
-        className="block"
-      >
+      <Link href={"/productions"} className="block">
         <div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
           <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
             <h1 className="text-xl">Planet Q Radio</h1>
@@ -676,7 +745,6 @@ const RootPage = () => {
     }
   }, []);
 
-  
   return (
     <div className="w-full overflow-y-scroll min-h-screen h-full relative">
       {/* Scroll arrows */}
@@ -721,16 +789,16 @@ const RootPage = () => {
         onTouchEnd={handleTouchEnd}
         style={{
           // Allow vertical scrolling but prevent horizontal scrollbar
-          overflowX: 'hidden',
+          overflowX: "hidden",
           // Prevent iOS rubber band effect
-          overscrollBehaviorY: 'contain',
+          overscrollBehaviorY: "contain",
           // Enable smooth scrolling on iOS
-          WebkitOverflowScrolling: 'touch',
+          WebkitOverflowScrolling: "touch",
           // Prevent text selection during swipe
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
+          userSelect: "none",
+          WebkitUserSelect: "none",
           // Prevent tap highlight on mobile
-          WebkitTapHighlightColor: 'transparent'
+          WebkitTapHighlightColor: "transparent",
         }}
       >
         {/* <CircleTypeTeFTxt
@@ -750,7 +818,6 @@ const RootPage = () => {
         {/* Reintroducing the improved stars component */}
         <StarsWrapper />
         {/* <StarsCanvas /> */}
-
         {/* Content container */}
         <div className="w-full max-w-md mx-auto relative px-4 pt-16 pb-16">
           {/* Scroll arrows */}
@@ -772,25 +839,24 @@ const RootPage = () => {
             </div>
           )}
 
-          <div 
+          <div
             className="relative w-full carousel-container"
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
             onClick={handleClickSteps}
             style={{
-              touchAction: 'pan-y',
-              WebkitOverflowScrolling: 'touch',
-              userSelect: 'none',
-              WebkitUserSelect: 'none',
-              overflowX: 'hidden',
-              width: '100%',
-              position: 'relative',
-              // Prevent iOS rubber band effect
-              overscrollBehaviorX: 'none',
-              WebkitOverflowScrolling: 'touch',
-              WebkitTouchCallout: 'none',
-              WebkitTapHighlightColor: 'transparent'
+              touchAction: "pan-y",
+              WebkitOverflowScrolling: "touch",
+              userSelect: "none",
+              WebkitUserSelect: "none",
+              overflowX: "hidden",
+              width: "100%",
+              position: "relative",
+              overscrollBehaviorX: "none",
+              WebkitOverflowScrolling: "touch",
+              WebkitTouchCallout: "none",
+              WebkitTapHighlightColor: "transparent",
             }}
           >
             <div
@@ -893,7 +959,7 @@ const RootPage = () => {
             </div>
 
             {/* Spacer div to maintain container height */}
-          
+
             <div
               className={cn(
                 "w-full opacity-0 pointer-events-none",
@@ -902,7 +968,7 @@ const RootPage = () => {
             >
               {planetQVideo}
             </div>
-            
+
             <div
               className={cn(
                 "w-full opacity-0 pointer-events-none",
@@ -985,7 +1051,17 @@ const RootPage = () => {
               {direction === "forward" ? "→" : "←"}
             </div>
           </div>
-        </div>
+        </div>{" "}
+        {needsUserAction && (
+          <div className="absolute inset-0 flex items-end justify-end pb-8 bg-opacity-50 rounded-full">
+            <button
+              onClick={handlePlayClick}
+              className="bg-red-500 text-white px-4 py-2 rounded"
+            >
+              ▶ Walkthrough
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
