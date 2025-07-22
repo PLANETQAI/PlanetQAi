@@ -1,103 +1,126 @@
-import { auth } from '@/auth'
-import { PrismaClient } from '@prisma/client'
-import { NextResponse } from 'next/server'
-import { redirect } from 'next/navigation'
+import prisma from "@/lib/prisma";
 
-const prisma = new PrismaClient()
+export async function GET(req) {
+  try {
+    const songs = await prisma.song.findMany({
+      where: {},
+      orderBy: { createdAt: "desc" },
+      include: {
+        User: { select: { id: true, fullName: true, email: true } },
+      },
+    });
+    return new Response(JSON.stringify({ songs }), { status: 200 });
+  } catch (e) {
+    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+  }
+}
+import { auth } from "@/auth";
+import { PrismaClient } from "@prisma/client";
+import { NextResponse } from "next/server";
+import { redirect } from "next/navigation";
+
+const prisma = new PrismaClient();
 
 export async function GET(request) {
   try {
     // Check if user is authenticated
-    const session = await auth()
+    const session = await auth();
     if (!session || !session.user) {
       // Redirect to login page with return URL
-      return NextResponse.redirect(new URL('/login?callbackUrl=/dashboard', request.url))
+      return NextResponse.redirect(
+        new URL("/login?callbackUrl=/dashboard", request.url)
+      );
     }
 
     // Get query parameters
-    const { searchParams } = new URL(request.url)
-    const provider = searchParams.get('provider')
-    const limit = parseInt(searchParams.get('limit') || '50')
-    const offset = parseInt(searchParams.get('offset') || '0')
-    
+    const { searchParams } = new URL(request.url);
+    const provider = searchParams.get("provider");
+    const limit = parseInt(searchParams.get("limit") || "50");
+    const offset = parseInt(searchParams.get("offset") || "0");
+
     // Only filter by user ID, let the frontend handle provider filtering
     const filters = {
-      userId: session.user.id
-    }
-    
-    console.log('Fetching all songs for user:', session.user.id)
-    
+      userId: session.user.id,
+    };
+
+    console.log("Fetching all songs for user:", session.user.id);
+
     // Fetch songs with pagination
     const songsFromDb = await prisma.song.findMany({
       where: filters,
       orderBy: {
-        createdAt: 'desc'
+        createdAt: "desc",
       },
       take: limit,
-      skip: offset
-    })
-    
-    console.log(`Found ${songsFromDb.length} songs matching the filters`)
+      skip: offset,
+    });
+
+    console.log(`Found ${songsFromDb.length} songs matching the filters`);
 
     // Helper function to format duration from seconds to "mm:ss"
     const formatDuration = (seconds) => {
       if (seconds === null || seconds === undefined) {
-        return '0:00';
+        return "0:00";
       }
       const mins = Math.floor(seconds / 60);
       const secs = Math.round(seconds % 60);
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
+      return `${mins}:${secs.toString().padStart(2, "0")}`;
     };
 
     // Format the duration for each song
-    const songs = songsFromDb.map(song => ({
+    const songs = songsFromDb.map((song) => ({
       ...song,
       duration: formatDuration(song.duration),
     }));
-    
+
     // Get total count for pagination
     const totalCount = await prisma.song.count({
-      where: filters
-    })
-    
+      where: filters,
+    });
+
     return NextResponse.json({
       songs,
       pagination: {
         total: totalCount,
         limit,
         offset,
-        hasMore: offset + songs.length < totalCount
-      }
-    })
+        hasMore: offset + songs.length < totalCount,
+      },
+    });
   } catch (error) {
-    console.error('Error fetching songs:', error)
+    console.error("Error fetching songs:", error);
     return NextResponse.json(
-      { error: 'Failed to fetch songs' },
+      { error: "Failed to fetch songs" },
       { status: 500 }
-    )
+    );
   }
 }
 
 export async function POST(request) {
   try {
     // Check if user is authenticated
-    const session = await auth()
+    const session = await auth();
     if (!session || !session.user) {
       // Redirect to login page with return URL
-      return NextResponse.redirect(new URL('/login?callbackUrl=/dashboard', request.url))
+      return NextResponse.redirect(
+        new URL("/login?callbackUrl=/dashboard", request.url)
+      );
     }
-    
+
     // Get song data from request body
-    const songData = await request.json()
-    
+    const songData = await request.json();
+
     // Validate required fields
     if (!songData.title || !songData.audioUrl || !songData.generator) {
       return NextResponse.json(
-        { error: 'Missing required fields: title, audioUrl, and generator are required' },
+        {
+          error:
+            "Missing required fields: title, audioUrl, and generator are required",
+        },
         { status: 400 }
-      )
+      );
     }
-    
+
     // Create the song
     const song = await prisma.song.create({
       data: {
@@ -113,16 +136,13 @@ export async function POST(request) {
         tempo: songData.tempo || null,
         mood: songData.mood || null,
         creditsUsed: 0, // Default value
-        isPublic: false // Default value
-      }
-    })
-    
-    return NextResponse.json({ song }, { status: 201 })
+        isPublic: false, // Default value
+      },
+    });
+
+    return NextResponse.json({ song }, { status: 201 });
   } catch (error) {
-    console.error('Error saving song:', error)
-    return NextResponse.json(
-      { error: 'Failed to save song' },
-      { status: 500 }
-    )
+    console.error("Error saving song:", error);
+    return NextResponse.json({ error: "Failed to save song" }, { status: 500 });
   }
 }
