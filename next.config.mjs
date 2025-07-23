@@ -3,7 +3,7 @@ const nextConfig = {
 	reactStrictMode: true,
 	transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
 	images: {
-		domains: ['res.cloudinary.com', 'storage.googleapis.com', 'lh3.googleusercontent.com'],
+		domains: ['res.cloudinary.com', 'storage.googleapis.com', 'lh3.googleusercontent.com', 'imagedelivery.net', 'localhost','via.placeholder.com'],
 	},
 	experimental: {
 		serverComponentsExternalPackages: ['@prisma/client'],

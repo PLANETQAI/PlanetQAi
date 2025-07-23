@@ -3,6 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
+import { useSession, signIn } from "next-auth/react";
+import { redirect, useRouter } from "next/navigation";
 
 // Move this out to its own file ideally
 const BeatCard = ({
@@ -61,34 +63,75 @@ const FuturisticHipHopBeats = () => {
   const [purchasingId, setPurchasingId] = useState(null);
   const [purchaseError, setPurchaseError] = useState(null);
   const [purchasedSongs, setPurchasedSongs] = useState([]);
+  const { data: session, status } = useSession();
+ 
 
   const handlePurchase = useCallback(async (id) => {
+    // Check authentication status
+  // Check if we have a valid session
+  if (!session) {
+    // Redirect to sign in with a callback URL to return here after login
+    signIn(undefined, { callbackUrl: '/productions/album' });
+    return;
+  }
+
+  // If we're still loading the session, show a message
+  if (status === 'loading') {
+    setPurchaseError("Please wait, we're checking your session...");
+    return;
+  }
+
     setPurchaseError(null);
     setPurchasingId(id);
+    
     try {
+      // Get the selected beat
+      const beatToPurchase = beats.find(beat => beat.id === id);
+      if (!beatToPurchase) {
+        throw new Error('Selected beat not found');
+      }
+
+      // Make the purchase request
       const res = await fetch("/api/song-purchase", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ songId: id }),
+        headers: { 
+          "Content-Type": "application/json",
+          // Include the session token if needed
+          'Authorization': `Bearer ${session.accessToken}`
+        },
+        body: JSON.stringify({ 
+          songId: id,
+          price: beatToPurchase.creditsUsed || 1, // Default to 1 credit if not specified
+          userId: session.user.id
+        }),
       });
+
       const data = await res.json();
+      
       if (!res.ok) {
-        setPurchaseError(data.error || "Purchase failed");
-      } else {
-        setPurchasedSongs(prev => [...prev, id]);
+        throw new Error(data.error || "Purchase failed. Please try again.");
       }
+      
+      // Update the UI to show the purchase was successful
+      setPurchasedSongs(prev => [...prev, id]);
+      
+      // Show success message (you might want to use a toast notification here)
+      alert('Purchase successful! The song has been added to your library.');
+      
     } catch (err) {
-      setPurchaseError("Network error. Try again.");
+      console.error('Purchase error:', err);
+      setPurchaseError(err.message || "An error occurred during purchase. Please try again.");
     } finally {
       setPurchasingId(null);
     }
-  }, []);
+  }, [status, session, signIn, beats]);
 
   useEffect(() => {
     async function fetchSongs() {
       try {
         const res = await fetch("/api/songs");
         const data = await res.json();
+        console.log(data);
         setBeats(data.songs || []);
       } catch (err) {
         setError("Failed to load beats.");

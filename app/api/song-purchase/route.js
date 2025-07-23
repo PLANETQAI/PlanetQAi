@@ -1,15 +1,17 @@
 import { getServerSession } from "next-auth";
 import prisma from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
+import { auth, authOptions } from "@/lib/auth";
 import { sendEmail } from "@/utils/email/emailService";
+import { NextResponse } from 'next/server';
+
 
 export async function POST(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
+   // Get the session and check if the user is an admin
+     const session = await auth();
+    
+     if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     const { songId } = await req.json();
     if (!songId) {
@@ -40,6 +42,7 @@ export async function POST(req) {
     const alreadyPurchased = await prisma.songPurchase.findFirst({
       where: { userId: user.id, songId: song.id },
     });
+    
     if (alreadyPurchased) {
       return new Response(JSON.stringify({ error: "Already purchased" }), {
         status: 409,
@@ -155,9 +158,9 @@ export async function POST(req) {
       console.error("Failed to send creator earnings email:", creatorEmailErr);
     }
 
-    return new Response(JSON.stringify({ success: true }), { status: 200 });
+    return NextResponse.json({ success: true }, { status: 200 });
   } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
+    return NextResponse.json({ error: e.message }, { status: 500 });
   }
 }
 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-16">
