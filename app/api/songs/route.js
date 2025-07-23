@@ -1,32 +1,24 @@
-import prisma from "@/lib/prisma";
-
-export async function GET(req) {
-  try {
-    const songs = await prisma.song.findMany({
-      where: {},
-      orderBy: { createdAt: "desc" },
-      include: {
-        User: { select: { id: true, fullName: true, email: true } },
-      },
-    });
-    return new Response(JSON.stringify({ songs }), { status: 200 });
-  } catch (e) {
-    return new Response(JSON.stringify({ error: e.message }), { status: 500 });
-  }
-}
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import { NextResponse } from "next/server";
-import { redirect } from "next/navigation";
 
 const prisma = new PrismaClient();
+
+// Helper function to format duration from seconds to "mm:ss"
+const formatDuration = (seconds) => {
+  if (seconds === null || seconds === undefined) {
+    return "0:00";
+  }
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.round(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, "0")}`;
+};
 
 export async function GET(request) {
   try {
     // Check if user is authenticated
     const session = await auth();
     if (!session || !session.user) {
-      // Redirect to login page with return URL
       return NextResponse.redirect(
         new URL("/login?callbackUrl=/dashboard", request.url)
       );
@@ -48,24 +40,15 @@ export async function GET(request) {
     // Fetch songs with pagination
     const songsFromDb = await prisma.song.findMany({
       where: filters,
-      orderBy: {
-        createdAt: "desc",
+      orderBy: { createdAt: "desc" },
+      include: {
+        User: { select: { id: true, fullName: true, email: true } },
       },
       take: limit,
       skip: offset,
     });
 
     console.log(`Found ${songsFromDb.length} songs matching the filters`);
-
-    // Helper function to format duration from seconds to "mm:ss"
-    const formatDuration = (seconds) => {
-      if (seconds === null || seconds === undefined) {
-        return "0:00";
-      }
-      const mins = Math.floor(seconds / 60);
-      const secs = Math.round(seconds % 60);
-      return `${mins}:${secs.toString().padStart(2, "0")}`;
-    };
 
     // Format the duration for each song
     const songs = songsFromDb.map((song) => ({

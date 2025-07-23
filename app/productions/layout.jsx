@@ -17,6 +17,7 @@ const RadioLayout = ({ children }) => {
 
   const navLinks = [
     { name: "Home", path: "/" },
+    { name: "Albums", path: "/productions/album" },
     { name: "FAQs", path: "/productions/faqs" },
     { name: "About", path: "/productions/about" },
     { name: "Contact", path: "/productions/contact" },

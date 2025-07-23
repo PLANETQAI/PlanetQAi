@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import Image from "next/image";
 
@@ -62,6 +62,28 @@ const FuturisticHipHopBeats = () => {
   const [purchaseError, setPurchaseError] = useState(null);
   const [purchasedSongs, setPurchasedSongs] = useState([]);
 
+  const handlePurchase = useCallback(async (id) => {
+    setPurchaseError(null);
+    setPurchasingId(id);
+    try {
+      const res = await fetch("/api/song-purchase", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ songId: id }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        setPurchaseError(data.error || "Purchase failed");
+      } else {
+        setPurchasedSongs(prev => [...prev, id]);
+      }
+    } catch (err) {
+      setPurchaseError("Network error. Try again.");
+    } finally {
+      setPurchasingId(null);
+    }
+  }, []);
+
   useEffect(() => {
     async function fetchSongs() {
       try {
@@ -109,27 +131,7 @@ const FuturisticHipHopBeats = () => {
                 isPurchased={purchasedSongs.includes(beat.id)}
                 purchasingId={purchasingId}
                 purchaseError={purchaseError}
-                onPurchase={async (id) => {
-                  setPurchaseError(null);
-                  setPurchasingId(id);
-                  try {
-                    const res = await fetch("/api/song-purchase", {
-                      method: "POST",
-                      headers: { "Content-Type": "application/json" },
-                      body: JSON.stringify({ songId: id }),
-                    });
-                    const data = await res.json();
-                    if (!res.ok) {
-                      setPurchaseError(data.error || "Purchase failed");
-                    } else {
-                      setPurchasedSongs((prev) => [...prev, id]);
-                    }
-                  } catch (err) {
-                    setPurchaseError("Network error. Try again.");
-                  } finally {
-                    setPurchasingId(null);
-                  }
-                }}
+                onPurchase={handlePurchase}
               />
             ))}
           </div>
