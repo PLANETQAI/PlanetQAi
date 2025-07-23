@@ -4,6 +4,8 @@ import { logInSchema } from './lib/zod'
 import bcrypt from 'bcryptjs'
 import prisma from './lib/prisma'
 
+export const runtime = 'nodejs';
+
 // Configure NextAuth with proper security settings
 const authConfig = {
 	// Configure pages for authentication
