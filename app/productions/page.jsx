@@ -45,98 +45,6 @@ const BackgroundPattern = () => (
   </div>
 );
 
-// Track Card Component
-const TrackCard = ({ track, isActive, onPlay, isPlaying }) => (
-  <div
-    className="group relative bg-gray-900/50 backdrop-blur-sm rounded-lg overflow-hidden border border-gray-800 hover:border-cyan-500/50 transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/10 cursor-pointer"
-    onClick={onPlay}
-  >
-    <div className="relative aspect-square">
-      <Image
-        src={track.cover}
-        alt={track.title}
-        width={300}
-        height={300}
-        className="w-full h-full object-cover"
-      />
-      <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-        <button className="w-12 h-12 rounded-full bg-cyan-500 flex items-center justify-center transform hover:scale-110 transition-transform">
-          {isActive && isPlaying ? <PauseIcon /> : <PlayIcon />}
-        </button>
-      </div>
-    </div>
-    <div className="p-4">
-      <h3 className="font-medium text-white">{track.title}</h3>
-      <p className="text-sm text-gray-400">{track.artist}</p>
-    </div>
-  </div>
-);
-
-// Icons
-const PlayIcon = () => (
-  <svg
-    className="w-5 h-5 ml-0.5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"
-    />
-  </svg>
-);
-
-const PauseIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M10 9v6m4-6v6m7-3a9 9 0 11-18 0 9 9 0 0118 0z"
-    />
-  </svg>
-);
-
-const NextIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M11.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 005 8v8a1 1 0 001.6.8l5.333-4zM19.933 12.8a1 1 0 000-1.6l-5.333-4A1 1 0 0013 8v8a1 1 0 001.6.8l5.333-4z"
-    />
-  </svg>
-);
-
-const PreviousIcon = () => (
-  <svg
-    className="w-5 h-5"
-    fill="none"
-    viewBox="0 0 24 24"
-    stroke="currentColor"
-  >
-    <path
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      strokeWidth={2}
-      d="M12.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0019 16V8a1 1 0 00-1.6-.8l-5.334 4zM4.066 11.2a1 1 0 000 1.6l5.334 4A1 1 0 0011 16V8a1 1 0 00-1.6-.8l-5.334 4z"
-    />
-  </svg>
-);
-
 const RadioPage = () => {
   // Modern radio page with multiple Spotify embeds
 const router = useRouter();
@@ -157,7 +65,7 @@ const router = useRouter();
           Enjoy curated Spotify playlists and tracks. Click play and vibe out!
         </p>
   
-        <div className="flex justify-center items-center">
+        <div className="flex flex-col justify-center items-center">
           <p className="text-center text-lg text-gray-300 mb-10">Do you want to have a full album?</p>
           <button className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-2 px-4 rounded-full hover:opacity-90" onClick={() => router.push('/productions/contact')}>
             Check Other users Albums

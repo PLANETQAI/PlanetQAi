@@ -517,3 +517,26 @@ html, body {
 		animation-fill-mode: both;
 	}
 }
+
+@keyframes animateGlow {
+	to {
+	  box-shadow: 0 0 50px #61dafb, 0 0 50px #61dafb, 0 0 50px #61dafb;
+	}
+  }
+  
+  .animate-glow {
+	animation: animateGlow 2s infinite alternate;
+  }
+
+  @keyframes vibrate {
+	0% { transform: translateX(0); }
+	25% { transform: translateX(-1px); }
+	50% { transform: translateX(1px); }
+	75% { transform: translateX(-1px); }
+	100% { transform: translateX(0); }
+  }
+  
+  .animate-vibrate {
+	animation: vibrate 0.3s ease-in-out infinite;
+  }
+  

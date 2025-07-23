@@ -1036,7 +1036,7 @@ const RootPage = () => {
             </div>
           </div>
         </div>{" "}
-        {needsUserAction && (
+        {/* {needsUserAction && (
           <div className="absolute inset-0 flex items-end justify-end pb-8 bg-opacity-50 rounded-full">
             <button
               onClick={handlePlayClick}
@@ -1045,7 +1045,7 @@ const RootPage = () => {
               ▶ Walkthrough
             </button>
           </div>
-        )}
+        )} */}
       </div>
     </div>
   );
