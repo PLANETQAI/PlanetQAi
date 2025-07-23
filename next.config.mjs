@@ -3,8 +3,33 @@ const nextConfig = {
 	reactStrictMode: true,
 	transpilePackages: ['three', '@react-three/fiber', '@react-three/drei'],
 	images: {
-		domains: ['res.cloudinary.com', 'storage.googleapis.com', 'lh3.googleusercontent.com', 'imagedelivery.net', 'localhost','via.placeholder.com'],
-	},
+		remotePatterns: [
+		  {
+			protocol: 'https',
+			hostname: 'res.cloudinary.com',
+		  },
+		  {
+			protocol: 'https',
+			hostname: 'storage.googleapis.com',
+		  },
+		  {
+			protocol: 'https',
+			hostname: 'lh3.googleusercontent.com',
+		  },
+		  {
+			protocol: 'https',
+			hostname: 'imagedelivery.net',
+		  },
+		  {
+			protocol: 'https',
+			hostname: 'via.placeholder.com',
+		  },
+		],
+		// Add this to handle image optimization errors
+		dangerouslyAllowSVG: true,
+		contentDispositionType: 'attachment',
+		contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
+	  },
 	experimental: {
 		serverComponentsExternalPackages: ['@prisma/client'],
 	},

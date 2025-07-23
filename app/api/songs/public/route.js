@@ -23,6 +23,11 @@ export async function GET() {
             email: true,
           },
         },
+        purchases: {
+            select: {
+                userId: true
+            }
+        }
       },
       orderBy: {
         createdAt: 'desc',

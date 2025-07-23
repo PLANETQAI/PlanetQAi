@@ -1,30 +1,41 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback, useRef } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { useSession, signIn } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
+import AudioPlayer from "../_components/AudioPlayer";
 
-const BeatCard = ({
-  beat,
-  isPurchased,
-  purchasingId,
-  onPurchase,
-  purchaseError,
-}) => {
-  const [imgSrc, setImgSrc] = useState(beat.thumbnailUrl || "/images/logo.png");
+const BeatCard = ({ beat, isPurchased, purchasingId, onPurchase, purchaseError }) => {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef(null);
+  const router = useRouter();
+  const [imgError, setImgError] = useState(false);
+
+  const togglePlay = (e) => {
+    e.stopPropagation();
+    if (isPlaying) {
+      audioRef.current.pause();
+    } else {
+      audioRef.current.play();
+    }
+    setIsPlaying(!isPlaying);
+  };
 
   return (
     <div className="bg-gray-900/80 rounded-2xl shadow-lg p-6 flex flex-col items-center">
-      <div className="relative w-full aspect-square mb-4">
-        <Image
-          src={imgSrc}
-          alt={beat.title}
-          fill
-          className="rounded-xl shadow-md object-cover"
-          onError={() => setImgSrc("/images/logo.png")}
-        />
+      <div className="relative w-full aspect-square mb-4 group">
+      <Image
+        src={imgError ? "/images/small.webp" : beat.thumbnailUrl || "/images/small.webp"}
+        alt={beat.title}
+        fill
+        className="rounded-xl shadow-md object-cover"
+
+      />
+
+<AudioPlayer audioUrl={beat.audioUrl} />
+
       </div>
       <h2 className="text-2xl font-bold mb-2 text-cyan-300 text-center">
         {beat.title}
@@ -32,31 +43,17 @@ const BeatCard = ({
       <p className="text-gray-400 text-center mb-4">
         {beat.prompt || "No description."}
       </p>
-      <div className="flex items-center justify-between w-full mt-auto">
-        <span className="text-xl font-semibold text-purple-300">
+      <div className="flex flex-col w-full space-y-2">
+        <span className="text-xl font-semibold text-purple-300 text-center">
           ${beat.price?.toFixed(2) || "2.00"}
         </span>
         <button
-          className={`ml-4 px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-full shadow-lg transition-transform ${
-            purchasingId === beat.id
-              ? "opacity-60 cursor-not-allowed"
-              : "hover:scale-105"
-          }`}
-          disabled={!beat.isPublic || isPurchased || purchasingId === beat.id}
-          onClick={() => onPurchase(beat.id)}
+          onClick={() => router.push(`/productions/purchase/${beat.id}`)}
+          className="w-full py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-full hover:opacity-90"
         >
-          {!beat.isPublic
-            ? "Not for Sale"
-            : isPurchased
-            ? "Purchased"
-            : purchasingId === beat.id
-            ? "Processing..."
-            : "Buy Now"}
+          {isPurchased ? "Purchased" : "Buy Now"}
         </button>
       </div>
-      {purchaseError && purchasingId === beat.id && (
-        <div className="text-red-400 text-sm mt-2">{purchaseError}</div>
-      )}
     </div>
   );
 };

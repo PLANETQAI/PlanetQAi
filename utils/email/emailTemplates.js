@@ -531,9 +531,86 @@ export const shareEmailTemplate = (sharerName, shareUrl, songs) => {
   return { html, text };
 };
 
+/**
+ * Generate song purchase email template
+ * @param {Object} song - The song being purchased
+ * @param {Object} user - The user making the purchase
+ * @param {Object} purchaseDetails - Details of the purchase
+ * @returns {Object} - HTML and text versions of the email
+ */
+
+export const songPurchaseTemplate = (song, user, purchaseDetails) => {
+  return `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; background: #0f172a; color: #fff; padding: 32px 0;">
+      <div style="max-width: 480px; margin: 0 auto; background: #18181b; border-radius: 18px; box-shadow: 0 8px 32px #0002; padding: 32px 28px;">
+        <div style="text-align:center; margin-bottom: 24px;">
+          <img src="https://your-logo-url.png" alt="Your Logo" style="width: 120px; margin-bottom: 16px;" />
+          <h2 style="color: #a21caf; font-size: 2rem; margin: 0;">Song Purchased!</h2>
+          <p style="color: #94a3b8; margin-top: 8px;">Thank you for your purchase, ${user.name || 'Valued Customer'}!</p>
+        </div>
+
+        <div style="background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+          <div style="display: flex; gap: 16px; margin-bottom: 16px;">
+            <img 
+              src="${song.thumbnailUrl || 'https://via.placeholder.com/100'}" 
+              alt="${song.title}" 
+              style="width: 100px; height: 100px; object-fit: cover; border-radius: 8px;"
+            />
+            <div>
+              <h3 style="color: #e2e8f0; margin: 0 0 8px 0; font-size: 1.25rem;">${song.title}</h3>
+              <p style="color: #94a3b8; margin: 0 0 4px 0;">${song.provider || 'Premium Beat'}</p>
+              <p style="color: #a78bfa; font-weight: 600; margin: 8px 0 0 0;">$${purchaseDetails.price?.toFixed(2) || '0.00'}</p>
+            </div>
+          </div>
+        </div>
+
+        <div style="background: #1e293b; border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+          <h4 style="color: #e2e8f0; margin-top: 0; margin-bottom: 16px; font-size: 1rem;">Order Summary</h4>
+          
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #94a3b8;">Subtotal</span>
+            <span>$${purchaseDetails.price?.toFixed(2) || '0.00'}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+            <span style="color: #94a3b8;">Credits Used</span>
+            <span>${purchaseDetails.creditsUsed || 0}</span>
+          </div>
+          <div style="height: 1px; background: #334155; margin: 16px 0;"></div>
+          <div style="display: flex; justify-content: space-between; font-weight: 600;">
+            <span>Total</span>
+            <span>$${purchaseDetails.price?.toFixed(2) || '0.00'}</span>
+          </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 32px;">
+          <a 
+            href="${process.env.NEXTAUTH_URL}/productions/album" 
+            style="
+              display: inline-block; 
+              background: #a21caf; 
+              color: white; 
+              padding: 12px 24px; 
+              border-radius: 8px; 
+              text-decoration: none; 
+              font-weight: 600;
+              margin-bottom: 16px;
+            "
+          >
+            View Your Library
+          </a>
+          <p style="color: #94a3b8; font-size: 0.875rem; margin: 24px 0 0 0;">
+            Need help? Contact our <a href="mailto:support@yourdomain.com" style="color: #a78bfa; text-decoration: none;">support team</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  `;
+};
+
 export default {
   passwordResetTemplate,
   accountVerificationTemplate,
   purchaseReceiptTemplate,
-  shareEmailTemplate
+  shareEmailTemplate,
+  songPurchaseTemplate,
 };
