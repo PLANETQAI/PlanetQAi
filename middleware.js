@@ -13,7 +13,8 @@ const EXCLUDED_PATHS = [
 	'/productions',
 	'/productions/faqs',
 	'/productions/about',
-	'/productions/contact'
+	'/productions/contact',
+	'/productions/album'
 ];
 
 // Create a middleware handler that excludes webhook paths

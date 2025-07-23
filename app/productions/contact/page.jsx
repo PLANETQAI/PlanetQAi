@@ -106,7 +106,7 @@ const ContactPage = () => {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-white">Email</h3>
-                    <p className="text-gray-400">contact@planetqradio.com</p>
+                    <p className="text-gray-400">quincin2000@planetqproductions.com</p>
                   </div>
                 </div>
                 
@@ -119,7 +119,7 @@ const ContactPage = () => {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-white">Location</h3>
-                    <p className="text-gray-400">Nairobi, Kenya</p>
+                    <p className="text-gray-400">USA</p>
                   </div>
                 </div>
                 
@@ -131,8 +131,8 @@ const ContactPage = () => {
                   </div>
                   <div className="ml-4">
                     <h3 className="text-lg font-medium text-white">Business Hours</h3>
-                    <p className="text-gray-400">Monday - Friday: 9:00 AM - 6:00 PM EAT</p>
-                    <p className="text-gray-400">Saturday: 10:00 AM - 4:00 PM EAT</p>
+                    <p className="text-gray-400">Monday - Friday: 9:00 AM - 6:00 PM EST</p>
+                    <p className="text-gray-400">Saturday: 10:00 AM - 4:00 PM EST</p>
                     <p className="text-gray-400">Sunday: Closed</p>
                   </div>
                 </div>

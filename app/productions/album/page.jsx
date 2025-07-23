@@ -44,9 +44,13 @@ const BeatCard = ({ beat, isPurchased, purchasingId, onPurchase, purchaseError }
         {beat.prompt || "No description."}
       </p>
       <div className="flex flex-col w-full space-y-2">
-        <span className="text-xl font-semibold text-purple-300 text-center">
+        <div>   <span className="text-xl font-semibold text-purple-300 text-center">
           ${beat.price?.toFixed(2) || "2.00"}
         </span>
+        <span className="text-sm font-light">
+          {beat.creditsUsed} Credits
+        </span></div>
+     
         <button
           onClick={() => router.push(`/productions/purchase/${beat.id}`)}
           className="w-full py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-full hover:opacity-90"
