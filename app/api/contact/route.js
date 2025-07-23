@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { sendEmail } from '@/utils/email/emailService';
 
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+
 export async function POST(request) {
   try {
     const { name, email, subject, message } = await request.json();
