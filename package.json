@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "npx prisma generate && npx prisma migrate deploy && node scripts/verify-schema.js && next lint && next build",
+    "build": "npx prisma generate && npx prisma migrate deploy && node scripts/verify-schema.js && npm run lint && next build",
     "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "postinstall": "npx prisma generate",
