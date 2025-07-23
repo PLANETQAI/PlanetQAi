@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 
 // Here's the links I have two links
 
@@ -138,7 +139,7 @@ const PreviousIcon = () => (
 
 const RadioPage = () => {
   // Modern radio page with multiple Spotify embeds
-
+const router = useRouter();
   return (
     <div className="min-h-screen text-white relative overflow-x-hidden font-sans">
       <BackgroundPattern />
@@ -155,6 +156,13 @@ const RadioPage = () => {
         <p className="text-center text-lg text-gray-300 mb-10">
           Enjoy curated Spotify playlists and tracks. Click play and vibe out!
         </p>
+  
+        <div className="flex justify-center items-center">
+          <p className="text-center text-lg text-gray-300 mb-10">Do you want to have a full album?</p>
+          <button className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-2 px-4 rounded-full hover:opacity-90" onClick={() => router.push('/productions/contact')}>
+            Check Other users Albums
+          </button>
+        </div>
 
         <div className="space-y-10">
           {spotifyEmbeds.map((embed, idx) => (

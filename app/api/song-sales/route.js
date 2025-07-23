@@ -1,15 +1,16 @@
-import { getServerSession } from "next-auth";
+
 import prisma from "@/lib/prisma";
-import { authOptions } from "@/lib/auth";
+import { auth } from "@/lib/auth";
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
-    const session = await getServerSession(authOptions);
-    if (!session?.user?.id) {
-      return new Response(JSON.stringify({ error: "Unauthorized" }), {
-        status: 401,
-      });
-    }
+     const session = await auth();
+     
+     if (!session?.user?.id) {
+       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+     }
+ 
     // Get all songs by this user
     const songs = await prisma.song.findMany({
       where: { userId: session.user.id },

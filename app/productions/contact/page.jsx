@@ -33,13 +33,23 @@ const ContactPage = () => {
     setIsSubmitting(true);
     
     try {
-      // Here you would typically send the form data to your API
-      // For now, we'll simulate a successful submission
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const response = await fetch('/api/contact', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.message || 'Something went wrong');
+      }
       
       setSubmitStatus({
         success: true,
-        message: 'Your message has been sent successfully! We\'ll get back to you soon.'
+        message: data.message || 'Your message has been sent successfully! We\'ll get back to you soon.'
       });
       
       // Reset form
@@ -56,9 +66,10 @@ const ContactPage = () => {
       }, 5000);
       
     } catch (error) {
+      console.error('Error sending message:', error);
       setSubmitStatus({
         success: false,
-        message: 'Something went wrong. Please try again later.'
+        message: error.message || 'Failed to send message. Please try again later or contact us directly at quincin2000@planetqproductions.com'
       });
     } finally {
       setIsSubmitting(false);
