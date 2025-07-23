@@ -1,17 +1,21 @@
-import nextPlugin from '@next/eslint-plugin-next';
 import js from '@eslint/js';
+import nextPlugin from '@next/eslint-plugin-next';
 
+/** @type {import('eslint').Linter.FlatConfig[]} */
 export default [
   {
     ignores: ['.next/**', 'node_modules/**', 'out/**', 'build/**'],
   },
   {
-    files: ['**/*.js', '**/*.jsx', '**/*.ts', '**/*.tsx'],
+    files: ['**/*.{js,jsx,ts,tsx}'],
     languageOptions: {
       ecmaVersion: 'latest',
       sourceType: 'module',
+      parserOptions: {
+        ecmaFeatures: { jsx: true },   // 👈 KEY: allow JSX parsing
+      },
       globals: {
-        React: 'readonly',
+        React: 'readonly', // Next injects React types as needed; safe to keep
         JSX: 'readonly',
         process: 'readonly',
         Buffer: 'readonly',
@@ -46,7 +50,7 @@ export default [
       ...js.configs.recommended.rules,
       ...nextPlugin.configs.recommended.rules,
       ...nextPlugin.configs['core-web-vitals'].rules,
-      'react/no-unescaped-entities': 'off',
+      'react/no-unescaped-entities': 'off',          // harmless to leave; ignored if no react plugin
       '@next/next/no-page-custom-font': 'off',
       'no-unused-vars': ['warn', { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }],
       'no-console': 'off',
