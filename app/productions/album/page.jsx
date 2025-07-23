@@ -6,55 +6,60 @@ import Image from "next/image";
 import { useSession, signIn } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 
-// Move this out to its own file ideally
 const BeatCard = ({
   beat,
   isPurchased,
   purchasingId,
   onPurchase,
   purchaseError,
-}) => (
-  <div className="bg-gray-900/80 rounded-2xl shadow-lg p-6 flex flex-col items-center">
-    <Image
-      src={beat.thumbnailUrl || "/images/radio/cover1.jpg"}
-      alt={beat.title}
-      width={220}
-      height={220}
-      className="rounded-xl mb-4 shadow-md object-cover"
-    />
-    <h2 className="text-2xl font-bold mb-2 text-cyan-300 text-center">
-      {beat.title}
-    </h2>
-    <p className="text-gray-400 text-center mb-4">
-      {beat.mood || beat.prompt || "No description."}
-    </p>
-    <div className="flex items-center justify-between w-full mt-auto">
-      <span className="text-xl font-semibold text-purple-300">
-        {beat.creditsUsed ? `$${(beat.creditsUsed * 2).toFixed(2)}` : "$2.00"}
-      </span>
-      <button
-        className={`ml-4 px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-full shadow-lg transition-transform ${
-          purchasingId === beat.id
-            ? "opacity-60 cursor-not-allowed"
-            : "hover:scale-105"
-        }`}
-        disabled={!beat.isForSale || isPurchased || purchasingId === beat.id}
-        onClick={() => onPurchase(beat.id)}
-      >
-        {!beat.isForSale
-          ? "Not for Sale"
-          : isPurchased
-          ? "Purchased"
-          : purchasingId === beat.id
-          ? "Processing..."
-          : "Buy Now"}
-      </button>
+}) => {
+  const [imgSrc, setImgSrc] = useState(beat.thumbnailUrl || "/images/logo.png");
+
+  return (
+    <div className="bg-gray-900/80 rounded-2xl shadow-lg p-6 flex flex-col items-center">
+      <div className="relative w-full aspect-square mb-4">
+        <Image
+          src={imgSrc}
+          alt={beat.title}
+          fill
+          className="rounded-xl shadow-md object-cover"
+          onError={() => setImgSrc("/images/logo.png")}
+        />
+      </div>
+      <h2 className="text-2xl font-bold mb-2 text-cyan-300 text-center">
+        {beat.title}
+      </h2>
+      <p className="text-gray-400 text-center mb-4">
+        {beat.prompt || "No description."}
+      </p>
+      <div className="flex items-center justify-between w-full mt-auto">
+        <span className="text-xl font-semibold text-purple-300">
+          ${beat.price?.toFixed(2) || "2.00"}
+        </span>
+        <button
+          className={`ml-4 px-5 py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-full shadow-lg transition-transform ${
+            purchasingId === beat.id
+              ? "opacity-60 cursor-not-allowed"
+              : "hover:scale-105"
+          }`}
+          disabled={!beat.isPublic || isPurchased || purchasingId === beat.id}
+          onClick={() => onPurchase(beat.id)}
+        >
+          {!beat.isPublic
+            ? "Not for Sale"
+            : isPurchased
+            ? "Purchased"
+            : purchasingId === beat.id
+            ? "Processing..."
+            : "Buy Now"}
+        </button>
+      </div>
+      {purchaseError && purchasingId === beat.id && (
+        <div className="text-red-400 text-sm mt-2">{purchaseError}</div>
+      )}
     </div>
-    {purchaseError && purchasingId === beat.id && (
-      <div className="text-red-400 text-sm mt-2">{purchaseError}</div>
-    )}
-  </div>
-);
+  );
+};
 
 const FuturisticHipHopBeats = () => {
   const [beats, setBeats] = useState([]);
@@ -129,12 +134,13 @@ const FuturisticHipHopBeats = () => {
   useEffect(() => {
     async function fetchSongs() {
       try {
-        const res = await fetch("/api/songs");
+        const res = await fetch("/api/songs/public");
         const data = await res.json();
-        console.log(data);
+        console.log("Fetched songs:", data);
         setBeats(data.songs || []);
       } catch (err) {
-        setError("Failed to load beats.");
+        console.error("Error fetching songs:", err);
+        setError("Failed to load beats. Please try again later.");
       } finally {
         setLoading(false);
       }
