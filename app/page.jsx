@@ -41,7 +41,6 @@ export default function Landing() {
             ref={videoRef}
             className="w-full h-full object-cover"
             onClick={togglePlay}
-            loop
             playsInline
           >
             <source src="/videos/intro_video.mp4" type="video/mp4" />
@@ -54,8 +53,8 @@ export default function Landing() {
               className="absolute inset-0 flex items-center justify-center cursor-pointer"
               onClick={togglePlay}
             >
-            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-100/80 to-purple-400/80 backdrop-blur-md flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 opacity-90 ring-2 ring-purple-400/40">
-            <div className="w-0 h-0 border-t-8 border-b-8 border-l-16 border-t-transparent border-b-transparent border-l-white ml-1"></div>
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-100/80 to-purple-400/80 backdrop-blur-md flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 opacity-90 ring-2 ring-purple-400/40">
+                <div className="w-0 h-0 border-t-8 border-b-8 border-l-16 border-t-transparent border-b-transparent border-l-white ml-1"></div>
               </div>
             </div>
           )}
