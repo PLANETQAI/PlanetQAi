@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
-import Image from "next/image";
+import StarsWrapper from "@/components/canvas/StarsWrapper";
 
 export default function Landing() {
   const router = useRouter();
@@ -31,14 +31,12 @@ export default function Landing() {
   };
 
   return (
-    <div className="w-full min-h-screen h-full flex flex-col items-center justify-center bg-black relative overflow-hidden">
-      {/* Background with stars */}
-      <div className="absolute inset-0 bg-[url('/images/stars-bg.png')] bg-cover bg-center opacity-30"></div>
-      
+    <div className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-auto">
+      <StarsWrapper />
       {/* Main content */}
       <div className="relative z-10 w-full max-w-4xl px-4">
         {/* Video with play button */}
-        <div className="relative w-full aspect-video max-h-[70vh] bg-black rounded-2xl overflow-hidden">
+        <div className="relative w-[500px] h-[500px] mx-auto rounded-full overflow-hidden border-4 border-purple-400/30 shadow-[0_0_50px_rgba(167,139,250,0.3)]">
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -49,23 +47,20 @@ export default function Landing() {
             <source src="/videos/intro_video.mp4" type="video/mp4" />
             Your browser does not support the video tag.
           </video>
-          
+
           {/* Play button overlay */}
           {!isPlaying && (
-            <div 
+            <div
               className="absolute inset-0 flex items-center justify-center cursor-pointer"
               onClick={togglePlay}
             >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg transform hover:scale-110 transition-transform duration-300">
-                <div className="w-0 h-0 border-t-8 border-b-8 border-l-16 border-t-transparent border-b-transparent border-l-white ml-1"></div>
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-100/80 to-purple-400/80 backdrop-blur-md flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 opacity-90 ring-2 ring-purple-400/40">
+            <div className="w-0 h-0 border-t-8 border-b-8 border-l-16 border-t-transparent border-b-transparent border-l-white ml-1"></div>
               </div>
             </div>
           )}
         </div>
-        
-        {/* Black separator */}
-        <div className="h-16 bg-black w-full"></div>
-        
+
         {/* Enter Website button */}
         <div className="flex flex-col items-center mt-4">
           <button
@@ -74,16 +69,6 @@ export default function Landing() {
           >
             Enter Website
           </button>
-          
-          {/* Pagination dots */}
-          <div className="flex space-x-2 mt-8">
-            {[1, 2, 3, 4, 5].map((dot) => (
-              <div 
-                key={dot}
-                className={`w-2 h-2 rounded-full ${dot === 1 ? 'bg-white' : 'bg-gray-600'}`}
-              ></div>
-            ))}
-          </div>
         </div>
       </div>
     </div>
