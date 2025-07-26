@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import dynamic from 'next/dynamic'
 import Image from 'next/image'
 import classes from '../../components/planetqproductioncomp/musicplayer.module.css'
@@ -13,14 +13,24 @@ import 'react-toastify/dist/ReactToastify.css'
 const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false })
 
 const Player = ({ userVideos }) => {
-	const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
+	const [currentVideoIndex, setCurrentVideoIndex] = useState(3)
 	const [songs, setSongs] = useState(userVideos ? [...userVideos] : [])
 	const [deleteLoading, setDeleteLoading] = useState(false)
 	const [updateLoading, setUpdateLoading] = useState(false)
+	const [isPlaying, setIsPlaying] = useState(true);
 
-	const handleVideoEnd = () => {
-		setCurrentVideoIndex(prevIndex => (prevIndex + 1) % userVideos.length)
-	}
+
+	useEffect(() => {
+		if (userVideos && userVideos.length > 0) {
+		  setSongs([...userVideos]);
+		}
+	  }, [userVideos]);
+	
+	  const handleVideoEnd = () => {
+		if (songs.length === 0) return;
+		setCurrentVideoIndex(prevIndex => (prevIndex + 1) % songs.length);
+	  };
+	console.log(userVideos)
 
 	const deleteSong = async songId => {
 		const confirmed = confirm('Are you sure you want to delete this song?')
@@ -83,7 +93,7 @@ const Player = ({ userVideos }) => {
 				{songs.length > 0 ? (
 					<ReactPlayer
 						url={userVideos[currentVideoIndex]?.videoLink}
-						playing
+						playing={isPlaying}
 						light={'/images/client.png'}
 						style={{ width: '100%', height: 'auto', objectFit: 'contain' }}
 						playIcon={
@@ -100,8 +110,21 @@ const Player = ({ userVideos }) => {
 								/>
 							</div>
 						}
-						controls={false}
+						controls
+						onPlay={() => setIsPlaying(true)}
+						onPause={() => setIsPlaying(false)}
 						onEnded={handleVideoEnd}
+						config={{
+							youtube: {
+							  playerVars: {
+								autoplay: 1,
+								controls: 1,
+								rel: 0,
+								showinfo: 0,
+								modestbranding: 1,
+							  },
+							},
+						  }}
 					/>
 				) : (
 					<div className="text-white text-start flex flex-col justify-center items-center">
