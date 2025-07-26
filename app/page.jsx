@@ -36,7 +36,7 @@ export default function Landing() {
       {/* Main content */}
       <div className="relative z-10 w-full max-w-4xl px-4">
         {/* Video with play button */}
-        <div className="relative w-[500px] h-[500px] mx-auto rounded-full overflow-hidden border-4 border-purple-400/30 shadow-[0_0_50px_rgba(167,139,250,0.3)]">
+        <div className="relative w-[90vw] h-[90vw] max-w-[500px] max-h-[500px] mx-auto rounded-full overflow-hidden border-4 border-purple-400/30 shadow-[0_0_50px_rgba(167,139,250,0.3)]">
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -53,8 +53,8 @@ export default function Landing() {
               className="absolute inset-0 flex items-center justify-center cursor-pointer"
               onClick={togglePlay}
             >
-              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-100/80 to-purple-400/80 backdrop-blur-md flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 opacity-90 ring-2 ring-purple-400/40">
-                <div className="w-0 h-0 border-t-8 border-b-8 border-l-16 border-t-transparent border-b-transparent border-l-white ml-1"></div>
+              <div className="w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-full bg-gradient-to-br from-purple-100/80 to-purple-400/80 backdrop-blur-md flex items-center justify-center shadow-2xl hover:scale-110 transition-all duration-300 opacity-90 ring-2 ring-purple-400/40">
+                <div className="w-0 h-0 border-t-6 border-b-6 border-l-12 sm:border-t-7 sm:border-b-7 sm:border-l-14 md:border-t-8 md:border-b-8 md:border-l-16 border-t-transparent border-b-transparent border-l-white ml-1"></div>
               </div>
             </div>
           )}
