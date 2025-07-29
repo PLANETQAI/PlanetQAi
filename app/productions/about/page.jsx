@@ -120,7 +120,7 @@ const AboutPage = () => {
                   
                   {/* Rotating Coin */}
                   <RotatingCoin 
-                    src="/images/planetq-coin.png" 
+                    src="/images/coin.gif" 
                     alt="Planet Q Crypto Coin" 
                   />
                   

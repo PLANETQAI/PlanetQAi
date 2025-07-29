@@ -17,6 +17,7 @@ const EXCLUDED_PATHS = [
   "/productions/contact",
   "/productions/album",
   "/carousel-test",
+  "/planetqgames",
 ];
 
 // Create a middleware handler that excludes webhook paths

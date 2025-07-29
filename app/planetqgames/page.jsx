@@ -1,11 +1,37 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import dynamic from 'next/dynamic';
 import StarsWrapper from '@/components/canvas/StarsWrapper';
 import Image from "next/image";
 import { useSpring, animated } from 'react-spring';
+import { getVideos } from '@/actions/videoActions';
+
+// Dynamically import Player with SSR disabled
+const Player = dynamic(() => import('../my-studio/player'), {
+  ssr: false,
+  loading: () => <div className="w-full h-64 flex items-center justify-center">Loading player...</div>
+});
 
 const PlanetQGamesPage = () => {
+
+    const [videos, setVideos] = useState([]);
+    const [loading, setLoading] = useState(true);
+  
+    useEffect(() => {
+      const fetchVideos = async () => {
+        try {
+          const videoData = await getVideos();
+          setVideos(videoData);
+        } catch (error) {
+          console.error('Error loading videos:', error);
+        } finally {
+          setLoading(false);
+        }
+      };
+  
+      fetchVideos();
+    }, []);
   // Animation properties
   const titleProps = useSpring({
     from: { opacity: 0, transform: 'translateY(-50px)' },
@@ -29,10 +55,25 @@ const PlanetQGamesPage = () => {
   });
 
   const pulseAnimation = useSpring({
-    from: { transform: 'scale(1)' },
-    to: { transform: 'scale(1.03)' },
+    from: { opacity: 1, transform: 'scale(1)' },
+    to: { opacity: 1, transform: 'scale(1.03)' },
     config: { duration: 2000 },
     loop: { reverse: true },
+  });
+
+  // Animation for grid items
+  const gridItems = [
+    { icon: '🎮', title: 'Epic Quests', desc: 'Immersive storylines' },
+    { icon: '🌌', title: 'Open Worlds', desc: 'Vast landscapes' },
+    { icon: '⚔️', title: 'Action-Packed', desc: 'Thrilling combat' },
+    { icon: '🎨', title: 'Stunning Visuals', desc: 'Next-gen graphics' }
+  ];
+
+  const gridAnimations = useSpring({
+    from: { opacity: 0, y: 40 },
+    to: { opacity: 1, y: 0 },
+    config: { mass: 1, tension: 120, friction: 14 },
+    delay: 800
   });
 
   return (
@@ -67,15 +108,23 @@ const PlanetQGamesPage = () => {
             Crafting immersive worlds and unforgettable adventures
           </animated.p>
         </div>
-
         <animated.div 
+          style={imageProps}
+          className="relative group"
+        >
+          <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl opacity-70 group-hover:opacity-100 blur-xl transition duration-500 group-hover:duration-200"></div>
+          <div className="relative overflow-hidden">
+            <Player userVideos={videos} />
+          </div>
+        </animated.div>
+        {/* <animated.div 
           style={imageProps}
           className="relative group"
         >
           <div className="absolute -inset-4 bg-gradient-to-r from-purple-600 to-blue-600 rounded-2xl opacity-70 group-hover:opacity-100 blur-xl transition duration-500 group-hover:duration-200"></div>
           <div className="relative bg-gradient-to-br from-gray-900 to-gray-800 p-1 rounded-2xl overflow-hidden">
             <Image
-              src="/images/video-game.jpg"
+              src="/images/video-game.png"
               alt="Game in Development"
               width={800}
               height={450}
@@ -89,7 +138,7 @@ const PlanetQGamesPage = () => {
               </div>
             </div>
           </div>
-        </animated.div>
+        </animated.div> */}
 
         <animated.div 
           style={pulseAnimation}
@@ -101,25 +150,18 @@ const PlanetQGamesPage = () => {
         </animated.div>
 
         <div className="mt-20 grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
-          {[
-            { icon: '🎮', title: 'Epic Quests', desc: 'Immersive storylines' },
-            { icon: '🌌', title: 'Open Worlds', desc: 'Vast landscapes' },
-            { icon: '⚔️', title: 'Action-Packed', desc: 'Thrilling combat' },
-            { icon: '🎨', title: 'Stunning Visuals', desc: 'Next-gen graphics' }
-          ].map((item, index) => (
+          {gridItems.map((item, index) => (
             <animated.div 
               key={index}
-              style={useSpring({
-                from: { opacity: 0, y: 40 },
-                to: { opacity: 1, y: 0 },
-                delay: 800 + (index * 100),
-                config: { mass: 1, tension: 120, friction: 14 }
-              })}
+              style={{
+                ...gridAnimations,
+                transitionDelay: `${index * 100}ms`
+              }}
               className="bg-gray-900/50 backdrop-blur-sm p-6 rounded-xl border border-gray-800 hover:border-purple-500/30 transition-colors"
             >
               <div className="text-4xl mb-3">{item.icon}</div>
               <h3 className="text-xl font-bold text-white mb-1">{item.title}</h3>
-              <p className="text-gray-400">{item.title === 'Stunning Visuals' ? 'Next-gen graphics' : item.desc}</p>
+              <p className="text-gray-400">{item.desc}</p>
             </animated.div>
           ))}
         </div>
