@@ -9,6 +9,21 @@ export default function SaleToggleButton({ songId, isForSale: initialIsForSale, 
 
   const toggleSaleStatus = async () => {
     const newStatus = !isForSale;
+    
+    // Show confirmation dialog
+    const confirmMessage = newStatus 
+      ? 'Are you sure you want to mark this song for sale?\n\n' +
+        '• Your song will be visible to other users\n' +
+        '• You can change this setting anytime\n' +
+        '• Private songs are only visible to you'
+      : 'Are you sure you want to make this song private?\n\n' +
+        '• Your song will no longer be visible to other users\n' +
+        '• You can make it public again anytime';
+    
+    if (!window.confirm(confirmMessage)) {
+      return; // User cancelled the action
+    }
+    
     setIsLoading(true);
     
     try {
