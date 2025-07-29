@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef } from "react"
 import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2, MessageCircle, Facebook, Twitter } from "lucide-react"
+import SaleToggleButton from "./player/SaleToggleButton"
 
 const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showShareButton = true }) => {
   const [currentSong, setCurrentSong] = useState(0)
@@ -524,7 +525,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                 <div className="flex items-center space-x-4">
                   <div className="relative">
                     <img
-                      src={song.cover || "/placeholder.svg"}
+                      src={song.cover || "/logo.png"}
                       alt={song.title}
                       className="w-16 h-16 rounded-xl object-cover transition-transform duration-300 group-hover:scale-110"
                     />
@@ -551,7 +552,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                         index === currentSong ? "text-purple-300" : "text-gray-400 group-hover:text-gray-300"
                       }`}
                     >
-                      {song.artist}
+                      {song.artist || song.provider}
                     </p>
                   </div>
 
@@ -571,6 +572,15 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                         <Share2 className="w-4 h-4" />
                       </button>
                     )}
+
+                    <SaleToggleButton 
+                      songId={song.id} 
+                      isForSale={song.isForSale}
+                      onStatusChange={(updatedSong) => {
+                        // Refresh the page to reflect the changes
+                        window.location.reload();
+                      }}
+                    />
 
                     {/* Delete Button */}
                     {!isPublic && (

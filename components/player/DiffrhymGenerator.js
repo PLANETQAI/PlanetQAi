@@ -239,6 +239,9 @@ const DiffrhymGenerator = ({
 						});
 					}
 					
+					// Ensure isForSale is always a boolean
+					const isForSale = Boolean(song.isForSale);
+					
 					return {
 						id: song.id,
 						title: song.title || 'Untitled Song',
@@ -248,10 +251,13 @@ const DiffrhymGenerator = ({
 						duration: song.duration || 0,
 						createdAt: song.createdAt,
 						generator: provider,
+						isForSale: isForSale, // Ensure this is a boolean
 						prompt: song.prompt,
 						style: song.style || style,
 						tempo: song.tempo || tempo,
-						mood: song.mood || mood
+						mood: song.mood || mood,
+						// Include all original song properties to ensure nothing is lost
+						...song
 					};
 				})
 				

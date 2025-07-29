@@ -329,7 +329,6 @@ const SunoGenerator = ({
 				
 				// Update user credits after successful generation
 				fetchUserCredits()
-
 				// Process the songs to ensure they have all required fields
 				const processedSongs = data.output.songs.map(song => ({
 					...song,
@@ -460,6 +459,7 @@ const SunoGenerator = ({
 			
 			const data = await response.json()
 			console.log('All songs from API:', data)
+
 			if (data.songs && Array.isArray(data.songs)) {
 				// Filter songs for Suno provider
 				const sunoSongs = data.songs.filter(song => {
@@ -520,7 +520,7 @@ const SunoGenerator = ({
 					
 					// If song has song_path but no audioUrl, use song_path as audioUrl
 					const audioUrl = song.audioUrl || song.song_path || (isCurrentSong ? generatedAudio : null);
-					
+					const isForSale = Boolean(song.isForSale);
 					// All songs in this list are completed since we filtered out pending ones
 					const status = 'completed';
 					
@@ -534,6 +534,7 @@ const SunoGenerator = ({
 						image_path: song.image_path || song.coverImageUrl || song.thumbnailUrl,
 						duration: song.duration || 0,
 						createdAt: song.createdAt,
+						isForSale: isForSale,
 						generator: provider,
 						prompt: song.prompt,
 						style: song.style || style,

@@ -2,6 +2,7 @@
 
 import React from 'react'
 import { Music, Clock } from 'lucide-react'
+import SaleToggleButton from './SaleToggleButton'
 
 const SongList = ({ 
   songs, 
@@ -10,6 +11,8 @@ const SongList = ({
   generator 
 }) => {
   // Helper function to check if a song is pending
+
+  console.log('Checking for pending songs...', songs)
   const isSongPending = (song) => {
     // Check if the song has a status tag indicating it's pending
     if (song.tags && song.tags.some(tag => tag === 'status:pending')) {
@@ -69,31 +72,39 @@ const SongList = ({
             </div>
           </div>
           
-          {/* Duration */}
-          <div className="text-gray-400 text-xs flex items-center gap-1 ml-3">
-            <Clock className="w-3 h-3" />
-            <span>{formatDuration(song.duration)}</span>
-          </div>
-          
-          {/* Generator badge */}
+          <div>{/* Duration */} {/* Generator badge */}
           <div className="ml-2 px-2 py-0.5 bg-gray-700 text-gray-300 text-xs rounded-full">
             {generator === 'diffrhym' ? 'Q_World Studio' : 'Planet Q AI'}
           </div>
+          <div className="text-gray-400 text-xs mt-2 flex items-center gap-1 ml-3">
+            <Clock className="w-3 h-3" />
+            <span>{song.duration}</span>
+          </div>
+          
+         </div>
+          
           
           {/* Pending indicator */}
           {isSongPending(song) && (
             <div className="ml-2 px-2 py-0.5 bg-amber-600 text-white text-xs rounded-full flex items-center">
               <div className="animate-pulse mr-1 h-2 w-2 rounded-full bg-white"></div>
-              Generating
+              ..
             </div>
           )}
           
-          {/* New song indicator */}
+          {/* New song indicator
           {!isSongPending(song) && index === 0 && (
-            <div className="ml-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full">
+            <div className="ml-2 px-2 py-0.5 bg-purple-600 text-white text-xs rounded-full mr-6">
               Latest
             </div>
-          )}
+          )} */}
+           <div className="ml-2" onClick={(e) => e.stopPropagation()}>
+             <SaleToggleButton 
+               songId={song.id}
+               isForSale={song.isForSale}
+               onStatusChange={() => window.location.reload()}
+             />
+           </div>
         </div>
       ))}
     </div>

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSession } from "next-auth/react";
 import FuturisticMusicPlayer from '@/components/FuturisticMusicPlayer';
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader';
+import RootLoader from '@/app/loading';
 
 const MySongsPage = () => {
   const { data: session } = useSession();
@@ -32,7 +33,7 @@ const MySongsPage = () => {
   };
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div><RootLoader /></div>;
   }
 
   return <div>
