@@ -241,16 +241,16 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
   // If no songs are available, show a message
   if (!currentSongs || currentSongs.length === 0) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white flex items-center justify-center p-8">
-        <div className="text-center max-w-md bg-black/40 backdrop-blur-lg rounded-3xl p-8 border border-white/10 shadow-2xl transform hover:scale-105 transition-all duration-500">
-          <div className="mb-6">
-            <div className="w-40 h-40 mx-auto rounded-full bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center mb-6">
-              <svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-purple-400">
-                <path d="M9 18V5l12-2v13"></path>
-                <circle cx="6" cy="18" r="3"></circle>
-                <circle cx="18" cy="16" r="3"></circle>
-              </svg>
-            </div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-purple-900 to-black text-white flex items-center justify-center p-4 sm:p-6">
+        <div className="text-center max-w-md w-full mx-4 sm:mx-6">
+          <div className="w-24 h-24 sm:w-32 sm:h-32 mx-auto mb-4 sm:mb-6 rounded-full bg-gradient-to-r from-purple-500/20 to-pink-500/20 flex items-center justify-center animate-pulse-slow">
+            <Music className="w-12 h-12 sm:w-16 sm:h-16 text-purple-400" />
+          </div>
+          <h2 className="text-xl sm:text-2xl font-bold mb-3 sm:mb-4">No songs available</h2>
+          <p className="text-gray-400 mb-4 sm:mb-6 text-sm sm:text-base">
+            Add some songs to your playlist to get started.
+          </p>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center">
             <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
               No Songs Shared
             </h2>
