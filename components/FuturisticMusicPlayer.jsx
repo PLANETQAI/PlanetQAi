@@ -278,38 +278,38 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
       />
       {/* Animated Background */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div className="absolute top-3/4 right-1/4 w-96 h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-1000"></div>
-        <div className="absolute bottom-1/4 left-1/3 w-96 h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
+        <div className="absolute top-1/4 left-1/4 w-48 h-48 md:w-80 md:h-80 lg:w-96 lg:h-96 bg-purple-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
+        <div className="absolute top-3/4 right-1/4 w-48 h-48 md:w-80 md:h-80 lg:w-96 lg:h-96 bg-blue-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-1000"></div>
+        <div className="absolute bottom-1/4 left-1/3 w-48 h-48 md:w-80 md:h-80 lg:w-96 lg:h-96 bg-pink-500 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse animation-delay-2000"></div>
       </div>
 
       {/* Grid Pattern */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTAgMEw0MCA0MCIgc3Ryb2tlPSJyZ2JhKDI1NSwgMjU1LCAyNTUsIDAuMDUpIi8+CjxwYXRoIGQ9Ik00MCAwTDAgNDAiIHN0cm9rZT0icmdiYSgyNTUsIDI1NSwgMjU1LCAwLjA1KSIvPgo8L3N2Zz4K')] opacity-30"></div>
 
-      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-8">
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen p-4 sm:p-6 md:p-8">
         {/* Main Player */}
-        <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl max-w-md w-full transform hover:scale-105 transition-all duration-500 animate-float">
+        <div className="bg-black/40 backdrop-blur-xl rounded-3xl p-4 sm:p-6 md:p-8 border border-white/10 shadow-2xl w-full max-w-xs sm:max-w-sm md:max-w-md transform hover:scale-105 transition-all duration-500 animate-float">
           {/* Album Art with Highly Animated Rings */}
-          <div className="relative mb-8">
-            <div className="w-80 h-80 mx-auto rounded-full overflow-hidden relative group">
+          <div className="relative mb-6 sm:mb-8">
+            <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto rounded-full overflow-hidden relative group">
               {/* Multiple Animated Rings */}
               <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-spin-slow"></div>
               <div className="absolute inset-1 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-spin-reverse"></div>
-              <div className="absolute inset-3 bg-gradient-to-br from-pink-400 via-blue-400 to-purple-400 animate-spin-slow-2"></div>
+              <div className="absolute inset-2 sm:inset-3 bg-gradient-to-br from-pink-400 via-blue-400 to-purple-400 animate-spin-slow-2"></div>
 
               {/* Pulsing Outer Rings */}
-              <div className="absolute -inset-4 bg-gradient-to-br from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-full animate-pulse-ring"></div>
-              <div className="absolute -inset-8 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full animate-pulse-ring-delayed"></div>
+              <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 bg-gradient-to-br from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-full animate-pulse-ring"></div>
+              <div className="absolute -inset-4 sm:-inset-6 md:-inset-8 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full animate-pulse-ring-delayed"></div>
 
               {/* Rotating Particles */}
               <div className="absolute inset-0 animate-spin-particles">
-                <div className="absolute top-4 left-1/2 w-2 h-2 bg-white rounded-full animate-ping"></div>
-                <div className="absolute bottom-4 left-1/4 w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="absolute top-1/3 right-4 w-1.5 h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
-                <div className="absolute bottom-1/3 left-4 w-1 h-1 bg-blue-400 rounded-full animate-ping"></div>
+                <div className="absolute top-3 sm:top-4 left-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white rounded-full animate-ping"></div>
+                <div className="absolute bottom-3 sm:bottom-4 left-1/4 w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
+                <div className="absolute top-1/3 right-3 sm:right-4 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
+                <div className="absolute bottom-1/3 left-3 sm:left-4 w-1 h-1 bg-blue-400 rounded-full animate-ping"></div>
               </div>
 
-              <div className="absolute inset-4 bg-black rounded-full overflow-hidden">
+              <div className="absolute inset-2 sm:inset-3 md:inset-4 bg-black rounded-full overflow-hidden">
                 <img
                   src={currentTrack.cover || "/placeholder.svg"}
                   alt={currentTrack.title}
@@ -320,15 +320,19 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
 
               {/* Enhanced Glowing Ring Effects */}
               <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-pulse-glow opacity-75 blur-sm"></div>
-              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-pulse-glow-delayed opacity-50 blur-md"></div>
+              <div className="absolute inset-1 sm:inset-2 rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-pulse-glow-delayed opacity-50 blur-md"></div>
 
               {/* Play Button Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
                 <button
                   onClick={togglePlay}
-                  className="w-16 h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300 shadow-lg animate-bounce-subtle"
+                  className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300 shadow-lg animate-bounce-subtle"
+                  aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
-                  {isPlaying ? <Pause className="w-8 h-8 text-black" /> : <Play className="w-8 h-8 text-black ml-1" />}
+                  {isPlaying ? 
+                    <Pause className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-black" /> : 
+                    <Play className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-black ml-0.5 sm:ml-1" />
+                  }
                 </button>
               </div>
             </div>
@@ -359,102 +363,117 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
             </div>
           </div>
 
-          {/* Enhanced Futuristic Controls */}
-          <div className="flex items-center justify-center space-x-8 mb-8">
-            {/* Enhanced Shuffle Control */}
+          {/* Enhanced Futuristic Controls - Responsive */}
+          <div className="flex items-center justify-center space-x-2 sm:space-x-4 md:space-x-6 lg:space-x-8 mb-6 sm:mb-8 px-1">
+            {/* Shuffle Control - Responsive */}
             <div className="relative">
               <div
-                className={`absolute -inset-4 rounded-full ${isShuffling ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"} blur-xl opacity-40 animate-pulse`}
+                className={`absolute -inset-2 sm:-inset-3 md:-inset-4 rounded-full ${
+                  isShuffling ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"
+                } blur-md sm:blur-xl opacity-40 animate-pulse`}
               ></div>
               <div
-                className={`absolute -inset-2 rounded-full ${isShuffling ? "bg-gradient-to-r from-purple-400 to-pink-400" : "bg-gray-500"} blur-lg opacity-60 animate-pulse-delayed`}
+                className={`absolute -inset-1 sm:-inset-2 rounded-full ${
+                  isShuffling ? "bg-gradient-to-r from-purple-400 to-pink-400" : "bg-gray-500"
+                } blur-sm sm:blur-lg opacity-60 animate-pulse-delayed`}
               ></div>
               <button
                 onClick={() => setIsShuffling(!isShuffling)}
-                className={`relative w-16 h-16 rounded-full border-4 flex items-center justify-center transition-all duration-500 transform hover:scale-125 ${
+                className={`relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full border-2 sm:border-3 md:border-4 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${
                   isShuffling
-                    ? "border-purple-400 bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-2xl shadow-purple-500/50"
+                    ? "border-purple-400 bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg sm:shadow-2xl shadow-purple-500/50"
                     : "border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10"
                 }`}
+                aria-label={isShuffling ? "Disable shuffle" : "Enable shuffle"}
               >
-                <Shuffle className="w-7 h-7" />
+                <Shuffle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" />
                 {isShuffling && (
                   <>
-                    <div className="absolute inset-0 rounded-full border-4 border-purple-400 animate-ping"></div>
-                    <div className="absolute inset-2 rounded-full border-2 border-pink-400 animate-pulse"></div>
+                    <div className="absolute inset-0 rounded-full border-2 sm:border-3 md:border-4 border-purple-400 animate-ping"></div>
+                    <div className="absolute inset-1 sm:inset-2 rounded-full border border-pink-400 animate-pulse"></div>
                   </>
                 )}
               </button>
             </div>
 
-            {/* Previous Control */}
+            {/* Previous Control - Responsive */}
             <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-gray-600 blur-md opacity-30"></div>
+              <div className="absolute inset-0 rounded-full bg-gray-600 blur-sm sm:blur-md opacity-30"></div>
               <button
                 onClick={handlePrevious}
-                className="relative w-14 h-14 rounded-full border-2 border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10 flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:rotate-12"
+                className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full border border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 hover:rotate-12"
+                aria-label="Previous track"
               >
-                <SkipBack className="w-6 h-6" />
-                <div className="absolute inset-0 rounded-full border-2 border-transparent hover:border-white/20 transition-all duration-300"></div>
+                <SkipBack className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                <div className="absolute inset-0 rounded-full border border-transparent hover:border-white/20 transition-all duration-300"></div>
               </button>
             </div>
 
-            {/* Main Play/Pause Control */}
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 blur-lg opacity-60 animate-pulse"></div>
+            {/* Main Play/Pause Control - Responsive */}
+            <div className="relative mx-1 sm:mx-2">
+              <div className="absolute inset-0 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 blur-md sm:blur-lg opacity-60 animate-pulse"></div>
               <button
                 onClick={togglePlay}
-                className="relative w-20 h-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 shadow-2xl shadow-purple-500/50"
+                className="relative w-14 h-14 sm:w-16 sm:h-16 md:w-20 md:h-20 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 shadow-xl sm:shadow-2xl shadow-purple-500/50"
+                aria-label={isPlaying ? "Pause" : "Play"}
               >
-                {isPlaying ? <Pause className="w-10 h-10" /> : <Play className="w-10 h-10 ml-1" />}
-                <div className="absolute inset-0 rounded-full border-4 border-white/20 animate-spin-slow"></div>
-                <div className="absolute inset-2 rounded-full border-2 border-white/10 animate-pulse"></div>
+                {isPlaying ? (
+                  <Pause className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10" />
+                ) : (
+                  <Play className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 lg:w-10 lg:h-10 ml-0.5 sm:ml-1" />
+                )}
+                <div className="absolute inset-0 rounded-full border-2 sm:border-3 md:border-4 border-white/20 animate-spin-slow"></div>
+                <div className="absolute inset-1 sm:inset-2 rounded-full border border-white/10 animate-pulse"></div>
               </button>
             </div>
 
-            {/* Next Control */}
+            {/* Next Control - Responsive */}
             <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-gray-600 blur-md opacity-30"></div>
+              <div className="absolute inset-0 rounded-full bg-gray-600 blur-sm sm:blur-md opacity-30"></div>
               <button
                 onClick={handleNext}
-                className="relative w-14 h-14 rounded-full border-2 border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10 flex items-center justify-center transition-all duration-300 transform hover:scale-110 hover:-rotate-12"
+                className="relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 rounded-full border border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 hover:-rotate-12"
+                aria-label="Next track"
               >
-                <SkipForward className="w-6 h-6" />
-                <div className="absolute inset-0 rounded-full border-2 border-transparent hover:border-white/20 transition-all duration-300"></div>
+                <SkipForward className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6" />
+                <div className="absolute inset-0 rounded-full border border-transparent hover:border-white/20 transition-all duration-300"></div>
               </button>
             </div>
 
-            {/* Repeat Control */}
+            {/* Repeat Control - Responsive */}
             <div className="relative">
               <div
-                className={`absolute inset-0 rounded-full ${isLooping ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"} blur-md opacity-50 animate-pulse`}
+                className={`absolute inset-0 rounded-full ${
+                  isLooping ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"
+                } blur-sm sm:blur-md opacity-50 animate-pulse`}
               ></div>
               <button
                 onClick={() => setIsLooping(!isLooping)}
-                className={`relative w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all duration-500 transform hover:scale-110 ${
+                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-500 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${
                   isLooping
                     ? "border-purple-400 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white shadow-lg shadow-purple-500/50"
-                    : "border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white"
+                    : "bg-black/50 text-gray-400 hover:border-white hover:text-white"
                 }`}
+                aria-label={isLooping ? "Disable repeat" : "Enable repeat"}
               >
-                <Repeat className="w-5 h-5" />
+                <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
                 {isLooping && (
-                  <div className="absolute inset-0 rounded-full border-2 border-purple-400 animate-ping"></div>
+                  <div className="absolute inset-0 rounded-full border border-purple-400 animate-ping"></div>
                 )}
               </button>
             </div>
           </div>
 
-          {/* Enhanced Volume Control Section */}
-          <div className="flex items-center justify-center mb-8">
-            <div className="flex items-center space-x-6 bg-black/30 backdrop-blur-lg rounded-full px-8 py-4 border border-white/10">
-              <Volume2 className="w-6 h-6 text-purple-400" />
-              <div className="relative w-40">
+          {/* Enhanced Volume Control Section - Responsive */}
+          <div className="flex items-center justify-center mb-6 sm:mb-8 px-2">
+            <div className="flex items-center space-x-2 sm:space-x-4 md:space-x-6 bg-black/30 backdrop-blur-lg rounded-full px-4 py-2 sm:px-6 sm:py-3 md:px-8 md:py-4 border border-white/10 w-full max-w-xs sm:max-w-sm">
+              <Volume2 className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 text-purple-400 flex-shrink-0" />
+              <div className="relative w-full max-w-[180px] sm:max-w-[200px]">
                 {/* Volume Track */}
-                <div className="w-full h-3 bg-gray-700 rounded-full relative overflow-hidden">
+                <div className="w-full h-1.5 sm:h-2 md:h-3 bg-gray-700 rounded-full relative overflow-hidden">
                   <div className="absolute inset-0 bg-gradient-to-r from-purple-500/30 to-pink-500/30 rounded-full animate-pulse"></div>
                   <div
-                    className="h-3 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300 relative overflow-hidden"
+                    className="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300 relative overflow-hidden"
                     style={{ width: `${volume * 100}%` }}
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-white/30 to-transparent animate-shimmer"></div>
@@ -469,18 +488,21 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                   step="0.1"
                   value={volume}
                   onChange={(e) => setVolume(Number.parseFloat(e.target.value))}
-                  className="absolute inset-0 w-full h-3 opacity-0 cursor-pointer"
+                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                  aria-label="Volume control"
                 />
 
                 {/* Volume Thumb */}
                 <div
-                  className="absolute top-1/2 w-5 h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transform -translate-y-1/2 shadow-lg shadow-purple-500/50 animate-pulse pointer-events-none"
-                  style={{ left: `calc(${volume * 100}% - 10px)` }}
+                  className="absolute top-1/2 w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transform -translate-y-1/2 shadow-md shadow-purple-500/50 animate-pulse pointer-events-none"
+                  style={{ left: `calc(${volume * 100}% - 6px)` }}
                 >
-                  <div className="absolute inset-0 rounded-full border-2 border-white/30 animate-ping"></div>
+                  <div className="absolute inset-0 rounded-full border border-white/30 animate-ping"></div>
                 </div>
               </div>
-              <span className="text-purple-400 font-mono text-sm min-w-[3rem]">{Math.round(volume * 100)}%</span>
+              <span className="text-purple-400 font-mono text-xs sm:text-sm min-w-[2rem] sm:min-w-[3rem] text-right">
+                {Math.round(volume * 100)}%
+              </span>
             </div>
           </div>
 
@@ -506,170 +528,192 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
           </div>
         </div>
 
-        {/* Enhanced Playlist */}
-        <div className="mt-8 bg-black/40 backdrop-blur-xl rounded-3xl p-6 border border-white/10 shadow-2xl max-w-2xl w-full animate-slide-up">
-          <h3 className="text-xl font-bold mb-6 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+        {/* Enhanced Playlist - Responsive */}
+        <div className="mt-6 sm:mt-8 bg-black/40 backdrop-blur-xl rounded-3xl p-3 sm:p-4 md:p-6 border border-white/10 shadow-2xl w-full max-w-2xl animate-slide-up mx-2 sm:mx-4">
+          <h3 className="text-lg sm:text-xl font-bold mb-4 sm:mb-6 text-center bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             Now Playing Queue
           </h3>
-          <div className="grid gap-3 max-h-96 overflow-y-auto scrollbar-hide">
+          <div className="grid gap-2 sm:gap-3 max-h-64 sm:max-h-80 md:max-h-96 overflow-y-auto scrollbar-hide px-1">
             {currentSongs.map((song, index) => (
               <div
                 key={song.id}
                 onClick={() => setCurrentSong(index)}
-                className={`group p-4 rounded-xl cursor-pointer transition-all duration-500 transform hover:scale-105 ${
+                className={`group p-2 sm:p-3 md:p-4 rounded-xl cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
                   index === currentSong
                     ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/50 shadow-lg shadow-purple-500/25 animate-glow-border"
                     : "bg-white/5 hover:bg-white/10 hover:shadow-lg"
                 }`}
               >
-                <div className="flex items-center space-x-4">
-                  <div className="relative">
+                <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
+                  <div className="relative flex-shrink-0">
                     <img
                       src={song.cover || "/logo.png"}
                       alt={song.title}
-                      className="w-16 h-16 rounded-xl object-cover transition-transform duration-300 group-hover:scale-110"
+                      className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     {index === currentSong && (
-                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-xl animate-pulse"></div>
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 to-pink-500/20 rounded-lg sm:rounded-xl animate-pulse"></div>
                     )}
                     {index === currentSong && isPlaying && (
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-4 h-4 bg-white rounded-full animate-ping"></div>
+                        <div className="w-2 h-2 sm:w-3 sm:h-3 md:w-4 md:h-4 bg-white rounded-full animate-ping"></div>
                       </div>
                     )}
                   </div>
 
-                  <div className="flex-1">
+                  <div className="flex-1 min-w-0">
                     <p
-                      className={`font-semibold text-base mb-1 transition-colors duration-300 ${
+                      className={`font-semibold text-sm sm:text-base truncate mb-0.5 sm:mb-1 transition-colors duration-300 ${
                         index === currentSong ? "text-white" : "text-gray-200 group-hover:text-white"
                       }`}
+                      title={song.title}
                     >
                       {song.title}
                     </p>
                     <p
-                      className={`text-sm transition-colors duration-300 ${
+                      className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
                         index === currentSong ? "text-purple-300" : "text-gray-400 group-hover:text-gray-300"
                       }`}
+                      title={song.artist || song.provider}
                     >
                       {song.artist || song.provider}
                     </p>
                   </div>
 
-                  <div className="flex items-center space-x-3">
-                    <span className="text-gray-400 text-sm font-mono">{song.duration}</span>
+                  <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
+                    <span className="text-gray-400 text-xs sm:text-sm font-mono whitespace-nowrap">
+                      {song.duration}
+                    </span>
 
-                    {/* Share Button */}
-                    {showShareButton && (
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handleShare(song);
+                    {/* Action Buttons */}
+                    <div className="flex items-center space-x-1 sm:space-x-2">
+                      {showShareButton && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleShare(song);
+                          }}
+                          className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-300 opacity-100 sm:opacity-0 group-hover:opacity-100"
+                          aria-label="Share song"
+                        >
+                          <Share2 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
+                        </button>
+                      )}
+
+                      <SaleToggleButton 
+                        songId={song.id} 
+                        isForSale={song.isForSale}
+                        onStatusChange={(updatedSong) => {
+                          window.location.reload();
                         }}
-                        className="p-2 rounded-full text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-300 opacity-0 group-hover:opacity-100"
-                        aria-label="Share song"
-                      >
-                        <Share2 className="w-4 h-4" />
-                      </button>
-                    )}
+                        className="w-6 h-6 sm:w-8 sm:h-8"
+                      />
 
-                    <SaleToggleButton 
-                      songId={song.id} 
-                      isForSale={song.isForSale}
-                      onStatusChange={(updatedSong) => {
-                        // Refresh the page to reflect the changes
-                        window.location.reload();
-                      }}
-                    />
+                      {!isPublic && (
+                        <button 
+                          onClick={(e) => deleteSong(song.id, e)}
+                          className="p-1.5 sm:p-2 rounded-full hover:bg-gray-700 transition-colors"
+                          aria-label="Delete song"
+                        >
+                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 hover:text-red-400" />
+                        </button>
+                      )}
 
-                    {/* Delete Button */}
-                    {!isPublic && (
-                      <button 
-                        onClick={(e) => deleteSong(song.id, e)}
-                        className="p-2 rounded-full hover:bg-gray-700 transition-colors"
-                        aria-label="Delete song"
-                      >
-                        <Trash2 className="w-5 h-5 text-gray-400 hover:text-red-400" />
-                      </button>
-                    )}
-
-                    {index === currentSong && (
-                      <div className="flex space-x-1">
-                        <div className="w-1 h-4 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full animate-bounce"></div>
-                        <div
-                          className="w-1 h-4 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.1s" }}
-                        ></div>
-                        <div
-                          className="w-1 h-4 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full animate-bounce"
-                          style={{ animationDelay: "0.2s" }}
-                        ></div>
-                      </div>
-                    )}
+                      {index === currentSong && (
+                        <div className="hidden sm:flex space-x-0.5 ml-1">
+                          <div className="w-0.5 h-3 sm:h-4 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full animate-bounce"></div>
+                          <div
+                            className="w-0.5 h-3 sm:h-4 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.1s" }}
+                          ></div>
+                          <div
+                            className="w-0.5 h-3 sm:h-4 bg-gradient-to-t from-purple-500 to-pink-500 rounded-full animate-bounce"
+                            style={{ animationDelay: "0.2s" }}
+                          ></div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
 
-                {/* Hover effect line */}
+                {/* Current track indicator */}
                 <div
-                  className={`h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-500 ${
+                  className={`h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300 ${
                     index === currentSong
                       ? "w-full opacity-100"
                       : "w-0 opacity-0 group-hover:w-full group-hover:opacity-50"
-                  } mt-3`}
+                  } mt-2 sm:mt-3`}
                 ></div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Share Modal */}
+        {/* Share Modal - Responsive */}
         {showShareModal && (
-          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
-            <div className="bg-black/80 backdrop-blur-xl rounded-3xl p-8 border border-white/10 shadow-2xl max-w-md w-full mx-4">
-              <h3 className="text-xl font-bold mb-6 text-center">Share Songs</h3>
+          <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4">
+            <div className="bg-gray-900/95 border border-white/10 rounded-xl sm:rounded-2xl p-4 sm:p-6 w-full max-w-md mx-2 sm:mx-4 backdrop-blur-xl relative overflow-hidden">
+              {/* Animated background elements */}
+              <div className="absolute inset-0 overflow-hidden">
+                <div className="absolute -top-16 -left-16 sm:-top-20 sm:-left-20 w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-r from-purple-500/20 to-pink-500/20 rounded-full filter blur-2xl sm:blur-3xl animate-pulse-slow"></div>
+                <div className="absolute -bottom-16 -right-16 sm:-bottom-20 sm:-right-20 w-32 h-32 sm:w-40 sm:h-40 bg-gradient-to-r from-blue-500/20 to-cyan-500/20 rounded-full filter blur-2xl sm:blur-3xl animate-pulse-slow animation-delay-2000"></div>
+              </div>
 
-              <div className="space-y-3 max-h-60 overflow-y-auto mb-6">
-                {currentSongs.map((song) => (
-                  <div
-                    key={song.id}
-                    className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300"
+              <div className="relative z-10">
+                <div className="flex justify-between items-center mb-4 sm:mb-6">
+                  <h3 className="text-lg sm:text-xl font-bold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">Share Tracks</h3>
+                  <button
+                    onClick={() => setShowShareModal(false)}
+                    className="text-gray-400 hover:text-white p-1 rounded-full hover:bg-white/10 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500/50"
+                    aria-label="Close share modal"
                   >
-                    <input
-                      type="checkbox"
-                      checked={selectedSongs.includes(song.id)}
-                      onChange={() => toggleSongSelection(song.id)}
-                      className="w-4 h-4 text-purple-500 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
-                    />
-                    <img
-                      src={song.cover || "/placeholder.svg"}
-                      alt={song.title}
-                      className="w-10 h-10 rounded-lg object-cover"
-                    />
-                    <div className="flex-1">
-                      <p className="font-medium text-sm">{song.title}</p>
-                      <p className="text-gray-400 text-xs">{song.artist}</p>
+                    <X className="w-5 h-5 sm:w-6 sm:h-6" />
+                  </button>
+                </div>
+
+                <div className="space-y-4 max-h-60 overflow-y-auto mb-4 sm:mb-6 pr-2">
+                  {currentSongs.map((song) => (
+                    <div
+                      key={song.id}
+                      className="flex items-center space-x-3 p-3 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedSongs.includes(song.id)}
+                        onChange={() => toggleSongSelection(song.id)}
+                        className="w-4 h-4 text-purple-500 bg-gray-700 border-gray-600 rounded focus:ring-purple-500"
+                        aria-label={`Select ${song.title} for sharing`}
+                      />
+                      <img
+                        src={song.cover || "/logo.png"}
+                        alt={song.title}
+                        className="w-8 h-8 sm:w-10 sm:h-10 rounded-lg object-cover"
+                      />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm sm:text-base font-medium truncate">{song.title}</p>
+                        <p className="text-xs text-gray-400 truncate">{song.artist || 'Unknown Artist'}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
 
-              <div className="flex space-x-4">
-                <button
-                  onClick={() => handleGenerateLink(selectedSongs)}
-                  disabled={selectedSongs.length === 0}
-                  className="flex-1 py-3 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  Share Selected
-                </button>
-                <button
-                  onClick={() => handleGenerateLink(currentSongs.map(s => s.id))}
-                  className="flex-1 py-3 px-4 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-all duration-300"
-                >
-                  Share All
-                </button>
-              </div>
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <button
+                    onClick={() => handleGenerateLink(selectedSongs)}
+                    disabled={selectedSongs.length === 0}
+                    className="flex-1 py-2 sm:py-3 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:scale-105 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    Share Selected
+                  </button>
+                  <button
+                    onClick={() => handleGenerateLink(currentSongs.map(s => s.id))}
+                    className="flex-1 py-2 sm:py-3 px-4 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-all duration-300"
+                  >
+                    Share All
+                  </button>
+                </div>
 
-              {shareLink && (
+                {shareLink && (
                 <div className="mt-6 space-y-4">
                   <div className="flex items-center space-x-2">
                     <input
@@ -735,12 +779,13 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                 </div>
               )}
 
-              <button
-                onClick={() => setShowShareModal(false)}
-                className="w-full mt-4 py-3 px-4 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-600 transition-all duration-300"
-              >
-                Cancel
-              </button>
+                <button
+                  onClick={() => setShowShareModal(false)}
+                  className="w-full mt-4 py-3 px-4 rounded-lg bg-gray-700 text-white font-medium hover:bg-gray-600 transition-all duration-300"
+                >
+                  Cancel
+                </button>
+              </div>
             </div>
           </div>
         )}
