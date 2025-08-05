@@ -15,17 +15,13 @@ import { useRouter } from "next/navigation";
 // List of Spotify playlist or track embed URLs
 const spotifyEmbeds = [
   {
-    title: "Today's Hits",
-    url: "https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M?utm_source=generator",
+    title: "Artist 1",
+    url: "https://open.spotify.com/embed/artist/2QAFHW7dvr7EbnlPY7PDbq?utm_source=generator"
   },
   {
-    title: "Today's Hits",
-    url: "https://open.spotify.com/artist/2QAFHW7dvr7EbnlPY7PDbq?si=H7nfkzLCRXi9eYYx7d0NxQ",
-  },
-  {
-    title: "Today's Hits",
-    url: "https://open.spotify.com/artist/5AWlrst9quIeaE4VWSvOVA?si=unNKcUtpQY-5Os-qJY-DtA",
-  },
+    title: "Artist 2",
+    url: "https://open.spotify.com/embed/artist/5AWlrst9quIeaE4VWSvOVA?utm_source=generator"
+  }
 ];
 
 // Background pattern component

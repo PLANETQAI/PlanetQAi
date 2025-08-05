@@ -34,15 +34,15 @@ const BeatCard = ({ beat, isPurchased, purchasingId, onPurchase, purchaseError }
 
       />
 
-<AudioPlayer audioUrl={beat.audioUrl} />
+      <AudioPlayer audioUrl={beat.audioUrl} />
 
       </div>
       <h2 className="text-2xl font-bold mb-2 text-cyan-300 text-center">
         {beat.title}
       </h2>
-      <p className="text-gray-400 text-center mb-4">
+      {/* <p className="text-gray-400 text-center mb-4">
         {beat.prompt || "No description."}
-      </p>
+      </p> */}
       <div className="flex flex-col w-full space-y-2">
         <div>   <span className="text-xl font-semibold text-purple-300 text-center">
           ${beat.price?.toFixed(2) || "2.00"}
@@ -160,9 +160,7 @@ const FuturisticHipHopBeats = () => {
           <p className="text-lg text-gray-300 mb-2">
             The Sci Fi Channel Of Hip Hop and R&B
           </p>
-          <p className="text-md text-gray-400">
-            All songs come with album art, MP3 and WAV files.
-          </p>
+          
         </div>
 
         {/* Beats Grid */}
