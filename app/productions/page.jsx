@@ -19,12 +19,12 @@ const spotifyEmbeds = [
     url: "https://open.spotify.com/embed/playlist/37i9dQZF1DXcBWIGoYBM5M?utm_source=generator",
   },
   {
-    title: "Chill Vibes",
-    url: "https://open.spotify.com/embed/playlist/37i9dQZF1DX4WYpdgoIcn6?utm_source=generator",
+    title: "Today's Hits",
+    url: "https://open.spotify.com/artist/2QAFHW7dvr7EbnlPY7PDbq?si=H7nfkzLCRXi9eYYx7d0NxQ",
   },
   {
-    title: "Electronic Mix",
-    url: "https://open.spotify.com/embed/playlist/37i9dQZF1DX8FwnYE6PRvL?utm_source=generator",
+    title: "Today's Hits",
+    url: "https://open.spotify.com/artist/5AWlrst9quIeaE4VWSvOVA?si=unNKcUtpQY-5Os-qJY-DtA",
   },
 ];
 
