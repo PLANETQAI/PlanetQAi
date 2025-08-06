@@ -40,7 +40,7 @@ const RadioLayout = ({ children }) => {
           <div className="flex flex-row md:flex-row md:items-center md:justify-between justify-between">
             <Link href="/radio" className="text-2xl font-bold mb-4 md:mb-0">
               <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">
-                Planet Q Radio
+                Planet Q Music Store
               </span>
             </Link>
 
