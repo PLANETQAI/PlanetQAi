@@ -36,7 +36,8 @@ export default function Landing() {
       {/* Main content */}
       <div className="relative z-10 w-full max-w-4xl px-4">
         {/* Video with play button */}
-        <div className="relative w-[90vw] h-[90vw] max-w-[500px] max-h-[500px] mx-auto rounded-full overflow-hidden border-4 border-purple-400/30 shadow-[0_0_50px_rgba(167,139,250,0.3)]">
+        <div className="flex items-center justify-center w-full my-8">
+        <div className="relative w-[90vw] h-[90vw] max-w-[500px] max-h-[500px] rounded-full overflow-hidden border-4 border-purple-400/30 shadow-[0_0_50px_rgba(167,139,250,0.3)]">
           <video
             ref={videoRef}
             className="w-full h-full object-cover"
@@ -59,6 +60,7 @@ export default function Landing() {
             </div>
           )}
         </div>
+      </div>
 
         {/* Enter Website button */}
         <div className="flex flex-col items-center mt-4">
