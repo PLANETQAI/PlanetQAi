@@ -68,7 +68,7 @@ export default function Landing() {
               onClick={handleGoToSite}
               className="px-12 py-4 bg-white text-blue-600 text-lg font-bold rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400 w-full max-w-[300px]"
             >
-              Enter Q Studio
+              Enter Q_World Studio
             </button>
           </div>
         </div>
