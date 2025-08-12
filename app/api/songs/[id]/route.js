@@ -19,8 +19,13 @@ export async function GET(request, { params }) {
     // Fetch song by ID
     const song = await prisma.song.findUnique({
       where: {
-        id: songId,
-        userId: session.user.id // Ensure the song belongs to the user
+        id: songId
+      },
+      select: {
+        id: true,
+        isForSale: true,
+        salePrice: true,
+        isLyricsPurchased: true,
       }
     })
     
@@ -52,7 +57,7 @@ export async function PATCH(request, { params }) {
     
     const songId = params.id
     const updateData = await request.json()
-    
+    console.log("The song Updated", updateData)
     // Validate that the song belongs to the user
     const existingSong = await prisma.song.findUnique({
       where: {
@@ -77,7 +82,7 @@ export async function PATCH(request, { params }) {
         ...updateData
       }
     })
-    
+    console.log("The song Updated", updatedSong)
     return NextResponse.json({ song: updatedSong })
   } catch (error) {
     console.error('Error updating song:', error)

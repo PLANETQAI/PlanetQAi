@@ -6,7 +6,7 @@ import Image from 'next/image'
 import { signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { IoIosLogOut } from 'react-icons/io'
-import { FaArrowAltCircleDown, FaMusic } from 'react-icons/fa'
+import { FaMusic } from 'react-icons/fa';
 import { CreditCard, Plus } from 'lucide-react'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 
@@ -94,7 +94,13 @@ export default function GlobalHeader({ session }) {
 							href="/my-songs"
 							className="flex items-center gap-1 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg px-3 py-2 font-medium transition-colors duration-200"
 						>
-							<FaArrowAltCircleDown className="text-blue-400" />
+							<Image 
+								src="/icons/tape.svg" 
+								alt="Downloads" 
+								width={25} 
+								height={25} 
+								className="text-blue-400"
+							/>
 							<span className="hidden sm:inline">Downloads</span>
 						</Link>
 

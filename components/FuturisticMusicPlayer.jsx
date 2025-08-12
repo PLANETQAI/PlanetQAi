@@ -602,7 +602,9 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
 
                       <SaleToggleButton 
                         songId={song.id} 
-                        isForSale={song.isForSale}
+                        isForSaleProp={song.isForSale}
+                        salePriceProp={song.salePrice}
+                        isLyricsPurchasedProp={song.isLyricsPurchased}
                         onStatusChange={(updatedSong) => {
                           window.location.reload();
                         }}
