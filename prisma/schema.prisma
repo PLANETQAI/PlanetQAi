@@ -79,6 +79,8 @@ model Song {
   thumbnailUrl     String?
   duration         Int
   creditsUsed      Int
+  isLyricsPurchased Boolean @default(false)
+  salePrice        Float?
   isPublic         Boolean   @default(false)
   isForSale       Boolean   @default(true)
   tags             String[]

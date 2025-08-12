@@ -101,7 +101,7 @@ const SongList = ({
            <div className="ml-2" onClick={(e) => e.stopPropagation()}>
              <SaleToggleButton 
                songId={song.id}
-               isForSale={song.isForSale}
+               isSetForSale={song.isForSale}
                onStatusChange={() => window.location.reload()}
              />
            </div>

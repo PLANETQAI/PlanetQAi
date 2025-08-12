@@ -14,7 +14,7 @@ export async function POST(req) {
     }
 
     // Parse request body
-    const { songId, price, creditsUsed } = await req.json();
+    const { songId, price, creditsUsed, isLyricsPurchased } = await req.json();
     if (!songId || price === undefined || creditsUsed === undefined) {
       return NextResponse.json(
         { error: 'Missing required fields' },
