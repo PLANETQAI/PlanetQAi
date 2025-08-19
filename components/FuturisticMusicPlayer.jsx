@@ -575,9 +575,9 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                       className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
                         index === currentSong ? "text-purple-300" : "text-gray-400 group-hover:text-gray-300"
                       }`}
-                      title={song.artist || song.provider}
+                      title={song.provider === 'suno' ? 'PlanetQ AI' : 'Q_world studio'}
                     >
-                      {song.artist || song.provider}
+                      {song.provider === 'suno' ? 'PlanetQ AI' : 'Q_world studio'}
                     </p>
                   </div>
 
