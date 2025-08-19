@@ -12,12 +12,14 @@ import 'react-toastify/dist/ReactToastify.css'
 
 const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false })
 
-const Player = ({ userVideos }) => {
-	const [currentVideoIndex, setCurrentVideoIndex] = useState(3)
+const Player = ({ userVideos, showList = true }) => {
 	const [songs, setSongs] = useState(userVideos ? [...userVideos] : [])
+	const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
 	const [deleteLoading, setDeleteLoading] = useState(false)
 	const [updateLoading, setUpdateLoading] = useState(false)
 	const [isPlaying, setIsPlaying] = useState(true);
+
+	console.log("userVideos", songs)
 
 
 	useEffect(() => {
@@ -138,10 +140,13 @@ const Player = ({ userVideos }) => {
 					</div>
 				)}
 			</div>
-			<div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 mt-20">
-				{songs.map((song, indx) => (
-					<div
-						key={indx}
+
+			{
+				showList && (	
+					<div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-2 gap-6 mt-20">
+					{songs.map((song, indx) => (
+						<div
+							key={indx}
 						className="bg-[#11111146] backdrop-filter backdrop-blur-lg bg-opacity-80 border border-gray-200 rounded-lg p-6 hover:shadow-lg transition-shadow duration-300 relative"
 					>
 						<div className="w-full flex justify-between">
@@ -163,9 +168,9 @@ const Player = ({ userVideos }) => {
 									<Link href={song.videoLink} target="_blank">
 										<h2 className="text-xl font-semibold mb-2 text-white hover:underline">{song.title}</h2>
 									</Link>
-									<p className="text-gray-400 flex items-center gap-1">
+									{/* <p className="text-gray-400 flex items-center gap-1">
 										<CiUser /> {song.user?.fullName || 'Not-Available'}
-									</p>
+									</p> */}
 								</div>
 							</div>
 						</div>
@@ -205,6 +210,8 @@ const Player = ({ userVideos }) => {
 					</div>
 				))}
 			</div>
+			)
+		}
 		</div>
 	)
 }
