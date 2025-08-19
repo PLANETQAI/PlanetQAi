@@ -8,7 +8,7 @@ import classes from "../../components/planetqproductioncomp/musicplayer.module.c
 import { useSpring, animated } from "react-spring";
 import Player from "../my-studio/player";
 import { getVideos } from "@/actions/videoActions";
-
+import Image from "next/image";
 
 const ReactPlayer = dynamic(() => import("react-player/lazy"), { ssr: false });
 
@@ -41,7 +41,16 @@ const VideoPlayerPage = () => {
   );
 
   if (loading) {
-    return <div>Loading videos...</div>;
+    return <div className="w-full flex h-screen justify-center items-center">
+      <Image
+        src={'/images/loader.webp'}
+        width={100}
+        height={100}
+        alt="loader"
+        unoptimized
+        className="w-full h-full max-h-svh object-cover"
+      />
+    </div>;
   }
 
   return (

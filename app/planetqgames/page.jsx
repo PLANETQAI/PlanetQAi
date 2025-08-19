@@ -108,7 +108,7 @@ const PlanetQGamesPage = () => {
             Crafting immersive worlds and unforgettable adventures
           </animated.p>
         </div>
-        <animated.div 
+        {/* <animated.div 
           style={imageProps}
           className="relative group"
         >
@@ -116,8 +116,8 @@ const PlanetQGamesPage = () => {
           <div className="relative overflow-hidden">
             <Player userVideos={videos} />
           </div>
-        </animated.div>
-        {/* <animated.div 
+        </animated.div> */}
+        <animated.div 
           style={imageProps}
           className="relative group"
         >
@@ -138,7 +138,7 @@ const PlanetQGamesPage = () => {
               </div>
             </div>
           </div>
-        </animated.div> */}
+        </animated.div>
 
         <animated.div 
           style={pulseAnimation}
