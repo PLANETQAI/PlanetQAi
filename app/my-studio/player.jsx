@@ -12,7 +12,7 @@ import 'react-toastify/dist/ReactToastify.css'
 
 const ReactPlayer = dynamic(() => import('react-player/lazy'), { ssr: false })
 
-const Player = ({ userVideos, showList = true }) => {
+const Player = ({ userVideos, showList = false }) => {
 	const [songs, setSongs] = useState(userVideos ? [...userVideos] : [])
 	const [currentVideoIndex, setCurrentVideoIndex] = useState(0)
 	const [deleteLoading, setDeleteLoading] = useState(false)

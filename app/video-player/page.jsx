@@ -60,12 +60,12 @@ const VideoPlayerPage = () => {
         style={props}
         className="relative z-10 bg-[#050816] p-4 sm:p-8 rounded-lg shadow-lg max-w-2xl w-full mx-4"
       >
-        <h1 className="text-3xl sm:text-4xl font-extrabold mb-6 text-white text-center">
+        {/* <h1 className="text-3xl sm:text-4xl font-extrabold mb-6 text-white text-center">
           Video Player
-        </h1>
+        </h1> */}
 
         <div className="w-full flex justify-center items-center mt-20">
-          <Player userVideos={videos} />
+          <Player userVideos={videos} showList={false}/>
         </div>
       </animated.div>
     </div>
