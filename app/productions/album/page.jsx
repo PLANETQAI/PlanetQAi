@@ -7,6 +7,7 @@ import { useSession, signIn } from "next-auth/react";
 import { redirect, useRouter } from "next/navigation";
 import AudioPlayer from "../_components/AudioPlayer";
 
+
 const BeatCard = ({ beat, isPurchased, purchasingId, onPurchase, purchaseError }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const audioRef = useRef(null);
@@ -26,15 +27,15 @@ const BeatCard = ({ beat, isPurchased, purchasingId, onPurchase, purchaseError }
   return (
     <div className="bg-gray-900/80 rounded-2xl shadow-lg p-6 flex flex-col items-center">
       <div className="relative w-full aspect-square mb-4 group">
-      <Image
-        src={imgError ? "/images/small.webp" : beat.thumbnailUrl || "/images/small.webp"}
-        alt={beat.title}
-        fill
-        className="rounded-xl shadow-md object-cover"
+        <Image
+          src={imgError ? "/images/small.webp" : beat.thumbnailUrl || "/images/small.webp"}
+          alt={beat.title}
+          fill
+          className="rounded-xl shadow-md object-cover"
 
-      />
+        />
 
-      <AudioPlayer audioUrl={beat.audioUrl} />
+        <AudioPlayer audioUrl={beat.audioUrl} />
 
       </div>
       <h2 className="text-2xl font-bold mb-2 text-cyan-300 text-center">
@@ -45,12 +46,13 @@ const BeatCard = ({ beat, isPurchased, purchasingId, onPurchase, purchaseError }
       </p> */}
       <div className="flex flex-col w-full space-y-2">
         <div>   <span className="text-xl font-semibold text-purple-300 text-center">
-          ${beat.price?.toFixed(2) || "2.00"}
+          ${beat.salePrice?.toFixed(2) || "2.00"}
         </span>
-        <span className="text-sm font-light">
-          {beat.creditsUsed} Credits
-        </span></div>
-     
+          {/* <span className="text-sm font-light">
+            {beat.creditsUsed} Credits
+          </span> */}
+          </div>
+
         <button
           onClick={() => router.push(`/productions/purchase/${beat.id}`)}
           className="w-full py-2 bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold rounded-full hover:opacity-90"
@@ -70,26 +72,26 @@ const FuturisticHipHopBeats = () => {
   const [purchaseError, setPurchaseError] = useState(null);
   const [purchasedSongs, setPurchasedSongs] = useState([]);
   const { data: session, status } = useSession();
- 
+
 
   const handlePurchase = useCallback(async (id) => {
     // Check authentication status
-  // Check if we have a valid session
-  if (!session) {
-    // Redirect to sign in with a callback URL to return here after login
-    signIn(undefined, { callbackUrl: '/productions/album' });
-    return;
-  }
+    // Check if we have a valid session
+    if (!session) {
+      // Redirect to sign in with a callback URL to return here after login
+      signIn(undefined, { callbackUrl: '/productions/album' });
+      return;
+    }
 
-  // If we're still loading the session, show a message
-  if (status === 'loading') {
-    setPurchaseError("Please wait, we're checking your session...");
-    return;
-  }
+    // If we're still loading the session, show a message
+    if (status === 'loading') {
+      setPurchaseError("Please wait, we're checking your session...");
+      return;
+    }
 
     setPurchaseError(null);
     setPurchasingId(id);
-    
+
     try {
       // Get the selected beat
       const beatToPurchase = beats.find(beat => beat.id === id);
@@ -100,12 +102,12 @@ const FuturisticHipHopBeats = () => {
       // Make the purchase request
       const res = await fetch("/api/song-purchase", {
         method: "POST",
-        headers: { 
+        headers: {
           "Content-Type": "application/json",
           // Include the session token if needed
           'Authorization': `Bearer ${session.accessToken}`
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           songId: id,
           price: beatToPurchase.creditsUsed || 1, // Default to 1 credit if not specified
           userId: session.user.id
@@ -113,17 +115,17 @@ const FuturisticHipHopBeats = () => {
       });
 
       const data = await res.json();
-      
+
       if (!res.ok) {
         throw new Error(data.error || "Purchase failed. Please try again.");
       }
-      
+
       // Update the UI to show the purchase was successful
       setPurchasedSongs(prev => [...prev, id]);
-      
+
       // Show success message (you might want to use a toast notification here)
       alert('Purchase successful! The song has been added to your library.');
-      
+
     } catch (err) {
       console.error('Purchase error:', err);
       setPurchaseError(err.message || "An error occurred during purchase. Please try again.");
@@ -149,6 +151,45 @@ const FuturisticHipHopBeats = () => {
     fetchSongs();
   }, []);
 
+  console.log("Beats:", beats);
+
+  if (loading) {
+    return (
+      <div className="w-full flex h-screen justify-center items-center">
+			<Image
+				src={'/images/loader.webp'}
+				width={100}
+				height={100}
+				alt="loader"
+				unoptimized
+				className="w-full h-full max-h-svh object-cover"
+			/>
+		</div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white font-sans">
+        <div className="max-w-4xl mx-auto px-4 py-12">
+          {/* Hero Section */}
+          <div className="text-center mb-12">
+            <h1 className="text-5xl font-extrabold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-lg">
+              Futuristic Hip Hop Beats
+            </h1>
+            <p className="text-lg text-gray-300 mb-2">
+              The Sci Fi Channel Of Hip Hop and R&B
+            </p>
+          </div>
+          {/* Beats Grid */}
+          <div className="text-center text-red-400 py-16 text-xl">
+            {error}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-black via-gray-900 to-purple-900 text-white font-sans">
       <div className="max-w-4xl mx-auto px-4 py-12">
@@ -160,17 +201,10 @@ const FuturisticHipHopBeats = () => {
           <p className="text-lg text-gray-300 mb-2">
             The Sci Fi Channel Of Hip Hop and R&B
           </p>
-          
+
         </div>
 
-        {/* Beats Grid */}
-        {loading ? (
-          <div className="text-center text-cyan-300 py-16 text-xl">
-            Loading beats...
-          </div>
-        ) : error ? (
-          <div className="text-center text-red-400 py-16 text-lg">{error}</div>
-        ) : (
+
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-8 mb-16">
             {beats.map((beat) => (
               <BeatCard
@@ -183,7 +217,7 @@ const FuturisticHipHopBeats = () => {
               />
             ))}
           </div>
-        )}
+
         {/* Footer Navigation */}
         <nav className="flex justify-center gap-8 border-t border-gray-800 pt-8 mt-8">
           <Link

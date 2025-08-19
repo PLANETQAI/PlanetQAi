@@ -116,11 +116,11 @@ export default function PurchasePage() {
             </div>
             <div>
               <h1 className="text-3xl font-bold mb-4">{beat.title}</h1>
-              <p className="text-gray-300 mb-6">{beat.prompt || "No description available."}</p>
+              {/* <p className="text-gray-300 mb-6">{beat.prompt || "No description available."}</p> */}
               
               <div className="space-y-4">
                 <div className="text-2xl font-bold text-purple-400">
-                  ${beat.price?.toFixed(2) || "2.00"}
+                  ${beat.salePrice?.toFixed(2) || "2.00"}
                 </div>
                 
                 <button

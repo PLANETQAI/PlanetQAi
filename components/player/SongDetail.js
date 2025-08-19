@@ -2,6 +2,18 @@
 
 import React, { useState } from 'react'
 import AudioPlayer from './audioPlayer'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+import { Button } from '../ui/button'
 
 const SongDetail = ({ 
   song, 
@@ -89,16 +101,27 @@ const SongDetail = ({
                 Edit Title
               </button>
               {onDeleteSong && (
-                <button 
-                  onClick={() => {
-                    if (window.confirm(`Are you sure you want to delete "${song.title}"?`)) {
-                      onDeleteSong(song.id);
-                    }
-                  }}
-                  className="text-red-400 hover:text-red-300 text-sm"
-                >
-                  Delete
-                </button>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <Button
+                      className="text-red-400 hover:text-red-300 text-sm"
+                    >
+                      Delete
+                    </Button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancel</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => onDeleteSong(song.id)}>Continue</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
               )}
             </div>
           </div>

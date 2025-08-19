@@ -5,6 +5,8 @@ import { useSession } from "next-auth/react";
 import FuturisticMusicPlayer from '@/components/FuturisticMusicPlayer';
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader';
 import RootLoader from '@/app/loading';
+import Image from 'next/image';
+
 
 const MySongsPage = () => {
   const { data: session } = useSession();

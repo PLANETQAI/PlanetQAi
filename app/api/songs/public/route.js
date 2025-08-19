@@ -23,11 +23,6 @@ export async function GET() {
             email: true,
           },
         },
-        purchases: {
-            select: {
-                userId: true
-            }
-        }
       },
       orderBy: {
         createdAt: 'desc',
@@ -37,7 +32,7 @@ export async function GET() {
     // Format songs with calculated price
     const formattedSongs = songs.map(song => {
       const credits = song.creditsUsed || 1;
-      const price = calculatePrice(credits);
+      const calculatedPrice = calculatePrice(credits);
       
       return {
         id: song.id,
@@ -47,7 +42,8 @@ export async function GET() {
         thumbnailUrl: song.thumbnailUrl,
         duration: song.duration,
         creditsUsed: credits,
-        price: price,
+        salePrice: song.salePrice,
+        price: song.salePrice !== null ? song.salePrice : calculatedPrice, // Use salePrice if available, otherwise calculatedPrice
         isPublic: song.isPublic,
         tags: song.tags,
         createdAt: song.createdAt,
@@ -56,6 +52,7 @@ export async function GET() {
         userId: song.userId,
         userName: song.user?.fullName,
         userEmail: song.user?.email,
+        purchases: song.purchases // Include the purchases data
       };
     });
 

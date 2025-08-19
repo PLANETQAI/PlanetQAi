@@ -43,6 +43,7 @@ export async function GET(request) {
       orderBy: { createdAt: "desc" },
       include: {
         User: { select: { id: true, fullName: true, email: true } },
+        purchases: true,
       },
       take: limit,
       skip: offset,

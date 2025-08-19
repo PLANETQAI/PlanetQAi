@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef } from "react"
 import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2, MessageCircle, Facebook, Twitter } from "lucide-react"
 import SaleToggleButton from "./player/SaleToggleButton"
+import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger ,AlertDialogDescription,AlertDialogAction} from "./ui/alert-dialog"
 
 const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showShareButton = true }) => {
   const [currentSong, setCurrentSong] = useState(0)
@@ -612,13 +613,28 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                       />
 
                       {!isPublic && (
-                        <button 
-                          onClick={(e) => deleteSong(song.id, e)}
-                          className="p-1.5 sm:p-2 rounded-full hover:bg-gray-700 transition-colors"
-                          aria-label="Delete song"
-                        >
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <button 
+                              className="p-1.5 sm:p-2 rounded-full hover:bg-gray-700 transition-colors"
+                              aria-label="Delete song"
+                            >
                           <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 hover:text-red-400" />
                         </button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent>
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel>Cancel</AlertDialogCancel>
+                          <AlertDialogAction onClick={(e) => deleteSong(song.id, e)}>Continue</AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
                       )}
 
                       {index === currentSong && (
