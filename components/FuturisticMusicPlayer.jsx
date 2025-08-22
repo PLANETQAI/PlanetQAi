@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react"
 import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2, MessageCircle, Facebook, Twitter } from "lucide-react"
 import SaleToggleButton from "./player/SaleToggleButton"
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger ,AlertDialogDescription,AlertDialogAction} from "./ui/alert-dialog"
+import toast from "react-hot-toast"
 
 const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showShareButton = true }) => {
   const [currentSong, setCurrentSong] = useState(0)
@@ -73,11 +74,12 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
       if (response.ok) {
         const updatedSongs = currentSongs.filter((song) => song.id !== songId)
         setCurrentSongs(updatedSongs)
-
+        toast.success('Song deleted successfully')
         // Adjust current song index if necessary
         if (currentSong >= updatedSongs.length) {
           setCurrentSong(Math.max(0, updatedSongs.length - 1))
         }
+     
       }
     } catch (error) {
       console.error('Failed to delete song:', error);

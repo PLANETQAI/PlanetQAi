@@ -160,13 +160,6 @@ export default function SaleToggleButton({
     }
   };
 
-  // if (!isInitialized) {
-  //   return (
-  //     <button className="p-2 rounded-full bg-gray-700/50 text-gray-400 opacity-50 cursor-not-allowed">
-  //       <div className="w-5 h-5 border-2 border-transparent border-t-current border-r-current rounded-full animate-spin" />
-  //     </button>
-  //   );
-  // }
 
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

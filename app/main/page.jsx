@@ -701,9 +701,21 @@ const RootPage = () => {
 
   return (
     <div className="w-full overflow-y-scroll min-h-screen h-full relative">
-      {/* Scroll arrows */}
+      {/* Scroll arrows with email */}
+      <div className="absolute right-8 bottom-28 flex flex-col items-center space-y-2">
+        <div 
+          className="cursor-pointer p-2 rounded-full hover:bg-blue-500/20 transition-colors" 
+          onClick={() => window.location.href = 'mailto:quincin2000@planetqproductions.com'}
+        >
+          <img 
+            src="/videos/email.gif" 
+            alt="Email Us" 
+            className="w-6 h-6"
+            style={{ filter: 'invert(1)' }}
+          />
+        </div>
       {showScrollUp && (
-        <div className="scroll-arrow scroll-arrow-up" onClick={scrollToTop}>
+        <div className="scroll-arrow scroll-arrow-up text-blue-500" onClick={scrollToTop}>
           <svg
             xmlns="http://www.w3.org/2000/svg"
             width="24"
@@ -719,7 +731,8 @@ const RootPage = () => {
           </svg>
         </div>
       )}
-      <div className="scroll-arrow scroll-arrow-down" onClick={scrollToBottom}>
+      </div>
+      <div className="scroll-arrow scroll-arrow-down text-blue-500" onClick={scrollToBottom}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           width="24"
@@ -776,20 +789,43 @@ const RootPage = () => {
         <div className="w-full max-w-md mx-auto relative px-4 pt-16 pb-16">
           {/* Scroll arrows */}
           {showScrollUp && (
-            <div className="scroll-arrow scroll-arrow-up" onClick={scrollToTop}>
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="24"
-                height="24"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
+            <div className="fixed bottom-8 right-8 flex flex-col gap-4">
+              <div 
+                className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
+                onClick={scrollToTop}
               >
-                <path d="M18 15l-6-6-6 6" />
-              </svg>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 15l-6-6-6 6" />
+                </svg>
+              </div>
+              <div 
+                className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
+                onClick={scrollToBottom}
+              >
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M6 9l6 6 6-6" />
+                </svg>
+              </div>
             </div>
           )}
 
