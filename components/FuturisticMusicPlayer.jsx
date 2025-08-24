@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useRef } from "react"
-import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2, MessageCircle, Facebook, Twitter } from "lucide-react"
+import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2, MessageCircle, Facebook, Twitter,X } from "lucide-react"
 import SaleToggleButton from "./player/SaleToggleButton"
 import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger ,AlertDialogDescription,AlertDialogAction} from "./ui/alert-dialog"
 import toast from "react-hot-toast"
@@ -153,11 +153,12 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
   }
 
   const handleShare = (songIds = null) => {
-    const songsToShare = songIds ? currentSongs.filter((song) => songIds.includes(song.id)) : currentSongs
+    const ids = Array.isArray(songIds) ? songIds : songIds ? [songIds] : null;
+    const songsToShare = ids ? currentSongs.filter((song) => ids.includes(song.id)) : currentSongs;
     if (onShare) {
-      onShare(songsToShare)
+      onShare(songsToShare);
     }
-    setShowShareModal(false)
+    setShowShareModal(false);
   }
 
   const handleGenerateLink = async (songIds) => {
@@ -592,10 +593,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                     <div className="flex items-center space-x-1 sm:space-x-2">
                       {showShareButton && (
                         <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleShare(song);
-                          }}
+                        onClick={() => setShowShareModal(true)}
                           className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-300 opacity-100 sm:opacity-0 group-hover:opacity-100"
                           aria-label="Share song"
                         >
