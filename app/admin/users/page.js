@@ -70,15 +70,22 @@ export default function UsersManagement() {
       if (actionType === 'delete') {
         method = 'DELETE';
       } else if (actionType === 'addCredits') {
-        // For adding credits, include the amount
+        requestBody.userId = selectedUser.id;
         requestBody.amount = 50;
+      }else if (actionType === 'suspend') {
+        requestBody.userId = selectedUser.id;
       }
 
+      // Construct the API URL
+      const apiUrl = actionType === 'delete' 
+        ? `/api/admin/users/${selectedUser.id}`
+        : '/api/admin/users';
+
       // Call the API
-      const response = await fetch(`/api/admin/users/${selectedUser.id}`, {
+      const response = await fetch(apiUrl, {
         method: method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(requestBody)
+        body: method !== 'DELETE' ? JSON.stringify(requestBody) : null
       });
 
       if (!response.ok) {

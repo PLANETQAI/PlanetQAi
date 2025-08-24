@@ -91,7 +91,7 @@ export default function AdminLayout({ children }) {
 
         <div className="mt-auto mb-4 space-y-1">
           <Link
-            href="/"
+            href="/aistudio"
             className="flex items-center px-4 py-3 text-gray-300 hover:bg-gray-700 rounded-md"
           >
             <HomeIcon className="h-5 w-5 mr-3" />

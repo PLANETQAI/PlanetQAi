@@ -96,7 +96,6 @@ export default function SaleToggleButton({
         body: JSON.stringify({ 
           isForSale: true,
           salePrice: price,
-          isLyricsPurchased: newIsLyricsPurchased
         }),
       });
 
@@ -191,7 +190,7 @@ export default function SaleToggleButton({
           </DialogHeader>
           
           <div className="grid gap-6 py-4">
-            <div className="space-y-2">
+            {/* <div className="space-y-2">
               <Label htmlFor="saleType">What would you like to sell?</Label>
               <RadioGroup 
                 id="saleType"
@@ -208,7 +207,7 @@ export default function SaleToggleButton({
                   <Label htmlFor="lyrics-only">Lyrics Only</Label>
                 </div>
               </RadioGroup>
-            </div>
+            </div> */}
             
             <div className="space-y-2">
               <Label htmlFor="salePrice">Price ($)</Label>

@@ -742,7 +742,7 @@ const deleteSong = async (songId) => {
 				{userCredits && (
 					<div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1 rounded-full">
 						<Zap className="w-4 h-4 text-yellow-400" />
-						<span className="text-white text-sm font-medium">{userCredits.credits} credits</span>
+						<span className="text-white text-sm font-medium">{userCredits.credits} Planet_Q_Coins</span>
 					</div>
 				)}
 			</div>
@@ -777,7 +777,7 @@ const deleteSong = async (songId) => {
 					<div className="flex items-center gap-2 text-purple-300">
 						<CreditCard size={18} />
 						<p className="text-sm">
-							This generation will use approximately <span className="font-bold">{estimatedCredits}</span> credits.
+							This generation will use approximately <span className="font-bold">{estimatedCredits}</span> Planet_Q_Coins. 
 						</p>
 					</div>
 				</div>
@@ -797,7 +797,7 @@ const deleteSong = async (songId) => {
 				/>
 			</div>
 
-			<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+			 {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
 				<div>
 					<label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
 						Song Title
@@ -887,7 +887,7 @@ const deleteSong = async (songId) => {
 						</SelectContent>
 					</Select>
 				</div>
-			</div>
+			</div> */}
 
 			<div className="flex justify-center items-center mb-4">
 				{session ? (
@@ -925,7 +925,7 @@ const deleteSong = async (songId) => {
 						Sign Up to Generate Music
 					</Link>
 				)}
-			</div>
+			</div> 
 
 			{/* Need more credits button */}
 			{userCredits && userCredits.credits < 50 && (

@@ -11,7 +11,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
   const [isPlaying, setIsPlaying] = useState(false)
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
-  const [isLooping, setIsLooping] = useState(true)
+  const [isLooping, setIsLooping] = useState(false)
   const [isShuffling, setIsShuffling] = useState(false)
   const [volume, setVolume] = useState(0.7)
   const [isLiked, setIsLiked] = useState(false)

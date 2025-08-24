@@ -1,78 +1,25 @@
-# Planet Q Productions Website Recreation Prompt
+1. In the administration panel you cant delete the users in the users tab. The delete button does not work. The suspend account button doesn't work either.. Also the add credits to user doesnt work. I hould be able to add free credits to them. 
 
-## Project Overview
-Create a modern, sci-fi themed website for "Planet Q Productions" - a hip-hop and R&B music production company with a futuristic aesthetic.
+2. The songs tab in the admin panel should display songs made from the store by users, and admin should be able to delete them if need be. 
 
-## Design Requirements
+3. The Back to Site button in the administration panet should bring you back to Q_World Studios. 
 
-### Brand Identity
-- **Company Name**: Planet Q Productions
-- **Tagline**: "The Sci Fi Channel Of Hip Hop and R&B"
-- **Theme**: Fusion of sci-fi aesthetics with urban music culture
-- **Vibe**: Professional, cutting-edge, cosmic, urban
+4. In the Q_World Studio Generator, The Icon where it shows how many coins I have left should display our coin Icon. The credits shoukd be called Planet Q Coins. 
 
-### Color Scheme
-- **Primary Background**: Deep space black (#0D0D0D)
-- **Text**: Crisp white (#FFFFFF) and light gray (#CCCCCC)
-- **Accent Colors**: 
-  - Cyan/Electric Blue (#00FFFF) for highlights
-  - Magenta (#FF00FF) for interactive elements
-  - Yellow (#FFFF00) for call-to-actions
-- **Overall Feel**: Dark theme with neon/glow accents
+5. I'm learning that the generators does not need the Song Title Tags Music Style Tempo Or Mood, Please take those out. 
 
-### Typography
-- **Headers**: Bold, futuristic sans-serif fonts (think tech/space themed)
-- **Body Text**: Clean, readable modern sans-serif
-- **Style**: Use uppercase for main headings, proper letter-spacing
-- **Hierarchy**: Clear distinction between h1, h2, h3 elements
+6. The Planet Q Button Inside of the generators should bring you back to the main radio station page. Not the landing page. 
 
-### Layout Structure
-- **Header**: 
-  - Centered logo/company name
-  - Horizontal navigation menu below
-  - Clean, spacious design
-- **Navigation Items**: Home | About Us | Radio | Contact Us
-- **Main Content**: Single-column, centered, max-width 1200px
-- **Footer**: Simple copyright notice "©2020 Planet Q-Productions"
+7. On the main Radio Station Page we do not need the bouncing Planet cue production icon anymore. Please put a Tap Text under the 7 menu dots 
 
-### Visual Elements
-- **Background**: Solid dark color or subtle space-like gradient
-- **Interactive Elements**: Subtle glow effects on hover
-- **Buttons**: Futuristic style with borders and hover animations
-- **Overall Style**: Minimalist but impactful, avoiding clutter
+8. The share audio player button stopped working with the users audio player. 
+(The audio player after you have generated a song.)
 
-### Pages to Create
-1. **Home Page**: Hero section with company name and tagline
-2. **FAQs Page**: Clean, organized FAQ sections (expandable/collapsible)
-3. **About Us Page**: Company story and mission
-4. **Radio Page**: Information about radio services
-5. **Contact Page**: Contact form and information
 
-### Technical Requirements
-- **Responsive Design**: Mobile-first approach
-- **Smooth Animations**: 0.3s ease transitions
-- **Hover Effects**: Glow and color-shift effects
-- **Loading**: Fast, optimized for web
-- **Accessibility**: Proper contrast ratios despite dark theme
+8.  The users Audio Player has a repeat button that is already activated when you enter that page. It should not be activated unless we press the button to do so. 
 
-### Special Features
-- Subtle sci-fi animations (particles, glow effects)
-- Modern web design principles
-- Professional music industry appearance
-- Easy navigation and user experience
+9. We would a mailbox floating icon at the bottom where the circle is 
 
-### Content Guidelines
-- Keep text concise and impactful
-- Use cosmic/space terminology where appropriate
-- Maintain professional tone while showing creativity
-- Emphasize the unique blend of sci-fi and music production
+10. In the menu where you put songs up for sale there should only be one menu to sell full song. Take the lyrics only option out. The price should be listed in credits. And the credits should be awarded to the seller after purchase.
 
-### Inspiration Keywords
-- Futuristic recording studio
-- Space-age music production
-- Cosmic hip-hop aesthetic
-- Neon-lit urban environments
-- High-tech entertainment branding
-
-## Deliverables
-Create a fully functional, modern website that captures the essence of a forward-thinking music production company that specializes in hip-hop and R&B with a distinctive sci-fi twist.
+The store the songs are not appearing in the store after you make a choice to put it in the store

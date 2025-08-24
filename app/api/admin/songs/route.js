@@ -36,7 +36,7 @@ export async function GET(req) {
       prisma.song.findMany({
         where,
         include: {
-          user: {
+          User: {
             select: {
               id: true,
               fullName: true,
@@ -53,23 +53,39 @@ export async function GET(req) {
       prisma.song.count({ where }),
     ]);
     
-    // Format the songs for the response
+    // Format the songs for the response with all fields from the Song model
     const formattedSongs = songs.map(song => ({
       id: song.id,
+      userId: song.userId,
       title: song.title,
       prompt: song.prompt,
+      lyrics: song.lyrics,
       audioUrl: song.audioUrl,
+      videoUrl: song.videoUrl,
       thumbnailUrl: song.thumbnailUrl,
       duration: song.duration,
       creditsUsed: song.creditsUsed,
+      isLyricsPurchased: song.isLyricsPurchased,
+      salePrice: song.salePrice,
       isPublic: song.isPublic,
+      isForSale: song.isForSale,
       tags: song.tags,
-      createdAt: song.createdAt,
+      alternativeSongs: song.alternativeSongs,
+      generationId: song.generationId,
+      generationTime: song.generationTime,
+      mood: song.mood,
       provider: song.provider,
+      startedAt: song.startedAt,
+      style: song.style,
+      taskId: song.taskId,
+      tempo: song.tempo,
       quality: song.quality || 'pending',
-      userId: song.userId,
-      userName: song.user.fullName,
-      userEmail: song.user.email,
+      createdAt: song.createdAt,
+      updatedAt: song.updatedAt,
+      completedAt: song.completedAt,
+      // User information
+      userName: song.User?.fullName || 'Unknown',
+      userEmail: song.User?.email || 'No email',
     }));
     
     // Calculate total pages

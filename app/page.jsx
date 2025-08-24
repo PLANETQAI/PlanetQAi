@@ -33,7 +33,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-auto">
+    <div className="overflow-y-scroll flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 min-h-screen h-full">
       <StarsWrapper />
       {/* Main content */}
       <PlanetQProductionsText />
@@ -64,7 +64,7 @@ export default function Landing() {
         </div>
 
         {/* Enter Website button */}
-        <div className="flex flex-col items-center mt-4 space-y-4">
+        <div className="flex flex-col items-center mt-4 space-y-4 md:mb-32 mb-16">
           <button
             onClick={handleGoToSite}
             className="px-12 py-4 bg-white text-blue-600 text-lg font-bold rounded-full shadow-lg hover:bg-gray-100 transition-colors duration-300 focus:outline-none focus:ring-2 focus:ring-blue-400"
@@ -74,15 +74,6 @@ export default function Landing() {
               <span className="text-md font-normal text-purple-700">AI Radio Station</span>
             </div>
           </button>
-          {/* <div className="relative w-48 h-48">
-            <Image 
-              src="/images/intro/ai_radio.png" 
-              alt="AI Radio" 
-              layout="fill"
-              objectFit="contain"
-              className="drop-shadow-lg"
-            />
-          </div> */}
         </div>
       </div>
     </div>

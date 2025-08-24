@@ -84,6 +84,12 @@ export default auth(async (req) => {
     }
   }
 
+  // Check for suspended users (must be authenticated and not on the suspended page)
+  if (req.auth?.user?.isSuspended && req.nextUrl.pathname !== '/suspended') {
+    const suspendedUrl = new URL('/suspended', req.nextUrl.origin);
+    return NextResponse.redirect(suspendedUrl);
+  }
+
   // 🔐 Auth logic for protected routes
   if (
     !req.auth &&
@@ -97,7 +103,8 @@ export default auth(async (req) => {
     req.nextUrl.pathname !== "/forgot-password" &&
     req.nextUrl.pathname !== "/reset-password" &&
     !req.nextUrl.pathname.startsWith("/share/") &&
-    req.nextUrl.pathname !== "/verify-account"
+    req.nextUrl.pathname !== "/verify-account" &&
+    req.nextUrl.pathname !== "/suspended"
   ) {
     const redirectTo = req.nextUrl.pathname;
     const newUrl = new URL(

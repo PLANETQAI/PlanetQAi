@@ -115,13 +115,13 @@ const CreditPurchaseModal = ({
         <DialogHeader>
           <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
             <Zap className="text-yellow-400" />
-            Purchase Credits
+            Purchase Planet_Q_Coins. 
           </DialogTitle>
           <DialogDescription className="text-gray-300">
             {creditsNeeded > 0 ? (
-              <>You need <span className="font-bold text-yellow-400">{creditsNeeded}</span> more credits to complete this operation.</>
+              <>You need <span className="font-bold text-yellow-400">{creditsNeeded}</span> more Planet_Q_Coins to complete this operation.</>
             ) : (
-              <>Purchase additional credits to generate more music.</>
+              <>Purchase additional Planet_Q_Coins to generate more music.</>
             )}
           </DialogDescription>
         </DialogHeader>
