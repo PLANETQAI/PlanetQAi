@@ -71,7 +71,7 @@ model PricingPlan {
 model Song {
   id               String    @id @default(uuid())
   userId           String
-  title            String
+  title            String?
   prompt           String
   lyrics           String?
   audioUrl         String
