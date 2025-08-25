@@ -18,7 +18,7 @@ export async function getVideos() {
     })
     return videos
   } catch (error) {
-    console.error('Error fetching videos:', error)
+    console.error('Error fetch videos:', error)
     return []
   }
 }
