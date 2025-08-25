@@ -46,11 +46,11 @@ const BeatCard = ({ beat, isPurchased, purchasingId, onPurchase, purchaseError }
       </p> */}
       <div className="flex flex-col w-full space-y-2">
         <div>   <span className="text-xl font-semibold text-purple-300 text-center">
-          ${beat.salePrice?.toFixed(2) || "2.00"}
+           {beat.credits} <span className="text-sm font-light text-cyan-300">PlanetQ Credits Coins</span>
         </span>
-          {/* <span className="text-sm font-light">
-            {beat.creditsUsed} Credits
-          </span> */}
+          <span className="text-sm font-light">
+          ${beat.salePrice?.toFixed(2) || "2.00"}
+          </span>
           </div>
 
         <button

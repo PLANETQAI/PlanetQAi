@@ -4,17 +4,16 @@ import prisma from '@/lib/prisma';
 
 // Helper function to calculate price based on credits
 function calculatePrice(credits) {
-  // Calculate price as credits * 0.05 (5 cents per credit)
-  // This is based on the average of your credit packages
-  const price = credits * 0.05;
+  const price = credits * 0.005;
   return parseFloat(price.toFixed(2));
 }
+
 
 export async function GET() {
   try {
     // Get all public songs
     const songs = await prisma.song.findMany({
-      where: { isForSale: true },
+      where: { isForSale: true ,isPublic: true },
       include: {
         User: {
           select: {
@@ -31,8 +30,9 @@ export async function GET() {
 
     // Format songs with calculated price
     const formattedSongs = songs.map(song => {
-      const credits = song.creditsUsed || 1;
+      const credits = song.creditsUsed || 50;
       const calculatedPrice = calculatePrice(credits);
+      const calculatedCredits = credits * 2.5;
       
       return {
         id: song.id,
@@ -42,6 +42,7 @@ export async function GET() {
         thumbnailUrl: song.thumbnailUrl,
         duration: song.duration,
         creditsUsed: credits,
+        credits: calculatedCredits,
         salePrice: song.salePrice,
         price: song.salePrice !== null ? song.salePrice : calculatedPrice, // Use salePrice if available, otherwise calculatedPrice
         isPublic: song.isPublic,
@@ -55,7 +56,7 @@ export async function GET() {
         purchases: song.purchases // Include the purchases data
       };
     });
-
+    console.log('Formatted songs:', formattedSongs);
     return NextResponse.json({ songs: formattedSongs });
   } catch (error) {
     console.error('Error fetching public songs:', error);

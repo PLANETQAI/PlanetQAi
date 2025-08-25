@@ -96,6 +96,8 @@ export default function SaleToggleButton({
         body: JSON.stringify({ 
           isForSale: true,
           salePrice: price,
+          isPublic: true,
+          isLyricsPurchased: true,
         }),
       });
 
@@ -134,6 +136,7 @@ export default function SaleToggleButton({
         body: JSON.stringify({ 
           isForSale: false,
           isLyricsPurchased: false,
+          isPublic: false,
           salePrice: null
         }),
       });

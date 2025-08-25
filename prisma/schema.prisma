@@ -82,7 +82,7 @@ model Song {
   isLyricsPurchased Boolean @default(false)
   salePrice        Float?
   isPublic         Boolean   @default(false)
-  isForSale       Boolean   @default(true)
+  isForSale       Boolean   @default(false)
   tags             String[]
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
