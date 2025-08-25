@@ -78,7 +78,7 @@ export default function UsersManagement() {
 
       // Construct the API URL
       const apiUrl = actionType === 'delete' 
-        ? `/api/admin/users/${selectedUser.id}`
+        ? `/api/admin/users?userId=${selectedUser.id}`
         : '/api/admin/users';
 
       // Call the API
