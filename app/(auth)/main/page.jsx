@@ -775,13 +775,13 @@ const RootPage = () => {
             showTime ? "opacity-100" : "opacity-0"
           )}
         /> */}
-        <CircleTypeText
+        {/* <CircleTypeText
           text={"Planet Q Productions"}
           className={cn(
             "absolute top-6 sm:top-10 z-50 text-white text-xl animate-bounce right-24 left-1/2 -translate-x-[50%] transition-opacity duration-500",
             showTime ? "opacity-100" : "opacity-0 pointer-events-none"
           )}
-        />
+        /> */}
         {/* Reintroducing the improved stars component */}
         <StarsWrapper />
         {/* <StarsCanvas /> */}
@@ -1040,7 +1040,11 @@ const RootPage = () => {
             >
               {direction === "forward" ? "→" : "←"}
             </div>
+            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2">
+              <h3 className="text-white text-3xl font-bold">TAP</h3>
+            </div>
           </div>
+
         </div>{" "}
       </div>
     </div>
