@@ -33,7 +33,7 @@ export default function Landing() {
   };
 
   return (
-    <div className="overflow-y-scroll flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 min-h-screen h-full">
+    <div className="overflow-y-scroll flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8  min-h-screen h-full">
       <StarsWrapper />
       {/* Main content */}
       <PlanetQProductionsText />

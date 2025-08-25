@@ -13,15 +13,15 @@ const PlanetQProductionsText = () => {
             <img 
               src="/images/intro/q_prod_text.svg" 
               alt="Planet Q" 
-              className="h-24 md:h-32 lg:h-40 w-auto"
+              className="h-24 md:h-24 lg:h-24 w-auto"
               style={{ fontFamily: 'var(--font-cursive)' }}
             />
           </div>
-          <div className="relative mt-2">
+          <div className="relative">
             <img 
               src="/images/intro/q_studio.png" 
               alt="Productions" 
-              className="h-16 md:h-20 lg:h-24 w-auto"
+              className="h-16 md:h-20 lg:h-20 w-auto"
               style={{ fontFamily: 'var(--font-cursive)' }}
             />
           </div>
