@@ -13,15 +13,28 @@ import Image from "next/image";
 import { SongGenerationStatus } from './SongGenerationStatus';
 import { NavigationButton } from './NavigationButton';
 
+// Custom hook to check if we're on the client side
+const useClientOnly = () => {
+    const [isClient, setIsClient] = useState(false);
+    
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
+    
+    return isClient;
+};
+
 const VoiceAssistantV2 = ({ 
     autoStart = false,
     compact = false
 }) => {
     const router = useRouter();
+    const isClient = useClientOnly();
+    
     const [connected, setConnected] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [transcription, setTranscription] = useState('');
-    const [isClient, setIsClient] = useState(false);
+    const [inputText, setInputText] = useState('');
     
     // Refs for WebRTC
     const audioElementRef = useRef(null);
@@ -29,18 +42,21 @@ const VoiceAssistantV2 = ({
     const dataChannelRef = useRef(null);
     const notificationSoundRef = useRef(null);
     const recognitionRef = useRef(null);
-    
-    // Set isClient to true after component mounts (client-side only)
-    useEffect(() => {
-        setIsClient(true);
-    }, []);
 
-    // Initialize notification sound
+    // Check for browser API availability
+    const hasWebRTC = isClient && typeof window !== 'undefined' && 'RTCPeerConnection' in window;
+    const hasSpeechRecognition = isClient && typeof window !== 'undefined' && 'webkitSpeechRecognition' in window;
+    const hasUserMedia = isClient && typeof window !== 'undefined' && navigator?.mediaDevices?.getUserMedia;
+
+    // Initialize notification sound (client-side only)
     useEffect(() => {
-        // Only run this effect on client side
-        if (typeof window === 'undefined') return;
+        if (!isClient) return;
         
-        notificationSoundRef.current = new Audio('/sound/notification.mp3');
+        try {
+            notificationSoundRef.current = new Audio('/sound/notification.mp3');
+        } catch (error) {
+            console.warn('Could not initialize notification sound:', error);
+        }
         
         return () => {
             if (notificationSoundRef.current) {
@@ -48,11 +64,237 @@ const VoiceAssistantV2 = ({
                 notificationSoundRef.current = null;
             }
         };
+    }, [isClient]);
+
+    const [assistantResponse, setAssistantResponse] = useState('');
+    const [messages, setMessages] = useState([]);
+    const [modals, setModals] = useState({
+        navigation: { isOpen: false, data: null },
+        songGeneration: { isOpen: false, data: null }
+    });
+
+    // Handle JSON commands from messages
+    const handleJsonCommand = useCallback((jsonData) => {
+        if (jsonData.navigateTo) {
+            setModals(prev => ({
+                ...prev,
+                navigation: {
+                    isOpen: true,
+                    data: {
+                        page: jsonData.navigateTo,
+                        url: jsonData.url,
+                        message: jsonData.message || 'Would you like to navigate?'
+                    }
+                }
+            }));
+            return true;
+        }
+        
+        if (jsonData.createSong) {
+            setModals(prev => ({
+                ...prev,
+                songGeneration: {
+                    isOpen: true,
+                    data: jsonData
+                }
+            }));
+            return true;
+        }
+        
+        return false;
+    }, []);
+    
+    // Close modal
+    const closeModal = useCallback((modalName) => {
+        setModals(prev => ({
+            ...prev,
+            [modalName]: { isOpen: false, data: null }
+        }));
     }, []);
 
-    // Initialize WebRTC and auto-connect if needed
+    // Handle music generation
+    const handleMusicGeneration = useCallback(async (musicData) => {
+        if (!musicData) return;
+
+        setIsProcessing(true);
+        try {
+            const result = await MusicGenerationAPI.generateMusic(musicData);
+            
+            // Play notification sound
+            if (notificationSoundRef.current) {
+                notificationSoundRef.current.play().catch(e => console.error('Error playing notification:', e));
+            }
+            
+            return result;
+        } catch (error) {
+            console.error('Error generating music:', error);
+            toast.error(
+                (t) => (
+                    <div className="flex items-center justify-between">
+                        <span>Failed to generate music. Please try again.</span>
+                        <button
+                            onClick={() => toast.dismiss(t.id)}
+                            className="ml-4 text-gray-400 hover:text-white"
+                        >
+                            <IoMdClose />
+                        </button>
+                    </div>
+                ),
+                {
+                    duration: 10000,
+                    position: 'bottom-right',
+                }
+            );
+            throw error;
+        } finally {
+            setIsProcessing(false);
+        }
+    }, []);
+
+    // Handle assistant messages and check for commands
+    const handleAssistantMessage = useCallback((message) => {
+        setAssistantResponse(prev => {
+            const newContent = prev + message;
+            
+            // Check for JSON commands in the new content
+            const jsonMatch = newContent.match(/```json\n([\s\S]*?)\n```/);
+            if (jsonMatch) {
+                try {
+                    const jsonData = JSON.parse(jsonMatch[1]);
+                    if (handleJsonCommand(jsonData)) {
+                        // If a command was handled, return the content without the JSON
+                        return newContent.replace(/```json[\s\S]*?```/g, '').trim();
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON command:', e);
+                }
+            }
+            
+            return newContent;
+        });
+    }, [handleJsonCommand]);
+
+    // Handle incoming WebRTC data channel messages
+    const handleDataChannelMessage = useCallback((event) => {
+        try {
+            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
+            console.log('Received WebRTC message:', data);
+
+            // Handle connection state changes
+            if (data.type === 'session.update' && data.status === 'connected') {
+                setConnected(true);
+            } else if (data.type === 'session.update' && data.status === 'disconnected') {
+                setConnected(false);
+                toast.success('Voice assistant disconnected', {
+                    duration: 3000,
+                    position: 'top-center'
+                })
+            }
+
+            switch (data.type) {
+                case 'response.text.delta':
+                    setMessages(prev => {
+                        const lastMessage = prev[prev.length - 1];
+                        if (lastMessage?.from === 'assistant') {
+                            return [
+                                ...prev.slice(0, -1),
+                                { from: 'assistant', text: lastMessage.text + (data.delta || '') }
+                            ];
+                        }
+                        return [...prev, { from: 'assistant', text: data.delta || '' }];
+                    });
+                    break;
+
+                case 'response.text.done':
+                    const finalText = data.response?.output?.[0]?.text || '';
+                    setMessages(prev => {
+                        const lastMessage = prev[prev.length - 1];
+                        if (lastMessage?.from === 'assistant') {
+                            return [
+                                ...prev.slice(0, -1),
+                                { from: 'assistant', text: finalText }
+                            ];
+                        }
+                        return [...prev, { from: 'assistant', text: finalText }];
+                    });
+                    break;
+
+                case 'response.done':
+                    // Handle final response
+                    const fullText = data.response?.output?.[0]?.content?.[0]?.transcript || '';
+                    if (fullText) {
+                        setMessages(prev => {
+                            const lastMessage = prev[prev.length - 1];
+                            if (lastMessage?.from === 'assistant') {
+                                return [
+                                    ...prev.slice(0, -1),
+                                    { from: 'assistant', text: fullText, status: 'completed' }
+                                ];
+                            }
+                            return [...prev, { from: 'assistant', text: fullText, status: 'completed' }];
+                        });
+                    }
+
+                    // Check for music generation command
+                    try {
+                        const parsedResponse = MessageParser.parseResponse(fullText);
+                        if (parsedResponse?.commands?.generateMusic) {
+                            handleMusicGeneration(parsedResponse.musicData);
+                        }
+                    } catch (error) {
+                        console.error('Error parsing response for commands:', error);
+                    }
+                    break;
+
+                default:
+                    console.log('Unhandled WebRTC message type:', data.type);
+            }
+        } catch (error) {
+            console.error('Error processing WebRTC message:', error);
+        }
+    }, [handleMusicGeneration]);
+
+    // Initialize speech recognition (client-side only)
     useEffect(() => {
-        if (!isClient) return;
+        if (!isClient || !hasSpeechRecognition) return;
+        
+        const initSpeechRecognition = () => {
+            try {
+                recognitionRef.current = new window.webkitSpeechRecognition();
+                recognitionRef.current.continuous = true;
+                recognitionRef.current.interimResults = true;
+
+                recognitionRef.current.onresult = (event) => {
+                    const transcript = Array.from(event.results)
+                        .map(result => result[0])
+                        .map(result => result.transcript)
+                        .join('');
+
+                    setTranscription(transcript);
+                };
+
+                recognitionRef.current.onerror = (event) => {
+                    console.error('Speech recognition error', event.error);
+                    toast.error('Speech recognition error: ' + event.error);
+                    setConnected(false);
+                };
+            } catch (error) {
+                console.error('Error initializing speech recognition:', error);
+            }
+        };
+
+        initSpeechRecognition();
+        
+        return () => {
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
+    }, [isClient, hasSpeechRecognition]);
+
+    // Initialize WebRTC and auto-connect if needed (client-side only)
+    useEffect(() => {
+        if (!isClient || !hasWebRTC || !hasUserMedia) return;
         
         let peer = null;
         let dataChannel = null;
@@ -170,6 +412,7 @@ const VoiceAssistantV2 = ({
             if (audioElement) {
                 audioElement.pause();
                 audioElement.srcObject = null;
+                audioElement.remove();
             }
             
             // Reset refs
@@ -177,95 +420,9 @@ const VoiceAssistantV2 = ({
             dataChannelRef.current = null;
             setConnected(false);
         };
-    }, [autoStart, isClient]); // Re-run if autoStart changes or when client is ready
+    }, [autoStart, isClient, hasWebRTC, hasUserMedia, handleDataChannelMessage]);
 
-    // Handle speech recognition for input transcription
-    useEffect(() => {
-        // Only run this effect on client side
-        if (typeof window === 'undefined') return;
-        
-        // Initialize speech recognition if available
-        const initSpeechRecognition = () => {
-            if (window.webkitSpeechRecognition) {
-                recognitionRef.current = new window.webkitSpeechRecognition();
-                recognitionRef.current.continuous = true;
-                recognitionRef.current.interimResults = true;
-
-                recognitionRef.current.onresult = (event) => {
-                    const transcript = Array.from(event.results)
-                        .map(result => result[0])
-                        .map(result => result.transcript)
-                        .join('');
-
-                    // Update internal transcription state and parent component
-                    setTranscription(transcript);
-                };
-
-                recognitionRef.current.onerror = (event) => {
-                    console.error('Speech recognition error', event.error);
-                    toast.error('Speech recognition error: ' + event.error);
-                    setConnected(false);
-                };
-            }
-        };
-
-        // Initialize with a small delay to ensure window is available
-        const timer = setTimeout(initSpeechRecognition, 0);
-        
-        return () => {
-            clearTimeout(timer);
-            if (recognitionRef.current) {
-                recognitionRef.current.stop();
-            }
-        };
-    }, []);
-
-    const [assistantResponse, setAssistantResponse] = useState('');
-    const [messages, setMessages] = useState([]);
-    const [modals, setModals] = useState({
-        navigation: { isOpen: false, data: null },
-        songGeneration: { isOpen: false, data: null }
-    });
-
-    // Handle JSON commands from messages
-    const handleJsonCommand = (jsonData) => {
-        if (jsonData.navigateTo) {
-            setModals(prev => ({
-                ...prev,
-                navigation: {
-                    isOpen: true,
-                    data: {
-                        page: jsonData.navigateTo,
-                        url: jsonData.url,
-                        message: jsonData.message || 'Would you like to navigate?'
-                    }
-                }
-            }));
-            return true;
-        }
-        
-        if (jsonData.createSong) {
-            setModals(prev => ({
-                ...prev,
-                songGeneration: {
-                    isOpen: true,
-                    data: jsonData
-                }
-            }));
-            return true;
-        }
-        
-        return false;
-    };
-    
-    // Close modal
-    const closeModal = (modalName) => {
-        setModals(prev => ({
-            ...prev,
-            [modalName]: { isOpen: false, data: null }
-        }));
-    };
-
+    // Song generation status effect
     useEffect(() => {
         const songData = modals.songGeneration.data;
         if (songData?.taskId) {
@@ -311,161 +468,14 @@ const VoiceAssistantV2 = ({
                 toast.dismiss(toastId);
             };
         }
-    }, [modals.songGeneration.data]);
-
-    // Handle message from the assistant
-    // const handleAssistantMessage = useCallback((message) => {
-    //     setAssistantResponse(prev => {
-    //         const newContent = prev + message;
-    //         // The message will be rendered with renderMessageContent when displayed
-    //         return newContent;
-    //     });
-    // }, []);
-
-    // Handle assistant messages and check for commands
-    const handleAssistantMessage = useCallback((message) => {
-        setAssistantResponse(prev => {
-            const newContent = prev + message;
-            
-            // Check for JSON commands in the new content
-            const jsonMatch = newContent.match(/```json\n([\s\S]*?)\n```/);
-            if (jsonMatch) {
-                try {
-                    const jsonData = JSON.parse(jsonMatch[1]);
-                    if (handleJsonCommand(jsonData)) {
-                        // If a command was handled, return the content without the JSON
-                        return newContent.replace(/```json[\s\S]*?```/g, '').trim();
-                    }
-                } catch (e) {
-                    console.error('Error parsing JSON command:', e);
-                }
-            }
-            
-            return newContent;
-        });
-    }, []);
-
-    // Handle music generation
-    const handleMusicGeneration = useCallback(async (musicData) => {
-        if (!musicData) return;
-
-        setIsProcessing(true);
-        try {
-            const result = await MusicGenerationAPI.generateMusic(musicData);
-            
-            // Play notification sound
-            if (notificationSoundRef.current) {
-                notificationSoundRef.current.play().catch(e => console.error('Error playing notification:', e));
-            }
-            
-            // The actual handling of the result is done by renderMessageContent
-            return result;
-        } catch (error) {
-            console.error('Error generating music:', error);
-            toast.error(
-                (t) => (
-                    <div className="flex items-center justify-between">
-                        <span>Failed to generate music. Please try again.</span>
-                        <button
-                            onClick={() => toast.dismiss(t.id)}
-                            className="ml-4 text-gray-400 hover:text-white"
-                        >
-                            <IoMdClose />
-                        </button>
-                    </div>
-                ),
-                {
-                    duration: 10000,
-                    position: 'bottom-right',
-                }
-            );
-            throw error;
-        } finally {
-            setIsProcessing(false);
-        }
-    }, [router]);
-
-    // Handle incoming WebRTC data channel messages
-    const handleDataChannelMessage = useCallback((event) => {
-        try {
-            const data = typeof event.data === 'string' ? JSON.parse(event.data) : event.data;
-            console.log('Received WebRTC message:', data);
-
-            // Handle connection state changes
-            if (data.type === 'session.update' && data.status === 'connected') {
-                setConnected(true);
-            } else if (data.type === 'session.update' && data.status === 'disconnected') {
-                setConnected(false);
-                toast.success('Voice assistant disconnected', {
-                    duration: 3000,
-                    position: 'top-center'
-                })
-            }
-
-            switch (data.type) {
-                case 'response.text.delta':
-                    setMessages(prev => {
-                        const lastMessage = prev[prev.length - 1];
-                        if (lastMessage?.from === 'assistant') {
-                            return [
-                                ...prev.slice(0, -1),
-                                { from: 'assistant', text: lastMessage.text + (data.delta || '') }
-                            ];
-                        }
-                        return [...prev, { from: 'assistant', text: data.delta || '' }];
-                    });
-                    break;
-
-                case 'response.text.done':
-                    const finalText = data.response?.output?.[0]?.text || '';
-                    setMessages(prev => {
-                        const lastMessage = prev[prev.length - 1];
-                        if (lastMessage?.from === 'assistant') {
-                            return [
-                                ...prev.slice(0, -1),
-                                { from: 'assistant', text: finalText }
-                            ];
-                        }
-                        return [...prev, { from: 'assistant', text: finalText }];
-                    });
-                    break;
-
-                case 'response.done':
-                    // Handle final response
-                    const fullText = data.response?.output?.[0]?.content?.[0]?.transcript || '';
-                    if (fullText) {
-                        setMessages(prev => {
-                            const lastMessage = prev[prev.length - 1];
-                            if (lastMessage?.from === 'assistant') {
-                                return [
-                                    ...prev.slice(0, -1),
-                                    { from: 'assistant', text: fullText, status: 'completed' }
-                                ];
-                            }
-                            return [...prev, { from: 'assistant', text: fullText, status: 'completed' }];
-                        });
-                    }
-
-                    // Check for music generation command
-                    try {
-                        const parsedResponse = MessageParser.parseResponse(fullText);
-                        if (parsedResponse?.commands?.generateMusic) {
-                            handleMusicGeneration(parsedResponse.musicData);
-                        }
-                    } catch (error) {
-                        console.error('Error parsing response for commands:', error);
-                    }
-                    break;
-
-                default:
-                    console.log('Unhandled WebRTC message type:', data.type);
-            }
-        } catch (error) {
-            console.error('Error processing WebRTC message:', error);
-        }
-    }, [handleMusicGeneration]);
+    }, [modals.songGeneration.data, closeModal]);
 
     const startVoiceAssistant = async () => {
+        if (!isClient || !hasWebRTC || !hasUserMedia) {
+            toast.error('Voice assistant is not supported in this environment');
+            return;
+        }
+
         try {
             // Start speech recognition if available
             if (recognitionRef.current) {
@@ -474,7 +484,7 @@ const VoiceAssistantV2 = ({
 
             // 1. Retrieve the ephemeral token for authenticating the session with OpenAI.
             const EPHEMERAL_KEY = await getToken();
-            console.log('🔑 Successfully retrieved ephemeral token', EPHEMERAL_KEY);
+            console.log('🔑 Successfully retrieved ephemeral token');
 
             // 2. Create a new RTCPeerConnection instance to manage the WebRTC connection.
             const peer = new RTCPeerConnection();
@@ -509,12 +519,45 @@ const VoiceAssistantV2 = ({
                         instructions: SYSTEM_INSTRUCTIONS
                     }
                 }));
+
+                // Show connected toast
+                toast(
+                    (t) => (
+                        <div className="flex items-center justify-between">
+                            <span>Voice assistant connected</span>
+                            <button
+                                onClick={() => toast.dismiss(t.id)}
+                                className="ml-4 text-gray-400 hover:text-white"
+                            >
+                                <IoMdClose />
+                            </button>
+                        </div>
+                    ),
+                    {
+                        duration: 5000,
+                        position: 'bottom-right',
+                    }
+                );
             };
 
             dataChannel.onmessage = handleDataChannelMessage;
+
+            dataChannel.onclose = () => {
+                console.log('DataChannel closed');
+                setConnected(false);
+                toast.success('Voice assistant disconnected', {
+                    duration: 3000,
+                    position: 'bottom-right'
+                });
+            };
+
             dataChannel.onerror = (error) => {
-                console.error('Data channel error:', error);
-                toast.error('Data channel error: ' + error.message);
+                console.error('DataChannel error:', error);
+                setConnected(false);
+                toast.error('Connection error: ' + (error.message || 'Unknown error'), {
+                    duration: 5000,
+                    position: 'bottom-right'
+                });
             };
 
             // 6. Create and set local description (offer)
@@ -547,59 +590,6 @@ const VoiceAssistantV2 = ({
             console.log('✅ WebRTC connection established');
             toast.success('Connected to voice assistant');
 
-            // 9. Set up data channel handlers
-            dataChannel.onopen = () => {
-                setConnected(true);
-                console.log("🔔 DataChannel is open!");
-
-                // Send system instructions
-                const systemMessage = {
-                    type: "session.update",
-                    session: {
-                        instructions: SYSTEM_INSTRUCTIONS
-                    },
-                };
-
-                console.log('Sending system instructions...');
-                dataChannel.send(JSON.stringify(systemMessage));
-
-                // Show connected toast
-                toast(
-                    (t) => (
-                        <div className="flex items-center justify-between">
-                            <span>Voice assistant connected</span>
-                            <button
-                                onClick={() => toast.dismiss(t.id)}
-                                className="ml-4 text-gray-400 hover:text-white"
-                            >
-                                <IoMdClose />
-                            </button>
-                        </div>
-                    ),
-                    {
-                        duration: 5000,
-                        position: 'bottom-right',
-                    }
-                );
-            };
-
-            dataChannel.onclose = () => {
-                console.log('DataChannel closed');
-                setConnected(false);
-                toast.success('Voice assistant disconnected', {
-                    duration: 3000,
-                    position: 'bottom-right'
-                });
-            };
-
-            dataChannel.onerror = (error) => {
-                console.error('DataChannel error:', error);
-                setConnected(false);
-                toast.error('Connection error: ' + (error.message || 'Unknown error'), {
-                    duration: 5000,
-                    position: 'bottom-right'
-                });
-            };
         } catch (error) {
             console.error('Error in startVoiceAssistant:', error);
             toast.error(`Connection error: ${error.message}`, {
@@ -614,6 +604,7 @@ const VoiceAssistantV2 = ({
         if (recognitionRef.current) {
             recognitionRef.current.stop();
         }
+        
         // Stop all media tracks
         if (peerRef.current) {
             peerRef.current.getSenders().forEach(sender => {
@@ -649,8 +640,6 @@ const VoiceAssistantV2 = ({
             audioElementRef.current.remove();
             audioElementRef.current = null;
         }
-
-        // Audio context cleanup removed as it's not used in the current implementation
 
         setConnected(false);
         toast(
@@ -715,10 +704,30 @@ const VoiceAssistantV2 = ({
         };
     }, [stopVoiceAssistant]);
 
+    // Show loading state on server-side render or when client features aren't available
+    if (!isClient) {
+        return (
+            <div className="relative w-full">
+                <div className="relative z-10 flex flex-col items-center justify-center w-full mx-auto p-4 rounded-2xl bg-gray-800/50 backdrop-blur-lg border border-gray-700/50 shadow-2xl">
+                    <div className="relative w-64 h-64 mb-8">
+                        <div className="absolute inset-0 rounded-full bg-gradient-to-r from-gray-400 to-gray-600 p-1">
+                            <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
+                                <div className="w-full h-full bg-gray-800 animate-pulse"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="text-gray-400 text-sm font-medium">
+                        Loading voice assistant...
+                    </div>
+                </div>
+            </div>
+        );
+    }
+
     // Render compact UI if in compact mode
     if (compact) {
         return (
-            <div className="flex flex-col items-center">
+            <div className="flex flex-col items-center" suppressHydrationWarning>
                 <div className="relative w-24 h-24 mb-4">
                     <div className={`absolute inset-0 rounded-full ${
                         connected 
@@ -749,8 +758,7 @@ const VoiceAssistantV2 = ({
     }
 
     return (
-        <div className="relative w-full">
-
+        <div className="relative w-full" suppressHydrationWarning>
             {/* Main content */}
             <div className="relative z-10 flex flex-col items-center justify-center w-full mx-auto p-4 rounded-2xl bg-gray-800/50 backdrop-blur-lg border border-gray-700/50 shadow-2xl">
                 {/* Avatar Container */}
@@ -812,14 +820,31 @@ const VoiceAssistantV2 = ({
                 {!connected && (
                     <button
                         onClick={startVoiceAssistant}
-                        className="mt-6 group relative px-8 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-medium shadow-lg hover:shadow-blue-500/30 transition-all duration-300 overflow-hidden"
+                        disabled={!hasWebRTC || !hasUserMedia}
+                        className={`mt-6 group relative px-8 py-3 rounded-full font-medium shadow-lg transition-all duration-300 overflow-hidden ${
+                            !hasWebRTC || !hasUserMedia 
+                                ? 'bg-gray-600 text-gray-400 cursor-not-allowed' 
+                                : 'bg-gradient-to-r from-blue-500 to-purple-600 text-white hover:shadow-blue-500/30'
+                        }`}
                     >
                         <span className="relative z-10 flex items-center">
                             <FaMicrophone className="mr-2" />
-                            Start Voice Assistant
+                            {!hasWebRTC || !hasUserMedia ? 'Not Supported' : 'Start Voice Assistant'}
                         </span>
-                        <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                        {(hasWebRTC && hasUserMedia) && (
+                            <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                        )}
                     </button>
+                )}
+
+                {/* Browser compatibility notice */}
+                {(!hasWebRTC || !hasUserMedia) && (
+                    <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-yellow-400 text-sm text-center max-w-md">
+                        <p>Voice assistant requires WebRTC and microphone access.</p>
+                        <p className="mt-1 text-xs text-yellow-500">
+                            Please use a modern browser like Chrome, Firefox, or Safari.
+                        </p>
+                    </div>
                 )}
             </div>
 
