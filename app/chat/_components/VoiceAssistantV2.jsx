@@ -18,7 +18,6 @@ const VoiceAssistantV2 = ({
     compact = false
 }) => {
     const router = useRouter();
-    const aiVideoRef = useRef(null);
     const [connected, setConnected] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [transcription, setTranscription] = useState('');
@@ -763,7 +762,6 @@ const VoiceAssistantV2 = ({
                                 loop 
                                 muted 
                                 className="w-full h-full object-cover opacity-90"
-                                ref={aiVideoRef}
                             >
                                 <source src="/images/anicircle.mp4" type="video/mp4" />
                             </video>

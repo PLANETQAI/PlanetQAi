@@ -2,18 +2,15 @@ import { NextResponse } from 'next/server';
 
 export async function GET() {
   console.log('Creating new session...');
-  console.log('OPENAI_API_KEY', process.env.OPENAI_API_KEY);
-  
-  if (!process.env.OPENAI_API_KEY) {
-    console.error('OPENAI_API_KEY is not set');
-    return NextResponse.json(
-      { error: "Server configuration error: OPENAI_API_KEY is not set" },
-      { status: 500 }
-    );
-  }
-
-
   try {
+    console.log('OPENAI_API_KEY', process.env.OPENAI_API_KEY);
+    if (!process.env.OPENAI_API_KEY) {
+      console.error('OPENAI_API_KEY is not set');
+      return NextResponse.json(
+        { error: "Server configuration error: OPENAI_API_KEY is not set" },
+        { status: 500 }
+      );
+    }
     const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
       method: 'POST',
       headers: {
