@@ -58,7 +58,7 @@ const MessageItem = React.memo(({ message }) => {
                 {message.role === 'assistant' && (
                     <div className="relative w-10 h-10 rounded-full overflow-hidden">
                         <Image 
-                            src="/images/chat-bot/ai-face.png" 
+                            src="/images/chat-bot/bot-icon.png" 
                             alt="AI Face" 
                             fill 
                             className="object-cover"
@@ -99,15 +99,33 @@ export default function ChatBot() {
     });
     
     const [triggerPrompt, setTriggerPrompt] = useState(false);
-    const [isVoiceAssistantActive, setIsVoiceAssistantActive] = useState(false);
+    // Load voice assistant state from localStorage on component mount
+    const [isVoiceAssistantActive, setIsVoiceAssistantActive] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('isVoiceAssistantActive');
+            return saved === 'true';
+        }
+        return false;
+    });
     const aiVideoRef = useRef(null);
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
     
-    // Memoize the input change handler
+    // Update localStorage when voice assistant state changes
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            localStorage.setItem('isVoiceAssistantActive', isVoiceAssistantActive);
+        }
+    }, [isVoiceAssistantActive]);
+
+    // Handle input change and switch to chat mode when typing
     const handleInputChangeMemoized = useCallback((e) => {
+        // If we're in voice mode and user starts typing, switch to chat mode
+        if (isVoiceAssistantActive && e.target.value.trim() !== '') {
+            setIsVoiceAssistantActive(false);
+        }
         handleInputChange(e);
-    }, [handleInputChange]);
+    }, [handleInputChange, isVoiceAssistantActive]);
     
     // Memoize the submit handler
     const handleSubmitMemoized = useCallback((e) => {
@@ -269,11 +287,24 @@ export default function ChatBot() {
                         </form>
                         
                         {/* Voice Assistant Overlay */}
-                        {isVoiceAssistantActive && (
+                        {isVoiceAssistantActive ? (
                             <div className="mt-4 max-w-4xl mx-auto">
                                 <div className="bg-gray-800/80 backdrop-blur-lg rounded-2xl p-4 border border-gray-700/50 shadow-lg">
+                                    <div className="flex justify-between items-center mb-3">
+                                        <p className="text-sm text-gray-300">Voice Assistant is active. Start typing to switch back to chat.</p>
+                                    </div>
                                     <VoiceAssistantV2 autoStart={true} />
                                 </div>
+                            </div>
+                        ) : (
+                            <div className="text-center mt-2">
+                                <button
+                                    onClick={() => setIsVoiceAssistantActive(true)}
+                                    className="text-sm text-blue-400 hover:text-blue-300 transition-colors flex items-center justify-center gap-1 mx-auto"
+                                >
+                                    <FaMicrophone size={14} />
+                                    <span>Use Voice Assistant</span>
+                                </button>
                             </div>
                         )}
                     </div>

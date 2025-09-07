@@ -14,11 +14,7 @@ import { SongGenerationStatus } from './SongGenerationStatus';
 import { NavigationButton } from './NavigationButton';
 
 const VoiceAssistantV2 = ({ 
-    mode = 'voice',
     autoStart = false,
-    onTranscriptUpdate,
-    onSend,
-    onDisconnect,
     compact = false
 }) => {
     const router = useRouter();
@@ -72,62 +68,140 @@ const VoiceAssistantV2 = ({
 
                 // Update internal transcription state and parent component
                 setTranscription(transcript);
-                if (onTranscriptUpdate) {
-                    onTranscriptUpdate(transcript);
-                }
             };
 
             recognitionRef.current.onerror = (event) => {
                 console.error('Speech recognition error', event.error);
                 toast.error('Speech recognition error: ' + event.error);
-                if (onDisconnect) {
-                    onDisconnect();
-                }
+                setConnected(false);
             };
         }
-    }, [onTranscriptUpdate, onDisconnect]);
+    }, []);
 
     const [assistantResponse, setAssistantResponse] = useState('');
     const [messages, setMessages] = useState([]);
-    const [currentAction, setCurrentAction] = useState(null);
-    const [generationData, setGenerationData] = useState(null);
+    const [modals, setModals] = useState({
+        navigation: { isOpen: false, data: null },
+        songGeneration: { isOpen: false, data: null }
+    });
 
-    // Handle navigation with toast
-    const handleNavigation = useCallback((path, pageName) => {
-        toast.custom((t) => (
-            <div className="w-full max-w-sm p-4 bg-gray-800 text-white rounded-lg shadow-xl">
-                <div className="flex items-center justify-between mb-3">
-                    <h3 className="font-medium">🚀 Navigate to {pageName}</h3>
-                    <button
-                        onClick={() => toast.dismiss(t.id)}
-                        className="text-gray-400 hover:text-white"
-                    >
-                        <IoMdClose size={20} />
-                    </button>
+    // Handle JSON commands from messages
+    const handleJsonCommand = (jsonData) => {
+        if (jsonData.navigateTo) {
+            setModals(prev => ({
+                ...prev,
+                navigation: {
+                    isOpen: true,
+                    data: {
+                        page: jsonData.navigateTo,
+                        url: jsonData.url,
+                        message: jsonData.message || 'Would you like to navigate?'
+                    }
+                }
+            }));
+            return true;
+        }
+        
+        if (jsonData.createSong) {
+            setModals(prev => ({
+                ...prev,
+                songGeneration: {
+                    isOpen: true,
+                    data: jsonData
+                }
+            }));
+            return true;
+        }
+        
+        return false;
+    };
+    
+    // Close modal
+    const closeModal = (modalName) => {
+        setModals(prev => ({
+            ...prev,
+            [modalName]: { isOpen: false, data: null }
+        }));
+    };
+
+    useEffect(() => {
+        const songData = modals.songGeneration.data;
+        if (songData?.taskId) {
+            // Show toast notification with song generation status
+            const toastId = 'song-generation-status';
+            
+            toast.custom((t) => (
+                <div className="w-full max-w-md p-0 bg-transparent shadow-none">
+                    <div className="bg-gray-800 rounded-lg overflow-hidden">
+                        <div className="p-4">
+                            <div className="flex justify-between items-center mb-2">
+                                <h3 className="text-white font-medium">
+                                    🎵 Generating: {songData.title || 'Your Song'}
+                                </h3>
+                                <button
+                                    onClick={() => {
+                                        toast.dismiss(t.id);
+                                        closeModal('songGeneration');
+                                    }}
+                                    className="text-gray-400 hover:text-white"
+                                >
+                                    <IoMdClose size={20} />
+                                </button>
+                            </div>
+                            <SongGenerationStatus 
+                                generationData={songData}
+                                onClose={() => {
+                                    toast.dismiss(t.id);
+                                    closeModal('songGeneration');
+                                }}
+                            />
+                        </div>
+                    </div>
                 </div>
-                <div className="flex space-x-3">
-                    <button
-                        onClick={() => {
-                            router.push(path);
-                            toast.dismiss(t.id);
-                        }}
-                        className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
-                    >
-                        Go Now
-                    </button>
-                    <button
-                        onClick={() => toast.dismiss(t.id)}
-                        className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
-                    >
-                        Dismiss
-                    </button>
-                </div>
-            </div>
-        ), {
-            duration: 10000,
-            position: 'bottom-right'
+            ), {
+                duration: Infinity,
+                position: 'bottom-right',
+                id: toastId,
+            });
+            
+            // Cleanup function to dismiss the toast when component unmounts
+            return () => {
+                toast.dismiss(toastId);
+            };
+        }
+    }, [modals.songGeneration.data]);
+
+    // Handle message from the assistant
+    // const handleAssistantMessage = useCallback((message) => {
+    //     setAssistantResponse(prev => {
+    //         const newContent = prev + message;
+    //         // The message will be rendered with renderMessageContent when displayed
+    //         return newContent;
+    //     });
+    // }, []);
+
+    // Handle assistant messages and check for commands
+    const handleAssistantMessage = useCallback((message) => {
+        setAssistantResponse(prev => {
+            const newContent = prev + message;
+            
+            // Check for JSON commands in the new content
+            const jsonMatch = newContent.match(/```json\n([\s\S]*?)\n```/);
+            if (jsonMatch) {
+                try {
+                    const jsonData = JSON.parse(jsonMatch[1]);
+                    if (handleJsonCommand(jsonData)) {
+                        // If a command was handled, return the content without the JSON
+                        return newContent.replace(/```json[\s\S]*?```/g, '').trim();
+                    }
+                } catch (e) {
+                    console.error('Error parsing JSON command:', e);
+                }
+            }
+            
+            return newContent;
         });
-    }, [router]);
+    }, []);
 
     // Handle music generation
     const handleMusicGeneration = useCallback(async (musicData) => {
@@ -137,54 +211,12 @@ const VoiceAssistantV2 = ({
         try {
             const result = await MusicGenerationAPI.generateMusic(musicData);
             
-            // Set the generation data to show the status popup
-            setGenerationData({
-                ...musicData,
-                taskId: result.taskId,
-                songId: result.songId,
-                status: 'starting'
-            });
-
             // Play notification sound
             if (notificationSoundRef.current) {
                 notificationSoundRef.current.play().catch(e => console.error('Error playing notification:', e));
             }
-
-            // Show toast notification with song generation status
-            toast.custom((t) => (
-                <div className="w-full max-w-md p-0 bg-transparent shadow-none">
-                    <div className="bg-gray-800 rounded-lg overflow-hidden">
-                        <div className="p-4">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-white font-medium">🎵 Generating: <strong>{musicData.title || 'Your Song'}</strong></h3>
-                                <button
-                                    onClick={() => {
-                                        toast.dismiss(t.id);
-                                        setGenerationData(null);
-                                    }}
-                                    className="text-gray-400 hover:text-white"
-                                >
-                                    <IoMdClose size={20} />
-                                </button>
-                            </div>
-                            {generationData && (
-                                <SongGenerationStatus 
-                                    generationData={generationData}
-                                    onClose={() => {
-                                        toast.dismiss(t.id);
-                                        setGenerationData(null);
-                                    }}
-                                />
-                            )}
-                        </div>
-                    </div>
-                </div>
-            ), {
-                duration: Infinity,
-                position: 'bottom-right',
-                id: 'song-generation-status',
-            });
-
+            
+            // The actual handling of the result is done by renderMessageContent
             return result;
         } catch (error) {
             console.error('Error generating music:', error);
@@ -222,9 +254,10 @@ const VoiceAssistantV2 = ({
                 setConnected(true);
             } else if (data.type === 'session.update' && data.status === 'disconnected') {
                 setConnected(false);
-                if (onDisconnect) {
-                    onDisconnect();
-                }
+                toast.success('Voice assistant disconnected', {
+                    duration: 3000,
+                    position: 'top-center'
+                })
             }
 
             switch (data.type) {
@@ -411,9 +444,6 @@ const VoiceAssistantV2 = ({
             dataChannel.onclose = () => {
                 console.log('DataChannel closed');
                 setConnected(false);
-                if (onDisconnect) {
-                    onDisconnect();
-                }
                 toast.success('Voice assistant disconnected', {
                     duration: 3000,
                     position: 'bottom-right'
@@ -423,9 +453,6 @@ const VoiceAssistantV2 = ({
             dataChannel.onerror = (error) => {
                 console.error('DataChannel error:', error);
                 setConnected(false);
-                if (onDisconnect) {
-                    onDisconnect();
-                }
                 toast.error('Connection error: ' + (error.message || 'Unknown error'), {
                     duration: 5000,
                     position: 'bottom-right'
@@ -654,6 +681,62 @@ const VoiceAssistantV2 = ({
                     </button>
                 )}
             </div>
+
+            {/* Navigation Modal */}
+            {modals.navigation.isOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-semibold text-white">Navigation</h3>
+                            <button 
+                                onClick={() => closeModal('navigation')}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                <IoMdClose size={24} />
+                            </button>
+                        </div>
+                        <p className="text-gray-300 mb-6">{modals.navigation.data?.message}</p>
+                        <div className="flex justify-end space-x-3">
+                            <button
+                                onClick={() => closeModal('navigation')}
+                                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md text-sm font-medium transition-colors"
+                            >
+                                Cancel
+                            </button>
+                            <NavigationButton 
+                                page={modals.navigation.data?.page || 'Page'}
+                                url={modals.navigation.data?.url}
+                                className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Song Generation Modal */}
+            {modals.songGeneration.isOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+                    <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full">
+                        <div className="flex justify-between items-center mb-4">
+                            <h3 className="text-xl font-semibold text-white">
+                                🎵 Generating: {modals.songGeneration.data?.title || 'Your Song'}
+                            </h3>
+                            <button 
+                                onClick={() => closeModal('songGeneration')}
+                                className="text-gray-400 hover:text-white"
+                            >
+                                <IoMdClose size={24} />
+                            </button>
+                        </div>
+                        <div className="space-y-4">
+                            <SongGenerationStatus 
+                                generationData={modals.songGeneration.data}
+                                onClose={() => closeModal('songGeneration')}
+                            />
+                        </div>
+                    </div>
+                </div>
+            )}
 
             {/* Add global styles for animations */}
             <style jsx global>{`
