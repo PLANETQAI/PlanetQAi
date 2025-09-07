@@ -18,19 +18,31 @@ const VoiceAssistantV2 = ({
     compact = false
 }) => {
     const router = useRouter();
-    const aiVideoRef = useRef(null)
+    const aiVideoRef = useRef(null);
     const [connected, setConnected] = useState(false);
     const [isProcessing, setIsProcessing] = useState(false);
     const [transcription, setTranscription] = useState('');
+    const [isClient, setIsClient] = useState(false);
+    
+    // Refs for WebRTC
     const audioElementRef = useRef(null);
     const peerRef = useRef(null);
     const dataChannelRef = useRef(null);
     const notificationSoundRef = useRef(null);
     const recognitionRef = useRef(null);
+    
+    // Set isClient to true after component mounts (client-side only)
+    useEffect(() => {
+        setIsClient(true);
+    }, []);
 
     // Initialize notification sound
     useEffect(() => {
+        // Only run this effect on client side
+        if (typeof window === 'undefined') return;
+        
         notificationSoundRef.current = new Audio('/sound/notification.mp3');
+        
         return () => {
             if (notificationSoundRef.current) {
                 notificationSoundRef.current.pause();
@@ -39,43 +51,174 @@ const VoiceAssistantV2 = ({
         };
     }, []);
 
-    // Auto-connect when component mounts if autoStart is true
+    // Initialize WebRTC and auto-connect if needed
     useEffect(() => {
-        if (autoStart) {
-            startVoiceAssistant();
-        }
+        if (!isClient) return;
         
+        let peer = null;
+        let dataChannel = null;
+        let audioElement = null;
+        
+        const initWebRTC = async () => {
+            try {
+                // 1. Retrieve the ephemeral token for authenticating the session with OpenAI.
+                const EPHEMERAL_KEY = await getToken();
+                console.log('🔑 Successfully retrieved ephemeral token');
+
+                // 2. Create a new RTCPeerConnection instance
+                peer = new RTCPeerConnection();
+                peerRef.current = peer;
+
+                // 3. Create audio element for incoming audio stream
+                audioElement = document.createElement('audio');
+                audioElement.autoplay = true;
+                audioElementRef.current = audioElement;
+
+                peer.ontrack = (e) => {
+                    if (e.streams && e.streams[0]) {
+                        audioElement.srcObject = e.streams[0];
+                    }
+                };
+
+                // 4. Get user media and add tracks
+                try {
+                    const localStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                    localStream.getTracks().forEach(track => peer.addTrack(track, localStream));
+                } catch (error) {
+                    console.error('Error accessing microphone:', error);
+                    toast.error('Could not access microphone. Please check permissions.');
+                    return;
+                }
+
+                // 5. Create data channel
+                dataChannel = peer.createDataChannel('oai-events');
+                dataChannelRef.current = dataChannel;
+
+                // Set up data channel handlers
+                dataChannel.onopen = () => {
+                    setConnected(true);
+                    console.log('🔔 DataChannel is open!');
+                    
+                    // Send initial session configuration
+                    dataChannel.send(JSON.stringify({
+                        type: 'session.update',
+                        session: {
+                            instructions: SYSTEM_INSTRUCTIONS
+                        }
+                    }));
+                };
+
+                dataChannel.onmessage = handleDataChannelMessage;
+                dataChannel.onerror = (error) => {
+                    console.error('Data channel error:', error);
+                    toast.error('Connection error: ' + (error.message || 'Unknown error'));
+                };
+
+                // 6. Create and set local description (offer)
+                const offer = await peer.createOffer();
+                await peer.setLocalDescription(offer);
+
+                // 7. Send offer to server and get answer
+                const baseUrl = 'https://api.openai.com/v1/realtime';
+                const model = 'gpt-4o-realtime-preview';
+                const sdpResponse = await fetch(`${baseUrl}?model=${model}`, {
+                    method: 'POST',
+                    body: offer.sdp,
+                    headers: {
+                        'Authorization': `Bearer ${EPHEMERAL_KEY}`,
+                        'Content-Type': 'application/sdp',
+                    },
+                });
+
+                if (!sdpResponse.ok) {
+                    throw new Error(`API request failed with status ${sdpResponse.status}`);
+                }
+
+                // 8. Set remote description with answer
+                const answer = {
+                    type: 'answer',
+                    sdp: await sdpResponse.text(),
+                };
+                await peer.setRemoteDescription(new RTCSessionDescription(answer));
+
+                console.log('✅ WebRTC connection established');
+
+            } catch (error) {
+                console.error('Error initializing WebRTC:', error);
+                toast.error('Failed to initialize voice assistant. Please try again.');
+                setConnected(false);
+            }
+        };
+
+        // Start voice assistant if autoStart is true
+        if (autoStart) {
+            initWebRTC();
+        }
+
+        // Cleanup function
         return () => {
+            // Stop speech recognition if active
             if (recognitionRef.current) {
                 recognitionRef.current.stop();
             }
-            stopVoiceAssistant();
+            
+            // Close WebRTC connection
+            if (peer) {
+                peer.close();
+            }
+            
+            // Clean up audio element
+            if (audioElement) {
+                audioElement.pause();
+                audioElement.srcObject = null;
+            }
+            
+            // Reset refs
+            peerRef.current = null;
+            dataChannelRef.current = null;
+            setConnected(false);
         };
-    }, [autoStart]);
+    }, [autoStart, isClient]); // Re-run if autoStart changes or when client is ready
 
     // Handle speech recognition for input transcription
     useEffect(() => {
-        if (typeof window !== 'undefined' && window.webkitSpeechRecognition) {
-            recognitionRef.current = new window.webkitSpeechRecognition();
-            recognitionRef.current.continuous = true;
-            recognitionRef.current.interimResults = true;
+        // Only run this effect on client side
+        if (typeof window === 'undefined') return;
+        
+        // Initialize speech recognition if available
+        const initSpeechRecognition = () => {
+            if (window.webkitSpeechRecognition) {
+                recognitionRef.current = new window.webkitSpeechRecognition();
+                recognitionRef.current.continuous = true;
+                recognitionRef.current.interimResults = true;
 
-            recognitionRef.current.onresult = (event) => {
-                const transcript = Array.from(event.results)
-                    .map(result => result[0])
-                    .map(result => result.transcript)
-                    .join('');
+                recognitionRef.current.onresult = (event) => {
+                    const transcript = Array.from(event.results)
+                        .map(result => result[0])
+                        .map(result => result.transcript)
+                        .join('');
 
-                // Update internal transcription state and parent component
-                setTranscription(transcript);
-            };
+                    // Update internal transcription state and parent component
+                    setTranscription(transcript);
+                };
 
-            recognitionRef.current.onerror = (event) => {
-                console.error('Speech recognition error', event.error);
-                toast.error('Speech recognition error: ' + event.error);
-                setConnected(false);
-            };
-        }
+                recognitionRef.current.onerror = (event) => {
+                    console.error('Speech recognition error', event.error);
+                    toast.error('Speech recognition error: ' + event.error);
+                    setConnected(false);
+                };
+            }
+        };
+
+        // Initialize with a small delay to ensure window is available
+        const timer = setTimeout(initSpeechRecognition, 0);
+        
+        return () => {
+            clearTimeout(timer);
+            if (recognitionRef.current) {
+                recognitionRef.current.stop();
+            }
+        };
     }, []);
 
     const [assistantResponse, setAssistantResponse] = useState('');
@@ -332,7 +475,7 @@ const VoiceAssistantV2 = ({
 
             // 1. Retrieve the ephemeral token for authenticating the session with OpenAI.
             const EPHEMERAL_KEY = await getToken();
-            console.log('🔑 Successfully retrieved ephemeral token');
+            console.log('🔑 Successfully retrieved ephemeral token', EPHEMERAL_KEY);
 
             // 2. Create a new RTCPeerConnection instance to manage the WebRTC connection.
             const peer = new RTCPeerConnection();

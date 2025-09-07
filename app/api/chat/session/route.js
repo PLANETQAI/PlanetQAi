@@ -28,7 +28,7 @@ export async function GET() {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({}));
-      console.error('OpenAI API error:', {
+      console.log('OpenAI API error:', {
         status: response.status,
         statusText: response.statusText,
         error
@@ -44,7 +44,7 @@ export async function GET() {
     }
 
     const data = await response.json();
-    console.log('Session created successfully');
+    console.log('Session created successfully', data);
     return NextResponse.json(data)
   } catch (error) {
     console.error("Error in /session:", error);
