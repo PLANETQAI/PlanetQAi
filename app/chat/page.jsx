@@ -5,9 +5,10 @@ import VoiceAssistantV3 from "./_components/VoiceAssistantV3";
 export default function RealtimePage() {
   return (
     <div >
-      {/* <ChatBot />
+      <ChatBot /> 
+      {/* 
       <VoiceAssistant /> */}
-      <VoiceAssistantV3 autoStart={false} compact={false} />
+      {/* <VoiceAssistantV3 autoStart={false} compact={false} /> */}
     </div>
   );
 }

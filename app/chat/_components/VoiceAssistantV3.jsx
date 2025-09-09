@@ -14,21 +14,21 @@ import { NavigationButton } from './NavigationButton';
 // Custom hook to check if we're on the client side
 const useClientOnly = () => {
     const [isClient, setIsClient] = useState(false);
-    
+
     useEffect(() => {
         setIsClient(true);
     }, []);
-    
+
     return isClient;
 };
 
-const VoiceAssistantV3 = ({ 
+const VoiceAssistantV3 = ({
     autoStart = false,
-    compact = false
+    compact = true
 }) => {
     const router = useRouter();
     const isClient = useClientOnly();
-    
+
     // State for UI
     const [inputText, setInputText] = useState('');
     const [modals, setModals] = useState({
@@ -36,7 +36,7 @@ const VoiceAssistantV3 = ({
         songGeneration: { isOpen: false, data: null }
     });
     const notificationSoundRef = useRef(null);
-    
+
     // Use the useWebRTCSession hook
     const {
         status,
@@ -51,20 +51,20 @@ const VoiceAssistantV3 = ({
 
     const [showToolUI, setShowToolUI] = useState(false);
     console.log("activeToolUI", activeToolUI);
-    
+
     const connected = status === 'connected';
     const connecting = status === 'connecting';
-    
+
     // Initialize notification sound (client-side only)
     useEffect(() => {
         if (!isClient) return;
-        
+
         try {
             notificationSoundRef.current = new Audio('/sound/notification.mp3');
         } catch (error) {
             console.warn('Could not initialize notification sound:', error);
         }
-        
+
         return () => {
             if (notificationSoundRef.current) {
                 notificationSoundRef.current.pause();
@@ -89,7 +89,7 @@ const VoiceAssistantV3 = ({
             }));
             return true;
         }
-        
+
         if (jsonData.createSong) {
             setModals(prev => ({
                 ...prev,
@@ -100,10 +100,10 @@ const VoiceAssistantV3 = ({
             }));
             return true;
         }
-        
+
         return false;
     }, []);
-    
+
     // Close modal
     const closeModal = useCallback((modalName) => {
         setModals(prev => ({
@@ -118,12 +118,12 @@ const VoiceAssistantV3 = ({
 
         try {
             const result = await MusicGenerationAPI.generateMusic(musicData);
-            
+
             // Play notification sound
             if (notificationSoundRef.current) {
                 notificationSoundRef.current.play().catch(e => console.error('Error playing notification:', e));
             }
-            
+
             return result;
         } catch (error) {
             console.error('Error generating music:', error);
@@ -188,7 +188,7 @@ const VoiceAssistantV3 = ({
                 }
             });
         }
-        
+
         return () => {
             if (autoStart) {
                 stopSession();
@@ -201,7 +201,7 @@ const VoiceAssistantV3 = ({
         const songData = modals.songGeneration.data;
         if (songData?.taskId) {
             const toastId = 'song-generation-status';
-            
+
             toast.custom((t) => (
                 <div className="w-full max-w-md p-0 bg-transparent shadow-none">
                     <div className="bg-gray-800 rounded-lg overflow-hidden">
@@ -220,7 +220,7 @@ const VoiceAssistantV3 = ({
                                     <IoMdClose size={20} />
                                 </button>
                             </div>
-                            <SongGenerationStatus 
+                            <SongGenerationStatus
                                 generationData={songData}
                                 onClose={() => {
                                     toast.dismiss(t.id);
@@ -235,7 +235,7 @@ const VoiceAssistantV3 = ({
                 position: 'bottom-right',
                 id: toastId,
             });
-            
+
             return () => {
                 toast.dismiss(toastId);
             };
@@ -299,6 +299,7 @@ const VoiceAssistantV3 = ({
     }
 
     // Show loading state on server-side render or when client features aren't available
+    // Show loading state on server-side render or when client features aren't available
     if (!isClient) {
         return (
             <div className="relative w-full">
@@ -323,11 +324,10 @@ const VoiceAssistantV3 = ({
         return (
             <div className="flex flex-col items-center" suppressHydrationWarning>
                 <div className="relative w-24 h-24 mb-4">
-                    <div className={`absolute inset-0 rounded-full ${
-                        connected 
-                            ? 'bg-gradient-to-r from-green-400 to-blue-500' 
+                    <div className={`absolute inset-0 rounded-full ${connected
+                            ? 'bg-gradient-to-r from-green-400 to-blue-500'
                             : 'bg-gradient-to-r from-gray-400 to-gray-600'
-                    } p-0.5`}>
+                        } p-0.5`}>
                         <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
                             <Image
                                 src="/images/chat-bot/bot-icon.png"
@@ -342,27 +342,34 @@ const VoiceAssistantV3 = ({
                         <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900"></div>
                     )}
                 </div>
-                <div className={`text-sm font-medium ${
-                    connected ? 'text-green-400' : 'text-gray-400'
-                }`}>
+                <div className={`text-sm font-medium mb-4 ${connected ? 'text-green-400' : 'text-gray-400'
+                    }`}>
                     {connected ? 'Listening...' : connecting ? 'Connecting...' : 'Tap to start'}
                 </div>
-                
+
                 {!connected && !connecting && (
                     <button
                         onClick={startSession}
-                        className="mt-2 px-4 py-1.5 text-xs bg-blue-600 hover:bg-blue-700 text-white rounded-full transition-colors"
+                        className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden"
                     >
-                        Start
+                        <span className="relative z-10 flex items-center">
+                            <FaMicrophone className="mr-2" />
+                            Start Assistant
+                        </span>
+                        <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
                 )}
-                
+
                 {connected && (
                     <button
                         onClick={stopSession}
-                        className="mt-2 px-4 py-1.5 text-xs bg-red-600 hover:bg-red-700 text-white rounded-full transition-colors"
-                    >
-                        Stop
+                        className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden"
+                        >
+                            <span className="relative z-10 flex items-center">
+                                <FaMicrophoneSlash className="mr-2" />
+                                Stop Assistant
+                            </span>
+                            <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
                 )}
             </div>
@@ -375,16 +382,15 @@ const VoiceAssistantV3 = ({
             <div className="relative z-10 flex flex-col items-center justify-center w-full mx-auto p-4 rounded-2xl bg-gray-800/50 backdrop-blur-lg border border-gray-700/50 shadow-2xl">
                 {/* Avatar Container */}
                 <div className="relative w-64 h-64 mb-8 group">
-                    <div className={`absolute inset-0 rounded-full p-1 ${
-                        connected 
-                            ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-rotate-slow' 
+                    <div className={`absolute inset-0 rounded-full p-1 ${connected
+                            ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-rotate-slow'
                             : 'bg-gradient-to-r from-gray-400 to-gray-600'
-                    }`}>
+                        }`}>
                         <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
-                            <video 
-                                autoPlay 
-                                loop 
-                                muted 
+                            <video
+                                autoPlay
+                                loop
+                                muted
                                 className="w-full h-full object-cover opacity-90"
                             >
                                 <source src="/images/anicircle.mp4" type="video/mp4" />
@@ -399,7 +405,7 @@ const VoiceAssistantV3 = ({
                             />
                         </div>
                     </div>
-                    
+
                     {/* Pulsing ring effect when connected */}
                     {connected && (
                         <div className="absolute inset-0 rounded-full border-4 border-blue-400/30 animate-pulse"></div>
@@ -407,20 +413,18 @@ const VoiceAssistantV3 = ({
                 </div>
 
                 {/* Status indicator */}
-                <div className={`flex items-center mb-6 px-4 py-2 rounded-full text-sm font-medium ${
-                    connected 
-                        ? 'bg-green-500/20 text-green-400' 
-                        : connecting 
-                            ? 'bg-yellow-500/20 text-yellow-400' 
+                <div className={`flex items-center mb-6 px-4 py-2 rounded-full text-sm font-medium ${connected
+                        ? 'bg-green-500/20 text-green-400'
+                        : connecting
+                            ? 'bg-yellow-500/20 text-yellow-400'
                             : 'bg-gray-700/50 text-gray-400'
-                }`}>
-                    <span className={`w-2 h-2 rounded-full mr-2 ${
-                        connected 
-                            ? 'bg-green-400' 
-                            : connecting 
-                                ? 'bg-yellow-400' 
+                    }`}>
+                    <span className={`w-2 h-2 rounded-full mr-2 ${connected
+                            ? 'bg-green-400'
+                            : connecting
+                                ? 'bg-yellow-400'
                                 : 'bg-gray-400'
-                    }`}></span>
+                        }`}></span>
                     {connected ? 'Connected' : connecting ? 'Connecting...' : 'Disconnected'}
                 </div>
 
@@ -465,7 +469,7 @@ const VoiceAssistantV3 = ({
                             className="w-full px-4 py-3 pr-12 bg-gray-700/50 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                             disabled={!connected}
                         />
-                        <button 
+                        <button
                             type="submit"
                             className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white disabled:opacity-50"
                             disabled={!inputText.trim() || !connected}
@@ -499,7 +503,7 @@ const VoiceAssistantV3 = ({
                     <div className="bg-gray-800 rounded-xl p-6 max-w-md w-full">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-semibold text-white">Navigation</h3>
-                            <button 
+                            <button
                                 onClick={() => closeModal('navigation')}
                                 className="text-gray-400 hover:text-white"
                             >
@@ -514,7 +518,7 @@ const VoiceAssistantV3 = ({
                             >
                                 Cancel
                             </button>
-                            <NavigationButton 
+                            <NavigationButton
                                 page={modals.navigation.data?.page || 'Page'}
                                 url={modals.navigation.data?.url}
                                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors"
@@ -532,7 +536,7 @@ const VoiceAssistantV3 = ({
                             <h3 className="text-xl font-semibold text-white">
                                 🎵 Generating: {modals.songGeneration.data?.title || 'Your Song'}
                             </h3>
-                            <button 
+                            <button
                                 onClick={() => closeModal('songGeneration')}
                                 className="text-gray-400 hover:text-white"
                             >
@@ -540,7 +544,7 @@ const VoiceAssistantV3 = ({
                             </button>
                         </div>
                         <div className="space-y-4">
-                            <SongGenerationStatus 
+                            <SongGenerationStatus
                                 generationData={modals.songGeneration.data}
                                 onClose={() => closeModal('songGeneration')}
                             />

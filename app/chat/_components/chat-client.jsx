@@ -9,6 +9,7 @@ import VoiceAssistantV2 from './VoiceAssistantV2'
 import { IoMdSend } from 'react-icons/io'
 import { NavigationButton } from './NavigationButton'
 import { SongGenerationStatus } from './SongGenerationStatus'
+import VoiceAssistantV3 from './VoiceAssistantV3'
 
 // Memoize the message item to prevent re-renders
 const MessageItem = React.memo(({ message }) => {
@@ -293,7 +294,7 @@ export default function ChatBot() {
                                     <div className="flex justify-between items-center mb-3">
                                         <p className="text-sm text-gray-300">Voice Assistant is active. Start typing to switch back to chat.</p>
                                     </div>
-                                    <VoiceAssistantV2 autoStart={true} />
+                                    <VoiceAssistantV3 autoStart={false} compact={true} />
                                 </div>
                             </div>
                         ) : (
