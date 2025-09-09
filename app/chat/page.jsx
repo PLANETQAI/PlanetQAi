@@ -4,8 +4,8 @@ import VoiceAssistant from "./_components/TestVoice";
 export default function RealtimePage() {
   return (
     <div >
-      {/* <ChatBot /> */}
-      <VoiceAssistant />
+      <ChatBot />
+      {/* <VoiceAssistant /> */}
     </div>
   );
 }
