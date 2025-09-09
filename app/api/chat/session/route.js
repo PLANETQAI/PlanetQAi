@@ -7,14 +7,6 @@ export async function GET() {
       return NextResponse.json({ error: 'OPENAI_API_KEY is missing' }, { status: 500 });
     }
 
-    // Force disable caching (important in Next.js)
-    const headers = {
-      'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
-      'Pragma': 'no-cache',
-      'Expires': '0'
-    };
-
-    // Call OpenAI Realtime sessions API
     const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
       method: 'POST',
       headers: {
@@ -27,33 +19,33 @@ export async function GET() {
         instructions: SYSTEM_INSTRUCTIONS,
         tools: [
           {
-            type: "function",
-            name: "create_song",
-            description: "Generates a new song based on user input",
+            type: 'function',
+            name: 'create_song',
+            description: 'Generates a new song based on user input',
             parameters: {
-              type: "object",
+              type: 'object',
               properties: {
-                title: { type: "string", description: "Title of the song" },
-                prompt: { type: "string", description: "Genre of the song" }
+                title: { type: 'string', description: 'Title of the song' },
+                prompt: { type: 'string', description: 'Prompt or theme for the song' }
               },
-              required: ["title", "prompt"]
+              required: ['title', 'prompt']
             }
           },
           {
-            type: "function",
-            name: "navigate_to",
-            description: "Navigate to a specific page",
+            type: 'function',
+            name: 'navigate_to',
+            description: 'Navigate to a specific page',
             parameters: {
-              type: "object",
+              type: 'object',
               properties: {
-                url: { type: "string", description: "URL to navigate" }
+                url: { type: 'string', description: 'URL to navigate to' }
               },
-              required: ["url"]
+              required: ['url']
             }
           }
         ]
       }),
-      cache: 'no-store' 
+      cache: 'no-store'
     });
 
     if (!response.ok) {
@@ -62,14 +54,8 @@ export async function GET() {
     }
 
     const data = await response.json();
-    console.log('Session created:', data);
 
-    // Always return a new token (ephemeral)
-    return new NextResponse(JSON.stringify({ client_secret: data.client_secret.value }), {
-      status: 200,
-      headers
-    });
-
+    return NextResponse.json({ client_secret: data.client_secret.value });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

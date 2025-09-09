@@ -45,8 +45,12 @@ const VoiceAssistantV3 = ({
         isProcessing,
         startSession,
         stopSession,
-        sendMessage
+        sendMessage,
+        activeToolUI
     } = useWebRTCSession();
+
+    const [showToolUI, setShowToolUI] = useState(false);
+    console.log("activeToolUI", activeToolUI);
     
     const connected = status === 'connected';
     const connecting = status === 'connecting';
@@ -262,6 +266,37 @@ const VoiceAssistantV3 = ({
             toast.dismiss();
         };
     }, [stopSession]);
+
+    useEffect(() => {
+        if (activeToolUI) {
+            setShowToolUI(true);
+        } else {
+            setShowToolUI(false);
+        }
+    }, [activeToolUI]);
+
+    if (showToolUI) {
+        return (
+            <div className="fixed inset-0 z-50 flex items-start justify-center p-4">
+                <div className="relative w-full max-w-md">
+                    <div className="relative bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+                        <div className="p-4">
+                            <div className="flex justify-between items-center mb-4">
+                                <h3 className="text-lg font-medium text-white">{activeToolUI.type}</h3>
+                                <button
+                                    onClick={() => setShowToolUI(false)}
+                                    className="text-gray-400 hover:text-white"
+                                >
+                                    <IoMdClose size={20} />
+                                </button>
+                            </div>
+                            {activeToolUI.data}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     // Show loading state on server-side render or when client features aren't available
     if (!isClient) {
