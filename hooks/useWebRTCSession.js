@@ -1,13 +1,13 @@
 "use client";
 
 import { getToken } from "@/lib/openai/token";
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
-import { toast } from "react-hot-toast"; // ✅ For notifications
+import { toast } from "react-hot-toast";
 import { MusicGenerationAPI } from "@/utils/voiceAssistant/apiHelpers";
 
 export function useWebRTCSession() {
-  const [status, setStatus] = useState("idle"); // idle | connecting | connected | error
+  const [status, setStatus] = useState("idle"); // idle | connecting | connected | disconnecting | error
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -15,82 +15,252 @@ export function useWebRTCSession() {
   const pcRef = useRef(null);
   const audioRef = useRef(null);
   const dcRef = useRef(null);
+  const localStreamRef = useRef(null);
+  const isMounted = useRef(true);
   const router = useRouter();
 
-  const startSession = async () => {
+  // Cleanup function
+  const cleanup = useCallback(() => {
+    if (pcRef.current) {
+      // Close peer connection
+      try {
+        const pc = pcRef.current;
+        pc.ontrack = null;
+        pc.onicecandidate = null;
+        pc.oniceconnectionstatechange = null;
+        pc.onsignalingstatechange = null;
+        pc.onicegatheringstatechange = null;
+        pc.onconnectionstatechange = null;
+        
+        // Close data channels
+        if (dcRef.current) {
+          dcRef.current.onmessage = null;
+          dcRef.current.onopen = null;
+          dcRef.current.onclose = null;
+          dcRef.current.close();
+          dcRef.current = null;
+        }
+        
+        // Close peer connection
+        pc.close();
+      } catch (err) {
+        console.error("Error during cleanup:", err);
+      } finally {
+        pcRef.current = null;
+      }
+    }
+
+    // Clean up audio element
+    if (audioRef.current) {
+      try {
+        if (audioRef.current.srcObject) {
+          audioRef.current.srcObject.getTracks().forEach(track => track.stop());
+          audioRef.current.srcObject = null;
+        }
+        if (audioRef.current.parentNode) {
+          audioRef.current.pause();
+          audioRef.current.parentNode.removeChild(audioRef.current);
+        }
+      } catch (err) {
+        console.error("Error cleaning up audio:", err);
+      } finally {
+        audioRef.current = null;
+      }
+    }
+
+    // Clean up local stream
+    if (localStreamRef.current) {
+      localStreamRef.current.getTracks().forEach(track => track.stop());
+      localStreamRef.current = null;
+    }
+  }, []);
+
+  // Handle data channel messages
+  const handleDataChannelMessage = useCallback((data) => {
     try {
-      setStatus("connecting");
+      setMessages(prev => [...prev, { from: 'assistant', text: data.delta || data.text || '', timestamp: new Date().toISOString() }]);
+    } catch (err) {
+      console.error('Error handling data channel message:', err);
+    }
+  }, []);
 
-      // ✅ Always get a fresh token
+  // Send message through data channel
+  const sendMessage = useCallback((message) => {
+    if (!dcRef.current || dcRef.current.readyState !== 'open') {
+      console.warn('Data channel not ready');
+      return false;
+    }
+    
+    try {
+      dcRef.current.send(JSON.stringify({
+        type: 'user_message',
+        text: message
+      }));
+      setMessages(prev => [...prev, { from: 'user', text: message, timestamp: new Date().toISOString() }]);
+      return true;
+    } catch (err) {
+      console.error('Error sending message:', err);
+      return false;
+    }
+  }, []);
+
+  // Start WebRTC session
+  const startSession = useCallback(async (options = {}) => {
+    if (!isMounted.current) return;
+    
+    // Don't start if already connecting or connected
+    if (['connecting', 'connected'].includes(status)) {
+      console.log('Session already active');
+      return;
+    }
+
+    setStatus("connecting");
+    setError(null);
+
+    try {
+      // Get a fresh token
       const client_secret = await getToken();
-      console.log(client_secret)
-      if (!client_secret) throw new Error("Failed to retrieve session token");
+      if (!client_secret) {
+        throw new Error("Failed to retrieve session token");
+      }
 
-      const pc = new RTCPeerConnection();
+      // Create new peer connection
+      const pc = new RTCPeerConnection({
+        iceServers: [{ urls: 'stun:stun.l.google.com:19302' }]
+      });
       pcRef.current = pc;
 
-      // ✅ Remote audio element
+      // Create audio element for remote audio
       const audioEl = document.createElement("audio");
       audioEl.autoplay = true;
+      audioEl.controls = false;
+      audioEl.style.display = 'none';
       document.body.appendChild(audioEl);
       audioRef.current = audioEl;
 
+      // Handle remote tracks
       pc.ontrack = (e) => {
-        audioEl.srcObject = e.streams[0];
+        if (e.streams && e.streams[0] && audioRef.current) {
+          audioRef.current.srcObject = e.streams[0];
+        }
       };
 
-      // ✅ Add microphone input
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach((track) => pc.addTrack(track, stream));
+      // Handle connection state changes
+      pc.oniceconnectionstatechange = () => {
+        if (!isMounted.current) return;
+        
+        const connectionState = pc.iceConnectionState;
+        console.log('ICE connection state:', connectionState);
+        
+        if (connectionState === 'failed' || connectionState === 'disconnected' || connectionState === 'closed') {
+          setStatus('error');
+          setError(new Error(`Connection ${connectionState}`));
+          cleanup();
+        }
+      };
 
-      // ✅ Data channel
+      // Add microphone input
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      localStreamRef.current = stream;
+      stream.getTracks().forEach((track) => {
+        pc.addTrack(track, stream);
+      });
+
+      // Create data channel
       const dc = pc.createDataChannel("oai-events");
       dcRef.current = dc;
+      
+      dc.onopen = () => {
+        if (!isMounted.current) return;
+        console.log('Data channel opened');
+      };
+      
+      dc.onclose = () => {
+        if (!isMounted.current) return;
+        console.log('Data channel closed');
+        if (status !== 'disconnecting') {
+          setStatus('error');
+          setError(new Error('Data channel closed unexpectedly'));
+          cleanup();
+        }
+      };
+      
+      dc.onerror = (err) => {
+        console.error('Data channel error:', err);
+        if (isMounted.current) {
+          setStatus('error');
+          setError(err);
+          cleanup();
+        }
+      };
+      
       dc.onmessage = (event) => {
-        handleDataChannelMessage(JSON.parse(event.data));
+        try {
+          const data = JSON.parse(event.data);
+          handleDataChannelMessage(data);
+        } catch (err) {
+          console.error('Error parsing data channel message:', err);
+        }
       };
 
-      // ✅ Offer SDP
-      const offer = await pc.createOffer();
+      // Create and set local description
+      const offer = await pc.createOffer({
+        offerToReceiveAudio: true,
+        offerToReceiveVideo: false,
+        voiceActivityDetection: true
+      });
+      
       await pc.setLocalDescription(offer);
 
-      // ✅ Send SDP to OpenAI
+      // Send SDP to OpenAI
       const sdpResponse = await fetchRealtime(client_secret, offer);
 
       if (!sdpResponse.ok) {
         if (sdpResponse.status === 401) {
           console.warn("Token expired, refreshing...");
           const newToken = await getToken(true); // force refresh
-          console.log("newToken",newToken)
           const retryResponse = await fetchRealtime(newToken, offer);
-          console.log("retryResponse",retryResponse)
-          if (!retryResponse.ok) throw new Error(`OpenAI Realtime API error after retry: ${retryResponse.status}`);
+          
+          if (!retryResponse.ok) {
+            throw new Error(`OpenAI Realtime API error after retry: ${retryResponse.status}`);
+          }
+          
           const answerSDP = await retryResponse.text();
-          await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
+          if (pc.signalingState !== 'closed') {
+            await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
+          }
         } else {
           throw new Error(`OpenAI Realtime API error: ${sdpResponse.status}`);
         }
       } else {
         const answerSDP = await sdpResponse.text();
-        await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
+        if (pc.signalingState !== 'closed') {
+          await pc.setRemoteDescription({ type: "answer", sdp: answerSDP });
+        }
       }
 
-      setStatus("connected");
+      if (isMounted.current) {
+        setStatus("connected");
+      }
+      
     } catch (err) {
       console.error("WebRTC Error:", err);
-      setError(err.message);
-      setStatus("error");
+      if (isMounted.current) {
+        setError(err);
+        setStatus("error");
+        cleanup();
+      }
     }
-  };
+  }, [status, cleanup, handleDataChannelMessage]);
 
-  // ✅ Stop session
-  const stopSession = () => {
-    if (pcRef.current) pcRef.current.close();
-    if (audioRef.current && audioRef.current.parentNode) {
-      audioRef.current.parentNode.removeChild(audioRef.current);
-    }
-    setStatus("idle");
-  };
+  // Stop session
+  const stopSession = useCallback(() => {
+    if (!isMounted.current) return;
+    
+    setStatus('disconnecting');
+    cleanup();
+    setStatus('idle');
+  }, [cleanup]);
 
   // ✅ Make request to OpenAI Realtime
   const fetchRealtime = async (token, offer) => {
@@ -105,35 +275,7 @@ export function useWebRTCSession() {
   };
 
   // ✅ Handle messages from OpenAI Data Channel
-  const handleDataChannelMessage = (data) => {
-    switch (data.type) {
-      case "response.text.delta":
-        setMessages((prev) => {
-          const updated = [...prev];
-          const lastIndex = updated.length - 1;
-          if (lastIndex >= 0 && updated[lastIndex].type === "assistant") {
-            updated[lastIndex].text += data.delta;
-          } else {
-            updated.push({ type: "assistant", text: data.delta });
-          }
-          return updated;
-        });
-        break;
 
-      case "response.text.done":
-        const finalText = data.response?.output?.[0]?.text || "";
-        checkForJsonCommand(finalText);
-        break;
-
-      case "response.error":
-        console.error("Realtime API Error:", data.error);
-        setError(data.error.message);
-        break;
-
-      default:
-        console.log("Unhandled event:", data);
-    }
-  };
 
   // ✅ Extract and execute JSON commands
   const checkForJsonCommand = (text) => {

@@ -24,9 +24,36 @@ export async function GET() {
       body: JSON.stringify({
         model: 'gpt-4o-realtime-preview-2024-12-17',
         voice: 'verse',
-        instructions: SYSTEM_INSTRUCTIONS
+        instructions: SYSTEM_INSTRUCTIONS,
+        tools: [
+          {
+            type: "function",
+            name: "create_song",
+            description: "Generates a new song based on user input",
+            parameters: {
+              type: "object",
+              properties: {
+                title: { type: "string", description: "Title of the song" },
+                prompt: { type: "string", description: "Genre of the song" }
+              },
+              required: ["title", "prompt"]
+            }
+          },
+          {
+            type: "function",
+            name: "navigate_to",
+            description: "Navigate to a specific page",
+            parameters: {
+              type: "object",
+              properties: {
+                url: { type: "string", description: "URL to navigate" }
+              },
+              required: ["url"]
+            }
+          }
+        ]
       }),
-      cache: 'no-store' // Prevent fetch caching
+      cache: 'no-store' 
     });
 
     if (!response.ok) {
