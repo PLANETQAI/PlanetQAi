@@ -1,16 +1,13 @@
+import { SYSTEM_INSTRUCTIONS } from '@/utils/voiceAssistant/prompts';
 import { NextResponse } from 'next/server';
 
 export async function GET() {
-  console.log('Creating new session...');
   try {
-    console.log('OPENAI_API_KEY', process.env.OPENAI_API_KEY);
     if (!process.env.OPENAI_API_KEY) {
-      console.error('OPENAI_API_KEY is not set');
-      return NextResponse.json(
-        { error: "Server configuration error: OPENAI_API_KEY is not set" },
-        { status: 500 }
-      );
+      return NextResponse.json({ error: 'OPENAI_API_KEY is missing' }, { status: 500 });
     }
+
+    // Call OpenAI to create a realtime session
     const response = await fetch('https://api.openai.com/v1/realtime/sessions', {
       method: 'POST',
       headers: {
@@ -18,40 +15,21 @@ export async function GET() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-realtime-preview',
+        model: 'gpt-4o-realtime-preview-2024-12-17', // use correct model
         voice: 'verse',
+        instructions: SYSTEM_INSTRUCTIONS 
       }),
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({}));
-      console.log('OpenAI API error:', {
-        status: response.status,
-        statusText: response.statusText,
-        error
-      });
-      return NextResponse.json(
-        { 
-          error: "Failed to create session",
-          details: error,
-          status: response.status
-        },
-        { status: response.status }
-      );
+      const errorText = await response.text();
+      return NextResponse.json({ error: 'Failed to create session', details: errorText }, { status: response.status });
     }
 
     const data = await response.json();
-    console.log('Session created successfully', data);
-    return NextResponse.json(data)
+    // Only send the client_secret back to the browser
+    return NextResponse.json({ client_secret: data.client_secret });
   } catch (error) {
-    console.error("Error in /session:", error);
-    return NextResponse.json(
-      { 
-        error: "Internal Server Error",
-        message: error.message,
-        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
