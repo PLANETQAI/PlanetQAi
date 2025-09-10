@@ -6,9 +6,9 @@ import axios from "axios";
 const prisma = new PrismaClient();
 
 // Constants for credit calculation
-const STUDIO_BASE_CREDITS = 50; // Base cost for Q_World Studio generation (50 cents in credits)
+const STUDIO_BASE_CREDITS = 80; // Base cost for Q_World Studio generation (50 cents in credits)
 const EXCESS_WORDS_PACK_SIZE = 10; // Additional credits for every 10 words over 200
-const STUDIO_EXCESS_WORDS_COST = 4; // Cost per pack of excess words
+const STUDIO_EXCESS_WORDS_COST = 2; // Cost per pack of excess words
 const WORD_COUNT_THRESHOLD = 200; // Threshold for additional credit costs
 
 /**

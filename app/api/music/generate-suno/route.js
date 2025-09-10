@@ -7,9 +7,9 @@ import axios from "axios";
 const prisma = new PrismaClient();
 
 // Constants for credit calculation
-const SUNO_BASE_CREDITS = 80; // Base cost for Suno generation (80 cents in credits)
+const SUNO_BASE_CREDITS = 85; // Base cost for Suno generation (80 cents in credits)
 const EXCESS_WORDS_PACK_SIZE = 10; // Additional credits for every 10 words over 200
-const SUNO_EXCESS_WORDS_COST = 5; // Cost per pack of excess words
+const SUNO_EXCESS_WORDS_COST = 2; // Cost per pack of excess words
 const WORD_COUNT_THRESHOLD = 200; // Threshold for additional credit costs
 
 /**
