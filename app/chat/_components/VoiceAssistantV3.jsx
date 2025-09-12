@@ -8,7 +8,6 @@ import toast from 'react-hot-toast';
 import { FaMicrophone, FaMicrophoneSlash, FaMusic, FaArrowRight } from "react-icons/fa";
 import { IoMdClose, Send } from "react-icons/io";
 import Image from "next/image";
-import { SongGenerationStatus } from './SongGenerationStatus';
 import { NavigationButton } from './NavigationButton';
 
 // Custom hook to check if we're on the client side
@@ -41,12 +40,13 @@ const VoiceAssistantV3 = ({
     const {
         status,
         error,
-        messages,
-        isProcessing,
         startSession,
         stopSession,
-        sendMessage,
-        activeToolUI
+        messages,
+        isProcessing,
+        showNavigationPopup,
+        showSongPopup,
+        activeToolUI,
     } = useWebRTCSession();
 
     const [showToolUI, setShowToolUI] = useState(false);
@@ -208,7 +208,7 @@ const VoiceAssistantV3 = ({
                         <div className="p-4">
                             <div className="flex justify-between items-center mb-2">
                                 <h3 className="text-white font-medium">
-                                    🎵 Generating: {songData.title || 'Your Song'}
+                                    🎵 Generating: {'Your Song'}
                                 </h3>
                                 <button
                                     onClick={() => {
@@ -220,13 +220,6 @@ const VoiceAssistantV3 = ({
                                     <IoMdClose size={20} />
                                 </button>
                             </div>
-                            <SongGenerationStatus
-                                generationData={songData}
-                                onClose={() => {
-                                    toast.dismiss(t.id);
-                                    closeModal('songGeneration');
-                                }}
-                            />
                         </div>
                     </div>
                 </div>
@@ -323,17 +316,17 @@ const VoiceAssistantV3 = ({
     if (compact) {
         return (
             <div className="flex flex-col items-center" suppressHydrationWarning>
-                <div className="relative w-24 h-24 mb-4">
+                <div className="relative w-80 h-80 mb-4">
                     <div className={`absolute inset-0 rounded-full ${connected
-                            ? 'bg-gradient-to-r from-green-400 to-blue-500'
-                            : 'bg-gradient-to-r from-gray-400 to-gray-600'
+                        ? 'bg-gradient-to-r from-green-400 to-blue-500'
+                        : 'bg-gradient-to-r from-gray-400 to-gray-600'
                         } p-0.5`}>
                         <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
                             <Image
                                 src="/images/chat-bot/bot-icon.png"
                                 alt="AI Assistant"
-                                width={96}
-                                height={96}
+                                width={200}
+                                height={200}
                                 className="w-full h-full object-cover"
                             />
                         </div>
@@ -364,12 +357,12 @@ const VoiceAssistantV3 = ({
                     <button
                         onClick={stopSession}
                         className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden"
-                        >
-                            <span className="relative z-10 flex items-center">
-                                <FaMicrophoneSlash className="mr-2" />
-                                Stop Assistant
-                            </span>
-                            <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                    >
+                        <span className="relative z-10 flex items-center">
+                            <FaMicrophoneSlash className="mr-2" />
+                            Stop Assistant
+                        </span>
+                        <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
                     </button>
                 )}
             </div>
@@ -383,8 +376,8 @@ const VoiceAssistantV3 = ({
                 {/* Avatar Container */}
                 <div className="relative w-64 h-64 mb-8 group">
                     <div className={`absolute inset-0 rounded-full p-1 ${connected
-                            ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-rotate-slow'
-                            : 'bg-gradient-to-r from-gray-400 to-gray-600'
+                        ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-rotate-slow'
+                        : 'bg-gradient-to-r from-gray-400 to-gray-600'
                         }`}>
                         <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
                             <video
@@ -414,16 +407,16 @@ const VoiceAssistantV3 = ({
 
                 {/* Status indicator */}
                 <div className={`flex items-center mb-6 px-4 py-2 rounded-full text-sm font-medium ${connected
-                        ? 'bg-green-500/20 text-green-400'
-                        : connecting
-                            ? 'bg-yellow-500/20 text-yellow-400'
-                            : 'bg-gray-700/50 text-gray-400'
+                    ? 'bg-green-500/20 text-green-400'
+                    : connecting
+                        ? 'bg-yellow-500/20 text-yellow-400'
+                        : 'bg-gray-700/50 text-gray-400'
                     }`}>
                     <span className={`w-2 h-2 rounded-full mr-2 ${connected
-                            ? 'bg-green-400'
-                            : connecting
-                                ? 'bg-yellow-400'
-                                : 'bg-gray-400'
+                        ? 'bg-green-400'
+                        : connecting
+                            ? 'bg-yellow-400'
+                            : 'bg-gray-400'
                         }`}></span>
                     {connected ? 'Connected' : connecting ? 'Connecting...' : 'Disconnected'}
                 </div>
@@ -534,7 +527,7 @@ const VoiceAssistantV3 = ({
                     <div className="bg-gray-800 rounded-xl p-6 max-w-2xl w-full">
                         <div className="flex justify-between items-center mb-4">
                             <h3 className="text-xl font-semibold text-white">
-                                🎵 Generating: {modals.songGeneration.data?.title || 'Your Song'}
+                                🎵 Generating
                             </h3>
                             <button
                                 onClick={() => closeModal('songGeneration')}
@@ -544,10 +537,32 @@ const VoiceAssistantV3 = ({
                             </button>
                         </div>
                         <div className="space-y-4">
-                            <SongGenerationStatus
-                                generationData={modals.songGeneration.data}
-                                onClose={() => closeModal('songGeneration')}
-                            />
+                            {showNavigationPopup.open && (
+                                <div className="p-2 bg-gray-200 rounded">
+                                    <p>Navigate to: {showNavigationPopup.url}</p>
+                                </div>
+                            )}
+
+                            {showSongPopup.open && (
+                                <div className="p-2 bg-gray-200 rounded">
+                                    <p>Generate Song: Title</p>
+                                    <p>Prompt: Prompt</p>
+                                </div>
+                            )}
+
+                            {activeToolUI && (
+                                <div className="p-2 bg-gray-100 rounded shadow">
+                                    <p>Tool: {activeToolUI.type}</p>
+                                    <div className="flex gap-2 mt-2">
+                                        <Button onClick={activeToolUI.onConfirm} disabled={activeToolUI.isLoading}>
+                                            Confirm
+                                        </Button>
+                                        <Button variant="secondary" onClick={activeToolUI.onCancel}>
+                                            Cancel
+                                        </Button>
+                                    </div>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>

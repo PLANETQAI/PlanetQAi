@@ -17,6 +17,20 @@ export class MusicGenerationAPI {
         if (!response.ok) {
           throw new Error(data.error || `HTTP error! status: ${response.status}`);
         }
+        
+        // Ensure the response has the expected structure
+        if (!data.taskId) {
+          throw new Error('Invalid response from server: missing taskId');
+        }
+        
+        // Return a consistent response format
+        return {
+          taskId: data.taskId,
+          status: 'pending',
+          output: data.output || {},
+          // Include any additional data from the response
+          ...data
+        };
   
         return data;
       } catch (error) {

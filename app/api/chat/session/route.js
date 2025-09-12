@@ -1,5 +1,6 @@
 import { SYSTEM_INSTRUCTIONS } from '@/utils/voiceAssistant/prompts';
 import { NextResponse } from 'next/server';
+import { tools } from '@/utils/voiceAssistant/tools';
 import { auth } from '@/auth';
 import { PrismaClient } from '@prisma/client';
 
@@ -59,35 +60,9 @@ export async function GET() {
       },
       body: JSON.stringify({
         model: 'gpt-4o-realtime-preview-2024-12-17',
-        voice: 'verse',
+        voice: 'shimmer',
         instructions: SYSTEM_INSTRUCTIONS,
-        tools: [
-          {
-            type: 'function',
-            name: 'create_song',
-            description: 'Generates a new song based on user input',
-            parameters: {
-              type: 'object',
-              properties: {
-                title: { type: 'string', description: 'Title of the song' },
-                prompt: { type: 'string', description: 'Prompt or theme for the song' }
-              },
-              required: ['title', 'prompt']
-            }
-          },
-          {
-            type: 'function',
-            name: 'navigate_to',
-            description: 'Navigate to a specific page',
-            parameters: {
-              type: 'object',
-              properties: {
-                url: { type: 'string', description: 'URL to navigate to' }
-              },
-              required: ['url']
-            }
-          }
-        ]
+        tools,
       }),
       cache: 'no-store'
     });
