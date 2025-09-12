@@ -8,7 +8,7 @@ import { MusicGenerationAPI } from "@/utils/voiceAssistant/apiHelpers";
 
 export function useWebRTCSession() {
   const functionArgsBuffer = useRef({}); // Keep partial arguments
-
+  const [generationStatus, setGenerationStatus] = useState(null); // pending | processing | completed | failed
   const [status, setStatus] = useState("idle"); // idle | connecting | connected | disconnecting | error
   const [error, setError] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -23,18 +23,15 @@ export function useWebRTCSession() {
   const localStreamRef = useRef(null);
   const isMounted = useRef(true);
   const router = useRouter();
-  const lastGenerateSongCallRef = useRef(null);
-
-  // Cooldown duration (5 minutes)
-  const COOLDOWN_MS = 5 * 60 * 1000;
+  const [cooldownUntil, setCooldownUntil] = useState(null);
 
   const isGenerateSongOnCooldown = () => {
-    if (!lastGenerateSongCallRef.current) return false;
-    return Date.now() - lastGenerateSongCallRef.current < COOLDOWN_MS;
+    if (!cooldownUntil) return false;
+    return Date.now() < cooldownUntil;
   };
 
   const markGenerateSongCalled = () => {
-    lastGenerateSongCallRef.current = Date.now();
+    setCooldownUntil(Date.now() + 5 * 60 * 1000);
   };
 
   // Cleanup function
@@ -394,29 +391,53 @@ export function useWebRTCSession() {
     console.log('🚀 Handling tool call:', name, parameters);
 
     if (name === "generate_song") {
+      console.log("generate_song tool call received");
       if (isGenerateSongOnCooldown()) {
-        toast.error("⏳ Please wait 5 minutes before generating another song.");
-        sendToolResult(call_id, { status: "failed", message: "Cooldown active" });
+        const errorMsg = "⏳ Please wait 5 minutes before generating another song.";
+        toast.error(errorMsg);
+        sendToolResult(call_id, { status: "failed", message: errorMsg });
         return;
       }
 
+      // Initialize generation status
+      setGenerationStatus("pending");
+      
       setActiveToolUI({
         type: "song",
         data: parameters,
         isLoading: false,
         onConfirm: async () => {
           setActiveToolUI((prev) => ({ ...prev, isLoading: true }));
+          setGenerationStatus("processing");
+          
           try {
-            await triggerMusicGeneration(parameters);
-            markGenerateSongCalled();
-            sendToolResult(call_id, { status: "success", message: "Song generated successfully!" });
+            await triggerMusicGeneration(parameters, (status) => {
+              setGenerationStatus(status);
+            });
+            
+            setGenerationStatus("completed");
+            markGenerateSongCalled(); // Start cooldown
+            sendToolResult(call_id, { 
+              status: "success", 
+              message: "Song generated successfully!" 
+            });
           } catch (err) {
-            sendToolResult(call_id, { status: "failed", message: err.message });
+            console.error("Song generation failed:", err);
+            setGenerationStatus("failed");
+            sendToolResult(call_id, { 
+              status: "failed", 
+              message: err.message || "Failed to generate song" 
+            });
+          } finally {
+            setActiveToolUI(null);
           }
-          setActiveToolUI(null);
         },
         onCancel: () => {
-          sendToolResult(call_id, { status: "cancelled", message: "User cancelled song generation" });
+          setGenerationStatus(null);
+          sendToolResult(call_id, { 
+            status: "cancelled", 
+            message: "User cancelled song generation" 
+          });
           setActiveToolUI(null);
         }
       });
@@ -473,36 +494,49 @@ export function useWebRTCSession() {
     }
   };
 
-  const handleJsonCommand = (jsonData) => {
-    if (jsonData.createSong) {
-      triggerMusicGeneration(jsonData);
-    }
 
-    if (jsonData.navigateTo) {
-      router.push(jsonData.url || "/");
+  const triggerMusicGeneration = async (musicData, onStatusUpdate) => {
+    if (isGenerateSongOnCooldown()) {
+      const errorMsg = "⏳ Please wait before generating another song.";
+      toast.error(errorMsg);
+      throw new Error(errorMsg);
     }
-  };
-
-  const triggerMusicGeneration = async (musicData) => {
+  
     setIsProcessing(true);
+    const updateStatus = (status) => {
+      setGenerationStatus(status);
+      if (onStatusUpdate) onStatusUpdate(status);
+    };
+  
     try {
-      const result = await MusicGenerationAPI.generateMusic(musicData);
-      console.log("✅ Music generated:", result);
+      updateStatus("pending");
+      
+      const result = await MusicGenerationAPI.generateMusic(musicData, (status) => {
+        updateStatus(status.status);
+      });
+  
+      console.log("✅ Music generation result:", result);
       toast.success("Your AI song is ready!");
+      updateStatus("completed");
+      
+      return result;
     } catch (error) {
       console.error("❌ Music generation failed:", error);
-      toast.error("Failed to generate music");
-      throw error; // Re-throw to handle in tool call
+      toast.error(error.message || "Failed to generate music");
+      updateStatus("failed");
+      throw error;
     } finally {
       setIsProcessing(false);
     }
   };
+  
 
   return { 
     status, 
     error, 
     startSession, 
     stopSession, 
+    generationStatus,
     messages, 
     isProcessing, 
     showNavigationPopup, 

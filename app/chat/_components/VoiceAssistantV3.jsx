@@ -28,8 +28,6 @@ const VoiceAssistantV3 = ({
     const router = useRouter();
     const isClient = useClientOnly();
 
-    // State for UI
-    const [inputText, setInputText] = useState('');
     const [modals, setModals] = useState({
         navigation: { isOpen: false, data: null },
         songGeneration: { isOpen: false, data: null }
@@ -43,11 +41,14 @@ const VoiceAssistantV3 = ({
         startSession,
         stopSession,
         messages,
+        generationStatus,
         isProcessing,
         showNavigationPopup,
         showSongPopup,
         activeToolUI,
     } = useWebRTCSession();
+
+    console.log("generationStatus", generationStatus);
 
     const [showToolUI, setShowToolUI] = useState(false);
     console.log("activeToolUI", activeToolUI);
@@ -73,37 +74,6 @@ const VoiceAssistantV3 = ({
         };
     }, [isClient]);
 
-    // Handle JSON commands from messages
-    const handleJsonCommand = useCallback((jsonData) => {
-        if (jsonData.navigateTo) {
-            setModals(prev => ({
-                ...prev,
-                navigation: {
-                    isOpen: true,
-                    data: {
-                        page: jsonData.navigateTo,
-                        url: jsonData.url,
-                        message: jsonData.message || 'Would you like to navigate?'
-                    }
-                }
-            }));
-            return true;
-        }
-
-        if (jsonData.createSong) {
-            setModals(prev => ({
-                ...prev,
-                songGeneration: {
-                    isOpen: true,
-                    data: jsonData
-                }
-            }));
-            return true;
-        }
-
-        return false;
-    }, []);
-
     // Close modal
     const closeModal = useCallback((modalName) => {
         setModals(prev => ({
@@ -111,59 +81,6 @@ const VoiceAssistantV3 = ({
             [modalName]: { isOpen: false, data: null }
         }));
     }, []);
-
-    // Handle music generation
-    const handleMusicGeneration = useCallback(async (musicData) => {
-        if (!musicData) return;
-
-        try {
-            const result = await MusicGenerationAPI.generateMusic(musicData);
-
-            // Play notification sound
-            if (notificationSoundRef.current) {
-                notificationSoundRef.current.play().catch(e => console.error('Error playing notification:', e));
-            }
-
-            return result;
-        } catch (error) {
-            console.error('Error generating music:', error);
-            toast.error(
-                (t) => (
-                    <div className="flex items-center justify-between">
-                        <span>Failed to generate music. Please try again.</span>
-                        <button
-                            onClick={() => toast.dismiss(t.id)}
-                            className="ml-4 text-gray-400 hover:text-white"
-                        >
-                            <IoMdClose />
-                        </button>
-                    </div>
-                ),
-                {
-                    duration: 10000,
-                    position: 'bottom-right',
-                }
-            );
-            throw error;
-        }
-    }, []);
-
-    // Handle assistant messages and check for commands
-    useEffect(() => {
-        const lastMessage = messages[messages.length - 1];
-        if (lastMessage?.from === 'assistant') {
-            // Check for JSON commands in the message
-            const jsonMatch = lastMessage.text.match(/```json\n([\s\S]*?)\n```/);
-            if (jsonMatch) {
-                try {
-                    const jsonData = JSON.parse(jsonMatch[1]);
-                    handleJsonCommand(jsonData);
-                } catch (e) {
-                    console.error('Error parsing JSON command:', e);
-                }
-            }
-        }
-    }, [messages, handleJsonCommand]);
 
     // Auto-start the session if needed
     useEffect(() => {
@@ -195,45 +112,6 @@ const VoiceAssistantV3 = ({
             }
         };
     }, [autoStart, isClient, startSession, stopSession]);
-
-    // Song generation status effect
-    useEffect(() => {
-        const songData = modals.songGeneration.data;
-        if (songData?.taskId) {
-            const toastId = 'song-generation-status';
-
-            toast.custom((t) => (
-                <div className="w-full max-w-md p-0 bg-transparent shadow-none">
-                    <div className="bg-gray-800 rounded-lg overflow-hidden">
-                        <div className="p-4">
-                            <div className="flex justify-between items-center mb-2">
-                                <h3 className="text-white font-medium">
-                                    🎵 Generating: {'Your Song'}
-                                </h3>
-                                <button
-                                    onClick={() => {
-                                        toast.dismiss(t.id);
-                                        closeModal('songGeneration');
-                                    }}
-                                    className="text-gray-400 hover:text-white"
-                                >
-                                    <IoMdClose size={20} />
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            ), {
-                duration: Infinity,
-                position: 'bottom-right',
-                id: toastId,
-            });
-
-            return () => {
-                toast.dismiss(toastId);
-            };
-        }
-    }, [modals.songGeneration.data, closeModal]);
 
     const handleTextSubmit = (e) => {
         e.preventDefault();
@@ -268,28 +146,29 @@ const VoiceAssistantV3 = ({
         }
     }, [activeToolUI]);
 
-    if (showToolUI) {
-        return (
-            <div className="fixed inset-0 z-50 flex items-start justify-center p-4">
-                <div className="relative w-full max-w-md">
-                    <div className="relative bg-gray-800 rounded-lg overflow-hidden shadow-xl">
-                        <div className="p-4">
-                            <div className="flex justify-between items-center mb-4">
-                                <h3 className="text-lg font-medium text-white">{activeToolUI.type}</h3>
-                                <button
-                                    onClick={() => setShowToolUI(false)}
-                                    className="text-gray-400 hover:text-white"
-                                >
-                                    <IoMdClose size={20} />
-                                </button>
-                            </div>
-                            {activeToolUI.data}
-                        </div>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+    // if (showToolUI) {
+    //     return (
+    //         <div className="fixed inset-0 z-50 flex items-start justify-center p-4">
+    //             <div className="relative w-full max-w-md">
+    //                 <div className="relative bg-gray-800 rounded-lg overflow-hidden shadow-xl">
+    //                     <div className="p-4">
+    //                         <div className="flex justify-between items-center mb-4">
+    //                             {/* <h3 className="text-lg font-medium text-white">{activeToolUI}</h3> */}
+    //                             <button
+    //                                 onClick={() => setShowToolUI(false)}
+    //                                 className="text-gray-400 hover:text-white"
+    //                             >
+    //                                 <IoMdClose size={20} />
+    //                             </button>
+    //                         </div>
+    //                         {/* {activeToolUI.data} */}
+    //                         <pre>{JSON.stringify(activeToolUI, null, 2)}</pre>
+    //                     </div>
+    //                 </div>
+    //             </div>
+    //         </div>
+    //     );
+    // }
 
     // Show loading state on server-side render or when client features aren't available
     // Show loading state on server-side render or when client features aren't available
@@ -451,27 +330,6 @@ const VoiceAssistantV3 = ({
                     )}
                 </div>
 
-                {/* Text input for non-voice interaction */}
-                <div className="mt-6 w-full max-w-md">
-                    <form onSubmit={handleTextSubmit} className="relative">
-                        <input
-                            type="text"
-                            value={inputText}
-                            onChange={(e) => setInputText(e.target.value)}
-                            placeholder="Type your message..."
-                            className="w-full px-4 py-3 pr-12 bg-gray-700/50 border border-gray-600 rounded-full text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                            disabled={!connected}
-                        />
-                        <button
-                            type="submit"
-                            className="absolute right-2 top-1/2 transform -translate-y-1/2 p-2 text-gray-400 hover:text-white disabled:opacity-50"
-                            disabled={!inputText.trim() || !connected}
-                        >
-                            <FaArrowRight />
-                        </button>
-                    </form>
-                </div>
-
                 {/* Error message */}
                 {error && (
                     <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-sm text-center max-w-md">
@@ -489,6 +347,16 @@ const VoiceAssistantV3 = ({
                     </div>
                 )}
             </div>
+            {generationStatus === "pending" && <p>🎶 Generating song...</p>}
+            {generationStatus === "processing" && <p>🎛️ Still processing...</p>}
+            {generationStatus === "completed" && <p>✅ Song ready!</p>}
+            {generationStatus === "failed" && <p>❌ Song failed.</p>}
+
+            {cooldownUntil && Date.now() < cooldownUntil && (
+                <p className="text-xs text-gray-400">
+                    Next song available in {Math.ceil((cooldownUntil - Date.now()) / 1000)}s
+                </p>
+            )}
 
             {/* Navigation Modal */}
             {modals.navigation.isOpen && (
