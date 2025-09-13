@@ -113,22 +113,7 @@ const VoiceAssistantV3 = ({
         };
     }, [autoStart, isClient, startSession, stopSession]);
 
-    const handleTextSubmit = (e) => {
-        e.preventDefault();
-        if (!inputText.trim()) return;
 
-        // Add user message
-        const userMessage = {
-            from: 'user',
-            text: inputText,
-            status: 'completed',
-            timestamp: new Date().toISOString()
-        };
-
-        // Send the message through WebRTC
-        sendMessage(inputText);
-        setInputText('');
-    };
 
     // Clean up on unmount
     useEffect(() => {
