@@ -20,6 +20,7 @@ const createTransporter = () => {
 
   // For production, use actual SMTP settings
   return nodemailer.createTransport({
+    service: 'gmail',
     host: process.env.EMAIL_HOST,
     port: process.env.EMAIL_PORT || 587,
     secure: process.env.EMAIL_SECURE === 'true',
@@ -42,7 +43,7 @@ export const sendEmail = async (to, subject, html, text) => {
   const transporter = createTransporter();
   
   const mailOptions = {
-    from: `"PlanetQAi" <${process.env.EMAIL_FROM || 'planetq@gmail.com'}>`,
+    from: `"PlanetQAi" <${process.env.EMAIL_FROM || 'planetqproducions@gmail.com'}>`,
     to,
     subject,
     html,
