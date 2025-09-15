@@ -3,7 +3,7 @@ import { streamText } from 'ai';
 import { NextResponse } from 'next/server';
 import { auth } from '@/auth';
 import { PrismaClient } from '@prisma/client';
-import { SYSTEM_INSTRUCTIONS } from '@/utils/voiceAssistant/prompts';
+import { SYSTEM_INSTRUCTIONS, SYSTEM_INSTRUCTIONS_CHAT } from '@/utils/voiceAssistant/prompts';
 
 const prisma = new PrismaClient();
 
@@ -63,7 +63,7 @@ export async function POST(req) {
     const result = streamText({
       model: openai('gpt-4o-mini'),
       messages,
-      system: SYSTEM_INSTRUCTIONS,
+      system: SYSTEM_INSTRUCTIONS_CHAT,
     });
 
 	console.log('Chat response:', result);

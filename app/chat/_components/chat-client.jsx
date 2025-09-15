@@ -8,20 +8,41 @@ import { FaMicrophone, FaMicrophoneSlash } from 'react-icons/fa'
 import { IoMdSend } from 'react-icons/io'
 import { NavigationButton } from './NavigationButton'
 import VoiceAssistantV3 from './VoiceAssistantV3'
-import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'
 import { MusicGenerationAPI } from '@/utils/voiceAssistant/apiHelpers'
 
 // Memoize the message item to prevent re-renders
-const MessageItem = React.memo(({ message, onCreateSong, isGenerating }) => {
+const MessageItem = React.memo(({ message, onCreateSong, isGenerating, generationStatus, currentSongData }) => {
+
+    console.log("MessageItem", message)
+    console.log("IsGenerating", isGenerating)
+    console.log("GenerationStatus", generationStatus)
+    console.log("CurrentSongData", currentSongData)
+    console.log("OnCreateSong", onCreateSong)
 
     const renderMessageContent = (content) => {
         // Check for JSON in the message
         const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/);
-
-        if (!jsonMatch) return <span>{content}</span>;
+        
+        // If no JSON match, return the content as is
+        if (!jsonMatch) {
+            console.log('No JSON found in message');
+            return <span>{content}</span>;
+        }
+        
+        // Get the text before the JSON block
+        const beforeJson = content.split('```json')[0].trim();
+        
+        // Parse the JSON data
+        let jsonData;
+        try {
+            jsonData = JSON.parse(jsonMatch[1]);
+            console.log('JSON Data:', jsonData);
+        } catch (e) {
+            console.error('Error parsing JSON:', e);
+            return <span>{content}</span>;
+        }
 
         try {
-            const jsonData = JSON.parse(jsonMatch[1]);
 
             // Handle navigation
             if (jsonData.navigateTo) {
@@ -39,7 +60,9 @@ const MessageItem = React.memo(({ message, onCreateSong, isGenerating }) => {
 
             // Handle song generation
             if (jsonData.createSong) {
+                console.log('Song generation data found:', jsonData);
                 const isCompleted = generationStatus === 'completed' && currentSongData?.id === jsonData.songId;
+                console.log('Is generation completed?', isCompleted, 'Current status:', generationStatus, 'Current song data:', currentSongData);
                 
                 // Auto-start generation if not already generating and not completed
                 useEffect(() => {
@@ -84,38 +107,6 @@ const MessageItem = React.memo(({ message, onCreateSong, isGenerating }) => {
                             </div>
                         )}
                         
-                        <div className="grid grid-cols-2 gap-2 text-sm text-gray-300">
-                            {jsonData.style && (
-                                <div className="bg-gray-700/50 px-3 py-1.5 rounded">
-                                    <span className="font-medium text-gray-400">Style:</span> {jsonData.style}
-                                </div>
-                            )}
-                            {jsonData.tempo && (
-                                <div className="bg-gray-700/50 px-3 py-1.5 rounded">
-                                    <span className="font-medium text-gray-400">Tempo:</span> {jsonData.tempo}
-                                </div>
-                            )}
-                            {jsonData.mood && (
-                                <div className="bg-gray-700/50 px-3 py-1.5 rounded">
-                                    <span className="font-medium text-gray-400">Mood:</span> {jsonData.mood}
-                                </div>
-                            )}
-                            {jsonData.lyricsType && (
-                                <div className="bg-gray-700/50 px-3 py-1.5 rounded">
-                                    <span className="font-medium text-gray-400">Lyrics:</span> {jsonData.lyricsType}
-                                </div>
-                            )}
-                        </div>
-                        
-                        {jsonData.tags && Array.isArray(jsonData.tags) && jsonData.tags.length > 0 && (
-                            <div className="flex flex-wrap gap-2 mt-2">
-                                {jsonData.tags.map((tag, index) => (
-                                    <span key={index} className="bg-blue-900/50 text-blue-200 text-xs px-2 py-1 rounded-full">
-                                        {tag}
-                                    </span>
-                                ))}
-                            </div>
-                        )}
                     </div>
                 );
             }
@@ -141,7 +132,9 @@ const MessageItem = React.memo(({ message, onCreateSong, isGenerating }) => {
                     </div>
                 )}
                 <div className={`my-2 p-4 max-w-3xl ${message.role === 'user' ? 'bg-gray-600 rounded-xl' : 'bg-gray-700 rounded-xl'}`}>
-                    {message.toolInvocations ? (
+                    {message.role === 'user' ? (
+                        <span>{message.content}</span>
+                    ) : message.toolInvocations ? (
                         <pre className="whitespace-pre-wrap">{JSON.stringify(message.toolInvocations, null, 2)}</pre>
                     ) : (
                         renderMessageContent(message.content)
@@ -154,7 +147,7 @@ const MessageItem = React.memo(({ message, onCreateSong, isGenerating }) => {
 
 MessageItem.displayName = 'MessageItem';
 
-export default function ChatBot({ session }) {
+export default function ChatBot() {
     const [showPaymentPrompt, setShowPaymentPrompt] = useState(false);
     const [errorMessage, setErrorMessage] = useState('');
     
@@ -209,24 +202,29 @@ export default function ChatBot({ session }) {
 
     // Song generation functions
     const handleCreateSong = useCallback(async (songData) => {
+        console.log('handleCreateSong called with:', songData);
         // Skip if already generated or generating
         if (generatedSongIds.current.has(songData.songId) || isGenerating) {
             console.log('Song already generated or generation in progress');
             return;
         }
 
+        let progressInterval = null;
+        
         try {
             setIsGenerating(true);
             setGenerationStatus('generating');
             setGenerationStartTime(Date.now());
             setGenerationProgress(0);
-            setGenerationError('');
+            setGenerationError(null);
+
+            // Add to generated set
             generatedSongIds.current.add(songData.songId);
 
             // Start progress simulation
-            const progressInterval = setInterval(() => {
+            progressInterval = setInterval(() => {
                 setGenerationProgress(prev => {
-                    const newProgress = prev + Math.random() * 10;
+                    const newProgress = prev + Math.random() * 5;
                     return newProgress > 90 ? 90 : newProgress;
                 });
             }, 1000);
@@ -234,30 +232,65 @@ export default function ChatBot({ session }) {
             // Call your music generation API
             const response = await MusicGenerationAPI.generateMusic({
                 prompt: songData.prompt,
-                style: songData.style,
-                tempo: songData.tempo,
-                mood: songData.mood,
-                tags: songData.tags,
                 title: songData.title,
-                lyricsType: songData.lyricsType,
-                songId: songData.songId // Make sure songId is passed to the API
+            }, (status) => {
+                // Handle status updates from the API
+                if (status.status === 'completed' || (status.output?.songs && status.output.songs.length > 0)) {
+                    setGenerationStatus('completed');
+                    setGenerationProgress(100);
+                    setIsGenerating(false);
+                    
+                    const song = Array.isArray(status.output?.songs) ? status.output.songs[0] : status.output;
+                    
+                    // Update the message content to mark as completed
+                    setMessages(prevMessages => {
+                        return prevMessages.map(msg => {
+                            if (msg.content.includes(songData.songId)) {
+                                const updatedContent = msg.content.replace(
+                                    /(\{\s*"createSong"\s*:).*?(\})/s,
+                                    `$1 true, "status": "completed", "songId": "${songData.songId}"$2`
+                                );
+                                return { ...msg, content: updatedContent };
+                            }
+                            return msg;
+                        });
+                    });
+                    
+                    // Update song data with completed info
+                    setCurrentSongData(prev => ({
+                        ...prev,
+                        ...song,
+                        id: songData.songId,
+                        audio_url: song.song_path || song.audio_url,
+                        image_url: song.image_path,
+                        lyrics: song.lyrics
+                    }));
+                } else if (status.status === 'failed') {
+                    setGenerationStatus('error');
+                    setGenerationError(status.error || 'Failed to generate song');
+                    setIsGenerating(false);
+                } else {
+                    // Update progress
+                    setGenerationStatus(status.status || 'generating');
+                    setGenerationProgress(prev => {
+                        const newProgress = prev + Math.random() * 10;
+                        return newProgress > 90 ? 90 : newProgress;
+                    });
+                }
             });
-
-            if (response.taskId) {
-                // Start polling for status every 20 seconds
-                startPolling(response.taskId, songData.songId);
-            }
         } catch (error) {
             console.error('Error generating song:', error);
             setGenerationStatus('error');
             setGenerationError(error.message);
             // Remove from generated set on error to allow retry
-            generatedSongIds.current.delete(songData.songId);
             if (songData?.songId) {
                 generatedSongIds.current.delete(songData.songId);
             }
         } finally {
-            clearInterval(progressInterval);
+            if (progressInterval) {
+                clearInterval(progressInterval);
+                progressInterval = null;
+            }
             setIsGenerating(false);
         }
     }, [isGenerating]);
@@ -281,22 +314,14 @@ export default function ChatBot({ session }) {
         try {
             const statusResponse = await MusicGenerationAPI.checkGenerationStatus(taskId, songId);
             
-            // Check if either status is 'completed' or if status is 'processing' with songs array in output
-            const isComplete = (statusResponse.status === 'completed' || 
-                              (statusResponse.status === 'processing' && 
-                               Array.isArray(statusResponse.output?.songs) && 
-                               statusResponse.output.songs.length > 0));
-            
-            if (isComplete) {
+            // Handle the response in the callback
+            if (statusResponse.status === 'completed' || (statusResponse.output?.songs && statusResponse.output.songs.length > 0)) {
                 setGenerationStatus('completed');
                 setGenerationProgress(100);
                 setIsGenerating(false);
                 
-                // If we have songs array, use the first song's data
-                const output = Array.isArray(statusResponse.output?.songs) && statusResponse.output.songs.length > 0
-                    ? statusResponse.output.songs[0]
-                    : statusResponse.output;
-
+                const song = Array.isArray(statusResponse.output?.songs) ? statusResponse.output.songs[0] : statusResponse.output;
+                
                 // Update the message content to mark as completed
                 setMessages(prevMessages => {
                     return prevMessages.map(msg => {
@@ -314,37 +339,28 @@ export default function ChatBot({ session }) {
                 // Update song data with completed info
                 setCurrentSongData(prev => ({
                     ...prev,
-                    ...output,
+                    ...song,
                     id: songId,
-                    audio_url: output.song_path || output.audio_url || (output.songs?.[0]?.song_path || output.songs?.[0]?.audio_url)
+                    audio_url: song.song_path || song.audio_url,
+                    image_url: song.image_path,
+                    lyrics: song.lyrics
                 }));
-                
-                // Clear polling and timer
-                if (pollingInterval.current) {
-                    clearInterval(pollingInterval.current);
-                    pollingInterval.current = null;
-                }
-                if (generationTimer.current) {
-                    clearInterval(generationTimer.current);
-                    generationTimer.current = null;
-                }
-                
+
                 // Show success message
                 alert('Song generation completed successfully!');
-                
             } else if (statusResponse.status === 'failed') {
                 throw new Error('Generation failed');
             } else {
                 // Still generating, update progress
                 setGenerationProgress(prev => Math.min(prev + 5, 90));
             }
-        } catch (err) {
-            console.error('Error checking status:', err);
-            setGenerationError(err.message || 'Failed to check generation status');
+        } catch (error) {
+            console.error('Error checking status:', error);
             setGenerationStatus('error');
+            setGenerationError(error.message || 'Failed to check generation status');
             setIsGenerating(false);
-            
-            // Clear polling and timer
+        } finally {
+            // Clear polling and timer in all cases
             if (pollingInterval.current) {
                 clearInterval(pollingInterval.current);
                 pollingInterval.current = null;
@@ -382,6 +398,7 @@ export default function ChatBot({ session }) {
         }
         return false;
     });
+
     const aiVideoRef = useRef(null);
     const inputRef = useRef(null);
     const messagesEndRef = useRef(null);
@@ -439,7 +456,6 @@ export default function ChatBot({ session }) {
 
     return (
         <div className="bg-gray-600 min-h-screen">
-            <GlobalHeader session={session} />
             <div className="flex justify-between flex-col min-h-screen bg-[#17101D]">
                 <div
                     className="flex items-center justify-center px-2 gap-12 sticky top-0"
@@ -505,30 +521,16 @@ export default function ChatBot({ session }) {
                                     Status checked every 20 seconds. This usually takes 1-3 minutes.
                                 </p>
                                 {generationError && (
-                                    <p className="text-red-400 text-sm mt-2">Error: {generationError}</p>
+                                    <div className="mt-2">
+                                        <p className="text-red-400 text-sm">Error: {generationError}</p>
+                                        <button
+                                            onClick={() => window.location.href = '/payment'}
+                                            className="mt-2 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                                        >
+                                            Buy Credits
+                                        </button>
+                                    </div>
                                 )}
-                            </div>
-                        )}
-
-                        {messages.map((message) => (
-                            <MessageItem 
-                                key={message.id} 
-                                message={message} 
-                                onCreateSong={handleCreateSong}
-                                isGenerating={isGenerating}
-                            />
-                        ))}
-                        {showPaymentPrompt && (
-                            <div className="bg-yellow-100 border-l-4 border-yellow-500 text-yellow-700 p-4 mb-4 rounded-lg max-w-3xl mx-auto">
-                                <div className="flex justify-between items-center">
-                                    <p>{errorMessage}</p>
-                                    <button
-                                        onClick={() => window.location.href = '/payment'}
-                                        className="ml-4 px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
-                                    >
-                                        Buy Credits
-                                    </button>
-                                </div>
                             </div>
                         )}
                         {errorMessage && !showPaymentPrompt && (
@@ -536,6 +538,19 @@ export default function ChatBot({ session }) {
                                 {errorMessage}
                             </div>
                         )}
+                        {/* Messages */}
+                        <div className="space-y-4">
+                            {messages.map((message) => (
+                                <MessageItem
+                                    key={message.id}
+                                    message={message}
+                                    isGenerating={isGenerating}
+                                    generationStatus={generationStatus}
+                                    currentSongData={currentSongData}
+                                    onCreateSong={handleCreateSong}
+                                />
+                            ))}
+                        </div>
                         <div ref={messagesEndRef} />
                     </div>
 
