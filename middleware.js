@@ -104,6 +104,7 @@ export default auth(async (req) => {
     req.nextUrl.pathname !== "/reset-password" &&
     !req.nextUrl.pathname.startsWith("/share/") &&
     req.nextUrl.pathname !== "/verify-account" &&
+    req.nextUrl.pathname !== "/welcome" &&
     req.nextUrl.pathname !== "/suspended"
   ) {
     const redirectTo = req.nextUrl.pathname;
