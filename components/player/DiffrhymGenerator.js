@@ -56,6 +56,8 @@ const DiffrhymGenerator = ({
 	const [errorMessage, setErrorMessage] = useState('')
 	// State for user credits
 	const [userCredits, setUserCredits] = useState(null)
+	const [creditsLoading, setCreditsLoading] = useState(false)
+	const [creditsError, setCreditsError] = useState(null)
 	// State for credit purchase modal
 	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
 	const [creditsNeeded, setCreditsNeeded] = useState(0)
@@ -285,6 +287,9 @@ const DiffrhymGenerator = ({
 
 	// Fetch user credits
 	const fetchUserCredits = async () => {
+		setCreditsLoading(true)
+		setCreditsError(null)
+		
 		try {
 			// First check if the user is authenticated by getting the session
 			const sessionResponse = await fetch('/api/auth/session')
@@ -298,9 +303,7 @@ const DiffrhymGenerator = ({
 			}
 			
 			// Now fetch credits with the authenticated session
-			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-			console.log('Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
-			const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
+			const response = await fetch('/api/credits-api', {
 				method: 'GET',
 				credentials: 'include', // This ensures cookies are sent with the request
 				headers: {
@@ -311,11 +314,11 @@ const DiffrhymGenerator = ({
 			if (!response.ok) {
 				// If unauthorized, redirect to login
 				if (response.status === 401) {
-					const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-					window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
+					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
 					return
 				}
-				throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
+				const errorData = await response.json().catch(() => ({}))
+				throw new Error(errorData.error || `Failed to fetch credits: ${response.status} ${response.statusText}`)
 			}
 			
 			const data = await response.json()
@@ -324,6 +327,9 @@ const DiffrhymGenerator = ({
 			onCreditsUpdate(data)
 		} catch (error) {
 			console.error('Error fetching credits:', error)
+			setCreditsError(error.message || 'Failed to load credits. Please try again.')
+		} finally {
+			setCreditsLoading(false)
 		}
 	}
 
@@ -739,12 +745,28 @@ const deleteSong = async (songId) => {
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-bold text-white">Generate Music with Q_World Studio</h3>
 				
-				{userCredits && (
+				{creditsLoading ? (
+					<div className="flex items-center gap-2 bg-slate-700/30 px-3 py-1 rounded-full">
+						<div className="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+						<span className="text-blue-300 text-sm font-medium">Loading...</span>
+					</div>
+				) : creditsError ? (
+					<button 
+						onClick={fetchUserCredits}
+						className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 px-3 py-1 rounded-full transition-colors"
+						title={creditsError}
+					>
+						<AlertCircle className="w-4 h-4 text-red-400" />
+						<span className="text-red-300 text-sm font-medium">Error loading credits</span>
+					</button>
+				) : userCredits ? (
 					<div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1 rounded-full">
 						<Zap className="w-4 h-4 text-yellow-400" />
-						<span className="text-white text-sm font-medium">{userCredits.credits} Planet_Q_Coins</span>
+						<span className="text-white text-sm font-medium">
+							{userCredits.credits.toLocaleString()} Planet_Q_Coins
+						</span>
 					</div>
-				)}
+				) : null}
 			</div>
 			
 			{/* Timer display when generation is in progress */}
