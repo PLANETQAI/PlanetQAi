@@ -64,7 +64,7 @@ export default function GlobalHeader({ session }) {
 		<>
 			<div className="text-white bg-gradient-to-r from-slate-900 to-slate-800 flex justify-between items-center px-4 py-3 shadow-md">
 				{/* Logo/Home link */}
-				<Link href="/planetqproductions" className="flex items-center gap-2">
+				<Link href="/main" className="flex items-center gap-2">
 					<Image
 						src="/images/small.webp"
 						alt="PlanetQAi Logo"
