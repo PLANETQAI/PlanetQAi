@@ -289,7 +289,7 @@ export default function VoiceAssistant() {
         />
       )}
       <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
-        <div className="relative w-80 h-80 mb-4">
+        <div className="relative w-120 h-120 mb-4">
           <div className={`absolute inset-0 rounded-full ${connected
             ? 'bg-gradient-to-r from-green-400 to-blue-500'
             : 'bg-gradient-to-r from-gray-400 to-gray-600'

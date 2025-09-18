@@ -30,8 +30,16 @@ const Generator = ({
   useEffect(() => {
     const loadCredits = async () => {
       try {
-        await fetchUserCredits();
-        setStatus('idle');
+        const credits = await fetchUserCredits();
+        if (credits < 1) {
+          setError('You need at least 1 credit to generate music.');
+          setStatus('error');
+        } else if (credits < 85) {
+          // If credits are low, show upgrade prompt
+          setStatus('upgrade');
+        } else {
+          setStatus('idle');
+        }
       } catch (error) {
         console.error('Error loading credits:', error);
         setError('Failed to load credits. Please try again.');
@@ -49,14 +57,14 @@ const Generator = ({
       
       if (!sessionData?.user) {
         window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname);
-        return;
+        return 0;
       }
       
-      const response = await fetch('/api/credits-api', {
-        method: 'GET',
-        credentials: 'include',
-        headers: { 'Content-Type': 'application/json' }
-      });
+      const response = await fetch('/api/credits/balance');
+      const data = await response.json();
+      const credits = data.credits || 0;
+      setUserCredits(credits);
+      return credits;
     } catch (error) {
       console.error('Error fetching credits:', error);
       setError('Failed to load credits. Please try again.');
@@ -173,9 +181,11 @@ const Generator = ({
     if (!songData) return;
     
     // Check credits before starting generation
-    const hasCredits = await fetchUserCredits();
-    if (!hasCredits) {
-      return; // Error already set by fetchUserCredits
+    const credits = await fetchUserCredits();
+    if (credits < 1) {
+      setError('You need at least 1 credit to generate music.');
+      setStatus('upgrade');
+      return;
     }
     
     setStatus('generating');
@@ -289,6 +299,25 @@ const Generator = ({
             <div className="flex flex-col items-center justify-center py-12">
               <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
               <p className="text-gray-400">Loading generator...</p>
+            </div>
+          ) : status === 'upgrade' ? (
+            <div className="flex flex-col items-center justify-center py-12 space-y-6">
+              <div className="text-center">
+                <h3 className="text-xl font-semibold text-white mb-2">Upgrade Your Plan</h3>
+                <p className="text-gray-400 mb-6">You need more credits to continue generating music.</p>
+                <button
+                  onClick={() => router.push('/payment')}
+                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors font-medium"
+                >
+                  Get More Credits
+                </button>
+              </div>
+              <button
+                onClick={onClose}
+                className="text-sm text-gray-400 hover:text-white"
+              >
+                Maybe later
+              </button>
             </div>
           ) : status === 'generating' || status === 'pending' ? (
             <div className="space-y-6">
