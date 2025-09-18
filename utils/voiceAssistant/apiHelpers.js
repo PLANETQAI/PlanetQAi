@@ -158,24 +158,31 @@ export class MusicGenerationAPI {
         
         // Case 2: Output has a songs array
         if (Array.isArray(data.output?.songs)) {
-          const processedSongs = data.output.songs.map(song => ({
-            // Default values for required fields
-            song_path: '',
-            audio_url: '',
-            image_path: '',
-            lyrics: '',
-            status: 'completed',
-            tags: [],
-            // Spread the original song data
-            ...song,
-            // Override with fallback values if needed
-            song_path: song.song_path || song.audio_url || data.output.audio_url || '',
-            audio_url: song.audio_url || song.song_path || data.output.audio_url || '',
-            image_path: song.image_path || song.image_url || data.output.image_url || '',
-            lyrics: song.lyrics || data.output.lyrics || '',
-            status: song.status || 'completed',
-            tags: Array.isArray(song.tags) ? song.tags : []
-          }));
+          const processedSongs = data.output.songs.map(song => {
+            // Create a base object with default values
+            const songData = {
+              song_path: '',
+              audio_url: '',
+              image_path: '',
+              lyrics: '',
+              status: 'completed',
+              tags: []
+            };
+
+            // Merge with the original song data
+            Object.assign(songData, song);
+
+            // Apply fallback values
+            return {
+              ...songData,
+              song_path: songData.song_path || songData.audio_url || data.output.audio_url || '',
+              audio_url: songData.audio_url || songData.song_path || data.output.audio_url || '',
+              image_path: songData.image_path || songData.image_url || data.output.image_url || '',
+              lyrics: songData.lyrics || data.output.lyrics || '',
+              status: songData.status || 'completed',
+              tags: Array.isArray(songData.tags) ? songData.tags : []
+            };
+          });
 
           return {
             ...data,
