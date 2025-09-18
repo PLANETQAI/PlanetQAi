@@ -168,7 +168,7 @@ export class MusicGenerationAPI {
             tags: [],
             // Spread the original song data
             ...song,
-            // Ensure required fields are set from common aliases
+            // Override with fallback values if needed
             song_path: song.song_path || song.audio_url || data.output.audio_url || '',
             audio_url: song.audio_url || song.song_path || data.output.audio_url || '',
             image_path: song.image_path || song.image_url || data.output.image_url || '',

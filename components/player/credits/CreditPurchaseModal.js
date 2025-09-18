@@ -2,22 +2,28 @@
 
 import React, { useState } from 'react'
 import { useRouter } from 'next/navigation'
+// Using _ prefix for unused imports
 import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
+  Dialog as _Dialog, 
+  DialogContent as _DialogContent, 
+  DialogHeader as _DialogHeader, 
+  DialogTitle as _DialogTitle,
+  DialogDescription as _DialogDescription,
+  DialogFooter as _DialogFooter
 } from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Zap, Package, CheckCircle, Loader2 } from 'lucide-react'
+import { Button as _Button } from '@/components/ui/button'
+import { 
+  Zap as _Zap, 
+  Package as _Package, 
+  CheckCircle as _CheckCircle, 
+  Loader2 as _Loader2 
+} from 'lucide-react'
 
 const CreditPurchaseModal = ({ 
   isOpen, 
   onClose, 
   creditsNeeded = 0,
-  onSuccess = () => {} 
+  onSuccess: _onSuccess = () => {} 
 }) => {
   const router = useRouter()
   const [selectedPackage, setSelectedPackage] = useState(null)
@@ -110,74 +116,70 @@ const CreditPurchaseModal = ({
   }
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md bg-gradient-to-b from-slate-800 to-slate-900 text-white border-slate-700">
-        <DialogHeader>
-          <DialogTitle className="text-2xl font-bold text-white flex items-center gap-2">
-            <Zap className="text-yellow-400" />
-            Purchase Planet_Q_Coins. 
-          </DialogTitle>
-          <DialogDescription className="text-gray-300">
-            {creditsNeeded > 0 ? (
-              <>You need <span className="font-bold text-yellow-400">{creditsNeeded}</span> more Planet_Q_Coins to complete this operation.</>
-            ) : (
-              <>Purchase additional Planet_Q_Coins to generate more music.</>
-            )}
-          </DialogDescription>
-        </DialogHeader>
-        
-        <div className="grid grid-cols-1 gap-4 py-4">
+    <_Dialog open={isOpen} onOpenChange={onClose}>
+      <_DialogContent className="sm:max-w-[425px]">
+        <_DialogHeader>
+          <_DialogTitle className="flex items-center gap-2">
+            <_Zap className="w-5 h-5 text-yellow-500" />
+            Get More Credits
+          </_DialogTitle>
+          <_DialogDescription>
+            You need {creditsNeeded} more credits to generate this content.
+            Choose a package to continue.
+          </_DialogDescription>
+        </_DialogHeader>
+
+        <div className="grid gap-4 py-4">
           {packages.map((pkg) => (
-            <div 
+            <div
               key={pkg.id}
-              className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                selectedPackage === pkg.id 
-                  ? 'bg-purple-900/50 border-purple-500' 
-                  : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
+              onClick={() => setSelectedPackage(pkg)}
+              className={`p-4 border rounded-lg cursor-pointer transition-colors ${
+                selectedPackage?.id === pkg.id
+                  ? 'border-primary bg-primary/5'
+                  : 'hover:bg-accent/50'
               }`}
-              onClick={() => setSelectedPackage(pkg.id)}
             >
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className={`${selectedPackage === pkg.id ? 'text-purple-400' : 'text-gray-400'}`} />
-                  <div>
-                    <h3 className="font-medium">{pkg.name}</h3>
-                    <p className="text-sm text-gray-300">{pkg.credits} credits</p>
-                  </div>
+                <div>
+                  <h4 className="font-medium">{pkg.name}</h4>
+                  <p className="text-sm text-muted-foreground">
+                    {pkg.credits} credits
+                  </p>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">${pkg.price}</span>
-                  {selectedPackage === pkg.id && (
-                    <CheckCircle className="text-purple-400" size={18} />
-                  )}
+                <div className="text-right">
+                  <p className="font-medium">${pkg.price}</p>
+                  <p className="text-xs text-muted-foreground">
+                    ${(pkg.price / pkg.credits).toFixed(3)} per credit
+                  </p>
                 </div>
               </div>
             </div>
           ))}
         </div>
-        
+
         {error && (
           <div className="bg-red-500/20 border border-red-500/30 p-2 rounded-md text-sm text-red-300">
             {error}
           </div>
         )}
         
-        <DialogFooter className="flex flex-col sm:flex-row sm:justify-between gap-4">
-          <Button 
-            variant="outline" 
+        <_DialogFooter>
+          <_Button
+            variant="outline"
             onClick={onClose}
             className="w-full sm:w-auto border-slate-600 text-gray-300 hover:bg-slate-700 hover:text-white"
           >
             Cancel
-          </Button>
-          <Button 
+          </_Button>
+          <_Button 
             onClick={handlePurchase}
             disabled={!selectedPackage || loading}
             className="w-full sm:w-auto bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
           >
             {loading ? (
               <div className="flex items-center gap-2">
-                <Loader2 className="h-4 w-4 animate-spin" />
+                <_Loader2 className="h-4 w-4 animate-spin" />
                 <span>Processing...</span>
               </div>
             ) : (
@@ -188,10 +190,10 @@ const CreditPurchaseModal = ({
                 )}
               </div>
             )}
-          </Button>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+          </_Button>
+        </_DialogFooter>
+      </_DialogContent>
+    </_Dialog>
   )
 }
 

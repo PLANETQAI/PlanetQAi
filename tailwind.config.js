@@ -11,8 +11,7 @@ module.exports = {
   		backgroundImage: {
   			'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
   			'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-  			'back-img': 'url('/images/back.png',
-  			')': '
+  			'back-img': "url('/images/back.png')",
   		},
   		animation: {
   			text: 'text 5s ease infinite',

@@ -415,7 +415,7 @@ export const purchaseReceiptTemplate = (userName, creditsAmount, paymentAmount, 
  * @returns {Object} - HTML and text versions of the email
  */
 export const shareEmailTemplate = (sharerName, shareUrl, songs) => {
-  const baseUrl = getBaseUrl();
+  const _baseUrl = getBaseUrl(); // Currently not used in the template
   
   const html = `
     <!DOCTYPE html>
