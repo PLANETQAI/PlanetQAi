@@ -179,20 +179,30 @@ const VoiceAssistantV3 = ({
     // Render compact UI if in compact mode
     if (compact) {
         return (
-            <div className="flex flex-col items-center" suppressHydrationWarning>
+            <div className="flex flex-col items-center justify-center bg-gray-600 h-screen" suppressHydrationWarning>
                 <div className="relative w-80 h-80 mb-4">
                     <div className={`absolute inset-0 rounded-full ${connected
                         ? 'bg-gradient-to-r from-green-400 to-blue-500'
                         : 'bg-gradient-to-r from-gray-400 to-gray-600'
                         } p-0.5`}>
                         <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
-                            <Image
+                            {/* <Image
                                 src="/images/chat-bot/bot-icon.png"
                                 alt="AI Assistant"
                                 width={200}
                                 height={200}
                                 className="w-full h-full object-cover"
-                            />
+                            /> */}
+                            <video
+                                autoPlay
+                                loop
+                                muted
+                                playsInline
+                                className="w-full h-full object-cover"
+                            >
+                                <source src="/videos/generator.mp4" type="video/mp4" />
+                                Your browser does not support the video tag.
+                            </video>
                         </div>
                     </div>
                     {connected && (
@@ -235,114 +245,7 @@ const VoiceAssistantV3 = ({
 
     return (
         <div className="relative w-full" suppressHydrationWarning>
-            {/* Main content */}
-            <div className="relative z-10 flex flex-col items-center justify-center w-full mx-auto p-4 rounded-2xl bg-gray-800/50 backdrop-blur-lg border border-gray-700/50 shadow-2xl">
-                {/* Avatar Container */}
-                <div className="relative w-64 h-64 mb-8 group">
-                    <div className={`absolute inset-0 rounded-full p-1 ${connected
-                        ? 'bg-gradient-to-r from-blue-400 via-purple-500 to-pink-500 animate-rotate-slow'
-                        : 'bg-gradient-to-r from-gray-400 to-gray-600'
-                        }`}>
-                        <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
-                            <video
-                                autoPlay
-                                loop
-                                muted
-                                className="w-full h-full object-cover opacity-90"
-                            >
-                                <source src="/images/anicircle.mp4" type="video/mp4" />
-                            </video>
-                            <Image
-                                src="/images/chat-bot/bot-icon.png"
-                                alt="AI Assistant"
-                                width={256}
-                                height={256}
-                                className="absolute inset-0 w-full h-full object-cover p-2"
-                                priority
-                            />
-                        </div>
-                    </div>
-
-                    {/* Pulsing ring effect when connected */}
-                    {connected && (
-                        <div className="absolute inset-0 rounded-full border-4 border-blue-400/30 animate-pulse"></div>
-                    )}
-                </div>
-
-                {/* Status indicator */}
-                <div className={`flex items-center mb-6 px-4 py-2 rounded-full text-sm font-medium ${connected
-                    ? 'bg-green-500/20 text-green-400'
-                    : connecting
-                        ? 'bg-yellow-500/20 text-yellow-400'
-                        : 'bg-gray-700/50 text-gray-400'
-                    }`}>
-                    <span className={`w-2 h-2 rounded-full mr-2 ${connected
-                        ? 'bg-green-400'
-                        : connecting
-                            ? 'bg-yellow-400'
-                            : 'bg-gray-400'
-                        }`}></span>
-                    {connected ? 'Connected' : connecting ? 'Connecting...' : 'Disconnected'}
-                </div>
-
-                {/* Control buttons */}
-                <div className="flex gap-4">
-                    {!connected && !connecting && (
-                        <button
-                            onClick={startSession}
-                            className="group relative px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-full font-medium shadow-lg hover:shadow-blue-500/30 transition-all duration-300 overflow-hidden"
-                        >
-                            <span className="relative z-10 flex items-center">
-                                <FaMicrophone className="mr-2" />
-                                Start Assistant
-                            </span>
-                            <span className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                        </button>
-                    )}
-
-                    {(connected || connecting) && (
-                        <button
-                            onClick={stopSession}
-                            className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden"
-                            disabled={connecting}
-                        >
-                            <span className="relative z-10 flex items-center">
-                                <FaMicrophoneSlash className="mr-2" />
-                                {connecting ? 'Connecting...' : 'Stop Assistant'}
-                            </span>
-                            <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                        </button>
-                    )}
-                </div>
-
-                {/* Error message */}
-                {error && (
-                    <div className="mt-4 p-3 bg-red-900/20 border border-red-500/30 rounded-lg text-red-400 text-sm text-center max-w-md">
-                        {error.message || 'An error occurred. Please try again.'}
-                    </div>
-                )}
-
-                {/* Browser compatibility notice */}
-                {!window.RTCPeerConnection && (
-                    <div className="mt-4 p-3 bg-yellow-900/20 border border-yellow-500/30 rounded-lg text-yellow-400 text-sm text-center max-w-md">
-                        <p>Voice assistant requires WebRTC support.</p>
-                        <p className="mt-1 text-xs text-yellow-500">
-                            Please use a modern browser like Chrome, Firefox, or Safari.
-                        </p>
-                    </div>
-                )}
-            </div>
-            {generationStatus === "pending" && <p>🎶 Generating song...</p>}
-            {generationStatus === "processing" && <p>🎛️ Still processing...</p>}
-            {generationStatus === "completed" && <p>✅ Song ready!</p>}
-            {generationStatus === "failed" && <p>❌ Song failed.</p>}
-
-            {cooldownUntil && Date.now() < cooldownUntil && (
-                <p className="text-xs text-gray-400">
-                    Next song available in {Math.ceil((cooldownUntil - Date.now()) / 1000)}s
-                </p>
-            )}
-
+          
             {/* Navigation Modal */}
             {modals.navigation.isOpen && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">

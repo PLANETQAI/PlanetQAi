@@ -1,21 +1,40 @@
+// utils/voiceAssistant/tools.js
+import { AgentRuntime } from "@openai/agents";
+
+const MusicGenerationAPI = {
+  generateMusic: async ({ title, prompt }) => {
+    return `Generated song: ${title || "Untitled"} → based on: "${prompt}"`;
+  },
+};
+
 export const tools = [
-    {
-        type: "function",
-        name: "generate_song",
-        description: "Generate a new AI song from a theme or lyrics idea.",
-        parameters: {
-            type: "object",
-            properties: {
-                title: {
-                    type: "string",
-                    description: "The title of the song"
-                },
-                prompt: {
-                    type: "string",
-                    description: "The main idea, theme, or lyrics to inspire the song"
-                }
-            },
-            required: ["title", "prompt"]
-        }
-    }
+  {
+    name: "generate_song",
+    description: "Generate an AI song",
+    parameters: {
+      type: "object",
+      properties: {
+        title: { type: "string" },
+        prompt: { type: "string" },
+      },
+      required: ["prompt"],
+    },
+    execute: async ({ title, prompt }) => {
+      const result = await MusicGenerationAPI.generateMusic({ title, prompt });
+      return { status: "success", result };
+    },
+  },
+  {
+    name: "navigate_to",
+    description: "Open a URL",
+    parameters: {
+      type: "object",
+      properties: { url: { type: "string" } },
+      required: ["url"],
+    },
+    execute: async ({ url }) => {
+      if (typeof window !== "undefined") window.open(url, "_blank");
+      return { status: "success" };
+    },
+  },
 ];

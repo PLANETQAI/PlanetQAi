@@ -5,6 +5,7 @@ import { useState, useRef, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "react-hot-toast";
 import { MusicGenerationAPI } from "@/utils/voiceAssistant/apiHelpers";
+import { runtime } from "@/utils/voiceAssistant/runtime";
 
 export function useWebRTCSession() {
   const functionArgsBuffer = useRef({}); // Keep partial arguments
@@ -22,16 +23,11 @@ export function useWebRTCSession() {
   const dcRef = useRef(null);
   const localStreamRef = useRef(null);
   const isMounted = useRef(true);
-  const router = useRouter();
   const [cooldownUntil, setCooldownUntil] = useState(null);
 
   const isGenerateSongOnCooldown = () => {
     if (!cooldownUntil) return false;
     return Date.now() < cooldownUntil;
-  };
-
-  const markGenerateSongCalled = () => {
-    setCooldownUntil(Date.now() + 5 * 60 * 1000);
   };
 
   // Cleanup function
@@ -167,15 +163,55 @@ export function useWebRTCSession() {
         }
       };
       
-      dc.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('📨 Received event:', data.type, data); // Debug log
-          handleDataChannelEvent(data);
-        } catch (err) {
-          console.error('Error parsing data channel message:', err);
+      // dc.onmessage = (event) => {
+      //   try {
+      //     const data = JSON.parse(event.data);
+      //     console.log('📨 Received event:', data.type, data); // Debug log
+      //     handleDataChannelEvent(data);
+      //   } catch (err) {
+      //     console.error('Error parsing data channel message:', err);
+      //   }
+      // };
+
+      dc.onmessage = async (event) => {
+        const data = JSON.parse(event.data);
+      
+        switch (data.type) {
+          case "response.function_call_arguments.delta": {
+            const { tool_call_id, delta } = data;
+            if (!functionArgsBuffer.current[tool_call_id]) {
+              functionArgsBuffer.current[tool_call_id] = { args: "" };
+            }
+            functionArgsBuffer.current[tool_call_id].args += delta;
+            break;
+          }
+      
+          case "response.tool_calls.done": {
+            const { tool_call_id, name } = data;
+            const argsStr = functionArgsBuffer.current[tool_call_id]?.args || "{}";
+            let args = {};
+            try {
+              args = JSON.parse(argsStr);
+            } catch (e) {
+              console.error("Failed to parse tool args:", e);
+            }
+      
+            // 🚀 Runtime handles the tool call
+            await handleToolCall({
+              name,
+              parameters: args,
+              call_id: tool_call_id,
+            });
+      
+            delete functionArgsBuffer.current[tool_call_id];
+            break;
+          }
+      
+          default:
+            console.log("Unhandled event:", data);
         }
       };
+      
 
       const offer = await pc.createOffer({
         offerToReceiveAudio: true,
@@ -245,94 +281,43 @@ export function useWebRTCSession() {
     });
   };
 
-  // 🔥 FIXED: Handle all data channel events properly
-  const handleDataChannelEvent = (data) => {
-    switch (data.type) {
-      // Handle text responses
-      case "response.text.delta":
-        if (data.delta) {
-          setMessages(prev => {
-            const lastMessage = prev[prev.length - 1];
-            if (lastMessage && lastMessage.from === 'assistant' && lastMessage.streaming) {
-              return [
-                ...prev.slice(0, -1),
-                { ...lastMessage, text: lastMessage.text + data.delta }
-              ];
-            } else {
-              return [...prev, { 
-                from: 'assistant', 
-                text: data.delta, 
-                timestamp: new Date().toISOString(),
-                streaming: true 
-              }];
-            }
-          });
-        }
-        break;
-
-      case "response.text.done":
-        setMessages(prev => {
-          const lastMessage = prev[prev.length - 1];
-          if (lastMessage && lastMessage.streaming) {
-            return [
-              ...prev.slice(0, -1),
-              { ...lastMessage, streaming: false }
-            ];
-          }
-          return prev;
-        });
-        checkForJsonCommand(data.text || "");
-        break;
-
-      // 🚀 CRITICAL: Handle tool calls correctly
-      case "response.function_call_arguments.delta":
-        handleFunctionArgumentsDelta(data);
-        break;
-
-      case "response.function_call_arguments.done":
-        handleFunctionCallReady(data);
-        break;
-
-      // Alternative tool call format
-      case "response.tool_calls.delta":
-        if (data.delta && data.delta.arguments) {
-          const toolCallId = data.tool_call_id || data.id;
-          if (!functionArgsBuffer.current[toolCallId]) {
-            functionArgsBuffer.current[toolCallId] = {
-              name: data.delta.name || '',
-              args: ''
-            };
-          }
-          functionArgsBuffer.current[toolCallId].args += data.delta.arguments;
-        }
-        break;
-
-      case "response.tool_calls.done":
-        Object.keys(functionArgsBuffer.current).forEach(toolCallId => {
-          const toolData = functionArgsBuffer.current[toolCallId];
-          try {
-            const args = JSON.parse(toolData.args);
-            handleToolCall({
-              name: toolData.name,
-              parameters: args,
-              call_id: toolCallId
-            });
-          } catch (err) {
-            console.error("Error parsing tool arguments:", err);
-          }
-        });
-        functionArgsBuffer.current = {}; // Clear buffer
-        break;
-
-      case "response.error":
-        console.error("Realtime API Error:", data.error);
-        setError(data.error.message);
-        break;
-
-      default:
-        console.log("📋 Unhandled event:", data.type, data);
+  const handleToolCall = async ({ name, parameters, call_id }) => {
+    console.log("🚀 Tool call received:", name, parameters);
+  
+    try {
+      // Let AgentRuntime execute the tool
+      const result = await runtime.executeTool(name, parameters);
+  
+      // ✅ Send result back
+      sendToolResult(call_id, result);
+    } catch (err) {
+      console.error("❌ Tool execution failed:", err);
+      sendToolResult(call_id, { status: "error", message: err.message });
     }
   };
+  
+   const sendMessage = (text) => {
+    if (!dcRef.current || dcRef.current.readyState !== "open") {
+      console.warn("⚠️ Data channel not open, cannot send message");
+      return;
+    }
+
+    // Append buffer
+    dcRef.current.send(
+      JSON.stringify({
+        type: "input_text_buffer.append",
+        text,
+      })
+    );
+
+    // Commit buffer (finalize message)
+    dcRef.current.send(
+      JSON.stringify({
+        type: "input_text_buffer.commit",
+      })
+    );
+  };
+
 
   // 🔧 FIXED: Function arguments handling
   function handleFunctionArgumentsDelta(event) {
@@ -385,114 +370,25 @@ export function useWebRTCSession() {
     }
   }
 
-  // 🎯 FIXED: Tool call handler
-  const handleToolCall = (toolData) => {
-    const { name, parameters, call_id } = toolData;
-    console.log('🚀 Handling tool call:', name, parameters);
 
-    if (name === "generate_song") {
-      console.log("generate_song tool call received");
-      if (isGenerateSongOnCooldown()) {
-        const errorMsg = "⏳ Please wait 5 minutes before generating another song.";
-        toast.error(errorMsg);
-        sendToolResult(call_id, { status: "failed", message: errorMsg });
-        return;
-      }
+const sendToolResult = (toolCallId, result) => {
+  if (!dcRef.current || dcRef.current.readyState !== "open") {
+    console.warn("⚠️ Data channel not open, cannot send tool result");
+    return;
+  }
 
-      // Initialize generation status
-      setGenerationStatus("pending");
-      
-      setActiveToolUI({
-        type: "song",
-        data: parameters,
-        isLoading: false,
-        onConfirm: async () => {
-          setActiveToolUI((prev) => ({ ...prev, isLoading: true }));
-          setGenerationStatus("processing");
-          
-          try {
-            await triggerMusicGeneration(parameters, (status) => {
-              setGenerationStatus(status);
-            });
-            
-            setGenerationStatus("completed");
-            markGenerateSongCalled(); // Start cooldown
-            sendToolResult(call_id, { 
-              status: "success", 
-              message: "Song generated successfully!" 
-            });
-          } catch (err) {
-            console.error("Song generation failed:", err);
-            setGenerationStatus("failed");
-            sendToolResult(call_id, { 
-              status: "failed", 
-              message: err.message || "Failed to generate song" 
-            });
-          } finally {
-            setActiveToolUI(null);
-          }
-        },
-        onCancel: () => {
-          setGenerationStatus(null);
-          sendToolResult(call_id, { 
-            status: "cancelled", 
-            message: "User cancelled song generation" 
-          });
-          setActiveToolUI(null);
-        }
-      });
-    }
-
-    if (name === "navigate_to") {
-      setActiveToolUI({
-        type: "navigate",
-        data: parameters,
-        isLoading: false,
-        onConfirm: () => {
-          window.open(parameters.url, "_blank");
-          sendToolResult(call_id, { status: "success", message: "Navigation completed" });
-          setActiveToolUI(null);
-        },
-        onCancel: () => {
-          sendToolResult(call_id, { status: "cancelled", message: "User cancelled navigation" });
-          setActiveToolUI(null);
-        }
-      });
-    }
+  const message = {
+    type: "conversation.item.create",
+    item: {
+      type: "function_call_output",
+      call_id: toolCallId,
+      output: JSON.stringify(result), // must be stringified
+    },
   };
 
-  // 📤 FIXED: Send tool result back to OpenAI
-  const sendToolResult = (toolCallId, result) => {
-    if (!dcRef.current || dcRef.current.readyState !== "open") {
-      console.warn('Data channel not open, cannot send tool result');
-      return;
-    }
-    
-    const message = {
-      type: "conversation.item.create",
-      item: {
-        type: "function_call_output",
-        call_id: toolCallId,
-        output: JSON.stringify(result)
-      }
-    };
-    
-    console.log('📤 Sending tool result:', message);
-    dcRef.current.send(JSON.stringify(message));
-  };
-
-  // Legacy JSON command handling (keep as backup)
-  const checkForJsonCommand = (text) => {
-    const jsonMatch = text.match(/```json\n([\s\S]*?)\n```/);
-    if (jsonMatch) {
-      try {
-        const jsonData = JSON.parse(jsonMatch[1]);
-        handleJsonCommand(jsonData);
-      } catch (error) {
-        console.error("Invalid JSON in response:", error);
-      }
-    }
-  };
+  console.log("📤 Sending tool result:", message);
+  dcRef.current.send(JSON.stringify(message));
+};
 
 
   const triggerMusicGeneration = async (musicData, onStatusUpdate) => {
@@ -530,6 +426,15 @@ export function useWebRTCSession() {
     }
   };
   
+  const sendSongRequest = (title, prompt) => {
+    const text = `Create a song titled "${title}" with this idea: ${prompt}`;
+    sendMessage(text);
+  };
+  const sendNavigationRequest = (url) => {
+    const text = `Take me to ${url}`;
+    sendMessage(text);
+  };
+    
 
   return { 
     status, 
@@ -541,6 +446,10 @@ export function useWebRTCSession() {
     isProcessing, 
     showNavigationPopup, 
     showSongPopup,
-    activeToolUI 
+    activeToolUI,
+    sendMessage,
+    triggerMusicGeneration,
+    sendSongRequest,
+    sendNavigationRequest,
   };
 }

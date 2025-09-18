@@ -3,6 +3,7 @@ import { NextResponse } from 'next/server';
 import { tools } from '@/utils/voiceAssistant/tools';
 import { auth } from '@/auth';
 import { PrismaClient } from '@prisma/client';
+import { runtime } from '@/utils/voiceAssistant/runtime';
 
 const prisma = new PrismaClient();
 
@@ -11,7 +12,7 @@ const AUDIO_SESSION_CREDITS = 20; // Deduct 20 credits per audio session
 
 export async function GET() {
   try {
-    // Get user session
+ 
     const session = await auth();
     if (!session) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
@@ -62,7 +63,7 @@ export async function GET() {
         model: 'gpt-4o-realtime-preview-2024-12-17',
         voice: 'shimmer',
         instructions: SYSTEM_INSTRUCTIONS,
-        tools,
+        tools: tools,
       }),
       cache: 'no-store'
     });

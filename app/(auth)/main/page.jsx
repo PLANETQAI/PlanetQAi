@@ -653,7 +653,7 @@ const RootPage = () => {
   // SWAPPED: Studio moved to productions position (was fifthLink)
   const studioCard = (
     <div className="p-1 card-content" onClick={preventPropagation}>
-      <Link href={"/welcome"} className="block">
+      <Link href={"/studio-main"} className="block">
         <div className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all">
           <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
             <h1 className="text-xl">Q World Studios</h1>
