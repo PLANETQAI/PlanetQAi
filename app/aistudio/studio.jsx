@@ -54,7 +54,7 @@ export default function Studio({ session }) {
 		try {
 			// Get base URL for API calls
 			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-			
+
 			// First check if the user is authenticated by getting the session
 			console.log('Fetching session from:', `${apiBaseUrl}/api/auth/session`)
 			const sessionResponse = await fetch(`${apiBaseUrl}/api/auth/session`)
@@ -115,10 +115,10 @@ export default function Studio({ session }) {
 		<>
 			<div style={backgroundImageStyle}>
 				<GlobalHeader session={session} />
-                {session?.user?.role === 'admin' && (
+				{session?.user?.role === 'admin' && (
 					<div className="flex justify-center mb-4">
-						<Link 
-							href="/admin" 
+						<Link
+							href="/admin"
 							className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-medium py-2 px-4 rounded-md flex items-center gap-2 transition-all duration-200 shadow-lg"
 						>
 							<ShieldCheck className="w-5 h-5" />
@@ -128,9 +128,23 @@ export default function Studio({ session }) {
 				)}
 				<p className="text-center text-gray-300 mb-8">Choose your preferred AI music generator</p>
 
+				<div className="w-64 aspect-square overflow-hidden rounded-full mx-auto my-8 shadow-lg border-4 border-purple-600">
+					<video
+						autoPlay
+						loop
+						muted
+						playsInline
+						className="w-full h-full object-cover"
+					>
+						<source src="/videos/generator.mp4" type="video/mp4" />
+						Your browser does not support the video tag.
+					</video>
+				</div>
+
+
 				<Tabs defaultValue="suno" className="w-full mb-8" onValueChange={setActiveGenerator}>
-					<TabsList className="grid w-full grid-cols-2 mb-6">			
-					<TabsTrigger value="suno" className="text-lg">
+					<TabsList className="grid w-full grid-cols-2 mb-6">
+						<TabsTrigger value="suno" className="text-lg">
 							<span className="flex items-center gap-2">
 								<span className="h-3 w-3 rounded-full bg-blue-500"></span>
 								Planet Q AI

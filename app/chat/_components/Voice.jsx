@@ -1,11 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { FaMicrophone, FaMicrophoneSlash, FaMusic, FaArrowRight } from "react-icons/fa";
-
-
-
-
+import Generator from './Generator';
 
 export default function VoiceAssistant() {
  
@@ -14,9 +11,10 @@ export default function VoiceAssistant() {
   const [connecting, setConnecting] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
-  const [songInformation, setSongInformation] = useState(null);
-
-  console.log("Chat History:", songInformation);
+  const [songData, setSongData] = useState(null);
+  const [showGenerator, setShowGenerator] = useState(false);
+  const [userCredits, setUserCredits] = useState(0);
+  const [isGeneratingSong, setIsGeneratingSong] = useState(false);
 
   useEffect(() => {
     // Dynamic import to avoid SSR issues
@@ -28,6 +26,23 @@ export default function VoiceAssistant() {
         setChatHistory(newHistory || []);
       });
     });
+  }, []);
+
+  // Fetch user credits on component mount
+  useEffect(() => {
+    const fetchUserCredits = async () => {
+      try {
+        const response = await fetch('/api/credits-api');
+        if (response.ok) {
+          const data = await response.json();
+          setUserCredits(data.balance || 0);
+        }
+      } catch (error) {
+        console.error('Failed to fetch user credits:', error);
+      }
+    };
+
+    fetchUserCredits();
   }, []);
 
   useEffect(() => {
@@ -42,7 +57,13 @@ export default function VoiceAssistant() {
       );
 
     if (createSongCall && createSongCall.parsedArguments) {
-      setSongInformation(createSongCall.parsedArguments);
+      setSongData({
+        title: createSongCall.parsedArguments.title || 'Untitled',
+        description: createSongCall.parsedArguments.description || '',
+        genre: createSongCall.parsedArguments.genre || 'pop',
+        mood: createSongCall.parsedArguments.mood || 'neutral'
+      });
+      setShowGenerator(true);
     }
   }, [chatHistory]);
 
@@ -135,58 +156,11 @@ export default function VoiceAssistant() {
       .join("\n");
   };
 
-  // const formatFunctionCall = (item) => {
-  //   const tool = item.name || "Unknown tool";
-  //   const args = item.parsedArguments
-  //     ? item.parsedArguments
-  //     : item.arguments
-  //     ? JSON.parse(item.arguments)
-  //     : {};
-
-  //   // optionally update song info if this tool is create_song
-  //   if (item.name === "create_song" && item.parsedArguments) {
-  //     setSongInformation(JSON.stringify(item.parsedArguments, null, 2));
-  //   }
-
-  //   return (
-  //     <div className="space-y-2">
-  //       <div className="font-semibold text-purple-400">🔧 Tool:</div>
-  //       <div className="bg-gray-900 px-3 py-2 rounded text-gray-200">
-  //         {tool}
-  //       </div>
-
-  //       <div className="font-semibold text-cyan-400">📝 Arguments:</div>
-  //       <pre className="bg-gray-900 px-3 py-2 rounded text-gray-200 whitespace-pre-wrap">
-  //         {JSON.stringify(args, null, 2)}
-  //       </pre>
-  //       <button onClick={() => handleCreateSong(args)} className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm">Handle Create Song</button>
-  //     </div>
-  //   );
-  // };
-
-
-  // const formatFunctionCall = (item) => {
-  //   let display = `🔧 Using tool: ${item.name || "Unknown tool"}`;
-
-  //   if (item.parsedArguments) {
-  //     display += `\n📝 Arguments: ${JSON.stringify(
-  //       item.parsedArguments,
-  //       null,
-  //       2
-  //     )}`;
-  //     setSongInformation(JSON.stringify(item.parsedArguments, null, 2));
-  //   } else if (item.arguments) {
-  //     display += `\n📝 Arguments: ${item.arguments}`;
-  //   }
-
-  //   return display;
-  // };
-
   const formatFunctionOutput = (item) => {
     return `✅ Tool Result: ${typeof item.output === "string"
       ? item.output
       : JSON.stringify(item.output, null, 2)
-      }`;
+    }`;
   };
 
   const formatFunctionCall = (item) => {
@@ -196,11 +170,6 @@ export default function VoiceAssistant() {
       : item.arguments
         ? JSON.parse(item.arguments)
         : {};
-
-    // optionally update song info if this tool is create_song
-    if (item.name === "create_song" && item.parsedArguments) {
-      setSongInformation(JSON.stringify(item.parsedArguments, null, 2));
-    }
 
     return (
       <div className="space-y-4 p-4 rounded-xl bg-gray-950 shadow-md border border-gray-800">
@@ -224,26 +193,64 @@ export default function VoiceAssistant() {
           </div>
         </div>
 
-
         {/* Button */}
-        <div className="pt-2">
-          <button
-            onClick={() => handleCreateSong(args)}
-            className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 
-            px-4 py-2 rounded-lg text-sm font-medium text-white shadow transition-all duration-200"
-          >
-            Handle Create Song
-          </button>
-        </div>
+        {item.name === "create_song" && (
+          <div className="pt-2">
+            <button
+              onClick={async () => {
+                setIsGeneratingSong(true);
+                const songData = {
+                  title: args.title || 'Untitled',
+                  description: args.description || `A ${args.mood || 'catchy'} ${args.genre || 'pop'} song`,
+                  genre: args.genre || 'pop',
+                  mood: args.mood || 'neutral'
+                };
+                setSongData(songData);
+                setShowGenerator(true);
+              }}
+              className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 
+              px-4 py-2 rounded-lg text-sm font-medium text-white shadow transition-all duration-200 flex items-center"
+            >
+              <FaMusic className="mr-2" /> Create Song
+            </button>
+          </div>
+        )}
       </div>
     );
   };
 
+  const handleCreateSong = useCallback(async (songData) => {
+    try {
+      setIsGeneratingSong(true);
+      
+      // If we already have song data from the function call, use that
+      if (!songData && songData) {
+        songData = typeof songData === 'string' 
+          ? JSON.parse(songData) 
+          : songData;
+      }
+      
+      if (!songData) {
+        throw new Error('No song data provided');
+      }
 
-  const handleCreateSong = (args) => {
-    console.log("Processing create_song with:", args);
-    // Add your custom logic here for create_song
-    // For example: save to local state, show in UI, etc.
+      // Show the create song modal which will handle the actual generation
+      setShowGenerator(true);
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error in handleCreateSong:', error);
+      setErrorMsg(error.message || 'Failed to start song generation');
+      return { 
+        success: false, 
+        error: error.message || 'Failed to start song generation' 
+      };
+    }
+  }, [songData]);
+
+  const handleSongGenerated = (song) => {
+    console.log('Song generated successfully:', song);
+    // You can add any additional logic here when song generation is complete
   };
 
   const handleSaveProgress = (args) => {
@@ -252,8 +259,35 @@ export default function VoiceAssistant() {
     // For example: update progress indicators, save to database, etc.
   };
 
+  const handleSongSuccess = (song) => {
+    console.log('Song generated successfully:', song);
+    // You can add additional success handling here
+    setIsGeneratingSong(false);
+  };
+
+  const handleSongError = (error) => {
+    console.error('Error generating song:', error);
+    setIsGeneratingSong(false);
+    // You can add additional error handling here
+  };
+
   return (
-    <div className="min-h-screen bg-gray-900 text-white">
+    <div className="flex flex-col h-screen bg-gray-900 text-white">
+      {/* Generator Component */}
+      {showGenerator && songData && (
+        <Generator
+          isOpen={showGenerator}
+          onClose={() => setShowGenerator(false)}
+          songData={{
+            title: songData.title,
+            prompt: songData.description || `A ${songData.mood} ${songData.genre} song about ${songData.title}`,
+            mood: songData.mood,
+            style: songData.genre
+          }}
+          onSuccess={handleSongSuccess}
+          onError={handleSongError}
+        />
+      )}
       <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
         <div className="relative w-80 h-80 mb-4">
           <div className={`absolute inset-0 rounded-full ${connected
