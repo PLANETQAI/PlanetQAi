@@ -88,7 +88,8 @@ const Generator = ({
         }
         
         const data = await response.json()
-        setUserCredits(data)
+        // Extract just the credits balance from the response
+        setUserCredits(data.credits || 0)
     } catch (error) {
         console.error('Error fetching credits:', error)
     }
@@ -271,12 +272,20 @@ const Generator = ({
   }, [startTimer, stopTimer, onError]);
 
   // Handle song generation
+  const handleUpgrade = () => {
+    // Redirect to payment page
+    window.location.href = '/pricing';
+  };
+
   const handleGenerate = useCallback(async () => {
     if (!songData) {
-      const err = new Error('No song data provided');
-      setStatus('error');
-      setError(err.message);
-      onError(err);
+      setError('No song data provided');
+      return;
+    }
+
+    // Check if user has enough credits
+    if (userCredits < 85) {
+      setError('Insufficient credits. Please upgrade your plan to continue.');
       return;
     }
 
@@ -736,10 +745,15 @@ const Generator = ({
                   </button>
                   
                   <div className="text-xs text-gray-500 text-center">
-                    <p>Each generation uses 1 credit. You have <span className="text-purple-400 font-medium">{userCredits || 0}</span> credits remaining.</p>
-                    <button className="text-purple-400 hover:text-purple-300 mt-1">
-                      Buy more credits
-                    </button>
+                    <p>Each generation uses 1 credit. You have <span className="text-purple-400 font-medium">{typeof userCredits === 'number' ? userCredits : 0}</span> credits remaining.</p>
+                    {userCredits < 85 && (
+                      <button 
+                        onClick={handleUpgrade}
+                        className="mt-2 px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-lg hover:from-purple-700 hover:to-indigo-700 transition-colors"
+                      >
+                        Upgrade Plan (Min. 85 credits required)
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
