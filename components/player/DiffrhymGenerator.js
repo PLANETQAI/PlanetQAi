@@ -760,11 +760,22 @@ const deleteSong = async (songId) => {
 						<span className="text-red-300 text-sm font-medium">Error loading credits</span>
 					</button>
 				) : userCredits ? (
-					<div className="flex items-center gap-2 bg-slate-700/50 px-3 py-1 rounded-full">
-						<Zap className="w-4 h-4 text-yellow-400" />
-						<span className="text-white text-sm font-medium">
-							{userCredits.credits.toLocaleString()} Planet_Q_Coins
-						</span>
+					<div className="flex items-center gap-2">
+						<div className="flex items-center gap-1 bg-slate-700/50 px-3 py-1 rounded-full">
+							<Zap className="w-4 h-4 text-yellow-400" />
+							<span className="text-white text-sm font-medium">
+								{userCredits.credits.toLocaleString()} Planet_Q_Coins
+							</span>
+						</div>
+						{userCredits.credits < 85 && (
+							<button 
+								onClick={() => setShowCreditPurchaseModal(true)}
+								className="flex items-center gap-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-yellow-900 text-xs font-medium px-2 py-1 rounded-full transition-colors"
+							>
+								<Zap className="w-3 h-3" />
+								<span>Upgrade</span>
+							</button>
+						)}
 					</div>
 				) : null}
 			</div>
@@ -915,7 +926,7 @@ const deleteSong = async (songId) => {
 				{session ? (
 					<button
 						onClick={generateAudio}
-						disabled={loading || !selectedPrompt.text}
+						disabled={loading || !selectedPrompt.text || creditsLoading}
 						className="bg-purple-600 text-white p-3 rounded-md hover:bg-purple-700 transition-colors duration-300 w-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
 						{loading ? (
 							<div className="flex items-center justify-center gap-2">
