@@ -9,7 +9,7 @@ import DiffrhymGenerator from '@/components/player/DiffrhymGenerator'
 import SunoGenerator from '@/components/player/SunoGenerator'
 import React from 'react'
 import 'react-h5-audio-player/lib/styles.css'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { normalizeValue } from '@/utils/functions'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
@@ -21,6 +21,7 @@ export default function Studio({ session }) {
 	const initialVideoLink = 'https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG'
 
 	const searchParams = useSearchParams()
+	const router = useRouter()
 	const text = normalizeValue(decodeURIComponent(searchParams.get('text')))
 	const tags = normalizeValue(decodeURIComponent(searchParams.get('tags')))
 	const title = normalizeValue(decodeURIComponent(searchParams.get('title')))
@@ -128,7 +129,10 @@ export default function Studio({ session }) {
 				)}
 				<p className="text-center text-gray-300 mb-8">Choose your preferred AI music generator</p>
 
-				<div className="w-64 aspect-square overflow-hidden rounded-full mx-auto my-8 shadow-lg border-4 border-purple-600">
+				<div 
+				className="w-64 aspect-square overflow-hidden rounded-full mx-auto my-8 shadow-lg border-4 border-purple-600"
+				onClick={() => router.push('/chat')}
+				>
 					<video
 						autoPlay
 						loop

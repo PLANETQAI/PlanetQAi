@@ -775,16 +775,6 @@ const SunoGenerator = ({
 		}
 	}
 
-	// Format duration in a readable format
-	const formatDuration = (seconds) => {
-		if (!seconds) return ''
-		const minutes = Math.floor(seconds / 60)
-		const remainingSeconds = seconds % 60
-		return `${minutes}m ${remainingSeconds}s`
-	}
-	
-
-
 	// Handle song selection
 	const selectSong = (index) => {
 		if (index >= 0 && index < generatedSongs.length) {
