@@ -15,18 +15,36 @@ export default function VoiceAssistant() {
   const [showGenerator, setShowGenerator] = useState(false);
   const [userCredits, setUserCredits] = useState(0);
   const [isGeneratingSong, setIsGeneratingSong] = useState(false);
-
+  
+  // Effect to handle generator visibility changes
   useEffect(() => {
-    // Dynamic import to avoid SSR issues
-    import("../../../lib/voice/voiceAgent.js").then(({ createSession }) => {
-      const session = createSession();
-      setVoiceSession(session);
+    if (showGenerator && connected) {
+      disconnect();
+    }
+  }, [showGenerator, connected]);
 
-      session.on("history_updated", (newHistory) => {
-        setChatHistory(newHistory || []);
-      });
+  const initializeSession = useCallback(async () => {
+    if (voiceSession) return voiceSession;
+    
+    const { createSession } = await import("../../../lib/voice/voiceAgent.js");
+    const session = createSession();
+    
+    session.on("history_updated", (newHistory) => {
+      setChatHistory(newHistory || []);
     });
-  }, []);
+    
+    setVoiceSession(session);
+    return session;
+  }, [voiceSession]);
+  
+  // Clean up session on unmount
+  useEffect(() => {
+    return () => {
+      if (voiceSession) {
+        voiceSession.close().catch(console.error);
+      }
+    };
+  }, [voiceSession]);
 
   // Fetch user credits on component mount
   useEffect(() => {
@@ -35,7 +53,8 @@ export default function VoiceAssistant() {
         const response = await fetch('/api/credits-api');
         if (response.ok) {
           const data = await response.json();
-          setUserCredits(data.balance || 0);
+          console.log("User credits:", data.credits);
+          setUserCredits(data.credits || 0);
         }
       } catch (error) {
         console.error('Failed to fetch user credits:', error);
@@ -68,24 +87,50 @@ export default function VoiceAssistant() {
   }, [chatHistory]);
 
   const connect = async () => {
-    if (!voiceSession) return;
-
     setConnecting(true);
     setErrorMsg("");
 
     try {
+      // Initialize session if not already done
+      const session = await initializeSession();
+      
       const { getToken } = await import("../../../lib/voice/voiceAgent.js");
-      const token = await getToken();
-      await voiceSession.connect({
+      const { token } = await getToken();
+      
+      // Connect with WebRTC options
+      await session.connect({
         apiKey: token,
-        useInsecureApiKey: true, // Add this line
+        useInsecureApiKey: true, // Required for browser WebRTC with regular API key
+        transport: 'webrtc',
+        voice: {
+          // Add any additional voice configuration here
+        },
+        // Add additional WebRTC configuration
+        webrtcConfig: {
+          iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' }, // Google's public STUN server
+            // Add TURN servers here if needed
+          ]
+        }
       });
+      
       setConnected(true);
     } catch (err) {
-      setErrorMsg(err.message || "Connection failed");
+      const errorMessage = err.message === "INSUFFICIENT_CREDITS" 
+        ? "Insufficient credits. Please purchase more credits to continue."
+        : err.message || "Connection failed";
+      
+      setErrorMsg(errorMessage);
       console.error("Connection error:", err);
+      
+      // If it's a credit error, show the credit purchase modal
+      if (err.message === "INSUFFICIENT_CREDITS") {
+        // You might want to trigger a credit purchase modal here
+        // setShowCreditModal(true);
+      }
+    } finally {
+      setConnecting(false);
     }
-    setConnecting(false);
     setChatHistory((prev) => [
       ...prev,
       {
@@ -111,24 +156,6 @@ export default function VoiceAssistant() {
   const stopTalking = () => {
     if (voiceSession) {
       voiceSession.interrupt();
-    }
-  };
-
-  const markAsDone = () => {
-    if (voiceSession) {
-      // Alternative: Send as a text message that will trigger the tool
-      voiceSession.sendMessage([
-        {
-          type: "message",
-          role: "user",
-          content: [
-            {
-              type: "input_text",
-              text: 'Please save progress with status "done" and title "Manual completion"',
-            },
-          ],
-        },
-      ]);
     }
   };
 
@@ -219,45 +246,6 @@ export default function VoiceAssistant() {
     );
   };
 
-  const handleCreateSong = useCallback(async (songData) => {
-    try {
-      setIsGeneratingSong(true);
-      
-      // If we already have song data from the function call, use that
-      if (!songData && songData) {
-        songData = typeof songData === 'string' 
-          ? JSON.parse(songData) 
-          : songData;
-      }
-      
-      if (!songData) {
-        throw new Error('No song data provided');
-      }
-
-      // Show the create song modal which will handle the actual generation
-      setShowGenerator(true);
-      
-      return { success: true };
-    } catch (error) {
-      console.error('Error in handleCreateSong:', error);
-      setErrorMsg(error.message || 'Failed to start song generation');
-      return { 
-        success: false, 
-        error: error.message || 'Failed to start song generation' 
-      };
-    }
-  }, [songData]);
-
-  const handleSongGenerated = (song) => {
-    console.log('Song generated successfully:', song);
-    // You can add any additional logic here when song generation is complete
-  };
-
-  const handleSaveProgress = (args) => {
-    console.log("Processing save_progress with:", args);
-    // Add your custom logic here for save_progress
-    // For example: update progress indicators, save to database, etc.
-  };
 
   const handleSongSuccess = (song) => {
     console.log('Song generated successfully:', song);
@@ -289,7 +277,7 @@ export default function VoiceAssistant() {
         />
       )}
       <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
-        <div className="relative w-120 h-120 mb-4">
+        <div className="relative  w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-120 lg:h-120   mb-4">
           <div className={`absolute inset-0 rounded-full ${connected
             ? 'bg-gradient-to-r from-green-400 to-blue-500'
             : 'bg-gradient-to-r from-gray-400 to-gray-600'
@@ -340,33 +328,30 @@ export default function VoiceAssistant() {
               <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
             </button>
           )}
-          {/* {!connected ? (
-            <button
-              onClick={connect}
-              disabled={connecting}
-              className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded-lg disabled:opacity-50 w-full"
-            >
-              {connecting ? "Connecting..." : "Connect"}
-            </button>
-          ) : (
-            <div>
-              <button
-                onClick={stopTalking}
-                className="bg-orange-600 hover:bg-orange-700 px-4 py-2 rounded-lg mr-2"
-              >
-                Stop
-              </button>
-              <button
-                onClick={disconnect}
-                className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg"
-              >
-                Disconnect
-              </button>
-            </div>
-          )} */}
+         
           {errorMsg && (
-            <div className="bg-red-900/50 border border-red-500 text-red-200 px-4 py-3 rounded-lg">
-              Error: {errorMsg}
+            <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
+              <div className="flex items-start">
+                <div className="flex-shrink-0 pt-0.5">
+                  <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-100">Something went wrong</h3>
+                  <div className="mt-1 text-sm text-red-200">
+                    We're having trouble processing your request. Please try again in a moment.
+                  </div>
+                  <div className="mt-3 flex">
+                    <a
+                      href="/support"
+                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                    >
+                      Contact Support
+                    </a>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
 

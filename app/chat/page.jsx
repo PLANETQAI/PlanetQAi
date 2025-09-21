@@ -15,7 +15,6 @@ export default async function RealtimePage() {
     <div >
       <GlobalHeader session={session} />
       <VoiceAssistant />
-
     </div>
   );
 }

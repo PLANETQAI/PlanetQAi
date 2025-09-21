@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import Generator from '../_components/Generator';
+import Generator from '../_components/Generator_v1';
 
 export default function TestGenerator() {
   const [showGenerator, setShowGenerator] = useState(false);

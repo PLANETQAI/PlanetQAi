@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 import { Loader2, Music, AlertCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -15,58 +15,26 @@ const Generator = ({
   onSuccess = () => {},
   onError = () => {}
 }) => {
-  const router = useRouter()
-  const [status, setStatus] = useState('loading'); // 'loading' | 'generating' | 'completed' | 'error' | 'upgrade'
+  const router = useRouter();
+  const [status, setStatus] = useState('loading');
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState('');
   const [taskId, setTaskId] = useState(null);
   const [songId, setSongId] = useState(null);
   const [generationStartTime, setGenerationStartTime] = useState(null);
   const [generationDuration, setGenerationDuration] = useState(null);
-  const [timerInterval, setTimerInterval] = useState(null);
   const [statusCheckCount, setStatusCheckCount] = useState(0);
   const [userCredits, setUserCredits] = useState(null);
-  const [currentAudio, setCurrentAudio] = useState(null);
-  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
   const [canGenerate, setCanGenerate] = useState(false);
+  const [loading, setLoading] = useState(false); // Simple loading state like SunoGenerator
   
-  // Fetch user credits on mount and update status
-  useEffect(() => {
-    const loadCredits = async () => {
-      try {
-        // First check if we have songData
-        if (!songData || !songData.title) {
-          setError('Missing song data. Please provide song information to generate music.');
-          setStatus('error');
-          setCanGenerate(false);
-          return;
-        }
-
-        const credits = await fetchUserCredits();
-        if (credits < 1) {
-          setError('You need at least 1 credit to generate music.');
-          setStatus('error');
-          setCanGenerate(false);
-        } else if (credits < 85) {
-          // If credits are low, show upgrade prompt
-          setStatus('upgrade');
-          setCanGenerate(false);
-        } else {
-          // Don't set to idle, set canGenerate flag instead
-          setCanGenerate(true);
-          // Status will be handled by the generation logic
-        }
-      } catch (error) {
-        console.error('Error loading credits:', error);
-        setError('Failed to load credits. Please try again.');
-        setStatus('error');
-        setCanGenerate(false);
-      }
-    };
-    
-    loadCredits();
-  }, [songData]);
-
+  // Refs for interval management - like your SunoGenerator
+  const pollingIntervalRef = useRef(null);
+  const timerIntervalRef = useRef(null);
+  const timeoutRef = useRef(null);
+  const hasInitializedRef = useRef(false);
+  
+  // Fetch user credits - similar to your implementation
   const fetchUserCredits = async () => {
     try {
       const sessionResponse = await fetch('/api/auth/session');
@@ -84,35 +52,99 @@ const Generator = ({
       return credits;
     } catch (error) {
       console.error('Error fetching credits:', error);
-      setError('An error occurred while generating the song. Please try again.');
-      setStatus('error');
-      onError(error);
-    } finally {
-      // Always release the lock and clean up
-      isGeneratingGlobally = false;
-      stopTimer();
+      throw error;
     }
   };
 
-  // Start the generation timer
-  const startTimer = useCallback(() => {
+  // Initialize credits and status - only once
+  useEffect(() => {
+    if (!isOpen || hasInitializedRef.current) return;
+    
+    const initialize = async () => {
+      hasInitializedRef.current = true;
+      
+      try {
+        if (!songData || !songData.title) {
+          setError('Missing song data. Please provide song information to generate music.');
+          setStatus('error');
+          setCanGenerate(false);
+          return;
+        }
+
+        const credits = await fetchUserCredits();
+        if (credits < 1) {
+          setError('You need at least 1 credit to generate music.');
+          setStatus('error');
+          setCanGenerate(false);
+        } else if (credits < 85) {
+          setStatus('upgrade');
+          setCanGenerate(false);
+        } else {
+          setStatus('ready');
+          setCanGenerate(true);
+          // Auto-start generation like your original code intended
+          handleGenerate();
+        }
+      } catch (error) {
+        console.error('Error initializing:', error);
+        setError('Failed to load credits. Please try again.');
+        setStatus('error');
+        setCanGenerate(false);
+      }
+    };
+
+    initialize();
+  }, [isOpen, songData?.id]);
+
+  // Reset when modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      hasInitializedRef.current = false;
+      cleanup();
+    }
+  }, [isOpen]);
+
+  // Cleanup function - similar to your approach
+  const cleanup = () => {
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
+    
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
+    }
+    
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+      timeoutRef.current = null;
+    }
+    
+    isGeneratingGlobally = false;
+    setLoading(false);
+  };
+
+  // Start timer - simplified version of your timer logic
+  const startTimer = () => {
     const startTime = Date.now();
     setGenerationStartTime(startTime);
     
-    const interval = setInterval(() => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+    }
+    
+    timerIntervalRef.current = setInterval(() => {
       const elapsed = Date.now() - startTime;
       setGenerationDuration(elapsed);
     }, 1000);
-    
-    setTimerInterval(interval);
-    return () => clearInterval(interval);
-  }, []);
+  };
 
-  // Stop the generation timer
-  const stopTimer = useCallback(() => {
-    if (timerInterval) {
-      clearInterval(timerInterval);
-      setTimerInterval(null);
+  // Stop timer
+  const stopTimer = () => {
+    if (timerIntervalRef.current) {
+      clearInterval(timerIntervalRef.current);
+      timerIntervalRef.current = null;
     }
     
     if (generationStartTime) {
@@ -120,9 +152,9 @@ const Generator = ({
       const elapsed = now - generationStartTime;
       setGenerationDuration(elapsed);
     }
-  }, [timerInterval, generationStartTime]);
+  };
 
-  // Format time in MM:SS format
+  // Format time
   const formatTime = (ms) => {
     if (!ms) return '00:00';
     const totalSeconds = Math.floor(ms / 1000);
@@ -131,7 +163,7 @@ const Generator = ({
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
   };
 
-  // Check status of a task
+  // Check status - similar to your checkStatus function
   const checkStatus = async (taskId, songId) => {
     try {
       setStatusCheckCount(prev => prev + 1);
@@ -145,6 +177,7 @@ const Generator = ({
           setStatus('completed');
           setProgress(100);
           stopTimer();
+          cleanup();
           onSuccess(song);
           return { completed: true, song };
         }
@@ -152,7 +185,6 @@ const Generator = ({
         throw new Error(result.error || 'Generation failed');
       } else if (result.status === 'pending' || result.status === 'processing') {
         setStatus('generating');
-        // Update progress based on status check count (capped at 90% until complete)
         const newProgress = Math.min(90, Math.floor(statusCheckCount * 5));
         setProgress(newProgress);
       }
@@ -162,69 +194,81 @@ const Generator = ({
       console.error('Error checking status:', error);
       setStatus('error');
       setError(error.message || 'Failed to check generation status');
-      stopTimer();
+      cleanup();
+      onError(error);
       throw error;
     }
   };
 
-  // Poll for task completion
-  const pollForCompletion = useCallback(async (taskId, songId) => {
-    if (!taskId || !songId) return;
+  // Start polling - borrowing your polling pattern
+  const startPolling = (taskId, songId) => {
+    // Clear any existing polling - key pattern from your code
+    if (pollingIntervalRef.current) {
+      clearInterval(pollingIntervalRef.current);
+      pollingIntervalRef.current = null;
+    }
     
-    const interval = setInterval(async () => {
-      if (!isGeneratingGlobally) {
-        clearInterval(interval);
+    console.log(`Starting polling for task ${taskId} with song ID ${songId}`);
+    
+    const pollForResult = async () => {
+      if (!loading || !isGeneratingGlobally) {
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
+        }
         return;
       }
       
       try {
         const { completed } = await checkStatus(taskId, songId);
         
-        if (!completed) {
-          // Use exponential backoff with jitter for polling
-          const baseDelay = 2000; // 2 seconds base delay
-          const maxDelay = 10000; // 10 seconds max delay
-          const jitter = Math.random() * 1000; // Add up to 1 second of jitter
-          const delay = Math.min(baseDelay * Math.pow(1.5, statusCheckCount) + jitter, maxDelay);
-          
-          await new Promise(resolve => setTimeout(resolve, delay));
-          return pollForCompletion(taskId, songId);
+        if (completed && pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
         }
       } catch (error) {
-        console.error('Polling error:', error);
-        setStatus('error');
-        setError(error.message || 'Failed to generate song');
-        onError(error);
-        stopTimer();
-        
-        // Clear any existing intervals
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          setTimerInterval(null);
+        if (pollingIntervalRef.current) {
+          clearInterval(pollingIntervalRef.current);
+          pollingIntervalRef.current = null;
         }
+        console.error('Polling error:', error);
       }
-    }, 1000);
-  }, [statusCheckCount, stopTimer, onError, timerInterval]);
+    };
 
-  // Handle song generation
-  const handleGenerate = useCallback(async () => {
-    if (!canGenerate || isGeneratingGlobally) {
-      console.log('Generation already in progress or not allowed');
+    // Do initial check immediately
+    pollForResult();
+    
+    // Set up polling interval
+    pollingIntervalRef.current = setInterval(pollForResult, 3000);
+  };
+
+  // Main generation function - using your pattern of simple state checks
+  const handleGenerate = async () => {
+    console.log('handleGenerate called', { loading, isGeneratingGlobally, canGenerate });
+
+    // Simple checks like your SunoGenerator - no complex locking
+    if (loading || isGeneratingGlobally || !canGenerate) {
+      console.log('Generation blocked - returning early');
       return;
     }
     
-    // Set global lock
+    // Set loading states
+    setLoading(true);
     isGeneratingGlobally = true;
-    
     setStatus('generating');
     setError('');
     setProgress(0);
+    setStatusCheckCount(0);
+    
+    // Start timer
+    startTimer();
     
     try {
       const credits = await fetchUserCredits();
       if (credits < 1) {
         setError('You need at least 1 credit to generate music.');
         setStatus('upgrade');
+        cleanup();
         return;
       }
       
@@ -246,64 +290,54 @@ const Generator = ({
       setTaskId(taskId);
       setSongId(songId);
       
-      // Start the timer
-      startTimer();
+      // Start polling
+      startPolling(taskId, songId);
       
-      // Immediately check the status once
-      await checkStatus(taskId, songId);
-      
-      // Start polling for status
-      pollForCompletion(taskId, songId);
-      
-      // Set a safety timeout to stop polling after 10 minutes
-      const timeoutId = setTimeout(() => {
-        if (timerInterval) {
-          clearInterval(timerInterval);
-          setTimerInterval(null);
-          setError('Generation is taking longer than expected. Please check back later.');
-          setStatus('error');
-        }
+      // Safety timeout
+      timeoutRef.current = setTimeout(() => {
+        console.log('Generation timeout reached');
+        setError('Generation is taking longer than expected. Please check back later.');
+        setStatus('error');
+        cleanup();
       }, 600000); // 10 minutes
-      
-      // Store the timeout ID to clear it if component unmounts
-      return () => clearTimeout(timeoutId);
       
     } catch (error) {
       console.error('Error generating song:', error);
       setStatus('error');
       setError(error.response?.data?.error || error.message || 'Failed to generate song');
+      cleanup();
       onError(error);
-      stopTimer();
-      
-      // Clear any existing intervals
-      if (timerInterval) {
-        clearInterval(timerInterval);
-        setTimerInterval(null);
-      }
     }
-  }, [songData, pollForCompletion, stopTimer, onError, userCredits, timerInterval, startTimer, checkStatus]);
+  };
 
-  // Auto-start generation when component mounts or songData changes
+  // Cleanup on unmount
   useEffect(() => {
-    if (isOpen && canGenerate && songData) {
-      handleGenerate();
-    }
-    
     return () => {
-      if (timerInterval) {
-        clearInterval(timerInterval);
-      }
-      // Ensure we release the lock if component unmounts
-      isGeneratingGlobally = false;
+      console.log('Component unmounting - cleaning up');
+      cleanup();
     };
-  }, [isOpen, songData?.id, canGenerate, timerInterval]);
+  }, []);
 
   if (!isOpen) return null;
 
   const handleCheckOutSong = () => {
-    onClose()
-    router.push(`/my-songs`)
-  }
+    onClose();
+    router.push(`/my-songs`);
+  };
+
+  const handleRetryGeneration = () => {
+    console.log('Retrying generation...');
+    cleanup();
+    setError('');
+    setStatus('ready');
+    
+    // Simple retry without complex flag management
+    setTimeout(() => {
+      if (canGenerate && songData) {
+        handleGenerate();
+      }
+    }, 100);
+  };
   
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75" onClick={(e) => e.stopPropagation()}>
@@ -453,10 +487,9 @@ const Generator = ({
                   >
                     Close
                   </button>
-                  {/* Only show Try Again if we have songData */}
                   {songData && songData.title && (
                     <button
-                      onClick={handleGenerate}
+                      onClick={handleRetryGeneration}
                       className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm flex items-center justify-center"
                     >
                       <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
@@ -491,7 +524,6 @@ const Generator = ({
         </div>
       </div>
     </div>
-    
   );
 };
 
