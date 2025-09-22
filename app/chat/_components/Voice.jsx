@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useContext } from "react";
 import { FaMicrophone, FaMicrophoneSlash, FaMusic, FaArrowRight } from "react-icons/fa";
 import Generator from './Generator';
 import { useSession } from 'next-auth/react';
 import QuaylaGenerator from "./Generator_v1";
 import CreditPurchaseModal from "@/components/credits/CreditPurchaseModal";
+import { useGenerator } from "@/context/GeneratorContext";
+import { useUser } from "@/context/UserContext";
 
 export default function VoiceAssistant() {
   const { data: session, status } = useSession();
@@ -15,18 +17,38 @@ export default function VoiceAssistant() {
   const [errorMsg, setErrorMsg] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [songData, setSongData] = useState(null);
-  const [showGenerator, setShowGenerator] = useState(false);
-  const [userCredits, setUserCredits] = useState(null);
-  const [isGeneratingSong, setIsGeneratingSong] = useState(false);
-  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
-  // Effect to handle generator visibility changes
+  const { openGenerator, closeGenerator, showGenerator } = useGenerator();
+  const { 
+    credits: userCredits, 
+    creditsLoading, 
+    creditsError, 
+    fetchUserCredits 
+  } = useUser();
+  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
 
-
-  useEffect(() => {
-    if (session?.user) {
-      fetchUserCredits()
+  const handleGenerateSong = useCallback(async (songData) => {
+    if (!session) {
+      setErrorMsg("Please sign in to generate songs");
+      return;
     }
-  }, [session])
+
+    try {
+      // Check if user has enough credits
+      const credits = await fetchUserCredits();
+      if (!credits || credits.credits < 85) { // Assuming 85 is the minimum required credits
+        setShowCreditPurchaseModal(true);
+        return false;
+      }
+
+      setSongData(songData);
+      openGenerator();
+      return true;
+    } catch (error) {
+      console.error('Error checking credits:', error);
+      setErrorMsg("Failed to check credits. Please try again.");
+      return false;
+    }
+  }, [session, openGenerator, fetchUserCredits]);
 
   const initializeSession = useCallback(async () => {
     if (voiceSession) return voiceSession;
@@ -51,12 +73,12 @@ export default function VoiceAssistant() {
     };
   }, [voiceSession]);
 
-  // Fetch user credits on component mount
+  // Fetch user credits on component mount and when session changes
   useEffect(() => {
     if (session?.user) {
-      fetchUserCredits()
+      fetchUserCredits().catch(console.error);
     }
-  }, [session])
+  }, [session, fetchUserCredits]);
 
   useEffect(() => {
     // Find the most recent create_song call by reversing the array
@@ -147,49 +169,6 @@ export default function VoiceAssistant() {
     }
   };
 
-  const fetchUserCredits = async () => {
-    try {
-      // Get base URL for API calls
-      const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-
-      // First check if the user is authenticated by getting the session
-      console.log('Fetching session from:', `${apiBaseUrl}/api/auth/session`)
-      const sessionResponse = await fetch(`${apiBaseUrl}/api/auth/session`)
-      const sessionData = await sessionResponse.json()
-
-      // If not authenticated, redirect to login page
-      if (!sessionData || !sessionData.user) {
-        console.log('User not authenticated, redirecting to login')
-        window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
-        return
-      }
-
-      // Now fetch credits with the authenticated session
-      console.log('Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
-      const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
-        method: 'GET',
-        credentials: 'include', // This ensures cookies are sent with the request
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        // If unauthorized, redirect to login
-        if (response.status === 401) {
-          window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
-          return
-        }
-        throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      setUserCredits(data)
-    } catch (error) {
-      console.error('Error fetching credits:', error)
-    }
-  }
-
   useEffect(() => {
     if (showGenerator && connected) {
       disconnect();
@@ -262,7 +241,6 @@ export default function VoiceAssistant() {
           <div className="pt-2">
             <button
               onClick={async () => {
-                setIsGeneratingSong(true);
                 const songData = {
                   title: args.title || 'Untitled',
                   description: args.description || `A ${args.mood || 'catchy'} ${args.genre || 'pop'} song`,
@@ -272,8 +250,7 @@ export default function VoiceAssistant() {
                   tempo: args.tempo || 'medium',
                   mood: args.mood || 'neutral'
                 };
-                setSongData(songData);
-                setShowGenerator(true);
+                handleGenerateSong(songData);
               }}
               className="bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 
               px-4 py-2 rounded-lg text-sm font-medium text-white shadow transition-all duration-200 flex items-center"
@@ -287,31 +264,28 @@ export default function VoiceAssistant() {
   };
 
 
-  const handleSongSuccess = (song) => {
-    console.log('Song generated successfully:', song);
-    // You can add additional success handling here
-    setIsGeneratingSong(false);
-  };
-
-
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       {/* Generator Component */}
-      {showGenerator && songData && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="relative bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            {/* <button
-              onClick={() => setShowGenerator(false)}
+      {showGenerator && session && (
+        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-3xl relative">
+            <button
+              onClick={closeGenerator}
               className="absolute top-4 right-4 text-gray-400 hover:text-white"
             >
               <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
-            </button> */}
-            <QuaylaGenerator
-              session={session}
-              selectedPrompt={songData}
-            />
+            </button>
+            <div className="mt-8 p-6 bg-gray-800 rounded-lg">
+              <QuaylaGenerator 
+                session={session} 
+                selectedPrompt={songData}
+                onCreditsUpdate={fetchUserCredits}
+                onClose={closeGenerator}
+              />
+            </div>
           </div>
         </div>
       )}

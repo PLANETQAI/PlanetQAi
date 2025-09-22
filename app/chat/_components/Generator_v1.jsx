@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect,useCallback } from 'react'
 import axios from 'axios'
 import Link from 'next/link'
 import { TbInfoHexagonFilled } from 'react-icons/tb'
@@ -11,6 +11,7 @@ import { Music, Zap, Clock, CreditCard, AlertCircle } from 'lucide-react'
 import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal'
 import SongDetail from '@/components/player/SongDetail'
 import SongList from '@/components/player/SongList'
+import { useUser } from "@/context/UserContext";
 
 
 const QuaylaGenerator = ({
@@ -23,7 +24,8 @@ const QuaylaGenerator = ({
     tags: [],
     mood: 'neutral'
   },
-  onCreditsUpdate = () => { }
+  onCreditsUpdate = () => { },
+  onClose = () => {}
 }) => {
   const pathname = usePathname()
   const router = useRouter()
@@ -44,9 +46,7 @@ const QuaylaGenerator = ({
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
   const [pollingInterval, setPollingInterval] = useState(null)
-  const [userCredits, setUserCredits] = useState(null)
-  const [creditsLoading, setCreditsLoading] = useState(false)
-  const [creditsError, setCreditsError] = useState(null)
+  const { credits: userCredits, creditsLoading, creditsError, fetchUserCredits, updateCredits } = useUser()
   // State for credit purchase modal
   const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
   const [creditsNeeded, setCreditsNeeded] = useState(0)
@@ -75,7 +75,7 @@ const QuaylaGenerator = ({
 
   useEffect(() => {
     if (session?.user) {
-      fetchUserCredits()
+      handleFetchCredits()
       fetchUserSongs()
 
       // Check for any pending songs that might have completed
@@ -96,7 +96,7 @@ const QuaylaGenerator = ({
       // Simply refresh the songs list to get any newly completed songs
       console.log('Checking for completed songs...')
       await fetchUserSongs()
-      await fetchUserCredits()
+      await handleFetchCredits()
     } catch (error) {
       console.error('Error checking pending songs:', error)
     }
@@ -201,13 +201,18 @@ const QuaylaGenerator = ({
 
         // Refresh the songs list
         await fetchUserSongs()
-        await fetchUserCredits()
+        await handleFetchCredits()
         // Stop polling
         if (pollingInterval) {
           clearInterval(pollingInterval)
           setPollingInterval(null)
           console.log('Status polling stopped - song is ready')
         }
+
+        // Close the generator after a short delay
+        setTimeout(() => {
+          onClose()
+        }, 2000) // 2 seconds delay to show success message
       }
 
       // Also check if the song has been updated in our database
@@ -236,6 +241,11 @@ const QuaylaGenerator = ({
               setPollingInterval(null)
               console.log('Status polling stopped - song is ready in database')
             }
+
+            // Close the generator after a short delay
+            setTimeout(() => {
+              onClose()
+            }, 2000) // 2 seconds delay to show success message
           }
         } catch (songErr) {
           console.error('Error checking song in database:', songErr)
@@ -276,7 +286,7 @@ const QuaylaGenerator = ({
         console.log('Song generation completed successfully', data.output.songs)
 
         // Update user credits after successful generation
-        fetchUserCredits()
+        handleFetchCredits()
         // Process the songs to ensure they have all required fields
         const processedSongs = data.output.songs.map(song => ({
           ...song,
@@ -322,13 +332,18 @@ const QuaylaGenerator = ({
         setSelectedSongIndex(0)
 
         // Refresh the songs list to show the completed song
-        // This ensures we have the latest data including the new song
-        await fetchUserSongs()
-
-        // Notify parent about credits update
-        if (onCreditsUpdate) {
-          onCreditsUpdate()
-        }
+        // When generation is complete
+        if (generationStatus === 'completed') {
+          stopTimer()
+          setLoading(false)
+          setGenerationStatus('completed')
+          
+          // Fetch updated songs list
+          await fetchUserSongs()
+          
+          // Update credits
+          await handleFetchCredits()
+        } 
       } else if (data.status === 'failed') {
         // Handle failed generation
         setError(data.error?.message || 'Failed to generate music. Please try again.')
@@ -341,6 +356,9 @@ const QuaylaGenerator = ({
 
         // Set loading to false
         setLoading(false)
+
+        // Stop the timer
+        stopTimer()
       }
       return data;
     } catch (err) {
@@ -513,53 +531,31 @@ const QuaylaGenerator = ({
     }
   }
 
-  // Fetch user credits
-  const fetchUserCredits = async () => {
-    setCreditsLoading(true)
-    setCreditsError(null)
-
+  // Fetch and update credits using UserContext
+  const handleFetchCredits = useCallback(async () => {
     try {
-      // First check if the user is authenticated by getting the session
-      const sessionResponse = await fetch('/api/auth/session')
-      const sessionData = await sessionResponse.json()
-
-      // If not authenticated, redirect to login page
-      if (!sessionData || !sessionData.user) {
-        console.log('User not authenticated, redirecting to login')
-        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-        return
+      // This will automatically update the context state
+      const credits = await fetchUserCredits()
+      
+      // Only call onCreditsUpdate if we have a valid credits object
+      if (credits?.credits !== undefined) {
+        onCreditsUpdate?.(credits)
+      } else if (session) {
+        // If we have a session but no credits, there might be an issue
+        console.warn('No credits data received despite having an active session')
+      } else {
+        // No session, redirect to login
+        const redirectPath = window.location.pathname + window.location.search
+        window.location.href = `/login?redirectTo=${encodeURIComponent(redirectPath)}`
       }
-
-      // Now fetch credits with the authenticated session
-      const response = await fetch('/api/credits-api', {
-        method: 'GET',
-        credentials: 'include', // This ensures cookies are sent with the request
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
-
-      if (!response.ok) {
-        // If unauthorized, redirect to login
-        if (response.status === 401) {
-          window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-          return
-        }
-        const errorData = await response.json().catch(() => ({}))
-        throw new Error(errorData.error || `Failed to fetch credits: ${response.status} ${response.statusText}`)
-      }
-
-      const data = await response.json()
-      setUserCredits(data)
-      // Notify parent component that credits have been updated
-      onCreditsUpdate(data)
+      
+      return credits
     } catch (error) {
-      console.error('Error fetching credits:', error)
-      setCreditsError(error.message || 'Failed to load credits. Please try again.')
-    } finally {
-      setCreditsLoading(false)
+      console.error('Error in handleFetchCredits:', error)
+      // Re-throw to allow error boundaries or parent components to handle it
+      throw error
     }
-  }
+  }, [fetchUserCredits, onCreditsUpdate, session])
 
   // Calculate estimated credits based on prompt complexity and selected options
   // This is only used to check if user has enough credits, not to show the cost
@@ -770,6 +766,10 @@ const QuaylaGenerator = ({
     }
   }
 
+  useEffect(() => {
+    handleFetchCredits()
+  }, [handleFetchCredits])
+
   return (
     <div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg shadow-xl">
       <div className="flex justify-between items-center mb-4">
@@ -782,7 +782,7 @@ const QuaylaGenerator = ({
           </div>
         ) : creditsError ? (
           <button
-            onClick={fetchUserCredits}
+            onClick={handleFetchCredits}
             className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 px-3 py-1 rounded-full transition-colors"
             title={creditsError}
           >
@@ -800,10 +800,9 @@ const QuaylaGenerator = ({
             {userCredits.credits < 85 && (
               <button
                 onClick={() => setShowCreditPurchaseModal(true)}
-                className="flex items-center gap-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-yellow-900 text-xs font-medium px-2 py-1 rounded-full transition-colors"
-              >
-                <Zap className="w-3 h-3" />
-                <span>Upgrade</span>
+                className="text-blue-300 hover:text-blue-200 text-sm underline flex items-center justify-center gap-1 mx-auto">
+                <Zap className="w-4 h-4" />
+                <span>Need more credits? Purchase now</span>
               </button>
             )}
           </div>
@@ -886,7 +885,7 @@ const QuaylaGenerator = ({
             {loading ? (
               <div className="flex items-center justify-center gap-2">
                 <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
-                <span>{getProgressMessage() || 'Generating...'}</span>
+                <span>{getProgressMessage()}</span>
               </div>
             ) : (
               <div className="flex items-center justify-center gap-2">
@@ -928,11 +927,27 @@ const QuaylaGenerator = ({
       )}
 
       {error && (
-        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
-          <div className="flex items-center gap-2 text-red-300">
-            <AlertCircle size={18} />
-            <p className="text-sm">{error}</p>
-          </div>
+        <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg flex flex-col gap-2">
+          <p className="text-red-300 text-sm">{error}</p>
+          {(generationStatus === 'completed' || error || (userCredits?.credits < 85)) && (
+            <div className="mt-4 flex justify-end gap-3">
+              {userCredits?.credits < 85 && !error && generationStatus !== 'completed' && (
+                <button
+                  onClick={() => setShowCreditPurchaseModal(true)}
+                  className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm transition-colors flex items-center gap-2"
+                >
+                  <Zap className="w-4 h-4" />
+                  <span>Buy More Credits</span>
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-md text-sm transition-colors"
+              >
+                {generationStatus === 'completed' ? 'Close' : 'Go Back'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 
@@ -1001,7 +1016,7 @@ const QuaylaGenerator = ({
         creditsNeeded={creditsNeeded}
         onSuccess={() => {
           // Refresh user credits after successful purchase
-          fetchUserCredits()
+          handleFetchCredits()
         }}
       />
 
