@@ -1,530 +1,1012 @@
-'use client';
+'use client'
 
-import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
-import { Loader2, Music, AlertCircle } from 'lucide-react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect } from 'react'
+import axios from 'axios'
+import Link from 'next/link'
+import { TbInfoHexagonFilled } from 'react-icons/tb'
+import { usePathname, useSearchParams, useRouter } from 'next/navigation'
+import { normalizeValue } from '@/utils/functions'
 
-// Track if a generation is in progress globally
-let isGeneratingGlobally = false;
+import { Music, Zap, Clock, CreditCard, AlertCircle } from 'lucide-react'
+import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal'
+import SongDetail from '@/components/player/SongDetail'
+import SongList from '@/components/player/SongList'
 
-const Generator = ({
-  songData,
-  isOpen = false,
-  onClose = () => {},
-  onSuccess = () => {},
-  onError = () => {}
+
+const QuaylaGenerator = ({
+  session,
+  selectedPrompt = {
+    text: '',
+    title: '',
+    style: 'pop',
+    tempo: 'medium',
+    tags: [],
+    mood: 'neutral'
+  },
+  onCreditsUpdate = () => { }
 }) => {
-  const router = useRouter();
-  const [status, setStatus] = useState('loading');
-  const [progress, setProgress] = useState(0);
-  const [error, setError] = useState('');
-  const [taskId, setTaskId] = useState(null);
-  const [songId, setSongId] = useState(null);
-  const [generationStartTime, setGenerationStartTime] = useState(null);
-  const [generationDuration, setGenerationDuration] = useState(null);
-  const [statusCheckCount, setStatusCheckCount] = useState(0);
-  const [userCredits, setUserCredits] = useState(null);
-  const [canGenerate, setCanGenerate] = useState(false);
-  const [loading, setLoading] = useState(false); // Simple loading state like SunoGenerator
-  
-  // Refs for interval management - like your SunoGenerator
-  const pollingIntervalRef = useRef(null);
-  const timerIntervalRef = useRef(null);
-  const timeoutRef = useRef(null);
-  const hasInitializedRef = useRef(false);
-  
-  // Fetch user credits - similar to your implementation
-  const fetchUserCredits = async () => {
+  const pathname = usePathname()
+  const router = useRouter()
+  const searchParams = useSearchParams()
+  const text = normalizeValue(decodeURIComponent(searchParams.get('text') || ''))
+  const tags = normalizeValue(decodeURIComponent(searchParams.get('tags') || ''))
+  const title = normalizeValue(decodeURIComponent(searchParams.get('title') || ''))
+  const style = normalizeValue(decodeURIComponent(searchParams.get('style') || 'pop'))
+  const tempo = normalizeValue(decodeURIComponent(searchParams.get('tempo') || 'medium'))
+  const mood = normalizeValue(decodeURIComponent(searchParams.get('mood') || 'neutral'))
+
+  // Add this right after the component definition, before any hooks
+  console.log('Selected Prompt:', selectedPrompt);
+
+  const [generatedAudio, setGeneratedAudio] = useState(null)
+  const [generatedLyrics, setGeneratedLyrics] = useState(null)
+  const [coverImage, setCoverImage] = useState(null)
+  const [error, setError] = useState('')
+  const [loading, setLoading] = useState(false)
+  const [pollingInterval, setPollingInterval] = useState(null)
+  const [userCredits, setUserCredits] = useState(null)
+  const [creditsLoading, setCreditsLoading] = useState(false)
+  const [creditsError, setCreditsError] = useState(null)
+  // State for credit purchase modal
+  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
+  const [creditsNeeded, setCreditsNeeded] = useState(0)
+  const [estimatedCredits, setEstimatedCredits] = useState(null)
+  const [generationStatus, setGenerationStatus] = useState(null)
+  const [isVisible, setIsVisible] = useState(false)
+  // State for task tracking and generation time
+  const [currentTaskId, setCurrentTaskId] = useState(null)
+  const [currentSongId, setCurrentSongId] = useState(null)
+  const [generationStartTime, setGenerationStartTime] = useState(null)
+  const [generationEndTime, setGenerationEndTime] = useState(null)
+  const [generationDuration, setGenerationDuration] = useState(null)
+
+  // Timer state for real-time tracking
+  const [timerInterval, setTimerInterval] = useState(null)
+  const [currentTime, setCurrentTime] = useState(0)
+
+  // Status tracking
+  const [statusCheckCount, setStatusCheckCount] = useState(0)
+  const [lastStatusResponse, setLastStatusResponse] = useState(null)
+  // State for generated songs
+  const [generatedSongs, setGeneratedSongs] = useState([])
+  const [selectedSongIndex, setSelectedSongIndex] = useState(0)
+
+
+
+  useEffect(() => {
+    if (session?.user) {
+      fetchUserCredits()
+      fetchUserSongs()
+
+      // Check for any pending songs that might have completed
+      checkPendingSongs()
+    }
+
+    // Cleanup function to clear any intervals when component unmounts
+    return () => {
+      if (pollingInterval) {
+        console.log('Clearing polling interval on unmount')
+        clearInterval(pollingInterval)
+      }
+    }
+  }, [session])
+
+  const checkPendingSongs = async () => {
     try {
-      const sessionResponse = await fetch('/api/auth/session');
-      const sessionData = await sessionResponse.json();
-      
-      if (!sessionData?.user) {
-        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname);
-        return 0;
-      }
-      
-      const response = await fetch('/api/credits-api');
-      const data = await response.json();
-      const credits = data.credits || 0;
-      setUserCredits(credits.toLocaleString());
-      return credits;
+      // Simply refresh the songs list to get any newly completed songs
+      console.log('Checking for completed songs...')
+      await fetchUserSongs()
+      await fetchUserCredits()
     } catch (error) {
-      console.error('Error fetching credits:', error);
-      throw error;
+      console.error('Error checking pending songs:', error)
     }
-  };
-
-  // Initialize credits and status - only once
-  useEffect(() => {
-    if (!isOpen || hasInitializedRef.current) return;
-    
-    const initialize = async () => {
-      hasInitializedRef.current = true;
-      
-      try {
-        if (!songData || !songData.title) {
-          setError('Missing song data. Please provide song information to generate music.');
-          setStatus('error');
-          setCanGenerate(false);
-          return;
-        }
-
-        const credits = await fetchUserCredits();
-        if (credits < 1) {
-          setError('You need at least 1 credit to generate music.');
-          setStatus('error');
-          setCanGenerate(false);
-        } else if (credits < 85) {
-          setStatus('upgrade');
-          setCanGenerate(false);
-        } else {
-          setStatus('ready');
-          setCanGenerate(true);
-          // Auto-start generation like your original code intended
-          handleGenerate();
-        }
-      } catch (error) {
-        console.error('Error initializing:', error);
-        setError('Failed to load credits. Please try again.');
-        setStatus('error');
-        setCanGenerate(false);
-      }
-    };
-
-    initialize();
-  }, [isOpen, songData?.id]);
-
-  // Reset when modal closes
-  useEffect(() => {
-    if (!isOpen) {
-      hasInitializedRef.current = false;
-      cleanup();
-    }
-  }, [isOpen]);
-
-  // Cleanup function - similar to your approach
-  const cleanup = () => {
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
-    
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
-      timeoutRef.current = null;
-    }
-    
-    isGeneratingGlobally = false;
-    setLoading(false);
-  };
-
-  // Start timer - simplified version of your timer logic
-  const startTimer = () => {
-    const startTime = Date.now();
-    setGenerationStartTime(startTime);
-    
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-    }
-    
-    timerIntervalRef.current = setInterval(() => {
-      const elapsed = Date.now() - startTime;
-      setGenerationDuration(elapsed);
-    }, 1000);
-  };
-
-  // Stop timer
-  const stopTimer = () => {
-    if (timerIntervalRef.current) {
-      clearInterval(timerIntervalRef.current);
-      timerIntervalRef.current = null;
-    }
-    
-    if (generationStartTime) {
-      const now = Date.now();
-      const elapsed = now - generationStartTime;
-      setGenerationDuration(elapsed);
-    }
-  };
-
-  // Format time
+  }
+  // Format time in mm:ss.ms format for the timer
   const formatTime = (ms) => {
-    if (!ms) return '00:00';
-    const totalSeconds = Math.floor(ms / 1000);
-    const minutes = Math.floor(totalSeconds / 60);
-    const seconds = totalSeconds % 60;
-    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-  };
+    const totalSeconds = ms / 1000
+    const minutes = Math.floor(totalSeconds / 60)
+    const seconds = Math.floor(totalSeconds % 60)
+    const milliseconds = Math.floor((ms % 1000) / 10)
 
-  // Check status - similar to your checkStatus function
+    return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`
+  }
+
+  // Start timer function
+  const startTimer = () => {
+    // Reset any existing timer
+    if (timerInterval) {
+      clearInterval(timerInterval)
+    }
+
+    const now = Date.now()
+    setGenerationStartTime(now)
+    setGenerationEndTime(null)
+    setGenerationDuration(null)
+    setCurrentTime(0)
+    setStatusCheckCount(0)
+
+    // Start a new timer that updates every 100ms
+    const interval = setInterval(() => {
+      const elapsed = Date.now() - now
+      setCurrentTime(elapsed)
+    }, 100)
+
+    setTimerInterval(interval)
+    console.log(`Timer started at ${new Date(now).toLocaleTimeString()}`)
+  }
+
+  // Stop timer function
+  const stopTimer = () => {
+    if (timerInterval) {
+      clearInterval(timerInterval)
+      setTimerInterval(null)
+    }
+
+    const now = Date.now()
+    setGenerationEndTime(now)
+
+    if (generationStartTime) {
+      const elapsed = now - generationStartTime
+      setGenerationDuration(elapsed)
+      console.log(`Timer stopped. Total time: ${formatTime(elapsed)}`)
+    }
+  }
+
+  // Check status of a task
   const checkStatus = async (taskId, songId) => {
     try {
-      setStatusCheckCount(prev => prev + 1);
-      
-      const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${songId}`);
-      const result = response.data;
-      
-      if (result.status === 'completed') {
-        const song = result.output?.songs?.[0];
-        if (song) {
-          setStatus('completed');
-          setProgress(100);
-          stopTimer();
-          cleanup();
-          onSuccess(song);
-          return { completed: true, song };
+      setStatusCheckCount(prev => prev + 1)
+      console.log(`Checking status for task ${taskId}... (Check #${statusCheckCount + 1})`)
+
+      // Call the status_suno API for Suno tasks
+      const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${songId}`)
+
+      const statusData = response.data
+      setLastStatusResponse(statusData)
+      setGenerationStatus(statusData.status || 'unknown')
+
+      console.log(`Status: ${statusData.status || 'unknown'}`)
+
+      // If completed, handle the Suno-specific response format
+      if (statusData.status === 'completed' && statusData.output) {
+        // Handle Suno response which includes songs array with audio, lyrics, and image
+        if (statusData.output.songs && statusData.output.songs.length > 0) {
+          const songs = statusData.output.songs
+          console.log(`Received ${songs.length} songs from Suno`)
+
+          // Set the generated songs
+          setGeneratedSongs(songs)
+
+          // Set the first song as the selected one
+          if (songs[0]) {
+            setGeneratedAudio(songs[0].song_path)
+            setGeneratedLyrics(songs[0].lyrics)
+            setCoverImage(songs[0].image_path)
+            console.log(`Audio URL: ${songs[0].song_path}`)
+            console.log(`Lyrics: ${songs[0].lyrics.substring(0, 100)}...`)
+            console.log(`Cover Image: ${songs[0].image_path}`)
+          }
+        } else if (statusData.output.audio_url) {
+          // Fallback to simple audio_url if songs array is not available
+          setGeneratedAudio(statusData.output.audio_url)
+          console.log(`Audio URL: ${statusData.output.audio_url}`)
         }
-      } else if (result.status === 'failed') {
-        throw new Error(result.error || 'Generation failed');
-      } else if (result.status === 'pending' || result.status === 'processing') {
-        setStatus('generating');
-        const newProgress = Math.min(90, Math.floor(statusCheckCount * 5));
-        setProgress(newProgress);
+
+        // Update loading state and clear error message
+        setLoading(false)
+        setError('')
+
+        // Stop the timer
+        stopTimer()
+
+        // Refresh the songs list
+        await fetchUserSongs()
+        await fetchUserCredits()
+        // Stop polling
+        if (pollingInterval) {
+          clearInterval(pollingInterval)
+          setPollingInterval(null)
+          console.log('Status polling stopped - song is ready')
+        }
       }
-      
-      return { completed: false };
-    } catch (error) {
-      console.error('Error checking status:', error);
-      setStatus('error');
-      setError(error.message || 'Failed to check generation status');
-      cleanup();
-      onError(error);
-      throw error;
-    }
-  };
 
-  // Start polling - borrowing your polling pattern
-  const startPolling = (taskId, songId) => {
-    // Clear any existing polling - key pattern from your code
-    if (pollingIntervalRef.current) {
-      clearInterval(pollingIntervalRef.current);
-      pollingIntervalRef.current = null;
-    }
-    
-    console.log(`Starting polling for task ${taskId} with song ID ${songId}`);
-    
-    const pollForResult = async () => {
-      if (!loading || !isGeneratingGlobally) {
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
+      // Also check if the song has been updated in our database
+      if (songId) {
+        try {
+          const songResponse = await axios.get(`/api/songs/${songId}`)
+          if (songResponse.data && songResponse.data.audioUrl) {
+            setGeneratedAudio(songResponse.data.audioUrl)
+            console.log(`Song updated in database with audio URL: ${songResponse.data.audioUrl}`)
+
+            // Update generation status
+            setGenerationStatus('completed')
+
+            // Update loading state
+            setLoading(false)
+            setError('')
+
+            // Stop the timer if it's still running
+            if (timerInterval) {
+              stopTimer()
+            }
+
+            // Stop polling
+            if (pollingInterval) {
+              clearInterval(pollingInterval)
+              setPollingInterval(null)
+              console.log('Status polling stopped - song is ready in database')
+            }
+          }
+        } catch (songErr) {
+          console.error('Error checking song in database:', songErr)
         }
-        return;
       }
-      
-      try {
-        const { completed } = await checkStatus(taskId, songId);
-        
-        if (completed && pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-      } catch (error) {
-        if (pollingIntervalRef.current) {
-          clearInterval(pollingIntervalRef.current);
-          pollingIntervalRef.current = null;
-        }
-        console.error('Polling error:', error);
-      }
-    };
 
-    // Do initial check immediately
-    pollForResult();
-    
-    // Set up polling interval
-    pollingIntervalRef.current = setInterval(pollForResult, 3000);
-  };
-
-  // Main generation function - using your pattern of simple state checks
-  const handleGenerate = async () => {
-    console.log('handleGenerate called', { loading, isGeneratingGlobally, canGenerate });
-
-    // Simple checks like your SunoGenerator - no complex locking
-    if (loading || isGeneratingGlobally || !canGenerate) {
-      console.log('Generation blocked - returning early');
-      return;
+      return statusData
+    } catch (err) {
+      console.error('Error checking status:', err)
+      return null
     }
-    
-    // Set loading states
-    setLoading(true);
-    isGeneratingGlobally = true;
-    setStatus('generating');
-    setError('');
-    setProgress(0);
-    setStatusCheckCount(0);
-    
-    // Start timer
-    startTimer();
-    
+  }
+
+  // Poll for result
+  const pollForResult = async (taskId, songId) => {
     try {
-      const credits = await fetchUserCredits();
-      if (credits < 1) {
-        setError('You need at least 1 credit to generate music.');
-        setStatus('upgrade');
-        cleanup();
-        return;
-      }
-      
-      const response = await axios.post('/api/music/generate-suno', {
-        prompt: songData.prompt || '',
-        title: songData.title || 'Untitled',
-        mood: songData.mood || 'neutral',
-        style: songData.style || 'pop',
-        tags: songData.tags || ''
-      });
+      // Use currentSongId if songId is not provided or undefined
+      const effectiveSongId = songId || currentSongId
 
-      if (!response.data || !response.data.success) {
-        throw new Error('Failed to start music generation');
+      if (!effectiveSongId) {
+        console.error('Cannot poll for result: missing songId', { taskId, songId, currentSongId })
+        return null
       }
 
-      const { taskId, songId } = response.data;
-      console.log('Music generation initiated successfully', { taskId, songId });
-      
-      setTaskId(taskId);
-      setSongId(songId);
-      
-      // Start polling
-      startPolling(taskId, songId);
-      
-      // Safety timeout
-      timeoutRef.current = setTimeout(() => {
-        console.log('Generation timeout reached');
-        setError('Generation is taking longer than expected. Please check back later.');
-        setStatus('error');
-        cleanup();
-      }, 600000); // 10 minutes
-      
-    } catch (error) {
-      console.error('Error generating song:', error);
-      setStatus('error');
-      setError(error.response?.data?.error || error.message || 'Failed to generate song');
-      cleanup();
-      onError(error);
+      const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${effectiveSongId}`)
+      const data = response.data
+      console.log('Poll result data:', data)
+
+      // Update generation status
+      setGenerationStatus(data.status)
+
+      // Check if we have start time information
+      if (data.meta && data.meta.started_at && data.meta.started_at !== "0001-01-01T00:00:00Z" && !generationStartTime) {
+        setGenerationStartTime(new Date(data.meta.started_at))
+      }
+
+      if ((data.status === 'completed' || data.status === 'succeeded') && data.output && data.output.songs && data.output.songs.length > 0) {
+        console.log('Song generation completed successfully', data.output.songs)
+
+        // Update user credits after successful generation
+        fetchUserCredits()
+        // Process the songs to ensure they have all required fields
+        const processedSongs = data.output.songs.map(song => ({
+          ...song,
+          audioUrl: song.song_path, // Ensure audioUrl is set for SongList component
+          song_path: song.song_path, // Make sure song_path is available
+          status: 'completed', // Explicitly mark as completed
+          tags: Array.isArray(song.tags) ? song.tags : [] // Ensure tags exists and is an array
+        }))
+
+        // Set the first song as selected by default
+        const firstSong = processedSongs[0]
+        setGeneratedAudio(firstSong.song_path)
+        setGeneratedLyrics(firstSong.lyrics)
+        setCoverImage(firstSong.image_path)
+
+        // Store processed songs in state
+        setGeneratedSongs(processedSongs)
+
+        // Record end time and calculate duration
+        if (data.meta && data.meta.ended_at && data.meta.ended_at !== "0001-01-01T00:00:00Z") {
+          const endTime = new Date(data.meta.ended_at)
+          setGenerationEndTime(endTime)
+
+          if (generationStartTime) {
+            const durationMs = endTime - generationStartTime
+            const durationSec = Math.round(durationMs / 1000)
+            setGenerationDuration(durationSec)
+          }
+        }
+
+        // Clear the polling interval
+        if (pollingInterval) {
+          clearInterval(pollingInterval)
+          setPollingInterval(null)
+          console.log('Status polling stopped - song is ready')
+        }
+
+        // Set loading to false
+        setLoading(false)
+        setError('') // Clear any error messages
+
+        // Force a re-render by updating the selected song index
+        setSelectedSongIndex(0)
+
+        // Refresh the songs list to show the completed song
+        // This ensures we have the latest data including the new song
+        await fetchUserSongs()
+
+        // Notify parent about credits update
+        if (onCreditsUpdate) {
+          onCreditsUpdate()
+        }
+      } else if (data.status === 'failed') {
+        // Handle failed generation
+        setError(data.error?.message || 'Failed to generate music. Please try again.')
+
+        // Clear the polling interval
+        if (pollingInterval) {
+          clearInterval(pollingInterval)
+          setPollingInterval(null)
+        }
+
+        // Set loading to false
+        setLoading(false)
+      }
+      return data;
+    } catch (err) {
+      console.error('Error polling for result:', err)
+      return null;
     }
-  };
+  }
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      console.log('Component unmounting - cleaning up');
-      cleanup();
-    };
-  }, []);
+  // Start polling for result
+  const startPolling = (taskId, songId) => {
+    // Use currentSongId if songId is not provided or undefined
+    const effectiveSongId = songId || currentSongId
 
-  if (!isOpen) return null;
+    if (!effectiveSongId) {
+      console.error('Cannot start polling: missing songId', { taskId, songId, currentSongId })
+      return null
+    }
 
-  const handleCheckOutSong = () => {
-    onClose();
-    router.push(`/my-songs`);
-  };
+    // Start polling for results
+    console.log(`Starting polling for task ${taskId} with song ID ${effectiveSongId}`)
 
-  const handleRetryGeneration = () => {
-    console.log('Retrying generation...');
-    cleanup();
-    setError('');
-    setStatus('ready');
-    
-    // Simple retry without complex flag management
-    setTimeout(() => {
-      if (canGenerate && songData) {
-        handleGenerate();
+    // Clear any existing polling interval
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      setPollingInterval(null)
+    }
+
+    // Set up a new polling interval (every 10 seconds to match DiffrhymGenerator)
+    const interval = setInterval(() => pollForResult(taskId, effectiveSongId), 10000)
+    setPollingInterval(interval)
+
+    // Record the start time
+    setGenerationStartTime(new Date())
+
+    // Do an initial check immediately
+    pollForResult(taskId, effectiveSongId)
+  }
+
+  // Fetch user's songs from the database
+  const fetchUserSongs = async () => {
+    console.log('Starting to fetch Suno songs...')
+    try {
+      // First check if the user is authenticated by getting the session
+      const sessionResponse = await fetch('/api/auth/session')
+      const sessionData = await sessionResponse.json()
+
+      if (!sessionData || !sessionData.user) {
+        console.log('User not authenticated, skipping song fetch')
+        return
       }
-    }, 100);
-  };
-  
+
+      // Fetch all user songs and filter locally
+      const response = await fetch('/api/songs', {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to fetch songs: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      console.log('All songs from API:', data)
+
+      if (data.songs && Array.isArray(data.songs)) {
+        // Filter songs for Suno provider
+        const sunoSongs = data.songs.filter(song => {
+          // Check if it's a Suno song
+          let isSunoSong = false;
+
+          // Check provider field
+          if (song.provider === 'suno') isSunoSong = true;
+
+          // Check tags array
+          if (song.tags && Array.isArray(song.tags)) {
+            if (song.tags.some(tag => tag === 'provider:suno')) {
+              isSunoSong = true;
+            }
+          }
+
+          // Only include songs that are Suno songs AND have an audio URL
+          // This is the key change - only include songs that have an audio URL
+          const hasAudioUrl = song.audioUrl || song.song_path;
+
+          // Special case: if this is the current song being generated and we have audio in memory
+          const isCurrentSongWithAudio = song.id === currentSongId && generatedAudio;
+
+          return isSunoSong && (hasAudioUrl || isCurrentSongWithAudio);
+        });
+
+        console.log(`Filtered ${sunoSongs.length} completed Suno songs from ${data.songs.length} total songs`);
+
+        // Sort songs by creation date (newest first)
+        const sortedSongs = sunoSongs.sort((a, b) => {
+          return new Date(b.createdAt) - new Date(a.createdAt)
+        })
+
+        // Map database songs to the format used in the component
+        const formattedSongs = sortedSongs.map(song => {
+          // Extract provider, style, tempo, mood from tags if available
+          let provider = 'suno';
+          let style = 'pop';
+          let tempo = 'medium';
+          let mood = 'neutral';
+
+          if (song.tags && Array.isArray(song.tags)) {
+            song.tags.forEach(tag => {
+              if (tag.startsWith('provider:')) {
+                provider = tag.split(':')[1];
+              } else if (tag.startsWith('style:')) {
+                style = tag.split(':')[1];
+              } else if (tag.startsWith('tempo:')) {
+                tempo = tag.split(':')[1];
+              } else if (tag.startsWith('mood:')) {
+                mood = tag.split(':')[1];
+              }
+            });
+          }
+
+          // Check if this is the current song being generated
+          const isCurrentSong = song.id === currentSongId;
+
+          // If song has song_path but no audioUrl, use song_path as audioUrl
+          const audioUrl = song.audioUrl || song.song_path || (isCurrentSong ? generatedAudio : null);
+          const isForSale = Boolean(song.isForSale);
+          // All songs in this list are completed since we filtered out pending ones
+          const status = 'completed';
+
+          return {
+            id: song.id,
+            title: song.title || 'Untitled Song',
+            audioUrl: audioUrl,
+            song_path: song.song_path || audioUrl, // Ensure song_path is available
+            lyrics: song.lyrics,
+            coverImageUrl: song.thumbnailUrl || song.coverImageUrl || song.image_path,
+            image_path: song.image_path || song.coverImageUrl || song.thumbnailUrl,
+            duration: song.duration || 0,
+            createdAt: song.createdAt,
+            isForSale: isForSale,
+            generator: provider,
+            prompt: song.prompt,
+            style: song.style || style,
+            tempo: song.tempo || tempo,
+            mood: song.mood || mood,
+            status: status // All songs are completed
+          };
+        });
+
+        // Update the songs state
+        setGeneratedSongs(formattedSongs);
+
+        // If songs exist, select the first (newest) one if none is selected
+        if (formattedSongs.length > 0 && selectedSongIndex === null) {
+          selectSong(0);
+        }
+
+        // If we have a current song ID, find and select it
+        if (currentSongId) {
+          const currentSongIndex = formattedSongs.findIndex(song => song.id === currentSongId);
+          if (currentSongIndex >= 0) {
+            selectSong(currentSongIndex);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching user songs:', error);
+    }
+  }
+
+  // Fetch user credits
+  const fetchUserCredits = async () => {
+    setCreditsLoading(true)
+    setCreditsError(null)
+
+    try {
+      // First check if the user is authenticated by getting the session
+      const sessionResponse = await fetch('/api/auth/session')
+      const sessionData = await sessionResponse.json()
+
+      // If not authenticated, redirect to login page
+      if (!sessionData || !sessionData.user) {
+        console.log('User not authenticated, redirecting to login')
+        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+        return
+      }
+
+      // Now fetch credits with the authenticated session
+      const response = await fetch('/api/credits-api', {
+        method: 'GET',
+        credentials: 'include', // This ensures cookies are sent with the request
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        // If unauthorized, redirect to login
+        if (response.status === 401) {
+          window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
+          return
+        }
+        const errorData = await response.json().catch(() => ({}))
+        throw new Error(errorData.error || `Failed to fetch credits: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      setUserCredits(data)
+      // Notify parent component that credits have been updated
+      onCreditsUpdate(data)
+    } catch (error) {
+      console.error('Error fetching credits:', error)
+      setCreditsError(error.message || 'Failed to load credits. Please try again.')
+    } finally {
+      setCreditsLoading(false)
+    }
+  }
+
+  // Calculate estimated credits based on prompt complexity and selected options
+  // This is only used to check if user has enough credits, not to show the cost
+  const calculateEstimatedCredits = () => {
+    // Get the prompt text
+    const promptText = selectedPrompt.text || '';
+    // Count words in the prompt - use the same algorithm as the backend
+    const wordCount = promptText.split(/\s+/).filter(word => word.length > 0).length;
+
+    // Base cost: 80 credits for Suno generation
+    let credits = 80;
+
+    // Additional cost: 5 credits for every 10 words (or fraction) over 200 words
+    if (wordCount > 200) {
+      const excessWords = wordCount - 200;
+      const excessWordPacks = Math.ceil(excessWords / 10);
+      credits += excessWordPacks * 5;
+    }
+
+    // Log the calculation for debugging
+    console.log(`Suno credit calculation: ${wordCount} words = ${credits} credits`);
+    console.log(`User has ${userCredits?.credits || 0} credits available`);
+
+    return credits;
+  }
+
+  const generateAudio = async () => {
+    setLoading(true)
+    setError('')
+    setGeneratedAudio(null)
+    setGeneratedLyrics(null)
+    setCoverImage(null)
+    setGenerationStatus('starting')
+    setEstimatedCredits(null)
+
+    // Stop any existing polling
+    if (pollingInterval) {
+      clearInterval(pollingInterval)
+      setPollingInterval(null)
+    }
+
+    // Start the timer
+    startTimer()
+
+    try {
+      // Calculate estimated credits
+      const estimatedCredits = calculateEstimatedCredits()
+      setEstimatedCredits(estimatedCredits)
+
+      // Check if user has enough credits
+      if (userCredits && userCredits.credits < estimatedCredits) {
+        setCreditsNeeded(estimatedCredits - userCredits.credits)
+        setShowCreditPurchaseModal(true)
+        setLoading(false)
+        setGenerationStatus(null)
+        stopTimer() // Stop the timer if we don't have enough credits
+        return
+      }
+
+      // Prepare the request payload
+      const payload = {
+        prompt: selectedPrompt.text,
+        tags: selectedPrompt.tags,
+        title: selectedPrompt.title,
+      }
+
+      // Show generating status
+      setGenerationStatus('generating')
+      console.log('Starting music generation with Suno API...', payload)
+
+      // Make the API request to the Suno endpoint
+      const response = await axios.post('/api/music/generate-suno', payload)
+      console.log('Generation response:', response.data)
+
+      // Handle the response
+      if (response.data && response.data.success) {
+        const { taskId, songId } = response.data
+
+        console.log('Music generation initiated successfully', { taskId, songId })
+
+        // Update generation status
+        setGenerationStatus('pending')
+
+        // Store the task ID and song ID for status checking
+        setCurrentTaskId(taskId)
+        setCurrentSongId(songId)
+
+        // Immediately check the status once
+        await checkStatus(taskId, songId)
+
+        // Start polling for status
+        startPolling(taskId, songId)
+
+        // Clear the interval after 10 minutes (safety timeout)
+        setTimeout(() => {
+          if (pollingInterval) {
+            clearInterval(pollingInterval)
+            setPollingInterval(null)
+            console.log('Status polling stopped due to timeout')
+          }
+        }, 600000) // 10 minutes
+
+        // The polling interval is already set in startPolling function
+
+        // Refresh the songs list to show the pending song
+        await fetchUserSongs()
+
+        // Set a message to inform the user
+        setError('Your music is being generated. It will appear in your song list automatically when ready. This may take a few minutes.')
+      } else {
+        throw new Error('Failed to generate music. Please try again.')
+      }
+    } catch (err) {
+      console.error('Error generating audio:', err)
+
+      // Check if this is a credit-related error
+      if (err.response && err.response.status === 403 && err.response.data) {
+        const { creditsNeeded, creditsAvailable, shortfall } = err.response.data
+
+        // Set the credits needed for the purchase modal
+        setCreditsNeeded(shortfall || (creditsNeeded - creditsAvailable))
+
+        // Show a more helpful error message
+        setError(`You need ${shortfall || (creditsNeeded - creditsAvailable)} more credits to generate this music.`)
+
+        // Open the credit purchase modal
+        setShowCreditPurchaseModal(true)
+      } else {
+        // Handle other types of errors
+        setError(err.response?.data?.error || err.message || 'Failed to generate music. Please try again.')
+      }
+
+      // Stop the timer
+      stopTimer()
+      setLoading(false)
+      setGenerationStatus(null)
+    }
+  }
+
+  // Format progress message based on status
+  const getProgressMessage = () => {
+    switch (generationStatus) {
+      case 'initializing':
+        return 'Preparing generation...'
+      case 'pending':
+        return 'Waiting in queue...'
+      case 'processing':
+        return 'Creating your music...'
+      case 'rendering':
+        return 'Finalizing your track...'
+      case 'analyzing':
+        return 'Analyzing audio quality...'
+      case 'completed':
+        return 'Generation complete!'
+      default:
+        return 'Generating music...'
+    }
+  }
+
+  // Handle song selection
+  const selectSong = (index) => {
+    if (index >= 0 && index < generatedSongs.length) {
+      setSelectedSongIndex(index)
+      const song = generatedSongs[index]
+      setGeneratedAudio(song.audioUrl || song.song_path)
+      setGeneratedLyrics(song.lyrics)
+      setCoverImage(song.coverImageUrl || song.image_path)
+    }
+  }
+
+  // Handle song deletion
+  const deleteSong = async (songId) => {
+    try {
+      // Delete the song from the database
+      const response = await fetch(`/api/songs/${songId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        throw new Error(`Failed to delete song: ${response.status} ${response.statusText}`)
+      }
+
+      console.log(`Song ${songId} deleted successfully`)
+
+      // Remove the song from the local state
+      const updatedSongs = generatedSongs.filter(song => song.id !== songId)
+      setGeneratedSongs(updatedSongs)
+
+      // If the deleted song was selected, select another song
+      if (generatedSongs[selectedSongIndex]?.id === songId) {
+        if (updatedSongs.length > 0) {
+          // Select the first song if available
+          selectSong(0)
+        } else {
+          // Clear the selected song if no songs are left
+          setSelectedSongIndex(null)
+          setGeneratedAudio(null)
+          setGeneratedLyrics(null)
+          setCoverImage(null)
+        }
+      }
+    } catch (error) {
+      console.error('Error deleting song:', error)
+      alert('Failed to delete song. Please try again.')
+    }
+  }
+
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-75" onClick={(e) => e.stopPropagation()}>
-      <div className="relative w-full max-w-3xl max-h-[90vh] flex flex-col bg-gray-900 rounded-xl shadow-xl border border-gray-700 overflow-hidden">
-        <div className="p-6 pb-0">
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-xl font-bold text-white">
-              {status === 'completed' ? 'Generation Complete!' : 'Generate Music'}
-            </h2>
-            {status !== 'generating' && (
+    <div className="max-w-2xl mx-auto p-4 bg-gradient-to-b from-slate-800 to-slate-900 rounded-lg shadow-xl">
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-2xl font-bold text-white">Generate Music with PlanetQAi</h3>
+
+        {creditsLoading ? (
+          <div className="flex items-center gap-2 bg-blue-700/30 px-3 py-1 rounded-full">
+            <div className="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+            <span className="text-blue-300 text-sm font-medium">Loading...</span>
+          </div>
+        ) : creditsError ? (
+          <button
+            onClick={fetchUserCredits}
+            className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 px-3 py-1 rounded-full transition-colors"
+            title={creditsError}
+          >
+            <AlertCircle className="w-4 h-4 text-red-400" />
+            <span className="text-red-300 text-sm font-medium">Error loading credits</span>
+          </button>
+        ) : userCredits ? (
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1 bg-blue-700/50 px-3 py-1 rounded-full">
+              <Zap className="w-4 h-4 text-yellow-400" />
+              <span className="text-white text-sm font-medium">
+                {userCredits.credits.toLocaleString()} Planet_Q_Coins
+              </span>
+            </div>
+            {userCredits.credits < 85 && (
               <button
-                onClick={onClose}
-                className="text-gray-400 hover:text-white transition-colors"
-                aria-label="Close"
+                onClick={() => setShowCreditPurchaseModal(true)}
+                className="flex items-center gap-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-yellow-900 text-xs font-medium px-2 py-1 rounded-full transition-colors"
               >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <Zap className="w-3 h-3" />
+                <span>Upgrade</span>
               </button>
             )}
           </div>
+        ) : null}
+      </div>
+
+      {/* Credit information */}
+      {estimatedCredits && (
+        <div className="mb-4 p-3 bg-blue-500/20 border border-blue-500/30 rounded-lg">
+          <div className="flex items-center gap-2 text-blue-300">
+            <CreditCard size={18} />
+            <p className="text-sm">
+              This generation will use approximately <span className="font-bold">{estimatedCredits}</span> Planet_Q_Coins.
+            </p>
+          </div>
         </div>
-        
-        <div className="flex-1 overflow-y-auto px-6 py-4">
-          {status === 'loading' ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-              <p className="text-gray-400">Loading generator...</p>
-            </div>
-          ) : status === 'upgrade' ? (
-            <div className="flex flex-col items-center justify-center py-12 space-y-6">
-              <div className="text-center">
-                <h3 className="text-xl font-semibold text-white mb-2">Upgrade Your Plan</h3>
-                <p className="text-gray-400 mb-6">You need more credits to continue generating music.</p>
-                <button
-                  onClick={() => router.push('/payment')}
-                  className="px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors font-medium"
-                >
-                  Get More Credits
-                </button>
-              </div>
-              <button
-                onClick={onClose}
-                className="text-sm text-gray-400 hover:text-white"
-              >
-                Maybe later
-              </button>
-            </div>
-          ) : status === 'generating' ? (
-            <div className="space-y-6">
-              <div className="flex flex-col items-center py-8">
-                <div className="relative">
-                  <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-blue-500 flex items-center justify-center">
-                    <Music className="w-10 h-10 text-white" />
-                  </div>
-                  <div className="absolute -bottom-1 -right-1 bg-purple-500 rounded-full p-1.5">
-                    <Loader2 className="w-5 h-5 text-white animate-spin" />
-                  </div>
-                </div>
-                
-                <h3 className="text-lg font-semibold text-white mt-4">Crafting Your Masterpiece</h3>
-                <p className="text-gray-400 text-center max-w-xs">We're working hard to create your song. This usually takes 1-2 minutes.</p>
-                
-                <div className="w-full max-w-xs mt-6 space-y-2">
-                  <div className="w-full bg-gray-800 rounded-full h-2">
-                    <div 
-                      className="bg-gradient-to-r from-purple-500 to-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
-                      style={{ width: `${progress}%` }}
-                    />
-                  </div>
-                  <div className="flex justify-between text-xs text-gray-400">
-                    <span>{progress}% complete</span>
-                    {generationDuration && <span>{formatTime(generationDuration)}</span>}
-                  </div>
-                </div>
-                
-                <div className="mt-6 w-full max-w-xs text-left text-sm">
-                  <div className="flex justify-between py-2 border-b border-gray-800">
-                    <span className="text-gray-400">Status</span>
-                    <span className="text-yellow-400 font-medium">In Progress</span>
-                  </div>
-                  <div className="flex justify-between py-2 border-b border-gray-800">
-                    <span className="text-gray-400">Checks</span>
-                    <span>{statusCheckCount}</span>
-                  </div>
-                  {taskId && (
-                    <div className="py-2 border-b border-gray-800">
-                      <div className="text-gray-400 text-xs mb-1">Task ID</div>
-                      <div className="text-xs font-mono text-gray-300 truncate" title={taskId}>
-                        {taskId}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          ) : status === 'completed' ? (
-            <div className="space-y-6 py-8">
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="w-10 h-10 text-white">
-                    <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                    <polyline points="22 4 12 14.01 9 11.01"></polyline>
-                  </svg>
-                </div>
-                <h3 className="text-lg font-semibold text-white mt-4">Your Song is Ready!</h3>
-                <p className="text-gray-400 text-center max-w-xs">Your music has been generated successfully.</p>
-                
-                <button
-                  onClick={handleCheckOutSong}
-                  className="mt-6 px-6 py-2 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-lg hover:from-purple-700 hover:to-blue-700 transition-colors"
-                >
-                  Check Out Your Song
-                </button>
-              </div>
-            </div>
-          ) : status === 'error' && (
-            <div className="space-y-6 py-6">
-              <div className="flex flex-col items-center">
-                <div className="w-20 h-20 rounded-full bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center">
-                  <AlertCircle className="w-10 h-10 text-white" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mt-4">Something Went Wrong</h3>
-                <p className="text-red-400 text-center max-w-xs">{error || 'An unknown error occurred'}</p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className="bg-red-900/20 border border-red-800/50 rounded-lg p-4 text-sm">
-                  <p className="font-medium text-red-300 mb-2">Error Details:</p>
-                  <p className="text-red-200 font-mono text-xs bg-black/30 p-2 rounded break-words">
-                    {error || 'No additional error information available'}
-                  </p>
-                  
-                  {(taskId || songId) && (
-                    <div className="mt-3 space-y-1 text-xs text-red-300">
-                      {taskId && <p>Task ID: <span className="font-mono">{taskId}</span></p>}
-                      {songId && <p>Song ID: <span className="font-mono">{songId}</span></p>}
-                    </div>
-                  )}
-                </div>
-                
-                <div className="flex space-x-3 pt-2">
-                  <button
-                    onClick={onClose}
-                    className="flex-1 px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg transition-colors text-sm"
-                  >
-                    Close
-                  </button>
-                  {songData && songData.title && (
-                    <button
-                      onClick={handleRetryGeneration}
-                      className="flex-1 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white rounded-lg transition-colors text-sm flex items-center justify-center"
+      )}
+
+      <div className="mb-4">
+        <label htmlFor="prompt" className="block text-sm font-medium text-gray-300 mb-1">
+          Music Description or Lyrics
+        </label>
+        <div className="flex flex-col gap-2">
+          <div className="my-2">
+            <p className="text-sm text-gray-300">Title</p>
+            <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.title}</p>
+          </div>
+          <div className="my-2">
+            <p className="text-sm text-gray-300">Lyrics & Prompt</p>
+            <p
+              className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500"
+
+            >
+              {selectedPrompt.text}
+            </p>
+          </div>
+          <div className="my-2">
+            <p className="text-sm text-gray-300">Genre</p>
+            <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.genre}</p>
+          </div>
+          <div className="my-2">
+            <p className="text-sm text-gray-300">Style</p>
+            <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.style}</p>
+          </div>
+          <div className="my-2">
+            <p className="text-sm text-gray-300">Tempo</p>
+            <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.tempo}</p>
+          </div>
+          <div className="my-2">
+            <p className="text-sm text-gray-300 mb-2">Tags</p>
+            <div className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 rounded-md">
+              <div className="flex flex-wrap gap-2">
+                {Array.isArray(selectedPrompt.tags) ? (
+                  selectedPrompt.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="bg-slate-800/70 hover:bg-slate-700/80 px-3 py-1 rounded-full text-sm text-gray-200"
                     >
-                      <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1.5">
-                        <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38"/>
-                      </svg>
-                      Try Again
-                    </button>
-                  )}
-                </div>
-              </div>
-              
-              <div className="text-xs text-gray-500 pt-4 border-t border-gray-800 text-center">
-                <p>If the problem persists, please contact support with the error details above.</p>
+                      {tag}
+                    </span>
+                  ))
+                ) : (
+                  <span className="text-gray-400 text-sm">No tags</span>
+                )}
               </div>
             </div>
-          )}
-        </div>
-        
-        {/* Footer */}
-        <div className="p-4 border-t border-gray-800 bg-gray-900/50">
-          <div className="flex items-center justify-between text-xs text-gray-500">
-            <div className="flex items-center space-x-2">
-              <span>Status: {status}</span>
-              {generationDuration && status === 'completed' && (
-                <span>• Generated in {formatTime(generationDuration)}</span>
-              )}
-            </div>
-            <div>
-              <span>v{process.env.NEXT_PUBLIC_APP_VERSION || '1.0.0'}</span>
-            </div>
+          </div>
+          <div className="my-2">
+            <p className="text-sm text-gray-300">Mood</p>
+            <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.mood}</p>
           </div>
         </div>
       </div>
-    </div>
-  );
-};
+      <div className="flex justify-center items-center mb-4">
+        {session ? (
+          <button
+            onClick={generateAudio}
+            disabled={loading || !selectedPrompt.text || creditsLoading}
+            className="bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors duration-300 w-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
+            {loading ? (
+              <div className="flex items-center justify-center gap-2">
+                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white"></div>
+                <span>{getProgressMessage() || 'Generating...'}</span>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center gap-2">
+                <Music className="w-5 h-5" />
+                <span>Generate Music with PlanetQ AI</span>
+              </div>
+            )}
+          </button>
+        ) : (
+          <Link
+            href={{
+              pathname: '/signup',
+              query: {
+                ...(tags ? { tags: encodeURIComponent(tags) } : {}),
+                ...(text ? { text: encodeURIComponent(text) } : {}),
+                ...(title ? { title: encodeURIComponent(title) } : {}),
+                ...(style ? { style: encodeURIComponent(style) } : {}),
+                ...(tempo ? { tempo: encodeURIComponent(tempo) } : {}),
+                ...(mood ? { mood: encodeURIComponent(mood) } : {}),
+                redirectTo: encodeURIComponent(pathname),
+              },
+            }}
+            className="bg-blue-600 text-white justify-center items-center text-center p-3 rounded-md hover:bg-blue-700 transition-colors duration-300 w-full font-semibold">
+            Sign Up to Generate Music
+          </Link>
+        )}
+      </div>
 
-export default Generator;
+      {/* Need more credits button */}
+      {userCredits && userCredits.credits < 50 && (
+        <div className="mb-4 text-center">
+          <button
+            onClick={() => setShowCreditPurchaseModal(true)}
+            className="text-blue-300 hover:text-blue-200 text-sm underline flex items-center justify-center gap-1 mx-auto">
+            <Zap className="w-4 h-4" />
+            <span>Need more credits? Purchase now</span>
+          </button>
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg">
+          <div className="flex items-center gap-2 text-red-300">
+            <AlertCircle size={18} />
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      )}
+
+      {generatedSongs && generatedSongs.length > 0 && (
+        <div className="mt-6 space-y-6">
+          <div>
+            <h4 className="text-white font-semibold mb-3">Your PlanetQAi Songs</h4>
+
+            {/* Use the reusable SongList component */}
+            <SongList
+              songs={generatedSongs}
+              selectedSongIndex={selectedSongIndex}
+              onSelectSong={selectSong}
+              generator="suno"
+            />
+          </div>
+
+          {/* Use the reusable SongDetail component */}
+          {generatedSongs[selectedSongIndex] && (
+            <SongDetail
+              song={generatedSongs[selectedSongIndex]}
+              onEditTitle={(newTitle) => {
+                // Update the song title in the state
+                const updatedSongs = [...generatedSongs]
+                updatedSongs[selectedSongIndex] = {
+                  ...updatedSongs[selectedSongIndex],
+                  title: newTitle
+                }
+                setGeneratedSongs(updatedSongs)
+
+                // Update the song title in the database
+                const songId = updatedSongs[selectedSongIndex].id
+                fetch(`/api/songs/${songId}`, {
+                  method: 'PATCH',
+                  headers: {
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify({ title: newTitle })
+                }).catch(error => {
+                  console.error('Error updating song title:', error)
+                })
+              }}
+              onDeleteSong={deleteSong}
+            />
+          )}
+        </div>
+      )}
+
+      {/* Information about credit usage */}
+      <div className="mt-6 pt-4 border-t border-blue-700/50">
+        <div className="flex items-start gap-2">
+          <TbInfoHexagonFilled className="text-gray-400 flex-shrink-0 mt-1" size={20} />
+          <p className="text-gray-400 text-sm">
+            Music generation uses credits from your account. PlanetQAi provides high-quality music with vocals and lyrics.
+            <button onClick={() => router.push('/payment')} className="text-blue-400 hover:text-blue-300 ml-1">
+              View pricing plans
+            </button>
+          </p>
+        </div>
+      </div>
+
+      {/* Credit Purchase Modal */}
+      <CreditPurchaseModal
+        isOpen={showCreditPurchaseModal}
+        onClose={() => setShowCreditPurchaseModal(false)}
+        creditsNeeded={creditsNeeded}
+        onSuccess={() => {
+          // Refresh user credits after successful purchase
+          fetchUserCredits()
+        }}
+      />
+
+    </div>
+  )
+}
+
+export default QuaylaGenerator

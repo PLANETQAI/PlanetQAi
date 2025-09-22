@@ -3,9 +3,12 @@
 import { useState, useEffect, useCallback } from "react";
 import { FaMicrophone, FaMicrophoneSlash, FaMusic, FaArrowRight } from "react-icons/fa";
 import Generator from './Generator';
+import { useSession } from 'next-auth/react';
+import QuaylaGenerator from "./Generator_v1";
+import CreditPurchaseModal from "@/components/credits/CreditPurchaseModal";
 
 export default function VoiceAssistant() {
- 
+  const { data: session, status } = useSession();
   const [voiceSession, setVoiceSession] = useState();
   const [connected, setConnected] = useState(false);
   const [connecting, setConnecting] = useState(false);
@@ -13,30 +16,32 @@ export default function VoiceAssistant() {
   const [chatHistory, setChatHistory] = useState([]);
   const [songData, setSongData] = useState(null);
   const [showGenerator, setShowGenerator] = useState(false);
-  const [userCredits, setUserCredits] = useState(0);
+  const [userCredits, setUserCredits] = useState(null);
   const [isGeneratingSong, setIsGeneratingSong] = useState(false);
-  
+  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
   // Effect to handle generator visibility changes
+
+
   useEffect(() => {
-    if (showGenerator && connected) {
-      disconnect();
+    if (session?.user) {
+      fetchUserCredits()
     }
-  }, [showGenerator, connected]);
+  }, [session])
 
   const initializeSession = useCallback(async () => {
     if (voiceSession) return voiceSession;
-    
+
     const { createSession } = await import("../../../lib/voice/voiceAgent.js");
     const session = createSession();
-    
+
     session.on("history_updated", (newHistory) => {
       setChatHistory(newHistory || []);
     });
-    
+
     setVoiceSession(session);
     return session;
   }, [voiceSession]);
-  
+
   // Clean up session on unmount
   useEffect(() => {
     return () => {
@@ -48,21 +53,10 @@ export default function VoiceAssistant() {
 
   // Fetch user credits on component mount
   useEffect(() => {
-    const fetchUserCredits = async () => {
-      try {
-        const response = await fetch('/api/credits-api');
-        if (response.ok) {
-          const data = await response.json();
-          console.log("User credits:", data.credits);
-          setUserCredits(data.credits || 0);
-        }
-      } catch (error) {
-        console.error('Failed to fetch user credits:', error);
-      }
-    };
-
-    fetchUserCredits();
-  }, []);
+    if (session?.user) {
+      fetchUserCredits()
+    }
+  }, [session])
 
   useEffect(() => {
     // Find the most recent create_song call by reversing the array
@@ -93,10 +87,10 @@ export default function VoiceAssistant() {
     try {
       // Initialize session if not already done
       const session = await initializeSession();
-      
+
       const { getToken } = await import("../../../lib/voice/voiceAgent.js");
       const { token } = await getToken();
-      
+
       // Connect with WebRTC options
       await session.connect({
         apiKey: token,
@@ -113,16 +107,16 @@ export default function VoiceAssistant() {
           ]
         }
       });
-      
+
       setConnected(true);
     } catch (err) {
-      const errorMessage = err.message === "INSUFFICIENT_CREDITS" 
+      const errorMessage = err.message === "INSUFFICIENT_CREDITS"
         ? "Insufficient credits. Please purchase more credits to continue."
         : err.message || "Connection failed";
-      
+
       setErrorMsg(errorMessage);
       console.error("Connection error:", err);
-      
+
       // If it's a credit error, show the credit purchase modal
       if (err.message === "INSUFFICIENT_CREDITS") {
         // You might want to trigger a credit purchase modal here
@@ -153,11 +147,54 @@ export default function VoiceAssistant() {
     }
   };
 
-  const stopTalking = () => {
-    if (voiceSession) {
-      voiceSession.interrupt();
+  const fetchUserCredits = async () => {
+    try {
+      // Get base URL for API calls
+      const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+
+      // First check if the user is authenticated by getting the session
+      console.log('Fetching session from:', `${apiBaseUrl}/api/auth/session`)
+      const sessionResponse = await fetch(`${apiBaseUrl}/api/auth/session`)
+      const sessionData = await sessionResponse.json()
+
+      // If not authenticated, redirect to login page
+      if (!sessionData || !sessionData.user) {
+        console.log('User not authenticated, redirecting to login')
+        window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
+        return
+      }
+
+      // Now fetch credits with the authenticated session
+      console.log('Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
+      const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
+        method: 'GET',
+        credentials: 'include', // This ensures cookies are sent with the request
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      })
+
+      if (!response.ok) {
+        // If unauthorized, redirect to login
+        if (response.status === 401) {
+          window.location.href = `${apiBaseUrl}/login?redirectTo=` + encodeURIComponent(window.location.pathname)
+          return
+        }
+        throw new Error(`Failed to fetch credits: ${response.status} ${response.statusText}`)
+      }
+
+      const data = await response.json()
+      setUserCredits(data)
+    } catch (error) {
+      console.error('Error fetching credits:', error)
     }
-  };
+  }
+
+  useEffect(() => {
+    if (showGenerator && connected) {
+      disconnect();
+    }
+  }, [showGenerator, connected]);
 
   const getMessageContent = (item) => {
     if (!item.content) return "Message";
@@ -187,7 +224,7 @@ export default function VoiceAssistant() {
     return `✅ Tool Result: ${typeof item.output === "string"
       ? item.output
       : JSON.stringify(item.output, null, 2)
-    }`;
+      }`;
   };
 
   const formatFunctionCall = (item) => {
@@ -230,6 +267,9 @@ export default function VoiceAssistant() {
                   title: args.title || 'Untitled',
                   description: args.description || `A ${args.mood || 'catchy'} ${args.genre || 'pop'} song`,
                   genre: args.genre || 'pop',
+                  text: args.text || '',
+                  tags: args.tags || [],
+                  tempo: args.tempo || 'medium',
                   mood: args.mood || 'neutral'
                 };
                 setSongData(songData);
@@ -253,28 +293,27 @@ export default function VoiceAssistant() {
     setIsGeneratingSong(false);
   };
 
-  const handleSongError = (error) => {
-    console.error('Error generating song:', error);
-    setIsGeneratingSong(false);
-    // You can add additional error handling here
-  };
 
   return (
     <div className="flex flex-col h-screen bg-gray-900 text-white">
       {/* Generator Component */}
       {showGenerator && songData && (
-        <Generator
-          isOpen={showGenerator}
-          onClose={() => setShowGenerator(false)}
-          songData={{
-            title: songData.title,
-            prompt: songData.description || `A ${songData.mood} ${songData.genre} song about ${songData.title}`,
-            mood: songData.mood,
-            style: songData.genre
-          }}
-          onSuccess={handleSongSuccess}
-          onError={handleSongError}
-        />
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="relative bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            {/* <button
+              onClick={() => setShowGenerator(false)}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button> */}
+            <QuaylaGenerator
+              session={session}
+              selectedPrompt={songData}
+            />
+          </div>
+        </div>
       )}
       <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
         <div className="relative  w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-120 lg:h-120   mb-4">
@@ -328,7 +367,7 @@ export default function VoiceAssistant() {
               <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
             </button>
           )}
-         
+
           {errorMsg && (
             <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
               <div className="flex items-start">
@@ -364,14 +403,32 @@ export default function VoiceAssistant() {
         {chatHistory.length > 0 && (
           <div className="mt-6">
             <div className="space-y-4 max-h-96 overflow-y-auto">
-              {chatHistory
+              {Array.from(
+                chatHistory
+                  .filter((item) => item.type === "function_call")
+                  .reduce((map, item) => {
+                    // Use function name as key to ensure uniqueness
+                    if (!map.has(item.name)) {
+                      map.set(item.name, item);
+                    }
+                    return map;
+                  }, new Map())
+                  .values()
+              ).map((item, index) => (
+                <div key={index} className="p-3 rounded">
+                  <div className="text-cyan-300 whitespace-pre-wrap">
+                    {formatFunctionCall(item)}
+                  </div>
+                </div>
+              ))}
+              {/* {chatHistory
                 .filter((item) => item.type === "function_call") // ✅ only show function calls
                 .map((item, index) => (
                   <div key={index} className="p-3 rounded">
                     <div className="text-cyan-300 whitespace-pre-wrap">
                       {formatFunctionCall(item)}
                       <div className="mt-2 space-x-2">
-                        {/* {item.name === "create_song" && (
+                        {item.name === "create_song" && (
                           <button
                             onClick={() =>
                               handleCreateSong(
@@ -382,8 +439,8 @@ export default function VoiceAssistant() {
                           >
                             Handle Create Song
                           </button>
-                        )} */}
-                        {/* {item.name === "save_progress" && (
+                        )}
+                        {item.name === "save_progress" && (
                           <button
                             onClick={() =>
                               handleSaveProgress(
@@ -394,11 +451,11 @@ export default function VoiceAssistant() {
                           >
                             Handle Save Progress
                           </button>
-                        )} */}
+                        )}
                       </div>
                     </div>
                   </div>
-                ))}
+                ))} */}
             </div>
           </div>
         )}
@@ -479,6 +536,17 @@ export default function VoiceAssistant() {
           </div>
         )} */}
       </div>
+
+      {session && (
+        <CreditPurchaseModal
+          isOpen={showCreditPurchaseModal}
+          onClose={() => setShowCreditPurchaseModal(false)}
+          creditsNeeded={0}
+          onSuccess={() => {
+            fetchUserCredits()
+          }}
+        />
+      )}
     </div>
   );
 }

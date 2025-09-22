@@ -105,7 +105,11 @@ export async function POST(req) {
 
     // Create initial song record
     // Prepare tags array with metadata
-    let songTags = tags ? tags.split(",").map(tag => tag.trim()) : [];
+    let songTags = Array.isArray(tags) 
+  ? tags.map(tag => String(tag).trim()).filter(Boolean)
+  : typeof tags === 'string' 
+    ? tags.split(',').map(tag => tag.trim()).filter(Boolean)
+    : [];
     
     // Add style, tempo, mood, and provider as tags
     songTags.push(`provider:suno`);
