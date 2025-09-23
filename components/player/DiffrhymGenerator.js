@@ -221,46 +221,47 @@ const DiffrhymGenerator = ({
 				
 				// Map database songs to the format used in the component
 				const formattedSongs = sortedSongs.map(song => {
-					// Extract provider, style, tempo, mood from tags if available
-					let provider = 'diffrhym';
-					let style = 'pop';
-					let tempo = 'medium';
-					let mood = 'neutral';
+					// Extract properties from song data or tags
+					const style = song.style || 
+						(song.tags?.find(tag => tag.startsWith('style:'))?.split(':')[1]);
 					
-					if (song.tags && Array.isArray(song.tags)) {
-						song.tags.forEach(tag => {
-							if (tag.startsWith('provider:')) {
-								provider = tag.split(':')[1];
-							} else if (tag.startsWith('style:')) {
-								style = tag.split(':')[1];
-							} else if (tag.startsWith('tempo:')) {
-								tempo = tag.split(':')[1];
-							} else if (tag.startsWith('mood:')) {
-								mood = tag.split(':')[1];
-							}
-						});
-					}
+					const tempo = song.tempo || 
+						(song.tags?.find(tag => tag.startsWith('tempo:'))?.split(':')[1]);
 					
+					const mood = song.mood || 
+						(song.tags?.find(tag => tag.startsWith('mood:'))?.split(':')[1]);
+
 					// Ensure isForSale is always a boolean
 					const isForSale = Boolean(song.isForSale);
 					
-					return {
+					// Create the formatted song object
+					const formattedSong = {
 						id: song.id,
 						title: song.title || 'Untitled Song',
-						audioUrl: song.audioUrl,
+						audioUrl: song.audioUrl || song.song_path,
 						lyrics: song.lyrics,
-						coverImageUrl: song.thumbnailUrl || `https://via.placeholder.com/300?text=${encodeURIComponent(song.title || 'Untitled')}`,
+						coverImageUrl: song.thumbnailUrl || song.coverImageUrl || 
+							`https://via.placeholder.com/300?text=${encodeURIComponent(song.title || 'Untitled')}`,
 						duration: song.duration || 0,
 						createdAt: song.createdAt,
-						generator: provider,
-						isForSale: isForSale, // Ensure this is a boolean
+						generator: 'diffrhym',
+						isForSale,
 						prompt: song.prompt,
-						style: song.style || style,
-						tempo: song.tempo || tempo,
-						mood: song.mood || mood,
+						style,
+						tempo,
+						mood,
 						// Include all original song properties to ensure nothing is lost
 						...song
 					};
+
+					console.log('Formatted song:', formattedSong.id, {
+						style: formattedSong.style,
+						tempo: formattedSong.tempo,
+						mood: formattedSong.mood,
+						tags: song.tags
+					});
+
+					return formattedSong;
 				})
 				
 				console.log('Formatted songs for UI:', formattedSongs)
@@ -830,8 +831,8 @@ const deleteSong = async (songId) => {
 				/>
 			</div>
 
-			 {/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-				<div>
+			 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+				{/* <div>
 					<label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
 						Song Title
 					</label>
@@ -856,7 +857,7 @@ const deleteSong = async (songId) => {
 						onChange={e => handleInputChange('tags', e.target.value)}
 						className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
 					/>
-				</div>
+				</div> */}
 			</div>
 
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
@@ -880,7 +881,7 @@ const deleteSong = async (songId) => {
 						</SelectContent>
 					</Select>
 				</div>
-				<div>
+				{/* <div>
 					<label htmlFor="tempo" className="block text-sm font-medium text-gray-300 mb-1">
 						Tempo
 					</label>
@@ -899,8 +900,8 @@ const deleteSong = async (songId) => {
 							))}
 						</SelectContent>
 					</Select>
-				</div>
-				<div>
+				</div> */}
+				{/* <div>
 					<label htmlFor="mood" className="block text-sm font-medium text-gray-300 mb-1">
 						Mood
 					</label>
@@ -919,8 +920,8 @@ const deleteSong = async (songId) => {
 							))}
 						</SelectContent>
 					</Select>
-				</div>
-			</div> */}
+				</div> */}
+			</div>
 
 			<div className="flex justify-center items-center mb-4">
 				{session ? (

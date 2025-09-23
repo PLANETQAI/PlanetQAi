@@ -37,11 +37,12 @@ const QuaylaGenerator = ({
   const tempo = normalizeValue(decodeURIComponent(searchParams.get('tempo') || 'medium'))
   const mood = normalizeValue(decodeURIComponent(searchParams.get('mood') || 'neutral'))
 
-  // Add this right after the component definition, before any hooks
-  console.log('Selected Prompt:', selectedPrompt);
-
   const [generatedAudio, setGeneratedAudio] = useState(null)
   const [generatedLyrics, setGeneratedLyrics] = useState(null)
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedStyle, setSelectedStyle] = useState(selectedPrompt.style || 'pop');
   const [coverImage, setCoverImage] = useState(null)
   const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
@@ -110,6 +111,18 @@ const QuaylaGenerator = ({
 
     return `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}`
   }
+
+  const styleOptions = [
+		{ value: 'pop', label: 'Pop' },
+		{ value: 'rock', label: 'Rock' },
+		{ value: 'hiphop', label: 'Hip Hop' },
+		{ value: 'electronic', label: 'Electronic' },
+		{ value: 'jazz', label: 'Jazz' },
+		{ value: 'classical', label: 'Classical' },
+		{ value: 'folk', label: 'Folk' },
+		{ value: 'cinematic', label: 'Cinematic' },
+		{ value: 'orchestral', label: 'Orchestral' }
+	]
 
   // Start timer function
   const startTimer = () => {
@@ -461,25 +474,29 @@ const QuaylaGenerator = ({
 
         // Map database songs to the format used in the component
         const formattedSongs = sortedSongs.map(song => {
-          // Extract provider, style, tempo, mood from tags if available
-          let provider = 'suno';
-          let style = 'pop';
-          let tempo = 'medium';
-          let mood = 'neutral';
-
+          // First, try to get properties from song data
+          let style = song.style;
+          let tempo = song.tempo;
+          let mood = song.mood;
+          let provider = song.provider || 'suno';
+          
+          // If not available in song data, try to extract from tags
           if (song.tags && Array.isArray(song.tags)) {
             song.tags.forEach(tag => {
               if (tag.startsWith('provider:')) {
                 provider = tag.split(':')[1];
-              } else if (tag.startsWith('style:')) {
+              } else if (!style && tag.startsWith('style:')) {
                 style = tag.split(':')[1];
-              } else if (tag.startsWith('tempo:')) {
+              } else if (!tempo && tag.startsWith('tempo:')) {
                 tempo = tag.split(':')[1];
-              } else if (tag.startsWith('mood:')) {
+              } else if (!mood && tag.startsWith('mood:')) {
                 mood = tag.split(':')[1];
               }
             });
           }
+          
+          // Only set defaults if no value was found in song data or tags
+          // This ensures we only use the style from the backend
 
           // Check if this is the current song being generated
           const isCurrentSong = song.id === currentSongId;
@@ -843,9 +860,27 @@ const QuaylaGenerator = ({
             <p className="text-sm text-gray-300">Genre</p>
             <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.genre}</p>
           </div>
-          <div className="my-2">
-            <p className="text-sm text-gray-300">Style</p>
-            <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.style}</p>
+          <div className="my-2 relative">
+            <label htmlFor="style-select" className="block text-sm text-gray-300 mb-1">Style</label>
+            <div className="relative">
+              <select
+                id="style-select"
+                value={selectedStyle}
+                onChange={(e) => setSelectedStyle(e.target.value)}
+                className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 pr-10 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 appearance-none cursor-pointer"
+              >
+                {styleOptions.map((option) => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                <svg className="h-5 w-5 text-gray-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </div>
+            </div>
           </div>
           <div className="my-2">
             <p className="text-sm text-gray-300">Tempo</p>

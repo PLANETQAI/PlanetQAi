@@ -66,7 +66,7 @@ const SongList = ({
           <div className="flex-1 min-w-0">
             <div className="text-white font-medium truncate">{song.title}</div>
             <div className="text-gray-400 text-xs flex items-center gap-2">
-              {/* <span>{song.style || 'Default'}</span> */}
+              <span>{song.prompt || 'Default'}</span>
               <span>•</span>
               <span>{new Date(song.createdAt).toLocaleDateString()}</span>
             </div>

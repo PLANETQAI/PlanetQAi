@@ -19,7 +19,7 @@ export default function SaleToggleButton({
   isLyricsPurchasedProp,
 }) {
   renderCount++;
-  console.log(`Rendering SaleToggleButton (${renderCount}):`, { songId });
+
   
   const [salePrice, setSalePrice] = useState(salePriceProp || '5.00');
   const [isForSale, setIsForSale] = useState(isForSaleProp);
@@ -72,7 +72,6 @@ export default function SaleToggleButton({
   // }, [songId]);
 
 
-  console.log("isSetForSale",isForSaleProp)
   // Load initial state from API
   const handleSave = async (e) => {
     e.preventDefault();

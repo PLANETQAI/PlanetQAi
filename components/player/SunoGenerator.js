@@ -487,64 +487,30 @@ const SunoGenerator = ({
 				});
 				
 				console.log(`Filtered ${sunoSongs.length} completed Suno songs from ${data.songs.length} total songs`);
-				
-				// Sort songs by creation date (newest first)
-				const sortedSongs = sunoSongs.sort((a, b) => {
-					return new Date(b.createdAt) - new Date(a.createdAt)
-				})
-				
-				// Map database songs to the format used in the component
-				const formattedSongs = sortedSongs.map(song => {
-					// Extract provider, style, tempo, mood from tags if available
-					let provider = 'suno';
-					let style = 'pop';
-					let tempo = 'medium';
-					let mood = 'neutral';
+
+				// Format the songs with proper style, tempo, and mood extraction
+				const formattedSongs = sunoSongs.map(song => {
+					// Extract properties from song data or tags
+					const style = song.style || 
+						(song.tags?.find(tag => tag.startsWith('style:'))?.split(':')[1]);
 					
-					if (song.tags && Array.isArray(song.tags)) {
-						song.tags.forEach(tag => {
-							if (tag.startsWith('provider:')) {
-								provider = tag.split(':')[1];
-							} else if (tag.startsWith('style:')) {
-								style = tag.split(':')[1];
-							} else if (tag.startsWith('tempo:')) {
-								tempo = tag.split(':')[1];
-							} else if (tag.startsWith('mood:')) {
-								mood = tag.split(':')[1];
-							}
-						});
-					}
+					const tempo = song.tempo || 
+						(song.tags?.find(tag => tag.startsWith('tempo:'))?.split(':')[1]);
 					
-					// Check if this is the current song being generated
-					const isCurrentSong = song.id === currentSongId;
-					
-					// If song has song_path but no audioUrl, use song_path as audioUrl
-					const audioUrl = song.audioUrl || song.song_path || (isCurrentSong ? generatedAudio : null);
-					const isForSale = Boolean(song.isForSale);
-					// All songs in this list are completed since we filtered out pending ones
-					const status = 'completed';
-					
+					const mood = song.mood || 
+						(song.tags?.find(tag => tag.startsWith('mood:'))?.split(':')[1]);
+
 					return {
-						id: song.id,
-						title: song.title || 'Untitled Song',
-						audioUrl: audioUrl,
-						song_path: song.song_path || audioUrl, // Ensure song_path is available
-						lyrics: song.lyrics,
-						coverImageUrl: song.thumbnailUrl || song.coverImageUrl || song.image_path,
-						image_path: song.image_path || song.coverImageUrl || song.thumbnailUrl,
-						duration: song.duration || 0,
-						createdAt: song.createdAt,
-						isForSale: isForSale,
-						generator: provider,
-						prompt: song.prompt,
-						style: song.style || style,
-						tempo: song.tempo || tempo,
-						mood: song.mood || mood,
-						status: status // All songs are completed
+						...song,
+						style,
+						tempo,
+						mood,
+						// Ensure a valid audio URL is available
+						audioUrl: song.audioUrl || song.song_path,
 					};
 				});
-				
-				// Update the songs state
+
+				// Update the state with formatted songs
 				setGeneratedSongs(formattedSongs);
 				
 				// If songs exist, select the first (newest) one if none is selected
@@ -926,7 +892,7 @@ const SunoGenerator = ({
 						className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
 					/>
 				</div>
-			</div>
+			</div> */}
 
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
 				<div>
@@ -949,7 +915,7 @@ const SunoGenerator = ({
 						</SelectContent>
 					</Select>
 				</div>
-				<div>
+				{/* <div>
 					<label htmlFor="tempo" className="block text-sm font-medium text-gray-300 mb-1">
 						Tempo
 					</label>
@@ -968,8 +934,8 @@ const SunoGenerator = ({
 							))}
 						</SelectContent>
 					</Select>
-				</div>
-				<div>
+				</div> */}
+				{/* <div>
 					<label htmlFor="mood" className="block text-sm font-medium text-gray-300 mb-1">
 						Mood
 					</label>
@@ -988,8 +954,8 @@ const SunoGenerator = ({
 							))}
 						</SelectContent>
 					</Select>
-				</div>
-			</div> */}
+				</div> */}
+			</div> 
 
 			{/* Lyrics Type Selector */}
 			{/* <div className="mb-6">

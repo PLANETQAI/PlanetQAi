@@ -17,16 +17,60 @@ const WORD_COUNT_THRESHOLD = 200; // Threshold for additional credit costs
  * Uses the PiAPI Suno integration
  */
 export async function POST(req) {
+  console.log('--- Suno Generation API Call Started ---');
+  
   try {
+    // Log the incoming request URL and method
+    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    
     // Get user session
     const session = await auth();
+    console.log('Session data:', session ? 'Authenticated' : 'No session');
+    
     if (!session) {
+      console.log('Authentication failed - no session');
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const userId = session.user.id;
-    const body = await req.json();
+    console.log('User ID:', userId);
+    
+    // Log request headers for debugging
+    const headers = {};
+    req.headers.forEach((value, key) => {
+      headers[key] = key === 'authorization' ? '***' : value;
+    });
+    console.log('Request headers:', headers);
+    
+    // Parse request body
+    let body;
+    try {
+      body = await req.json();
+      console.log('Request body:', JSON.stringify({
+        ...body,
+        prompt: body.prompt ? `${body.prompt.substring(0, 30)}...` : 'No prompt',
+        style: body.style || 'Not provided',
+        tempo: body.tempo || 'Not provided',
+        mood: body.mood || 'Not provided'
+      }, null, 2));
+    } catch (e) {
+      console.error('Error parsing request body:', e);
+      return NextResponse.json(
+        { error: "Invalid request body" },
+        { status: 400 }
+      );
+    }
+    
     const { prompt, title, tags, style, tempo, mood, lyricsType = 'generate' } = body;
+    console.log('Suno generation parameters:', { 
+      prompt: prompt ? `${prompt.substring(0, 50)}...` : 'No prompt',
+      title: title || 'No title',
+      tags: tags || 'No tags',
+      style: style || 'Not specified (will use default)',
+      tempo: tempo || 'Not specified (will use default)',
+      mood: mood || 'Not specified (will use default)',
+      lyricsType
+    });
 
     if (!prompt) {
       return NextResponse.json(
@@ -124,6 +168,7 @@ export async function POST(req) {
         userId,
         title: title || prompt.substring(0, 50),
         prompt,
+        style ,
         audioUrl: "", // Will be updated after generation
         duration: 0, // Will be updated after generation
         creditsUsed: 0, // Will be updated after generation

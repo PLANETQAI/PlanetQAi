@@ -124,6 +124,7 @@ export async function POST(req) {
           userId,
           title: title || prompt.substring(0, 50),
           prompt,
+          style: style || "pop",
           audioUrl: "", // Will be updated after generation
           duration: 0, // Will be updated after generation
           creditsUsed: 0, // Will be updated when generation is successful
