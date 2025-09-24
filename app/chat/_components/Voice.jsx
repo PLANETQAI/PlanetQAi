@@ -278,7 +278,7 @@ export default function VoiceAssistant() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
               </svg>
             </button>
-            <div className="mt-8 p-6 bg-gray-800 rounded-lg">
+            <div className="mt-8 p-6 bg-gray-800 rounded-lg max-h-[calc(90vh-4rem)] overflow-y-auto">
               <QuaylaGenerator 
                 session={session} 
                 selectedPrompt={songData}

@@ -856,10 +856,10 @@ const QuaylaGenerator = ({
               {selectedPrompt.text}
             </p>
           </div>
-          <div className="my-2">
+          {/* <div className="my-2">
             <p className="text-sm text-gray-300">Genre</p>
             <p className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white w-full rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500">{selectedPrompt.genre}</p>
-          </div>
+          </div> */}
           <div className="my-2 relative">
             <label htmlFor="style-select" className="block text-sm text-gray-300 mb-1">Style</label>
             <div className="relative">

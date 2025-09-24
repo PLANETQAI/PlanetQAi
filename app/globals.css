@@ -55,6 +55,7 @@
 html, body {
 	scroll-behavior: smooth;
 	scrollbar-width: none;
+	-webkit-overflow-scrolling: touch;
 }
 
 /* Hide scrollbars for IE and Edge */
