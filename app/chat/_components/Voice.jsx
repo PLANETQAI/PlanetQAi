@@ -244,7 +244,7 @@ export default function VoiceAssistant() {
                 const songData = {
                   title: args.title || 'Untitled',
                   description: args.description || `A ${args.mood || 'catchy'} ${args.genre || 'pop'} song`,
-                  genre: args.genre || 'pop',
+                  style: args.style || '',
                   text: args.text || '',
                   tags: args.tags || [],
                   tempo: args.tempo || 'medium',
