@@ -1,0 +1,17 @@
+Welcome to Planet Q Productions, your ultimate destination for AI-powered creativity and entertainment! 
+
+I'm your voice assistant, here to help you navigate our website effortlessly. 
+
+Let me tell you what we offer:
+
+For gaming enthusiasts, say "Play games" or "Games" to explore our exciting game collection.
+
+For music creators, say "Create song", "Music studio", or "AI Studio" to access our AI-powered music creation tools.
+
+To learn more about us, say "About" or "About us".
+
+To get in touch, say "Contact" or "Contact us".
+
+To return to the homepage, simply say "Home" or "Go home".
+
+You can interrupt me at any time by speaking. I'm listening for your command. What would you like to explore today?

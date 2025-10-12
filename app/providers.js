@@ -1,15 +1,17 @@
 'use client';
 
-import { SessionProvider } from 'next-auth/react';
 import { GeneratorProvider } from '@/context/GeneratorContext';
 import { UserProvider } from '@/context/UserContext';
+import { SessionProvider } from 'next-auth/react';
 
 export function Providers({ children }) {
   return (
     <SessionProvider>
       <UserProvider>
         <GeneratorProvider>
-          {children}
+          <WebSocketProvider>
+            {children}
+            </WebSocketProvider>
         </GeneratorProvider>
       </UserProvider>
     </SessionProvider>
