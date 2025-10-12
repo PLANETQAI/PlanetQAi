@@ -1,16 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import Link from "next/link";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
-
-// Here's the links I have two links
-
-// https://open.spotify.com/artist/5AWlrst9quIeaE4VWSvOVA?si=6xNMoWV1TiiH-b_0aOKM-g
-
-// https://open.spotify.com/artist/2QAFHW7dvr7EbnlPY7PDbq?si=MHsK33YHSOunJfxS2GnUkQ
+import PlayerBot from "./_components/PlayerBot";
+import RadioSubscriptionFlow from './_components/RadioSubscriptionFlow';
 
 // List of Spotify playlist or track embed URLs
 const spotifyEmbeds = [
@@ -41,9 +33,9 @@ const BackgroundPattern = () => (
   </div>
 );
 
-const RadioPage = () => {
-  // Modern radio page with multiple Spotify embeds
-const router = useRouter();
+const RadioContent = () => {
+  const router = useRouter();
+
   return (
     <div className="min-h-screen text-white relative overflow-x-hidden font-sans">
       <BackgroundPattern />
@@ -60,15 +52,10 @@ const router = useRouter();
         <p className="text-center text-lg text-gray-300 mb-10">
           Enjoy curated Spotify playlists and tracks. Click play and vibe out!
         </p>
-  
-        <div className="flex flex-col justify-center items-center">
-          <p className="text-center text-lg text-gray-300 mb-10">Do you want to have a full album?</p>
-          <button className="bg-gradient-to-r from-cyan-500 to-purple-500 text-white font-bold py-2 px-4 rounded-full hover:opacity-90" onClick={() => router.push('/productions/contact')}>
-            Check Other users Albums
-          </button>
+        <div className="w-full flex justify-center">
+          <PlayerBot />
         </div>
-
-        <div className="space-y-10">
+        {/* <div className="space-y-10">
           {spotifyEmbeds.map((embed, idx) => (
             <div
               key={idx}
@@ -91,70 +78,17 @@ const router = useRouter();
               </div>
             </div>
           ))}
-        </div>
-
-        {/* Navigation */}
-        <nav className="flex justify-center gap-8 border-t border-gray-800 pt-10 mt-16">
-          <Link
-            href="/productions/faqs"
-            className="text-gray-400 hover:text-cyan-400 transition-colors flex items-center group text-lg"
-          >
-            <span className="mr-1.5">FAQs</span>
-            <svg
-              className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Link>
-          <Link
-            href="/productions/about"
-            className="text-gray-400 hover:text-cyan-400 transition-colors flex items-center group text-lg"
-          >
-            <span className="mr-1.5">About</span>
-            <svg
-              className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Link>
-          <Link
-            href="/productions/contact"
-            className="text-gray-400 hover:text-cyan-400 transition-colors flex items-center group text-lg"
-          >
-            <span className="mr-1.5">Contact</span>
-            <svg
-              className="w-4 h-4 opacity-0 group-hover:opacity-100 transition-opacity"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 5l7 7-7 7"
-              />
-            </svg>
-          </Link>
-        </nav>
+        </div> */}
       </div>
     </div>
+  );
+};
+
+const RadioPage = () => {
+  return (
+    <RadioSubscriptionFlow>
+      <RadioContent />
+    </RadioSubscriptionFlow>
   );
 };
 

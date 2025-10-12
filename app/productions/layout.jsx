@@ -1,10 +1,10 @@
 "use client";
 
-import { motion, AnimatePresence } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import { usePathname } from "next/navigation";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
 import { FiMenu, FiX } from "react-icons/fi";
 
 // Dynamically import components with SSR disabled
@@ -86,7 +86,7 @@ const RadioLayout = ({ children }) => {
       <main className="relative z-10">{children}</main>
 
       {/* Footer */}
-      <footer className="relative z-10 py-8 border-t border-gray-800 mt-16">
+      <footer className="relative z-10 pt-8 border-t border-gray-800 mt-16">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Planet Q Radio. All rights reserved.

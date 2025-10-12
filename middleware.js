@@ -11,13 +11,9 @@ const EXCLUDED_PATHS = [
   "/api/subscriptions/webhook",
   "/api/share", // Exclude all share API routes
   "/share", // Exclude share page routes
-  "/productions",
-  "/productions/faqs",
-  "/productions/about",
-  "/productions/contact",
-  "/productions/album",
   "/carousel-test",
   "/planetqgames",
+  "/chat/avatar",
 ];
 
 // Create a middleware handler that excludes webhook paths

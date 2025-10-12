@@ -11,7 +11,8 @@ import {
   EnvelopeIcon, 
   ChartBarIcon,
   HomeIcon,
-  ArrowLeftOnRectangleIcon
+  ArrowLeftOnRectangleIcon,
+  CreditCardIcon
 } from '@heroicons/react/24/outline';
 
 export default function AdminLayout({ children }) {
@@ -57,6 +58,7 @@ export default function AdminLayout({ children }) {
   const navItems = [
     { name: 'Dashboard', href: '/admin', icon: ChartBarIcon },
     { name: 'Users', href: '/admin/users', icon: UserIcon },
+    { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
     { name: 'Songs', href: '/admin/songs', icon: MusicalNoteIcon },
     { name: 'Newsletter', href: '/admin/newsletter', icon: EnvelopeIcon },
   ];
