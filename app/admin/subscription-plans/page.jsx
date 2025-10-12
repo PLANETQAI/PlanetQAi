@@ -1,14 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  PencilIcon, 
-  TrashIcon, 
-  CheckCircleIcon, 
-  XCircleIcon,
+import {
   ArrowPathIcon,
-  PlusIcon
+  CheckCircleIcon,
+  PencilIcon,
+  PlusIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 export default function SubscriptionPlansPage() {
@@ -178,7 +177,7 @@ export default function SubscriptionPlansPage() {
                         >
                           <PencilIcon className="h-5 w-5" />
                         </button>
-                        {plan.isActive && (
+                        {/* {plan.isActive && (
                           <button 
                             onClick={() => handleDeactivate(plan)}
                             className="text-red-400 hover:text-red-300"
@@ -186,7 +185,7 @@ export default function SubscriptionPlansPage() {
                           >
                             <TrashIcon className="h-5 w-5" />
                           </button>
-                        )}
+                        )} */}
                       </div>
                     </td>
                   </tr>
