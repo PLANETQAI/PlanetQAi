@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Dot, MicOff, MicVocal } from 'lucide-react';
+import { AlertCircle, Dot, Mic, MicVocal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useEffect, useRef, useState } from 'react';
 
@@ -316,28 +316,53 @@ const VoiceNavigationAssistant = () => {
     }
 
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      // Mobile-optimized audio constraints
+      const constraints = {
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
           channelCount: 1,
-          sampleRate: 16000
-        } 
-      });
+          sampleRate: 16000,
+          // Mobile-specific optimizations
+          ...(isMobile && {
+            latency: 0.1,
+            echoCancellationType: 'system',
+            suppressLocalAudioPlayback: true,
+            sampleSize: 16
+          })
+        }
+      };
+
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
       
       mediaStreamRef.current = stream;
       setMicPermission('granted');
       setShowPermissionError(false);
       
-      await initAudioProcessing(stream);
+      const processingInitialized = await initAudioProcessing(stream);
+      
+      if (!processingInitialized) {
+        throw new Error('Failed to initialize audio processing');
+      }
       
       setIsListening(true);
-      setStatus('Listening continuously... Speak naturally!');
+      setStatus(isMobile ? 'Listening...' : 'Listening continuously... Speak naturally!');
+      
+      // Auto-stop after 30 seconds on mobile
+      if (isMobile) {
+        interactionTimeoutRef.current = setTimeout(() => {
+          if (isListening) {
+            stopAssistant();
+          }
+        }, 30000);
+      }
       
       if (!welcomeFinished && videoRef.current) {
         videoRef.current.currentTime = 0;
-        videoRef.current.muted = false;
+        videoRef.current.muted = isMobile; // Mute on mobile by default
+        videoRef.current.playsInline = true; // For iOS
+        videoRef.current.setAttribute('playsinline', 'true');
         videoRef.current.play().catch(err => {
           console.warn('⚠️ Video autoplay prevented:', err);
         });
@@ -357,23 +382,84 @@ const VoiceNavigationAssistant = () => {
   const stopRecording = () => {
     console.log('🛑 Stopping recording...');
     
+    // Clear any pending timeouts
+    clearTimeout(interactionTimeoutRef.current);
+    
     setIsListening(false);
     
+    // Clean up audio processing
     if (audioProcessorRef.current) {
       audioProcessorRef.current.port.postMessage('stop');
+      audioProcessorRef.current.disconnect();
+      audioProcessorRef.current = null;
     }
     
-    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
-      audioContextRef.current.suspend();
+    // Close audio context if it exists
+    if (audioContextRef.current) {
+      if (audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.suspend();
+        audioContextRef.current.close();
+      }
     }
     
+    // Stop all media tracks
     if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach(track => track.stop());
+      mediaStreamRef.current.getTracks().forEach(track => {
+        track.stop();
+        track.enabled = false;
+      });
       mediaStreamRef.current = null;
     }
     
+    // Reset audio chunks
     audioChunksRef.current = [];
   };
+  
+  // Touch event handlers for mobile
+  const handleTouchStart = () => {
+    if (!isActive) {
+      touchTimerRef.current = setTimeout(() => {
+        startAssistant();
+      }, 300); // Slight delay to prevent accidental triggers
+    } else {
+      setTouchActive(true);
+    }
+  };
+
+  const handleTouchEnd = () => {
+    clearTimeout(touchTimerRef.current);
+    
+    if (isActive && touchActive) {
+      // If user lifts finger while active, stop listening after a short delay
+      interactionTimeoutRef.current = setTimeout(() => {
+        if (isListening) {
+          stopAssistant();
+        }
+      }, 2000);
+    }
+    setTouchActive(false);
+  };
+  
+
+  // Clean up all resources when component unmounts
+  useEffect(() => {
+    return () => {
+      stopRecording();
+      
+      if (synthesisRef.current) {
+        synthesisRef.current.cancel();
+      }
+      
+      clearTimeout(touchTimerRef.current);
+      clearTimeout(interactionTimeoutRef.current);
+      
+      if (videoRef.current) {
+        videoRef.current.pause();
+        videoRef.current.removeAttribute('src');
+        videoRef.current.load();
+      }
+    };
+  }, []);
 
   const startAssistant = async () => {
     console.log('🚀 Starting assistant...');
@@ -468,7 +554,7 @@ const VoiceNavigationAssistant = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#141432] to-[#0a0e27] flex flex-col items-center justify-center p-4 relative overflow-hidden">
+    <div className=" bg-gradient-to-b from-[#0a0e27] via-[#141432] to-[#0a0e27] flex flex-col items-center justify-center p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(100)].map((_, i) => (
           <div
@@ -485,23 +571,25 @@ const VoiceNavigationAssistant = () => {
         ))}
       </div>
 
-      <div className="relative z-10 flex flex-col items-center max-w-2xl w-full">
-        <h1 className="text-5xl md:text-6xl font-bold mb-6 text-center"
+      <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 max-w-2xl mx-auto">
+        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
             style={{
               fontFamily: 'cursive',
               color: '#00d4ff',
               textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
-              letterSpacing: '2px'
+              letterSpacing: '1px',
+              lineHeight: '1.2'
             }}>
-          Planet Q Productions
+          Planet Q<br className="sm:hidden" /> Productions
         </h1>
 
-        <h2 className="text-2xl md:text-3xl mb-8 text-center"
+        <h2 className="text-xl sm:text-2xl md:text-3xl mb-6 sm:mb-8 text-center"
             style={{
               fontFamily: 'cursive',
               color: '#ff00ff',
               textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
-              letterSpacing: '1px'
+              letterSpacing: '0.5px',
+              lineHeight: '1.3'
             }}>
           Q_World Studios
         </h2>
@@ -582,68 +670,58 @@ const VoiceNavigationAssistant = () => {
           AI Radio Station
         </h4>
 
-        <button
-          onClick={toggleListening}
-          disabled={micPermission === 'denied'}
-          className={`mb-6 px-6 py-3 rounded-full font-semibold text-sm transition-all duration-300 flex items-center gap-2 ${
-            isActive 
-              ? 'bg-red-500 hover:bg-red-600 shadow-lg shadow-red-500/50' 
-              : micPermission === 'denied'
-              ? 'bg-gray-500 cursor-not-allowed opacity-50'
-              : 'bg-cyan-500 hover:bg-cyan-600 shadow-lg shadow-cyan-500/50'
-          }`}
-          style={{
-            color: 'white',
-            transform: isActive ? 'scale(1.05)' : 'scale(1)'
-          }}
-        >
-          {isActive ? (
-            <div className="flex flex-col items-center gap-1">
-              <MicOff size={16} />
-              <span className="text-xs">Stop</span>
-            </div>
-          ) : micPermission === 'denied' ? (
-            <div className="flex flex-col items-center gap-1">
-              <AlertCircle size={16} />
-              <span className="text-xs">Denied</span>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center gap-1">
-              <MicVocal size={16} />
-              <span className="text-xs">Activate</span>
-            </div>
-          )}
-        </button>
-
-        {/* <div className="w-full max-w-md p-6 rounded-lg bg-black/30 backdrop-blur-sm border border-cyan-500/30">
-          <div className="flex items-center gap-3 mb-4">
-            <div className={`w-3 h-3 rounded-full ${
-              isListening ? 'bg-red-500 animate-pulse' : 
-              pulseAnimation ? 'bg-cyan-500 animate-pulse' : 
-              'bg-gray-500'
-            }`} />
-            <p className="text-cyan-300 font-semibold">
-              {isListening ? 'Listening Continuously' :
-               pulseAnimation ? 'Speaking...' : 
-               'Standby'}
-            </p>
-          </div>
+        <div className="relative">
+          <button
+            onTouchStart={handleTouchStart}
+            onTouchEnd={handleTouchEnd}
+            onMouseDown={isMobile ? undefined : () => setTouchActive(true)}
+            onMouseUp={isMobile ? undefined : () => setTouchActive(false)}
+            onMouseLeave={isMobile ? undefined : () => setTouchActive(false)}
+            onClick={!isMobile ? toggleListening : undefined}
+            disabled={micPermission === 'denied'}
+            className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg transition-all duration-300 ${
+              isActive 
+                ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50' 
+                : micPermission === 'denied'
+                ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                : 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50'
+            } ${touchActive ? 'scale-95' : 'scale-100'}`}
+            style={{
+              WebkitTapHighlightColor: 'transparent',
+              touchAction: 'manipulation',
+              transform: `${isActive ? 'scale(1.1)' : 'scale(1)'} ${touchActive ? 'scale(0.95)' : ''}`,
+              transition: 'transform 150ms ease, background 200ms ease'
+            }}
+            aria-label={isActive ? 'Stop voice assistant' : 'Start voice assistant'}
+          >
+            {isActive ? (
+              <div className="flex items-center justify-center w-full h-full">
+                <MicVocal className="w-7 h-7 md:w-8 md:h-8" />
+                <div className="absolute inset-0 rounded-full opacity-20 bg-red-400 animate-ping"></div>
+              </div>
+            ) : micPermission === 'denied' ? (
+              <div className="flex flex-col items-center justify-center w-full h-full">
+                <AlertCircle size={24} className="text-white" />
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center w-full h-full">
+                <Mic className="w-6 h-6 md:w-7 md:h-7" />
+              </div>
+            )}
+            
+            {/* Visual feedback for touch devices */}
+            {touchActive && (
+              <span className="absolute inset-0 rounded-full bg-white/20"></span>
+            )}
+          </button>
           
-          <p className="text-gray-300 text-sm mb-3">{status}</p>
-          
-          {transcript && (
-            <div className="mt-3 pt-3 border-t border-cyan-500/30">
-              <p className="text-xs text-gray-400 mb-1">Live Transcription:</p>
-              <p className="text-cyan-200 min-h-[20px]">{transcript}</p>
-            </div>
-          )}
-
-          <div className="mt-3 pt-3 border-t border-cyan-500/30">
-            <p className="text-xs text-gray-400 text-center">
-              💬 Speak naturally - I'm always listening!
-            </p>
+          {/* Status indicator */}
+          <div className={`mt-2 text-center text-xs text-gray-300 transition-opacity duration-200 ${
+            isActive ? 'opacity-100' : 'opacity-0'
+          }`}>
+            {status}
           </div>
-        </div> */}
+        </div>
       </div>
     </div>
   );
