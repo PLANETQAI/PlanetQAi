@@ -2,7 +2,7 @@
 
 import { AlertCircle, Dot, Mic, MicVocal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 const VoiceNavigationAssistant = () => {
   // State for mobile optimization
@@ -17,7 +17,7 @@ const VoiceNavigationAssistant = () => {
   const [welcomeFinished, setWelcomeFinished] = useState(false);
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  
+  const [isMounted, setIsMounted] = useState(false);
   const router = useRouter();
   const mediaStreamRef = useRef(null);
   const synthesisRef = useRef(null);
@@ -27,10 +27,43 @@ const VoiceNavigationAssistant = () => {
   const audioChunksRef = useRef([]);
   const isNavigatingRef = useRef(false);
   const isSpeakingRef = useRef(false);
+  const shouldProcessRef = useRef(true);
   const touchTimerRef = useRef(null);
   const interactionTimeoutRef = useRef(null);
+  const abortControllerRef = useRef(new AbortController());
 
   const videoUrl = "/videos/generator.mp4";
+
+  useEffect(() => {
+    setIsMounted(true);
+    return () => {
+      setIsMounted(false);
+      // Cleanup
+      stopRecording();
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close().catch(console.error);
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    const container = document.querySelector('.carousel-container');
+    if (!container) return;
+
+    const handleTouch = (e) => {
+      // Only prevent default if we're actually handling the touch
+      if (isActive || isListening) {
+        e.preventDefault();
+      }
+    };
+
+    // Use capture phase to ensure we can prevent default
+    container.addEventListener('touchstart', handleTouch, { passive: false, capture: true });
+
+    return () => {
+      container.removeEventListener('touchstart', handleTouch, { passive: false, capture: true });
+    };
+  }, [isActive, isListening]);
 
   // Detect mobile devices
   useEffect(() => {
@@ -38,7 +71,7 @@ const VoiceNavigationAssistant = () => {
       const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
       setIsMobile(isMobileDevice);
     };
-    
+
     checkIfMobile();
     window.addEventListener('resize', checkIfMobile);
     return () => window.removeEventListener('resize', checkIfMobile);
@@ -50,10 +83,10 @@ const VoiceNavigationAssistant = () => {
     const checkMicrophonePermission = async () => {
       if (navigator.permissions && navigator.permissions.query) {
         try {
-          const permissionStatus = await navigator.permissions.query({ 
-            name: 'microphone' 
+          const permissionStatus = await navigator.permissions.query({
+            name: 'microphone'
           }).catch(() => null);
-          
+
           if (permissionStatus) {
             setMicPermission(permissionStatus.state);
             permissionStatus.onchange = () => {
@@ -70,6 +103,10 @@ const VoiceNavigationAssistant = () => {
     checkMicrophonePermission();
 
     return () => {
+      shouldProcessRef.current = false;
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
       stopRecording();
       if (audioContextRef.current) {
         audioContextRef.current.close();
@@ -83,108 +120,112 @@ const VoiceNavigationAssistant = () => {
   const speak = (text) => {
     return new Promise((resolve) => {
       console.log('🔊 Speaking:', text);
-      
+
       if (!synthesisRef.current) {
         resolve();
         return;
       }
-      
+
       synthesisRef.current.cancel();
       isSpeakingRef.current = true;
-      
+
       setTimeout(() => {
         const utterance = new SpeechSynthesisUtterance(text);
         utterance.rate = 0.95;
         utterance.pitch = 1;
         utterance.volume = 1;
         utterance.lang = 'en-US';
-        
+
         utterance.onstart = () => {
           console.log('🗣️ Speech started');
           setPulseAnimation(true);
         };
-        
+
         utterance.onend = () => {
           console.log('✅ Speech ended');
           setPulseAnimation(false);
           isSpeakingRef.current = false;
           resolve();
         };
-        
+
         utterance.onerror = (event) => {
           console.error('❌ Speech error:', event.error);
           setPulseAnimation(false);
           isSpeakingRef.current = false;
           resolve();
         };
-        
+
         synthesisRef.current.speak(utterance);
       }, 150);
     });
   };
 
   const processAudioChunk = async (audioBuffer) => {
-    // Don't process if we're navigating or already processing
-    if (isNavigatingRef.current || isProcessing || isSpeakingRef.current) {
-      console.log('⏭️ Skipping processing - busy');
+    if (!shouldProcessRef.current || isProcessing || isSpeakingRef.current) {
+      console.log('⏭️ Skipping processing - stopped or busy');
       return;
     }
 
     setIsProcessing(true);
     console.log('🎵 Processing audio chunk...');
-    
+
     try {
+      if (!shouldProcessRef.current) {
+        console.log('Processing stopped by user');
+        return;
+      }
+      abortControllerRef.current = new AbortController();
+      const signal = abortControllerRef.current.signal;
+
       const wavBlob = audioBufferToWav(audioBuffer);
-      
+
       const formData = new FormData();
       formData.append('audio', wavBlob, 'chunk.wav');
-      formData.append('streaming', 'true');
-      
+
       const response = await fetch('/api/speech/transcribe', {
         method: 'POST',
         body: formData,
+        signal,
       });
-      
+
       if (!response.ok) {
-        console.error('❌ Transcription failed');
-        setIsProcessing(false);
-        return;
+        throw new Error('Transcription failed');
       }
-      
+
       const result = await response.json();
-      
+
       if (result.text && result.text.trim()) {
         console.log('📝 Transcribed:', result.text);
         setTranscript(prev => {
           const newText = prev ? prev + ' ' + result.text : result.text;
           return newText;
         });
-        
+
         // Check if navigation command was detected
         if (result.navigation) {
           console.log('🎯 Navigation detected:', result.navigation.action);
           isNavigatingRef.current = true;
-          
+
           if (result.navigation.action === 'navigate') {
             console.log('🧭 Navigating to:', result.navigation.route);
             setStatus(result.navigation.message);
-            
+
             // Speak and then navigate
             await speak(result.navigation.message);
-            
+
             // Stop everything
             stopAssistant();
-            
+
             // Navigate after a short delay
             setTimeout(() => {
               router.push(`/${result.navigation.route}`);
             }, 500);
-            
+
           } else if (result.navigation.action === 'exit') {
             setStatus(result.navigation.message);
             await speak(result.navigation.message);
             stopAssistant();
-            
+
           } else if (result.navigation.action === 'greeting' || result.navigation.action === 'help') {
             setStatus('Listening for your command...');
             await speak(result.navigation.message);
@@ -192,11 +233,13 @@ const VoiceNavigationAssistant = () => {
           }
         }
       }
-      
+
     } catch (error) {
       console.error('❌ Error processing audio:', error);
     } finally {
-      setIsProcessing(false);
+      if (shouldProcessRef.current) {
+        setIsProcessing(false);
+      }
       console.log('✅ Processing complete - ready for next chunk');
     }
   };
@@ -205,10 +248,10 @@ const VoiceNavigationAssistant = () => {
     const sampleRate = 16000;
     const numChannels = 1;
     const bitsPerSample = 16;
-    
+
     const buffer = new ArrayBuffer(44 + audioBuffer.length * 2);
     const view = new DataView(buffer);
-    
+
     // WAV header
     writeString(view, 0, 'RIFF');
     view.setUint32(4, 36 + audioBuffer.length * 2, true);
@@ -223,14 +266,14 @@ const VoiceNavigationAssistant = () => {
     view.setUint16(34, bitsPerSample, true);
     writeString(view, 36, 'data');
     view.setUint32(40, audioBuffer.length * 2, true);
-    
+
     let offset = 44;
     for (let i = 0; i < audioBuffer.length; i++) {
       const sample = Math.max(-1, Math.min(1, audioBuffer[i]));
       view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
       offset += 2;
     }
-    
+
     return new Blob([buffer], { type: 'audio/wav' });
   };
 
@@ -244,62 +287,62 @@ const VoiceNavigationAssistant = () => {
     try {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext({ sampleRate: 16000 });
-      
+
       await audioContextRef.current.audioWorklet.addModule('/audio-processor.js');
-      
+
       const source = audioContextRef.current.createMediaStreamSource(stream);
-      
+
       // Create a gain node to prevent feedback - mute the output
       const gainNode = audioContextRef.current.createGain();
       gainNode.gain.value = 0; // Mute the microphone input playback
-      
+
       audioProcessorRef.current = new AudioWorkletNode(
         audioContextRef.current,
         'audio-processor'
       );
-      
+
       audioProcessorRef.current.port.onmessage = (event) => {
         if (event.data.type === 'audioData' && !isNavigatingRef.current) {
           const audioData = new Float32Array(event.data.audioData);
           audioChunksRef.current.push(audioData);
-          
+
           console.log(`📊 Buffer chunks: ${audioChunksRef.current.length}/2`);
-          
+
           // Process every 2 seconds of audio (2 chunks)
           if (audioChunksRef.current.length >= 2) {
             console.log('🔄 Combining chunks for processing...');
-            
+
             const combinedBuffer = new Float32Array(
               audioChunksRef.current.reduce((acc, chunk) => acc + chunk.length, 0)
             );
-            
+
             let offset = 0;
             audioChunksRef.current.forEach(chunk => {
               combinedBuffer.set(chunk, offset);
               offset += chunk.length;
             });
-            
+
             // Clear the chunks for next collection
             audioChunksRef.current = [];
-            
+
             // Process the audio
             processAudioChunk(combinedBuffer);
           }
         }
       };
-      
+
       // Connect with gain node to prevent feedback
       source.connect(audioProcessorRef.current);
       audioProcessorRef.current.connect(gainNode);
       gainNode.connect(audioContextRef.current.destination);
-      
+
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
       }
-      
+
       console.log('✅ Audio processing initialized (feedback prevention enabled)');
       return true;
-      
+
     } catch (error) {
       console.error('❌ Error initializing audio:', error);
       return false;
@@ -307,8 +350,9 @@ const VoiceNavigationAssistant = () => {
   };
 
   const startRecording = async () => {
+    shouldProcessRef.current = true;
     console.log('🎙️ Starting recording...');
-    
+
     if (micPermission === 'denied') {
       setStatus('Microphone access denied');
       setShowPermissionError(true);
@@ -335,20 +379,20 @@ const VoiceNavigationAssistant = () => {
       };
 
       const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      
+
       mediaStreamRef.current = stream;
       setMicPermission('granted');
       setShowPermissionError(false);
-      
+
       const processingInitialized = await initAudioProcessing(stream);
-      
+
       if (!processingInitialized) {
         throw new Error('Failed to initialize audio processing');
       }
-      
+
       setIsListening(true);
       setStatus(isMobile ? 'Listening...' : 'Listening continuously... Speak naturally!');
-      
+
       // Auto-stop after 30 seconds on mobile
       if (isMobile) {
         interactionTimeoutRef.current = setTimeout(() => {
@@ -357,7 +401,7 @@ const VoiceNavigationAssistant = () => {
           }
         }, 30000);
       }
-      
+
       if (!welcomeFinished && videoRef.current) {
         videoRef.current.currentTime = 0;
         videoRef.current.muted = isMobile; // Mute on mobile by default
@@ -367,9 +411,9 @@ const VoiceNavigationAssistant = () => {
           console.warn('⚠️ Video autoplay prevented:', err);
         });
       }
-      
+
       return true;
-      
+
     } catch (error) {
       console.error('❌ Microphone error:', error);
       setMicPermission('denied');
@@ -379,42 +423,44 @@ const VoiceNavigationAssistant = () => {
     }
   };
 
-  const stopRecording = () => {
-    console.log('🛑 Stopping recording...');
-    
-    // Clear any pending timeouts
-    clearTimeout(interactionTimeoutRef.current);
-    
-    setIsListening(false);
-    
-    // Clean up audio processing
-    if (audioProcessorRef.current) {
-      audioProcessorRef.current.port.postMessage('stop');
-      audioProcessorRef.current.disconnect();
-      audioProcessorRef.current = null;
-    }
-    
-    // Close audio context if it exists
-    if (audioContextRef.current) {
-      if (audioContextRef.current.state !== 'closed') {
-        audioContextRef.current.suspend();
-        audioContextRef.current.close();
+  const stopRecording = useCallback(() => {
+    if (!isMounted) return;
+
+    shouldProcessRef.current = false;
+    setIsProcessing(false);
+
+    if (abortControllerRef.current && !abortControllerRef.current.signal.aborted) {
+      try {
+        abortControllerRef.current.abort();
+      } catch (error) {
+        console.log('Cleanup - abort already in progress');
       }
     }
-    
-    // Stop all media tracks
+    abortControllerRef.current = new AbortController();
+
+    console.log('🛑 Stopping recording...');
+    clearTimeout(interactionTimeoutRef.current);
+    setIsListening(false);
+
+    // Clean up audio processing
+    if (audioProcessorRef.current) {
+      try {
+        audioProcessorRef.current.port.postMessage('stop');
+        audioProcessorRef.current.disconnect();
+      } catch (error) {
+        console.log('Cleanup - audio processor already disconnected');
+      }
+      audioProcessorRef.current = null;
+    }
+
+    // Clean up media stream
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => {
         track.stop();
-        track.enabled = false;
       });
       mediaStreamRef.current = null;
     }
-    
-    // Reset audio chunks
-    audioChunksRef.current = [];
-  };
-  
+  }, [isMounted]);
   // Touch event handlers for mobile
   const handleTouchStart = () => {
     if (!isActive) {
@@ -428,7 +474,7 @@ const VoiceNavigationAssistant = () => {
 
   const handleTouchEnd = () => {
     clearTimeout(touchTimerRef.current);
-    
+
     if (isActive && touchActive) {
       // If user lifts finger while active, stop listening after a short delay
       interactionTimeoutRef.current = setTimeout(() => {
@@ -439,20 +485,20 @@ const VoiceNavigationAssistant = () => {
     }
     setTouchActive(false);
   };
-  
+
 
   // Clean up all resources when component unmounts
   useEffect(() => {
     return () => {
       stopRecording();
-      
+
       if (synthesisRef.current) {
         synthesisRef.current.cancel();
       }
-      
+
       clearTimeout(touchTimerRef.current);
       clearTimeout(interactionTimeoutRef.current);
-      
+
       if (videoRef.current) {
         videoRef.current.pause();
         videoRef.current.removeAttribute('src');
@@ -463,7 +509,7 @@ const VoiceNavigationAssistant = () => {
 
   const startAssistant = async () => {
     console.log('🚀 Starting assistant...');
-    
+
     if (micPermission !== 'granted') {
       const permissionGranted = await requestMicrophonePermission();
       if (!permissionGranted) return;
@@ -475,23 +521,23 @@ const VoiceNavigationAssistant = () => {
     setWelcomeFinished(false);
     isNavigatingRef.current = false;
     isSpeakingRef.current = false;
-    
+
     await startRecording();
   };
 
   const stopAssistant = () => {
     console.log('🛑 Stopping assistant...');
-    
+
     stopRecording();
-    
+
     if (synthesisRef.current) {
       synthesisRef.current.cancel();
     }
-    
+
     if (videoRef.current) {
       videoRef.current.pause();
     }
-    
+
     setIsActive(false);
     setTranscript('');
     setStatus('Click to activate voice assistant');
@@ -530,21 +576,21 @@ const VoiceNavigationAssistant = () => {
 
     setStatus('Requesting microphone access...');
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
+      const stream = await navigator.mediaDevices.getUserMedia({
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
           autoGainControl: true,
           channelCount: 1,
           sampleRate: 16000
-        } 
+        }
       });
-      
+
       stream.getTracks().forEach(track => track.stop());
       setMicPermission('granted');
       setShowPermissionError(false);
       startAssistant();
-      
+
     } catch (error) {
       console.error('❌ Permission error:', error);
       setMicPermission('denied');
@@ -554,8 +600,9 @@ const VoiceNavigationAssistant = () => {
   };
 
   return (
-    <div className=" bg-gradient-to-b from-[#0a0e27] via-[#141432] to-[#0a0e27] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute inset-0 overflow-hidden">
+    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg border border-gray-700" 
+   >
+      {/* <div className="absolute inset-0 overflow-hidden">
         {[...Array(100)].map((_, i) => (
           <div
             key={i}
@@ -569,28 +616,28 @@ const VoiceNavigationAssistant = () => {
             }}
           />
         ))}
-      </div>
+      </div> */}
 
       <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 max-w-2xl mx-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
-            style={{
-              fontFamily: 'cursive',
-              color: '#00d4ff',
-              textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
-              letterSpacing: '1px',
-              lineHeight: '1.2'
-            }}>
+          style={{
+            fontFamily: 'cursive',
+            color: '#00d4ff',
+            textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
+            letterSpacing: '1px',
+            lineHeight: '1.2'
+          }}>
           Planet Q<br className="sm:hidden" /> Productions
         </h1>
 
         <h2 className="text-xl sm:text-2xl md:text-3xl mb-6 sm:mb-8 text-center"
-            style={{
-              fontFamily: 'cursive',
-              color: '#ff00ff',
-              textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
-              letterSpacing: '0.5px',
-              lineHeight: '1.3'
-            }}>
+          style={{
+            fontFamily: 'cursive',
+            color: '#ff00ff',
+            textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
+            letterSpacing: '0.5px',
+            lineHeight: '1.3'
+          }}>
           Q_World Studios
         </h2>
 
@@ -605,23 +652,22 @@ const VoiceNavigationAssistant = () => {
         )}
 
         <div className="relative mb-8">
-          <div className={`absolute inset-0 rounded-full transition-all duration-300 ${
-            pulseAnimation ? 'animate-ping' : ''
-          }`}
-               style={{
-                 background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%)',
-                 transform: 'scale(1.2)'
-               }} />
-          
-          <div 
+          <div className={`absolute inset-0 rounded-full transition-all duration-300 ${pulseAnimation ? 'animate-ping' : ''
+            }`}
+            style={{
+              background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%)',
+              transform: 'scale(1.2)'
+            }} />
+
+          <div
             className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-purple-500/30"
             style={{
               background: 'radial-gradient(circle at center, rgba(30,30,60,0.9), rgba(10,10,30,0.95))',
-              boxShadow: isActive 
-                ? '0 0 60px rgba(0,212,255,0.6), inset 0 0 40px rgba(0,100,150,0.3)' 
+              boxShadow: isActive
+                ? '0 0 60px rgba(0,212,255,0.6), inset 0 0 40px rgba(0,100,150,0.3)'
                 : '0 0 30px rgba(0,212,255,0.3), inset 0 0 20px rgba(0,100,150,0.2)'
             }}>
-            
+
             <video
               ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
@@ -642,31 +688,30 @@ const VoiceNavigationAssistant = () => {
           </div>
 
           <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
-              isListening ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-cyan-500 shadow-lg shadow-cyan-500/50'
-            }`}>
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isListening ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-cyan-500 shadow-lg shadow-cyan-500/50'
+              }`}>
               <Dot className="text-white" size={24} />
             </div>
           </div>
         </div>
 
         <h3 className="text-2xl md:text-3xl mb-6 text-center"
-            style={{
-              fontFamily: 'cursive',
-              color: '#ff00ff',
-              textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
-              letterSpacing: '1px'
-            }}>
+          style={{
+            fontFamily: 'cursive',
+            color: '#ff00ff',
+            textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
+            letterSpacing: '1px'
+          }}>
           Music Creation
         </h3>
 
         <h4 className="text-3xl md:text-4xl mb-8 text-center"
-            style={{
-              fontFamily: 'cursive',
-              color: '#00d4ff',
-              textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
-              letterSpacing: '2px'
-            }}>
+          style={{
+            fontFamily: 'cursive',
+            color: '#00d4ff',
+            textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
+            letterSpacing: '2px'
+          }}>
           AI Radio Station
         </h4>
 
@@ -679,17 +724,16 @@ const VoiceNavigationAssistant = () => {
             onMouseLeave={isMobile ? undefined : () => setTouchActive(false)}
             onClick={!isMobile ? toggleListening : undefined}
             disabled={micPermission === 'denied'}
-            className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg transition-all duration-300 ${
-              isActive 
-                ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50' 
-                : micPermission === 'denied'
+            className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg transition-all duration-300 ${isActive
+              ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50'
+              : micPermission === 'denied'
                 ? 'bg-gray-500 cursor-not-allowed opacity-50'
                 : 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50'
-            } ${touchActive ? 'scale-95' : 'scale-100'}`}
+              }`}
             style={{
               WebkitTapHighlightColor: 'transparent',
               touchAction: 'manipulation',
-              transform: `${isActive ? 'scale(1.1)' : 'scale(1)'} ${touchActive ? 'scale(0.95)' : ''}`,
+              transform: `${isActive ? 'scale(1.1)' : touchActive ? 'scale(0.95)' : 'scale(1)'}`,
               transition: 'transform 150ms ease, background 200ms ease'
             }}
             aria-label={isActive ? 'Stop voice assistant' : 'Start voice assistant'}
@@ -708,17 +752,18 @@ const VoiceNavigationAssistant = () => {
                 <Mic className="w-6 h-6 md:w-7 md:h-7" />
               </div>
             )}
-            
+
             {/* Visual feedback for touch devices */}
             {touchActive && (
               <span className="absolute inset-0 rounded-full bg-white/20"></span>
             )}
           </button>
-          
+
           {/* Status indicator */}
-          <div className={`mt-2 text-center text-xs text-gray-300 transition-opacity duration-200 ${
-            isActive ? 'opacity-100' : 'opacity-0'
-          }`}>
+          <div
+            className={`absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-full text-center text-sm font-medium transition-all duration-200 ${isActive ? 'opacity-100 text-white' : 'opacity-0 text-gray-300'
+              } whitespace-nowrap`}
+          >
             {status}
           </div>
         </div>

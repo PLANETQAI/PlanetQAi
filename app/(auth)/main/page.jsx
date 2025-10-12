@@ -385,14 +385,19 @@ const RootPage = () => {
   };
 
   // Handle touch events for swipe functionality
-  const handleTouchStart = (e) => {
-    // Only prevent default if it's a horizontal swipe
-    if (e.touches.length === 1) {
+const handleTouchStart = (e) => {
+  if (e.touches.length === 1) {
+    // Only prevent default if we can
+    try {
       e.preventDefault();
-      setTouchStart(e.touches[0].clientX);
-      setTouchEnd(null); // Reset touch end when a new touch starts
+    } catch (err) {
+      // Ignore the error if preventDefault fails
+      console.warn('Could not preventDefault on touchstart:', err);
     }
-  };
+    setTouchStart(e.touches[0].clientX);
+    setTouchEnd(null);
+  }
+};
 
   const handleTouchMove = (e) => {
     if (touchStart !== null) {
@@ -472,9 +477,13 @@ const RootPage = () => {
   }, [touchStart]);
 
   // Prevent click propagation on interactive elements
-  const preventPropagation = (e) => {
-    e.stopPropagation();
-  };
+const preventPropagation = (e) => {
+  e.stopPropagation();
+  e.nativeEvent?.stopImmediatePropagation?.();
+  if (e.type === 'touchstart' || e.type === 'touchmove') {
+    e.preventDefault();
+  }
+};
 
   const handlePlaneqgames = (e) => {
     e.stopPropagation();
@@ -492,6 +501,7 @@ const RootPage = () => {
     <div
       className="group bg-[#17101d9c] rounded-lg p-2 sm:p-3 hover:bg-[#17101db3] transition-all text-center card-content"
       onClick={preventPropagation}
+      onTouchStart={preventPropagation}
     >
       <div className="text-[#afafaf] text-xs sm:text-sm md:text-lg font-semibold p-1 sm:p-2 mb-1 sm:mb-2 text-center group-hover:animate-vibrate">
         <h1 className="text-xl">Planet Q Store</h1>
@@ -611,8 +621,8 @@ const RootPage = () => {
   // );
 
   const qWorldStudios = (
-    <div className="w-full card-content" onClick={preventPropagation}>
-      <VoiceNavigationAssistant />
+    <div className="w-full card-content">
+      <VoiceNavigationAssistant  />
     </div>
   );
 
