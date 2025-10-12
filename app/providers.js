@@ -9,9 +9,7 @@ export function Providers({ children }) {
     <SessionProvider>
       <UserProvider>
         <GeneratorProvider>
-          <WebSocketProvider>
-            {children}
-            </WebSocketProvider>
+          {children}
         </GeneratorProvider>
       </UserProvider>
     </SessionProvider>

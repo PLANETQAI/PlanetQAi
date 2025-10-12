@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import Image from "next/image";
-import "slick-carousel/slick/slick.css";
-import "slick-carousel/slick/slick-theme.css";
-import Link from "next/link";
+import { cn } from "@/lib/utils";
 import dynamic from "next/dynamic";
+import Image from "next/image";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import "slick-carousel/slick/slick-theme.css";
+import "slick-carousel/slick/slick.css";
 
 // Import client-side components
 const PlanetQGamesCard = dynamic(
@@ -17,11 +18,10 @@ const PlanetQVideoCard = dynamic(
   () => import("@/components/PlanetQVideoCard"),
   { ssr: false }
 );
-import CircleTypeText from "@/components/circleTypeText";
-import { cn } from "@/lib/utils";
 
 // Import the improved stars component
 import StarsWrapper from "@/components/canvas/StarsWrapper";
+import VoiceNavigationAssistant from "@/components/common/QuaylaAssistants";
 
 const CustomRadioPlayer = () => {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -508,107 +508,114 @@ const RootPage = () => {
     </div>
   );
 
+  // const qWorldStudios = (
+  //   <div className="w-full card-content" onClick={preventPropagation}>
+  //     <div
+  //       className="flex items-center justify-between px-2 sm:px-4 py-4 sm:py-6 w-full rounded-t-lg"
+  //       style={{
+  //         backgroundColor: "rgb(31 41 55 / 0.9)",
+  //       }}
+  //     >
+  //       {/* Left Radio Circle */}
+  //       <div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
+  //         <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+  //           <video
+  //             autoPlay
+  //             loop
+  //             muted
+  //             className="w-[150%] h-auto object-cover rounded-full"
+  //           >
+  //             <source src="/images/anicircle.mp4" type="video/mp4" />
+  //           </video>
+  //           <Image
+  //             src="/images/radio1.jpeg"
+  //             alt="Radio Left"
+  //             width={100}
+  //             height={100}
+  //             className="absolute p-1 sm:p-2 rounded-full"
+  //           />
+  //         </div>
+  //       </div>
+
+  //       {/* Center Chat Link */}
+  //       <div className="flex justify-center items-center flex-col gap-4">
+  //         <Link
+  //           href={"/chat"}
+  //           className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer mx-2"
+  //         >
+  //           <video
+  //             loop
+  //             autoPlay
+  //             muted
+  //             preload="true"
+  //             className="rounded-full w-full h-full object-cover"
+  //           >
+  //             <source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
+  //           </video>
+  //         </Link>
+  //         <p className="text-blue-500 text-lg font-bold animate-pulse">
+  //           Chat Bot
+  //         </p>
+  //       </div>
+
+  //       {/* Right Radio Circle */}
+  //       <div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
+  //         <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
+  //           <video
+  //             autoPlay
+  //             loop
+  //             muted
+  //             className="w-[150%] h-auto object-cover rounded-full"
+  //           >
+  //             <source src="/images/anicircle.mp4" type="video/mp4" />
+  //           </video>
+  //           <Image
+  //             src="/images/radio1.jpeg"
+  //             alt="Radio Right"
+  //             width={100}
+  //             height={100}
+  //             className="absolute p-1 sm:p-2 rounded-full"
+  //           />
+  //         </div>
+  //       </div>
+  //     </div>
+
+  //     {/* Background Video */}
+  //     <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+  //       <video
+  //         src="/images/bg-video-compressed.mp4"
+  //         className="absolute top-0 left-0 w-full h-full object-cover"
+  //         autoPlay
+  //         muted
+  //         loop
+  //       ></video>
+  //     </div>
+
+  //     {/* Replace the iframe with our custom player */}
+  //     <div className="bg-gray-800 w-full rounded-b-lg p-2! sm:p-3">
+  //       <iframe
+  //         src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true"
+  //         frameBorder="0"
+  //         allowtransparency="true"
+  //         style={{
+  //           width: "100%",
+  //           height: "130px",
+  //           border: "0",
+  //         }}
+  //         title="Radio Planet Q"
+  //         allow="autoplay; encrypted-media"
+  //       ></iframe>
+  //     </div>
+  //     {/* <CustomRadioPlayer /> */}
+  //   </div>
+  // );
+
   const qWorldStudios = (
     <div className="w-full card-content" onClick={preventPropagation}>
-      <div
-        className="flex items-center justify-between px-2 sm:px-4 py-4 sm:py-6 w-full rounded-t-lg"
-        style={{
-          backgroundColor: "rgb(31 41 55 / 0.9)",
-        }}
-      >
-        {/* Left Radio Circle */}
-        <div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-            <video
-              autoPlay
-              loop
-              muted
-              className="w-[150%] h-auto object-cover rounded-full"
-            >
-              <source src="/images/anicircle.mp4" type="video/mp4" />
-            </video>
-            <Image
-              src="/images/radio1.jpeg"
-              alt="Radio Left"
-              width={100}
-              height={100}
-              className="absolute p-1 sm:p-2 rounded-full"
-            />
-          </div>
-        </div>
-
-        {/* Center Chat Link */}
-        <div className="flex justify-center items-center flex-col gap-4">
-          <Link
-            href={"/chat"}
-            className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer mx-2"
-          >
-            <video
-              loop
-              autoPlay
-              muted
-              preload="true"
-              className="rounded-full w-full h-full object-cover"
-            >
-              <source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
-            </video>
-          </Link>
-          <p className="text-blue-500 text-lg font-bold animate-pulse">
-            Chat Bot
-          </p>
-        </div>
-
-        {/* Right Radio Circle */}
-        <div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
-          <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-            <video
-              autoPlay
-              loop
-              muted
-              className="w-[150%] h-auto object-cover rounded-full"
-            >
-              <source src="/images/anicircle.mp4" type="video/mp4" />
-            </video>
-            <Image
-              src="/images/radio1.jpeg"
-              alt="Radio Right"
-              width={100}
-              height={100}
-              className="absolute p-1 sm:p-2 rounded-full"
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Background Video */}
-      <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-        <video
-          src="/images/bg-video-compressed.mp4"
-          className="absolute top-0 left-0 w-full h-full object-cover"
-          autoPlay
-          muted
-          loop
-        ></video>
-      </div>
-
-      {/* Replace the iframe with our custom player */}
-      <div className="bg-gray-800 w-full rounded-b-lg p-2! sm:p-3">
-        <iframe
-          src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true"
-          frameBorder="0"
-          allowtransparency="true"
-          style={{
-            width: "100%",
-            height: "130px",
-            border: "0",
-          }}
-          title="Radio Planet Q"
-          allow="autoplay; encrypted-media"
-        ></iframe>
-      </div>
-      {/* <CustomRadioPlayer /> */}
+      <VoiceNavigationAssistant />
     </div>
   );
+
 
   // SWAPPED: Productions moved to studio position (was radioPlayer)
   const planetQProductions = (
@@ -703,34 +710,34 @@ const RootPage = () => {
     <div className="w-full overflow-y-scroll min-h-screen h-full relative">
       {/* Scroll arrows with email */}
       <div className="absolute right-8 bottom-28 flex flex-col items-center space-y-2">
-        <div 
-          className="cursor-pointer p-2 rounded-full hover:bg-blue-500/20 transition-colors" 
+        <div
+          className="cursor-pointer p-2 rounded-full hover:bg-blue-500/20 transition-colors"
           onClick={() => window.location.href = 'mailto:quincin2000@planetqproductions.com'}
         >
-          <img 
-            src="/videos/email.gif" 
-            alt="Email Us" 
+          <img
+            src="/videos/email.gif"
+            alt="Email Us"
             className="w-6 h-6"
             style={{ filter: 'invert(1)' }}
           />
         </div>
-      {showScrollUp && (
-        <div className="scroll-arrow scroll-arrow-up text-blue-500" onClick={scrollToTop}>
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="24"
-            height="24"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M18 15l-6-6-6 6" />
-          </svg>
-        </div>
-      )}
+        {showScrollUp && (
+          <div className="scroll-arrow scroll-arrow-up text-blue-500" onClick={scrollToTop}>
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              width="24"
+              height="24"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <path d="M18 15l-6-6-6 6" />
+            </svg>
+          </div>
+        )}
       </div>
       <div className="scroll-arrow scroll-arrow-down text-blue-500" onClick={scrollToBottom}>
         <svg
@@ -790,7 +797,7 @@ const RootPage = () => {
           {/* Scroll arrows */}
           {showScrollUp && (
             <div className="fixed bottom-8 right-8 flex flex-col gap-4">
-              <div 
+              <div
                 className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
                 onClick={scrollToTop}
               >
@@ -808,7 +815,7 @@ const RootPage = () => {
                   <path d="M18 15l-6-6-6 6" />
                 </svg>
               </div>
-              <div 
+              <div
                 className="w-12 h-12 rounded-full bg-black/50 backdrop-blur-sm border border-white/20 flex items-center justify-center cursor-pointer hover:bg-white/20 transition-colors"
                 onClick={scrollToBottom}
               >
@@ -855,8 +862,8 @@ const RootPage = () => {
                 clickSteps === 0
                   ? "opacity-100 translate-x-0"
                   : clickSteps < 0
-                  ? "opacity-0 -translate-x-full"
-                  : "opacity-0 translate-x-full"
+                    ? "opacity-0 -translate-x-full"
+                    : "opacity-0 translate-x-full"
               )}
             >
               {planetQVideo}
@@ -867,8 +874,8 @@ const RootPage = () => {
                 clickSteps === 1
                   ? "opacity-100 translate-x-0"
                   : clickSteps < 1
-                  ? "opacity-0 -translate-x-full"
-                  : "opacity-0 translate-x-full"
+                    ? "opacity-0 -translate-x-full"
+                    : "opacity-0 translate-x-full"
               )}
             >
               {planetQProductions}
@@ -880,8 +887,8 @@ const RootPage = () => {
                 clickSteps === 2
                   ? "opacity-100 translate-x-0"
                   : clickSteps < 2
-                  ? "opacity-0 -translate-x-full"
-                  : "opacity-0 translate-x-full"
+                    ? "opacity-0 -translate-x-full"
+                    : "opacity-0 translate-x-full"
               )}
             >
               {planetQRadio}
@@ -893,8 +900,8 @@ const RootPage = () => {
                 clickSteps === 3
                   ? "opacity-100 translate-x-0"
                   : clickSteps < 3
-                  ? "opacity-0 -translate-x-full"
-                  : "opacity-0 translate-x-full"
+                    ? "opacity-0 -translate-x-full"
+                    : "opacity-0 translate-x-full"
               )}
             >
               {qWorldStudios}
@@ -905,8 +912,8 @@ const RootPage = () => {
                 clickSteps === 4
                   ? "opacity-100 translate-x-0"
                   : clickSteps < 4
-                  ? "opacity-0 -translate-x-full"
-                  : "opacity-0 translate-x-full"
+                    ? "opacity-0 -translate-x-full"
+                    : "opacity-0 translate-x-full"
               )}
             >
               {studioCard}
@@ -941,8 +948,8 @@ const RootPage = () => {
                 clickSteps === 6
                   ? "opacity-100 translate-x-0"
                   : clickSteps < 6
-                  ? "opacity-0 -translate-x-full"
-                  : "opacity-0 translate-x-full"
+                    ? "opacity-0 -translate-x-full"
+                    : "opacity-0 translate-x-full"
               )}
             >
               {planetQGames}

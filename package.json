@@ -3,9 +3,9 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS='-r dotenv/config' node server.js",
+    "dev": "next dev",
     "build": "npx prisma generate && npx prisma migrate deploy && node scripts/verify-schema.js && next build",
-    "start": "NODE_OPTIONS='-r dotenv/config' node server.js",
+    "start": "next start",
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx",
     "postinstall": "npx prisma generate",
     "verify-schema": "node scripts/verify-schema.js"

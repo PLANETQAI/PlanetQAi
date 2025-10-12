@@ -1,237 +1,76 @@
 "use client";
 
-import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { AlertCircle, Dot, MicOff, MicVocal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, Mic, MicOff, Volume2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 const VoiceNavigationAssistant = () => {
+  // State for mobile optimization
+  const [isMobile, setIsMobile] = useState(false);
+  const [touchActive, setTouchActive] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [transcript, setTranscript] = useState('');
-  const [status, setStatus] = useState('Click to activate voice assistant');
+  const [status, setStatus] = useState('Tap to activate');
   const [isActive, setIsActive] = useState(false);
-  const [micPermission, setMicPermission] = useState('prompt'); // 'granted', 'denied', 'prompt'
+  const [micPermission, setMicPermission] = useState('prompt');
   const [showPermissionError, setShowPermissionError] = useState(false);
   const [welcomeFinished, setWelcomeFinished] = useState(false);
   const [pulseAnimation, setPulseAnimation] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
   
   const router = useRouter();
-  const mediaRecorderRef = useRef(null);
   const mediaStreamRef = useRef(null);
-  const audioChunksRef = useRef([]);
   const synthesisRef = useRef(null);
   const videoRef = useRef(null);
-  const utteranceRef = useRef(null);
-  const wsRef = useRef(null);
   const audioContextRef = useRef(null);
   const audioProcessorRef = useRef(null);
-  const isProcessingRef = useRef(false);
-  const reconnectAttemptsRef = useRef(0);
-  const maxReconnectAttempts = 5;
-  const reconnectDelay = 1000; // 1 second
-  const silenceTimerRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const isNavigatingRef = useRef(false);
+  const isSpeakingRef = useRef(false);
+  const touchTimerRef = useRef(null);
+  const interactionTimeoutRef = useRef(null);
 
-  // Replace this with your actual video URL
   const videoUrl = "/videos/generator.mp4";
 
-  // Navigation routes mapping
-  const navigationMap = {
-    games: ['play games', 'games', 'game', 'play', 'gaming', 'start game'],
-    aistudio: ['create song', 'music', 'ai studio', 'studio', 'create music', 'make song', 'compose', 'create', 'generate song'],
-    'productions/album': ['listen to songs', 'check my songs', 'my songs', 'my album', 'my music'],
-    productions: ['listen to radio', 'radio', 'ai radio', 'radio station'],
-    'video-player': ['video', 'videos', 'gallery', 'watch video', 'video player', 'my videos'],
-    home: ['home', 'main page', 'homepage', 'go home', 'start', 'main menu'],
-    about: ['about', 'about us', 'information', 'who are you'],
-    contact: ['contact', 'reach out', 'get in touch', 'contact us', 'support']
-  };
-
-  // Initialize WebSocket connection
-  const initWebSocket = useCallback(() => {
-    // Don't initialize if already connecting/connected
-    if (wsRef.current && (wsRef.current.readyState === WebSocket.CONNECTING || wsRef.current.readyState === WebSocket.OPEN)) {
-      return;
-    }
-
-    // Close existing connection if any
-    if (wsRef.current) {
-      wsRef.current.close();
-    }
-
-    // Use the same protocol as the current page for WebSocket
-    const wsProtocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const wsUrl = `${wsProtocol}//${window.location.host}/api/speech/ws`;
-    
-    console.log('🔌 Connecting to WebSocket...', wsUrl);
-    wsRef.current = new WebSocket(wsUrl);
-    
-    wsRef.current.onopen = () => {
-      console.log('✅ WebSocket connected');
-      reconnectAttemptsRef.current = 0;
-      setStatus('Connected. Click to start speaking.');
-    };
-    
-    wsRef.current.onmessage = (event) => {
-      try {
-        const data = JSON.parse(event.data);
-        console.log('📩 WebSocket message:', data);
-        
-        if (data.type === 'transcription' && data.text) {
-          handleTranscription(data.text);
-        } else if (data.type === 'error') {
-          console.error('Server error:', data.message);
-          setStatus(`Error: ${data.message}`);
-        }
-      } catch (error) {
-        console.error('Error processing WebSocket message:', error);
-      }
-    };
-    
-    wsRef.current.onclose = (event) => {
-      console.log(`WebSocket closed: ${event.code} ${event.reason || 'No reason provided'}`);
-      
-      // Only attempt to reconnect if we're still active and haven't exceeded max attempts
-      if (isActive && reconnectAttemptsRef.current < maxReconnectAttempts) {
-        const delay = Math.min(1000 * Math.pow(2, reconnectAttemptsRef.current), 30000);
-        reconnectAttemptsRef.current++;
-        console.log(`♻️ Reconnecting in ${delay}ms (attempt ${reconnectAttemptsRef.current}/${maxReconnectAttempts})...`);
-        
-        setTimeout(() => {
-          if (isActive) {
-            initWebSocket();
-          }
-        }, delay);
-      } else if (isActive) {
-        console.error('❌ Max reconnection attempts reached');
-        setStatus('Connection lost. Please refresh the page.');
-      }
-    };
-    
-    wsRef.current.onerror = (error) => {
-      console.error('WebSocket error:', error);
-    };
-  }, [isActive]);
-
-  // Initialize WebSocket connection on mount and clean up on unmount
+  // Detect mobile devices
   useEffect(() => {
-    if (typeof WebSocket !== 'undefined') {
-      initWebSocket();
-      
-      return () => {
-        if (wsRef.current) {
-          wsRef.current.close();
-          wsRef.current = null;
-        }
-      };
-    } else {
-      console.error('WebSocket is not supported in this browser');
-      setStatus('WebSocket is not supported in your browser');
-    }
-  }, [initWebSocket]);
-
-  // Start/stop recording when isActive changes
-  useEffect(() => {
-    if (isActive && wsRef.current?.readyState === WebSocket.OPEN) {
-      startRecording();
-    } else if (!isActive) {
-      stopRecording();
-    }
-  }, [isActive]);
-
-  // Handle transcription results
-  const handleTranscription = async (text) => {
-    if (!text.trim()) return;
-    
-    console.log('🎤 Transcribed text:', text);
-    setTranscript(text);
-    await processCommand(text.toLowerCase().trim());
-  };
-
-  // Process audio data and send to WebSocket
-  const processAudioData = (audioData) => {
-    if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN || isProcessingRef.current) {
-      return;
-    }
-    
-    isProcessingRef.current = true;
-    
-    // Convert audio data to base64
-    const reader = new FileReader();
-    reader.onload = () => {
-      const base64Audio = reader.result.split(',')[1];
-      wsRef.current.send(JSON.stringify({
-        type: 'audio',
-        audio: `data:audio/webm;base64,${base64Audio}`
-      }));
-      isProcessingRef.current = false;
-    };
-    reader.readAsDataURL(new Blob([audioData], { type: 'audio/webm' }));
-  };
-
-  // Initialize audio context and processor
-  const initAudioProcessing = async (stream) => {
-    try {
-      audioContextRef.current = new (window.AudioContext || window.webkitAudioContext)();
-      await audioContextRef.current.audioWorklet.addModule('/audio-processor.js');
-      
-      const source = audioContextRef.current.createMediaStreamSource(stream);
-      audioProcessorRef.current = new AudioWorkletNode(audioContextRef.current, 'audio-processor');
-      
-      audioProcessorRef.current.port.onmessage = (event) => {
-        if (event.data.type === 'audioData') {
-          processAudioData(event.data.audioData);
-        }
-      };
-      
-      source.connect(audioProcessorRef.current);
-      audioProcessorRef.current.connect(audioContextRef.current.destination);
-      
-    } catch (error) {
-      console.error('Error initializing audio processing:', error);
-      // Fallback to MediaRecorder if AudioWorklet is not supported
-      startMediaRecorder(stream);
-    }
-  };
-
-  // Fallback to MediaRecorder if AudioWorklet is not available
-  const startMediaRecorder = (stream) => {
-    mediaRecorderRef.current = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-    audioChunksRef.current = [];
-    
-    mediaRecorderRef.current.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        processAudioData(event.data);
-      }
+    const checkIfMobile = () => {
+      const isMobileDevice = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsMobile(isMobileDevice);
     };
     
-    mediaRecorderRef.current.start(1000); // Collect data every second
-  };
+    checkIfMobile();
+    window.addEventListener('resize', checkIfMobile);
+    return () => window.removeEventListener('resize', checkIfMobile);
+  }, []);
 
   useEffect(() => {
-    // Initialize Speech Synthesis for text-to-speech
     synthesisRef.current = window.speechSynthesis;
 
-    // Check microphone permission status
     const checkMicrophonePermission = async () => {
-      try {
-        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-        // We'll use this stream for the actual recording
-        stream.getTracks().forEach(track => track.stop());
-        setMicPermission('granted');
-      } catch (error) {
-        console.log('Microphone permission not granted:', error);
-        setMicPermission('denied');
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ 
+            name: 'microphone' 
+          }).catch(() => null);
+          
+          if (permissionStatus) {
+            setMicPermission(permissionStatus.state);
+            permissionStatus.onchange = () => {
+              setMicPermission(permissionStatus.state);
+            };
+            return;
+          }
+        } catch (error) {
+          console.log('Permissions API not available');
+        }
       }
     };
 
     checkMicrophonePermission();
-    initWebSocket();
 
-    // Cleanup function
     return () => {
       stopRecording();
-      if (wsRef.current) {
-        wsRef.current.close();
-      }
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
@@ -239,88 +78,263 @@ const VoiceNavigationAssistant = () => {
         synthesisRef.current.cancel();
       }
     };
-  }, [initWebSocket]);
+  }, []);
 
-  const requestMicrophonePermission = async () => {
+  const speak = (text) => {
+    return new Promise((resolve) => {
+      console.log('🔊 Speaking:', text);
+      
+      if (!synthesisRef.current) {
+        resolve();
+        return;
+      }
+      
+      synthesisRef.current.cancel();
+      isSpeakingRef.current = true;
+      
+      setTimeout(() => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.95;
+        utterance.pitch = 1;
+        utterance.volume = 1;
+        utterance.lang = 'en-US';
+        
+        utterance.onstart = () => {
+          console.log('🗣️ Speech started');
+          setPulseAnimation(true);
+        };
+        
+        utterance.onend = () => {
+          console.log('✅ Speech ended');
+          setPulseAnimation(false);
+          isSpeakingRef.current = false;
+          resolve();
+        };
+        
+        utterance.onerror = (event) => {
+          console.error('❌ Speech error:', event.error);
+          setPulseAnimation(false);
+          isSpeakingRef.current = false;
+          resolve();
+        };
+        
+        synthesisRef.current.speak(utterance);
+      }, 150);
+    });
+  };
+
+  const processAudioChunk = async (audioBuffer) => {
+    // Don't process if we're navigating or already processing
+    if (isNavigatingRef.current || isProcessing || isSpeakingRef.current) {
+      console.log('⏭️ Skipping processing - busy');
+      return;
+    }
+
+    setIsProcessing(true);
+    console.log('🎵 Processing audio chunk...');
+    
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      setMicPermission('granted');
-      setShowPermissionError(false);
-      // Stop the stream immediately as we only needed it for permission
-      stream.getTracks().forEach(track => track.stop());
-      return true;
+      const wavBlob = audioBufferToWav(audioBuffer);
+      
+      const formData = new FormData();
+      formData.append('audio', wavBlob, 'chunk.wav');
+      formData.append('streaming', 'true');
+      
+      const response = await fetch('/api/speech/transcribe', {
+        method: 'POST',
+        body: formData,
+      });
+      
+      if (!response.ok) {
+        console.error('❌ Transcription failed');
+        setIsProcessing(false);
+        return;
+      }
+      
+      const result = await response.json();
+      
+      if (result.text && result.text.trim()) {
+        console.log('📝 Transcribed:', result.text);
+        setTranscript(prev => {
+          const newText = prev ? prev + ' ' + result.text : result.text;
+          return newText;
+        });
+        
+        // Check if navigation command was detected
+        if (result.navigation) {
+          console.log('🎯 Navigation detected:', result.navigation.action);
+          isNavigatingRef.current = true;
+          
+          if (result.navigation.action === 'navigate') {
+            console.log('🧭 Navigating to:', result.navigation.route);
+            setStatus(result.navigation.message);
+            
+            // Speak and then navigate
+            await speak(result.navigation.message);
+            
+            // Stop everything
+            stopAssistant();
+            
+            // Navigate after a short delay
+            setTimeout(() => {
+              router.push(`/${result.navigation.route}`);
+            }, 500);
+            
+          } else if (result.navigation.action === 'exit') {
+            setStatus(result.navigation.message);
+            await speak(result.navigation.message);
+            stopAssistant();
+            
+          } else if (result.navigation.action === 'greeting' || result.navigation.action === 'help') {
+            setStatus('Listening for your command...');
+            await speak(result.navigation.message);
+            // Continue listening after greeting/help
+          }
+        }
+      }
+      
     } catch (error) {
-      console.error('Microphone permission denied:', error);
-      setMicPermission('denied');
-      setShowPermissionError(true);
-      setStatus('Microphone access denied. Please enable it in your browser settings.');
-      return false;
+      console.error('❌ Error processing audio:', error);
+    } finally {
+      setIsProcessing(false);
+      console.log('✅ Processing complete - ready for next chunk');
     }
   };
 
-  // Simplified speak function for responses
-  const speak = (text) => {
-    console.log('🔊 Speaking response:', text.substring(0, 100) + '...');
+  const audioBufferToWav = (audioBuffer) => {
+    const sampleRate = 16000;
+    const numChannels = 1;
+    const bitsPerSample = 16;
     
-    if (!synthesisRef.current) {
-      console.error('❌ Speech synthesis not available');
-      return;
+    const buffer = new ArrayBuffer(44 + audioBuffer.length * 2);
+    const view = new DataView(buffer);
+    
+    // WAV header
+    writeString(view, 0, 'RIFF');
+    view.setUint32(4, 36 + audioBuffer.length * 2, true);
+    writeString(view, 8, 'WAVE');
+    writeString(view, 12, 'fmt ');
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, numChannels, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate * numChannels * bitsPerSample / 8, true);
+    view.setUint16(32, numChannels * bitsPerSample / 8, true);
+    view.setUint16(34, bitsPerSample, true);
+    writeString(view, 36, 'data');
+    view.setUint32(40, audioBuffer.length * 2, true);
+    
+    let offset = 44;
+    for (let i = 0; i < audioBuffer.length; i++) {
+      const sample = Math.max(-1, Math.min(1, audioBuffer[i]));
+      view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      offset += 2;
     }
     
-    synthesisRef.current.cancel();
-    
-    setTimeout(() => {
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.95;
-      utterance.pitch = 1;
-      utterance.volume = 1;
-      utterance.lang = 'en-US';
+    return new Blob([buffer], { type: 'audio/wav' });
+  };
+
+  const writeString = (view, offset, string) => {
+    for (let i = 0; i < string.length; i++) {
+      view.setUint8(offset + i, string.charCodeAt(i));
+    }
+  };
+
+  const initAudioProcessing = async (stream) => {
+    try {
+      const AudioContext = window.AudioContext || window.webkitAudioContext;
+      audioContextRef.current = new AudioContext({ sampleRate: 16000 });
       
-      utteranceRef.current = utterance;
+      await audioContextRef.current.audioWorklet.addModule('/audio-processor.js');
       
-      utterance.onstart = () => {
-        console.log('✅ Response speech started');
-        setPulseAnimation(true);
-      };
-      utterance.onend = () => {
-        console.log('🛑 Response speech ended');
-        setPulseAnimation(false);
-      };
-      utterance.onerror = (event) => {
-        console.error('❌ Response speech error:', event.error);
-        setPulseAnimation(false);
+      const source = audioContextRef.current.createMediaStreamSource(stream);
+      
+      // Create a gain node to prevent feedback - mute the output
+      const gainNode = audioContextRef.current.createGain();
+      gainNode.gain.value = 0; // Mute the microphone input playback
+      
+      audioProcessorRef.current = new AudioWorkletNode(
+        audioContextRef.current,
+        'audio-processor'
+      );
+      
+      audioProcessorRef.current.port.onmessage = (event) => {
+        if (event.data.type === 'audioData' && !isNavigatingRef.current) {
+          const audioData = new Float32Array(event.data.audioData);
+          audioChunksRef.current.push(audioData);
+          
+          console.log(`📊 Buffer chunks: ${audioChunksRef.current.length}/2`);
+          
+          // Process every 2 seconds of audio (2 chunks)
+          if (audioChunksRef.current.length >= 2) {
+            console.log('🔄 Combining chunks for processing...');
+            
+            const combinedBuffer = new Float32Array(
+              audioChunksRef.current.reduce((acc, chunk) => acc + chunk.length, 0)
+            );
+            
+            let offset = 0;
+            audioChunksRef.current.forEach(chunk => {
+              combinedBuffer.set(chunk, offset);
+              offset += chunk.length;
+            });
+            
+            // Clear the chunks for next collection
+            audioChunksRef.current = [];
+            
+            // Process the audio
+            processAudioChunk(combinedBuffer);
+          }
+        }
       };
       
-      synthesisRef.current.speak(utterance);
-    }, 150);
+      // Connect with gain node to prevent feedback
+      source.connect(audioProcessorRef.current);
+      audioProcessorRef.current.connect(gainNode);
+      gainNode.connect(audioContextRef.current.destination);
+      
+      if (audioContextRef.current.state === 'suspended') {
+        await audioContextRef.current.resume();
+      }
+      
+      console.log('✅ Audio processing initialized (feedback prevention enabled)');
+      return true;
+      
+    } catch (error) {
+      console.error('❌ Error initializing audio:', error);
+      return false;
+    }
   };
 
   const startRecording = async () => {
     console.log('🎙️ Starting recording...');
     
+    if (micPermission === 'denied') {
+      setStatus('Microphone access denied');
+      setShowPermissionError(true);
+      return false;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ 
         audio: {
           echoCancellation: true,
           noiseSuppression: true,
+          autoGainControl: true,
           channelCount: 1,
           sampleRate: 16000
         } 
       });
       
       mediaStreamRef.current = stream;
+      setMicPermission('granted');
+      setShowPermissionError(false);
       
-      // Initialize audio processing
-      if (window.AudioWorkletNode) {
-        await initAudioProcessing(stream);
-      } else {
-        startMediaRecorder(stream);
-      }
+      await initAudioProcessing(stream);
       
-      setStatus('Listening...');
-      setPulseAnimation(true);
+      setIsListening(true);
+      setStatus('Listening continuously... Speak naturally!');
       
-      // Start welcome video if not already finished
       if (!welcomeFinished && videoRef.current) {
         videoRef.current.currentTime = 0;
         videoRef.current.muted = false;
@@ -329,128 +343,59 @@ const VoiceNavigationAssistant = () => {
         });
       }
       
+      return true;
+      
     } catch (error) {
-      console.error('Error accessing microphone:', error);
+      console.error('❌ Microphone error:', error);
       setMicPermission('denied');
       setShowPermissionError(true);
       setIsActive(false);
+      return false;
     }
   };
 
   const stopRecording = () => {
     console.log('🛑 Stopping recording...');
     
-    // Stop audio processing
-    if (audioContextRef.current) {
+    setIsListening(false);
+    
+    if (audioProcessorRef.current) {
+      audioProcessorRef.current.port.postMessage('stop');
+    }
+    
+    if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
       audioContextRef.current.suspend();
-      if (audioProcessorRef.current) {
-        audioProcessorRef.current.port.postMessage('stop');
-      }
     }
     
-    // Stop MediaRecorder if it's being used
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== 'inactive') {
-      mediaRecorderRef.current.stop();
-    }
-    
-    // Clear any active media stream tracks
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => track.stop());
       mediaStreamRef.current = null;
     }
     
-    setPulseAnimation(false);
-  };
-
-  const startSilenceDetection = () => {
-    // Reset any existing timer
-    clearTimeout(silenceTimerRef.current);
-    
-    // Set a new timer (e.g., 3 seconds of silence)
-    silenceTimerRef.current = setTimeout(() => {
-      console.log('🔇 No speech detected, stopping recording...');
-      stopRecording();
-      setStatus('Processing your command...');
-    }, 3000);
-  };
-
-  const processAudio = async (audioBlob) => {
-    const formData = new FormData();
-    formData.append('audio', audioBlob, 'recording.webm');
-    
-    try {
-      const response = await fetch('/api/speech/transcribe', {
-        method: 'POST',
-        body: formData,
-      });
-      
-      if (!response.ok) {
-        throw new Error('Transcription failed');
-      }
-      
-      const { text } = await response.json();
-      console.log('🎤 Transcribed text:', text);
-      
-      if (text) {
-        setTranscript(text);
-        await processCommand(text.toLowerCase().trim());
-      }
-      
-      // Restart recording after processing the command
-      if (isActive) {
-        // Small delay before restarting to avoid immediate re-trigger
-        setTimeout(() => {
-          if (isActive) {
-            console.log('🔄 Restarting recording...');
-            startRecording();
-          }
-        }, 500);
-      }
-      
-    } catch (error) {
-      console.error('Error transcribing audio:', error);
-      setStatus('Error processing your voice command. Please try again.');
-      
-      // Still try to restart recording even if there was an error
-      if (isActive) {
-        setTimeout(() => {
-          if (isActive) {
-            console.log('🔄 Restarting recording after error...');
-            startRecording();
-          }
-        }, 1000);
-      }
-    }
+    audioChunksRef.current = [];
   };
 
   const startAssistant = async () => {
-    console.log('🚀 Starting voice assistant...');
+    console.log('🚀 Starting assistant...');
     
     if (micPermission !== 'granted') {
-      console.log('🔒 Requesting microphone permission...');
       const permissionGranted = await requestMicrophonePermission();
-      if (!permissionGranted) {
-        console.error('❌ Microphone permission denied');
-        return;
-      }
+      if (!permissionGranted) return;
     }
 
     setIsActive(true);
+    setTranscript('');
     setShowPermissionError(false);
     setWelcomeFinished(false);
-    
-    if (videoRef.current) {
-      videoRef.current.currentTime = 0;
-      videoRef.current.muted = false;
-      videoRef.current.play().catch(err => {
-        console.warn('⚠️ Video autoplay prevented:', err);
-      });
-    }
+    isNavigatingRef.current = false;
+    isSpeakingRef.current = false;
     
     await startRecording();
   };
 
   const stopAssistant = () => {
+    console.log('🛑 Stopping assistant...');
+    
     stopRecording();
     
     if (synthesisRef.current) {
@@ -464,82 +409,66 @@ const VoiceNavigationAssistant = () => {
     setIsActive(false);
     setTranscript('');
     setStatus('Click to activate voice assistant');
-    setWelcomeFinished(false);
+    setPulseAnimation(false);
+    isNavigatingRef.current = false;
+    isSpeakingRef.current = false;
   };
 
-  const processCommand = async (command) => {
-    console.log('🔍 Processing command:', command);
-    let foundRoute = null;
-    let foundKeyword = '';
-
-    // Check for exit or stop commands
-    if (['exit', 'stop', 'goodbye', 'that\'s all', 'thank you'].some(cmd => command.includes(cmd))) {
-      const response = 'Goodbye! Have a great day!';
-      await speak(response);
-      setStatus(response);
-      stopAssistant();
-      return;
-    }
-
-    // Check for greeting
-    if (['hello', 'hi', 'hey', 'hi there'].some(greeting => command.includes(greeting))) {
-      const responses = [
-        'Hello! How can I help you today?',
-        'Hi there! What would you like to do?',
-        'Hello! I\'m here to help. What would you like to do?'
-      ];
-      const response = responses[Math.floor(Math.random() * responses.length)];
-      await speak(response);
-      setStatus('Listening for your command...');
-      return;
-    }
-
-    // Check for help
-    if (command.includes('help') || command.includes('what can you do')) {
-      const response = 'I can help you navigate the app. Try saying: "Play games", "Create a song", or "Go to my music"';
-      await speak(response);
-      setStatus(response);
-      return;
-    }
-
-    // Check navigation commands
-    for (const [route, keywords] of Object.entries(navigationMap)) {
-      if (keywords.some(keyword => command.includes(keyword))) {
-        foundRoute = route;
-        foundKeyword = keywords.find(keyword => command.includes(keyword));
-        break;
-      }
-    }
-
-    if (foundRoute) {
-      console.log('✅ Found route:', foundRoute, 'via keyword:', foundKeyword);
-      const response = `Taking you to ${foundRoute.replace('-', ' ')}.`;
-      await speak(response);
-      setStatus(response);
-      
-      // Small delay before navigation to allow the speech to be heard
-      setTimeout(() => {
-        router.push(`/${foundRoute}`);
-      }, 1000);
-    } else {
-      console.log('❓ Command not recognized');
-      const response = "I didn't quite catch that. Try saying: Play games, Create song, or Go home.";
-      await speak(response);
-      setStatus('Listening for your command...');
+  const requestMicrophonePermission = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      setMicPermission('granted');
+      setShowPermissionError(false);
+      return true;
+    } catch (error) {
+      console.error('❌ Permission denied:', error);
+      setMicPermission('denied');
+      setShowPermissionError(true);
+      setStatus('Microphone access denied');
+      return false;
     }
   };
 
-  const toggleListening = () => {
+  const toggleListening = async () => {
     if (isActive) {
       stopAssistant();
-    } else {
+      return;
+    }
+
+    if (micPermission === 'denied') {
+      setStatus('Microphone access denied');
+      setShowPermissionError(true);
+      return;
+    }
+
+    setStatus('Requesting microphone access...');
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ 
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
+          sampleRate: 16000
+        } 
+      });
+      
+      stream.getTracks().forEach(track => track.stop());
+      setMicPermission('granted');
+      setShowPermissionError(false);
       startAssistant();
+      
+    } catch (error) {
+      console.error('❌ Permission error:', error);
+      setMicPermission('denied');
+      setShowPermissionError(true);
+      setStatus('Microphone access is required');
     }
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-[#0a0e27] via-[#141432] to-[#0a0e27] flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      {/* Starfield Background */}
       <div className="absolute inset-0 overflow-hidden">
         {[...Array(100)].map((_, i) => (
           <div
@@ -557,18 +486,16 @@ const VoiceNavigationAssistant = () => {
       </div>
 
       <div className="relative z-10 flex flex-col items-center max-w-2xl w-full">
-        {/* Title */}
         <h1 className="text-5xl md:text-6xl font-bold mb-6 text-center"
             style={{
               fontFamily: 'cursive',
               color: '#00d4ff',
-              textShadow: '0 0 20px rgba(0, 212, 255, 0.5), 0 0 40px rgba(0, 212, 255, 0.3)',
+              textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
               letterSpacing: '2px'
             }}>
           Planet Q Productions
         </h1>
 
-        {/* Subtitle */}
         <h2 className="text-2xl md:text-3xl mb-8 text-center"
             style={{
               fontFamily: 'cursive',
@@ -579,20 +506,17 @@ const VoiceNavigationAssistant = () => {
           Q_World Studios
         </h2>
 
-        {/* Microphone Permission Error */}
         {showPermissionError && (
           <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg flex items-center gap-3 max-w-md">
             <AlertCircle className="text-red-400 flex-shrink-0" size={24} />
             <div className="text-sm text-red-200">
               <p className="font-semibold mb-1">Microphone Access Required</p>
-              <p>Please enable microphone permissions in your browser settings to use voice commands.</p>
+              <p>Please enable microphone permissions in your browser settings.</p>
             </div>
           </div>
         )}
 
-        {/* AI Avatar with Video */}
         <div className="relative mb-8">
-          {/* Outer glow ring */}
           <div className={`absolute inset-0 rounded-full transition-all duration-300 ${
             pulseAnimation ? 'animate-ping' : ''
           }`}
@@ -601,7 +525,6 @@ const VoiceNavigationAssistant = () => {
                  transform: 'scale(1.2)'
                }} />
           
-          {/* Main avatar container */}
           <div 
             className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-purple-500/30"
             style={{
@@ -611,39 +534,34 @@ const VoiceNavigationAssistant = () => {
                 : '0 0 30px rgba(0,212,255,0.3), inset 0 0 20px rgba(0,100,150,0.2)'
             }}>
             
-            {/* Video Player - Plays welcome audio */}
             <video
               ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
               loop={false}
               playsInline
               onEnded={() => {
-                console.log('✅ Welcome video finished.');
+                console.log('✅ Welcome video finished');
                 setWelcomeFinished(true);
-                setStatus('Ready! Listening for your command...');
+                setStatus('Ready! Listening continuously...');
               }}
             >
               <source src={videoUrl} type="video/mp4" />
-              Your browser does not support the video tag.
             </video>
 
-            {/* Active listening indicator */}
             {isListening && (
               <div className="absolute inset-0 bg-red-500/5 animate-pulse" />
             )}
           </div>
 
-          {/* Voice indicator icon */}
           <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
             <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${
               isListening ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-cyan-500 shadow-lg shadow-cyan-500/50'
             }`}>
-              <Volume2 className="text-white" size={24} />
+              <Dot className="text-white" size={24} />
             </div>
           </div>
         </div>
 
-        {/* Music Creation Label */}
         <h3 className="text-2xl md:text-3xl mb-6 text-center"
             style={{
               fontFamily: 'cursive',
@@ -654,7 +572,6 @@ const VoiceNavigationAssistant = () => {
           Music Creation
         </h3>
 
-        {/* AI Radio Station Label */}
         <h4 className="text-3xl md:text-4xl mb-8 text-center"
             style={{
               fontFamily: 'cursive',
@@ -665,7 +582,6 @@ const VoiceNavigationAssistant = () => {
           AI Radio Station
         </h4>
 
-        {/* Control Button */}
         <button
           onClick={toggleListening}
           disabled={micPermission === 'denied'}
@@ -693,14 +609,13 @@ const VoiceNavigationAssistant = () => {
             </div>
           ) : (
             <div className="flex flex-col items-center gap-1">
-              <Mic size={16} />
+              <MicVocal size={16} />
               <span className="text-xs">Activate</span>
             </div>
           )}
         </button>
 
-        {/* Status Display */}
-        <div className="w-full max-w-md p-6 rounded-lg bg-black/30 backdrop-blur-sm border border-cyan-500/30">
+        {/* <div className="w-full max-w-md p-6 rounded-lg bg-black/30 backdrop-blur-sm border border-cyan-500/30">
           <div className="flex items-center gap-3 mb-4">
             <div className={`w-3 h-3 rounded-full ${
               isListening ? 'bg-red-500 animate-pulse' : 
@@ -708,7 +623,7 @@ const VoiceNavigationAssistant = () => {
               'bg-gray-500'
             }`} />
             <p className="text-cyan-300 font-semibold">
-              {isListening ? 'Listening...' :
+              {isListening ? 'Listening Continuously' :
                pulseAnimation ? 'Speaking...' : 
                'Standby'}
             </p>
@@ -719,31 +634,16 @@ const VoiceNavigationAssistant = () => {
           {transcript && (
             <div className="mt-3 pt-3 border-t border-cyan-500/30">
               <p className="text-xs text-gray-400 mb-1">Live Transcription:</p>
-              <p className="text-cyan-200 min-h-[20px]">{transcript || '...'}</p>
+              <p className="text-cyan-200 min-h-[20px]">{transcript}</p>
             </div>
           )}
 
-          {/* Debug Console Hint */}
           <div className="mt-3 pt-3 border-t border-cyan-500/30">
             <p className="text-xs text-gray-400 text-center">
-              💡 Open browser console (F12) to see detailed logs
+              💬 Speak naturally - I'm always listening!
             </p>
           </div>
-        </div>
-
-        {/* Navigation Help - Only show when not active */}
-        {!isActive && (
-          <div className="mt-6 text-center text-gray-400 text-sm max-w-md">
-            <p className="mb-2">Once activated, you can say:</p>
-            <div className="flex flex-wrap gap-2 justify-center">
-              <span className="px-3 py-1 bg-cyan-500/20 rounded-full text-cyan-300">"Play games"</span>
-              <span className="px-3 py-1 bg-purple-500/20 rounded-full text-purple-300">"Create song"</span>
-              <span className="px-3 py-1 bg-pink-500/20 rounded-full text-pink-300">"Go home"</span>
-              <span className="px-3 py-1 bg-green-500/20 rounded-full text-green-300">"About"</span>
-              <span className="px-3 py-1 bg-yellow-500/20 rounded-full text-yellow-300">"Contact"</span>
-            </div>
-          </div>
-        )}
+        </div> */}
       </div>
     </div>
   );

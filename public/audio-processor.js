@@ -1,46 +1,73 @@
+// public/audio-processor.js
 class AudioProcessor extends AudioWorkletProcessor {
   constructor() {
     super();
+    this.bufferSize = 16000; // 1 second at 16kHz
     this.buffer = [];
-    this.bufferSize = 16000; // 1 second buffer at 16kHz
-    this.lastProcessTime = 0;
+    this.isRecording = true;
+    
     this.port.onmessage = (event) => {
       if (event.data === 'stop') {
-        this.stopProcessing();
+        this.isRecording = false;
+        this.buffer = [];
+      } else if (event.data === 'start') {
+        this.isRecording = true;
+        this.buffer = [];
+      } else if (event.data === 'flush') {
+        this.flushBuffer();
       }
     };
   }
 
-  process(inputs) {
-    const input = inputs[0];
-    if (input && input.length > 0) {
-      const currentTime = Date.now();
-      
-      // Add new audio data to buffer
-      for (let i = 0; i < input[0].length; i++) {
-        this.buffer.push(input[0][i]);
-      }
-
-      // Process audio every 1000ms (1 second)
-      if (currentTime - this.lastProcessTime >= 1000 && this.buffer.length >= 16000) {
-        this.lastProcessTime = currentTime;
-        
-        // Create a copy of the buffer and clear it
+  flushBuffer() {
+    if (this.buffer.length > 0) {
+      try {
+        // Create a copy of the buffer data
         const audioData = new Float32Array(this.buffer);
-        this.buffer = [];
-        
-        // Send audio data to main thread
         this.port.postMessage({
           type: 'audioData',
           audioData: audioData.buffer
-        }, [audioData.buffer]);
+        }, [audioData.buffer]); // Transfer ownership for better performance
+        
+        this.buffer = [];
+      } catch (e) {
+        console.error('Error flushing buffer:', e);
       }
     }
-    return true;
   }
 
-  stopProcessing() {
-    this.buffer = [];
+  process(inputs, outputs) {
+    const input = inputs[0];
+    const output = outputs[0];
+    
+    if (!this.isRecording) {
+      return true;
+    }
+    
+    if (input && input[0]) {
+      // Copy input to output (pass-through)
+      for (let channel = 0; channel < output.length; channel++) {
+        const inputChannel = input[channel] || input[0];
+        const outputChannel = output[channel] || [];
+        
+        for (let i = 0; i < outputChannel.length; i++) {
+          outputChannel[i] = inputChannel[i] || 0;
+        }
+      }
+      
+      // Collect audio data in buffer
+      const inputChannel = input[0];
+      for (let i = 0; i < inputChannel.length; i++) {
+        this.buffer.push(inputChannel[i]);
+      }
+      
+      // When buffer reaches desired size, send it
+      if (this.buffer.length >= this.bufferSize) {
+        this.flushBuffer();
+      }
+    }
+    
+    return true;
   }
 }
 
