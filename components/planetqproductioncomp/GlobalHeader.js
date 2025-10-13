@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import Link from 'next/link'
-import Image from 'next/image'
-import { signOut } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { IoIosLogOut } from 'react-icons/io'
-import { FaMusic } from 'react-icons/fa';
 import { CreditCard, Plus } from 'lucide-react'
+import { signOut } from 'next-auth/react'
+import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { FaMusic } from 'react-icons/fa'
+import { IoIosLogOut } from 'react-icons/io'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 
 export default function GlobalHeader({ session }) {
@@ -64,7 +64,7 @@ export default function GlobalHeader({ session }) {
 		<>
 			<div className="text-white bg-gradient-to-r from-slate-900 to-slate-800 flex justify-between items-center px-4 py-3 shadow-md">
 				{/* Logo/Home link */}
-				<Link href="/main" className="flex items-center gap-2">
+				<Link href="/" className="flex items-center gap-2">
 					<Image
 						src="/images/small.webp"
 						alt="PlanetQAi Logo"

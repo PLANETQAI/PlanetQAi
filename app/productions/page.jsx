@@ -50,6 +50,9 @@ const RadioContent = () => {
         <h1 className="text-4xl font-extrabold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-lg">
           PlanetQ Radio
         </h1>
+        <p className="text-center text-gray-300 mb-8">
+          Click Play and Vibe Out
+        </p>
         <div className="w-full flex justify-center">
           <PlayerBot />
         </div>

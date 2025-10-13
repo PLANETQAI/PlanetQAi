@@ -86,7 +86,7 @@ const RadioLayout = ({ children }) => {
       <main className="relative z-10">{children}</main>
 
       {/* Footer */}
-      <footer className="relative z-10 pt-8 border-t border-gray-800 mt-16">
+      <footer className="relative z-10 pt-2 mb-4">
         <div className="container mx-auto px-4 text-center">
           <p className="text-gray-400 text-sm">
             © {new Date().getFullYear()} Planet Q Radio. All rights reserved.
