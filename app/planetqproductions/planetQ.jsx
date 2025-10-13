@@ -24,7 +24,7 @@ export default function PlanetQProductions({ session, songData }) {
 
 		setDeleteLoading(true)
 		try {
-			const response = await fetch('/api/link/deletelink', {
+			      await fetch('/api/link/deletelink', {
 				method: 'DELETE',
 				headers: {
 					'Content-Type': 'application/json',

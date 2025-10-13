@@ -863,7 +863,6 @@ const RootPage = () => {
               width: "100%",
               position: "relative",
               overscrollBehaviorX: "none",
-              WebkitOverflowScrolling: "touch",
               WebkitTouchCallout: "none",
               WebkitTapHighlightColor: "transparent",
             }}

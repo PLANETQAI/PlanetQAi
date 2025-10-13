@@ -1,37 +1,11 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import StarsWrapper from '@/components/canvas/StarsWrapper';
 import Image from "next/image";
 import { useSpring, animated } from 'react-spring';
-import { getVideos } from '@/actions/videoActions';
-
-// Dynamically import Player with SSR disabled
-const Player = dynamic(() => import('../my-studio/player'), {
-  ssr: false,
-  loading: () => <div className="w-full h-64 flex items-center justify-center">Loading player...</div>
-});
 
 const PlanetQGamesPage = () => {
-
-    const [videos, setVideos] = useState([]);
-    const [loading, setLoading] = useState(true);
-  
-    useEffect(() => {
-      const fetchVideos = async () => {
-        try {
-          const videoData = await getVideos();
-          setVideos(videoData);
-        } catch (error) {
-          console.error('Error loading videos:', error);
-        } finally {
-          setLoading(false);
-        }
-      };
-  
-      fetchVideos();
-    }, []);
   // Animation properties
   const titleProps = useSpring({
     from: { opacity: 0, transform: 'translateY(-50px)' },

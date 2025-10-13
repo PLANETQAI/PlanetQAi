@@ -1,13 +1,12 @@
 "use client";
 
-import { useState, useEffect, useCallback, useContext } from "react";
-import { FaMicrophone, FaMicrophoneSlash, FaMusic, FaArrowRight } from "react-icons/fa";
-import Generator from './Generator';
-import { useSession } from 'next-auth/react';
-import QuaylaGenerator from "./Generator_v1";
 import CreditPurchaseModal from "@/components/credits/CreditPurchaseModal";
 import { useGenerator } from "@/context/GeneratorContext";
 import { useUser } from "@/context/UserContext";
+import { useSession } from 'next-auth/react';
+import { useCallback, useEffect, useState } from "react";
+import { FaMicrophone, FaMicrophoneSlash, FaMusic } from "react-icons/fa";
+import QuaylaGenerator from "./Generator_v1";
 
 export default function VoiceAssistant() {
   const { data: session, status } = useSession();
