@@ -1,6 +1,6 @@
 "use client";
 
-import { AlertCircle, Dot, Mic, MicVocal } from 'lucide-react';
+import { AlertCircle, Mic, MicVocal } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
@@ -623,21 +623,6 @@ const VoiceNavigationAssistant = () => {
   return (
     <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg border border-gray-700"
     >
-      {/* <div className="absolute inset-0 overflow-hidden">
-        {[...Array(100)].map((_, i) => (
-          <div
-            key={i}
-            className="absolute w-1 h-1 bg-white rounded-full animate-pulse"
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-              animationDelay: `${Math.random() * 3}s`,
-              animationDuration: `${2 + Math.random() * 3}s`,
-              opacity: Math.random() * 0.7 + 0.3
-            }}
-          />
-        ))}
-      </div> */}
 
       <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 max-w-2xl mx-auto">
         <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
@@ -707,36 +692,8 @@ const VoiceNavigationAssistant = () => {
               <div className="absolute inset-0 bg-red-500/5 animate-pulse" />
             )}
           </div>
-
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
-            <div className={`w-12 h-12 rounded-full flex items-center justify-center transition-all duration-300 ${isListening ? 'bg-red-500 shadow-lg shadow-red-500/50' : 'bg-cyan-500 shadow-lg shadow-cyan-500/50'
-              }`}>
-              <Dot className="text-white" size={24} />
-            </div>
-          </div>
-        </div>
-
-        <h3 className="text-2xl md:text-3xl mb-6 text-center"
-          style={{
-            fontFamily: 'cursive',
-            color: '#ff00ff',
-            textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
-            letterSpacing: '1px'
-          }}>
-          Music Creation
-        </h3>
-
-        <h4 className="text-3xl md:text-4xl mb-8 text-center"
-          style={{
-            fontFamily: 'cursive',
-            color: '#00d4ff',
-            textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
-            letterSpacing: '2px'
-          }}>
-          AI Radio Station
-        </h4>
-
-        <div className="relative">
+            <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
+              <div className="relative">
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -789,6 +746,30 @@ const VoiceNavigationAssistant = () => {
             {status}
           </div>
         </div>
+          </div>
+        </div>
+
+        <h3 className="text-2xl md:text-3xl mb-6 text-center"
+          style={{
+            fontFamily: 'cursive',
+            color: '#ff00ff',
+            textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
+            letterSpacing: '1px'
+          }}>
+          Music Creation
+        </h3>
+
+        <h4 className="text-3xl md:text-4xl mb-8 text-center"
+          style={{
+            fontFamily: 'cursive',
+            color: '#00d4ff',
+            textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
+            letterSpacing: '2px'
+          }}>
+          AI Radio Station
+        </h4>
+
+     
       </div>
     </div>
   );

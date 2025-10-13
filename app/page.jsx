@@ -620,7 +620,7 @@ const RootPage = () => {
 
   const qWorldStudios = (
     <div
-      className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-auto"
+      className="p-2"
       onClick={preventPropagation}
       onTouchStart={preventPropagation}
     >
@@ -1058,7 +1058,7 @@ const RootPage = () => {
             >
               {direction === "forward" ? "→" : "←"}
             </div>
-            <div className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2">
+            <div className="absolute top-[94%] left-1/2 transform -translate-x-1/2">
               <h3 className="text-white text-3xl font-bold">TAP</h3>
             </div>
           </div>

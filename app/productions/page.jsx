@@ -1,5 +1,6 @@
 "use client";
 
+import StarsWrapper from "@/components/canvas/StarsWrapper";
 import { useRouter } from "next/navigation";
 import PlayerBot from "./_components/PlayerBot";
 import RadioSubscriptionFlow from './_components/RadioSubscriptionFlow';
@@ -38,7 +39,7 @@ const RadioContent = () => {
 
   return (
     <div className="min-h-screen text-white relative overflow-x-hidden font-sans">
-      <BackgroundPattern />
+        <StarsWrapper />
       {/* Glow effects */}
       <div className="fixed inset-0 pointer-events-none">
         <div className="absolute top-1/4 -left-1/4 w-1/2 h-1/2 bg-cyan-500/5 rounded-full filter blur-3xl"></div>
@@ -49,9 +50,6 @@ const RadioContent = () => {
         <h1 className="text-4xl font-extrabold text-center mb-8 bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-purple-500 drop-shadow-lg">
           PlanetQ Radio
         </h1>
-        <p className="text-center text-lg text-gray-300 mb-10">
-          Enjoy curated Spotify playlists and tracks. Click play and vibe out!
-        </p>
         <div className="w-full flex justify-center">
           <PlayerBot />
         </div>
