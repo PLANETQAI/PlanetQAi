@@ -548,7 +548,7 @@ const VoiceNavigationAssistant = () => {
   }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg">
+    <div className="flex bg-[#17101d9c] flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg">
       <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 max-w-2xl mx-auto">
         <h1 
           className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
@@ -645,10 +645,6 @@ const VoiceNavigationAssistant = () => {
                     : 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50'
                 }`}
                 style={{
-                  WebkitTapHighlightColor: 'transparent',
-                  touchAction: 'manipulation',
-                  transform: `${isActive ? 'scale(1.1)' : 'scale(1)'}`,
-                  transition: 'transform 150ms ease, background 200ms ease',
                   userSelect: 'none',
                   zIndex: 50,
                   pointerEvents: micPermission === 'denied' ? 'none' : 'auto'
