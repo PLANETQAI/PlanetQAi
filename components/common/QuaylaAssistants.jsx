@@ -33,7 +33,7 @@ const VoiceNavigationAssistant = () => {
   const interactionTimeoutRef = useRef(null);
   const abortControllerRef = useRef(new AbortController());
 
-  const videoUrl = "/videos/generator.mp4";
+  const videoUrl = "/videos/generator_final.mp4";
 
   // Initial mount effect
   useEffect(() => {
@@ -609,7 +609,8 @@ const VoiceNavigationAssistant = () => {
             <video
               ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
-              loop={false}
+              autoPlay
+              muted
               playsInline
               onEnded={() => {
                 console.log('✅ Welcome video finished');
@@ -618,6 +619,7 @@ const VoiceNavigationAssistant = () => {
               }}
             >
               <source src={videoUrl} type="video/mp4" />
+              Your browser does not support the video tag.
             </video>
 
             {isListening && (
