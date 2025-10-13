@@ -18,6 +18,7 @@ const VoiceNavigationAssistant = () => {
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
+  
   const router = useRouter();
   const mediaStreamRef = useRef(null);
   const synthesisRef = useRef(null);
@@ -34,11 +35,11 @@ const VoiceNavigationAssistant = () => {
 
   const videoUrl = "/videos/generator.mp4";
 
+  // Initial mount effect
   useEffect(() => {
     setIsMounted(true);
     return () => {
       setIsMounted(false);
-      // Cleanup
       stopRecording();
       if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
         audioContextRef.current.close().catch(console.error);
@@ -46,22 +47,21 @@ const VoiceNavigationAssistant = () => {
     };
   }, []);
 
+  // Prevent carousel scroll when assistant is active
   useEffect(() => {
     const container = document.querySelector('.carousel-container');
     if (!container) return;
 
     const handleTouch = (e) => {
-      // Only prevent default if we're actually handling the touch
       if (isActive || isListening) {
         e.preventDefault();
       }
     };
 
-    // Use capture phase to ensure we can prevent default
     container.addEventListener('touchstart', handleTouch, { passive: false, capture: true });
 
     return () => {
-      container.removeEventListener('touchstart', handleTouch, { passive: false, capture: true });
+      container.removeEventListener('touchstart', handleTouch, { capture: true });
     };
   }, [isActive, isListening]);
 
@@ -77,6 +77,7 @@ const VoiceNavigationAssistant = () => {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
+  // Initialize speech synthesis and check microphone permission
   useEffect(() => {
     synthesisRef.current = window.speechSynthesis;
 
@@ -89,8 +90,17 @@ const VoiceNavigationAssistant = () => {
 
           if (permissionStatus) {
             setMicPermission(permissionStatus.state);
+            
+            // Clear error if permission is granted
+            if (permissionStatus.state === 'granted') {
+              setShowPermissionError(false);
+            }
+            
             permissionStatus.onchange = () => {
               setMicPermission(permissionStatus.state);
+              if (permissionStatus.state === 'granted') {
+                setShowPermissionError(false);
+              }
             };
             return;
           }
@@ -107,7 +117,6 @@ const VoiceNavigationAssistant = () => {
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
-      stopRecording();
       if (audioContextRef.current) {
         audioContextRef.current.close();
       }
@@ -235,7 +244,9 @@ const VoiceNavigationAssistant = () => {
       }
 
     } catch (error) {
-      console.error('❌ Error processing audio:', error);
+      if (error.name !== 'AbortError') {
+        console.error('❌ Error processing audio:', error);
+      }
     } finally {
       if (shouldProcessRef.current) {
         setIsProcessing(false);
@@ -349,80 +360,6 @@ const VoiceNavigationAssistant = () => {
     }
   };
 
-  const startRecording = async () => {
-    shouldProcessRef.current = true;
-    console.log('🎙️ Starting recording...');
-
-    if (micPermission === 'denied') {
-      setStatus('Microphone access denied');
-      setShowPermissionError(true);
-      return false;
-    }
-
-    try {
-      // Mobile-optimized audio constraints
-      const constraints = {
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate: 16000,
-          // Mobile-specific optimizations
-          ...(isMobile && {
-            latency: 0.1,
-            echoCancellationType: 'system',
-            suppressLocalAudioPlayback: true,
-            sampleSize: 16
-          })
-        }
-      };
-
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-
-      mediaStreamRef.current = stream;
-      setMicPermission('granted');
-      setShowPermissionError(false);
-
-      const processingInitialized = await initAudioProcessing(stream);
-
-      if (!processingInitialized) {
-        throw new Error('Failed to initialize audio processing');
-      }
-
-      setIsListening(true);
-      setStatus(isMobile ? 'Listening...' : 'Listening continuously... Speak naturally!');
-
-      // Auto-stop after 30 seconds on mobile
-      if (isMobile) {
-        interactionTimeoutRef.current = setTimeout(() => {
-          if (isListening) {
-            stopAssistant();
-          }
-        }, 30000);
-      }
-
-      if (!welcomeFinished && videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.muted = isMobile; // Mute on mobile by default
-        videoRef.current.playsInline = true; // For iOS
-        videoRef.current.setAttribute('playsinline', 'true');
-        videoRef.current.play().catch(err => {
-          console.warn('⚠️ Video autoplay prevented:', err);
-        });
-      }
-
-      return true;
-
-    } catch (error) {
-      console.error('❌ Microphone error:', error);
-      setMicPermission('denied');
-      setShowPermissionError(true);
-      setIsActive(false);
-      return false;
-    }
-  };
-
   const stopRecording = useCallback(() => {
     if (!isMounted) return;
 
@@ -461,62 +398,26 @@ const VoiceNavigationAssistant = () => {
       mediaStreamRef.current = null;
     }
   }, [isMounted]);
+
   // Touch event handlers for mobile
   const handleTouchStart = () => {
     if (!isActive) {
       touchTimerRef.current = setTimeout(() => {
         startAssistant();
-      }, 300); // Slight delay to prevent accidental triggers
+      }, 300);
     } else {
       setTouchActive(true);
     }
   };
-  // In your component, update the touch handlers like this:
 
-
-  const handleTouchMove = (e) => {
-    if (touchStart !== null) {
-      // Only prevent default if we're actually handling a swipe
-      const touch = e.touches[0];
-      const diff = Math.abs(touch.clientX - touchStart);
-
-      // If the movement is more horizontal than vertical, prevent default
-      if (diff > 10) {  // Threshold to determine if it's a horizontal swipe
-        e.preventDefault();
-      }
-      setTouchEnd(touch.clientX);
-    }
+  const handleTouchEnd = () => {
+    clearTimeout(touchTimerRef.current);
+    setTouchActive(false);
   };
-
-  const handleTouchEnd = (e) => {
-  clearTimeout(touchTimerRef.current);
-  setTouchActive(false);
-};
-
-  // const handleTouchEnd = () => {
-  //   clearTimeout(touchTimerRef.current);
-
-  //   if (isActive && touchActive) {
-  //     // If user lifts finger while active, stop listening after a short delay
-  //     interactionTimeoutRef.current = setTimeout(() => {
-  //       if (isListening) {
-  //         stopAssistant();
-  //       }
-  //     }, 2000);
-  //   }
-  //   setTouchActive(false);
-  // };
-
 
   // Clean up all resources when component unmounts
   useEffect(() => {
     return () => {
-      stopRecording();
-
-      if (synthesisRef.current) {
-        synthesisRef.current.cancel();
-      }
-
       clearTimeout(touchTimerRef.current);
       clearTimeout(interactionTimeoutRef.current);
 
@@ -530,25 +431,86 @@ const VoiceNavigationAssistant = () => {
 
   const startAssistant = async () => {
     console.log('🚀 Starting assistant...');
-
-    if (micPermission !== 'granted') {
-      const permissionGranted = await requestMicrophonePermission();
-      if (!permissionGranted) return;
+    
+    // If permission is denied, show error and exit early
+    if (micPermission === 'denied') {
+      setStatus('Microphone access denied');
+      setShowPermissionError(true);
+      return;
     }
 
+    // Set active state immediately for UI feedback
     setIsActive(true);
+    setStatus('Initializing...');
     setTranscript('');
     setShowPermissionError(false);
     setWelcomeFinished(false);
     isNavigatingRef.current = false;
     isSpeakingRef.current = false;
+    shouldProcessRef.current = true;
 
-    await startRecording();
+    try {
+      // Get the microphone stream
+      const constraints = {
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          channelCount: 1,
+          sampleRate: 16000,
+          ...(isMobile && {
+            latency: 0.1,
+            echoCancellationType: 'system',
+            suppressLocalAudioPlayback: true,
+            sampleSize: 16
+          })
+        }
+      };
+      
+      const stream = await navigator.mediaDevices.getUserMedia(constraints);
+      mediaStreamRef.current = stream;
+      setMicPermission('granted');
+      setShowPermissionError(false); // Clear any previous errors
+
+      // Initialize audio processing with the stream
+      const processingInitialized = await initAudioProcessing(stream);
+      if (!processingInitialized) {
+        throw new Error('Failed to initialize audio processing');
+      }
+
+      setIsListening(true);
+      setStatus(isMobile ? 'Listening...' : 'Listening continuously... Speak naturally!');
+
+      // Mobile-specific timeout
+      if (isMobile) {
+        interactionTimeoutRef.current = setTimeout(() => {
+          if (isListening) stopAssistant();
+        }, 30000);
+      }
+
+      // Start welcome video
+      if (!welcomeFinished && videoRef.current) {
+        videoRef.current.currentTime = 0;
+        videoRef.current.muted = isMobile;
+        videoRef.current.playsInline = true;
+        videoRef.current.setAttribute('playsinline', 'true');
+        videoRef.current.play().catch(err => console.warn('⚠️ Video autoplay prevented:', err));
+      }
+    } catch (error) {
+      console.error('❌ Failed to start assistant:', error);
+      setMicPermission('denied');
+      setShowPermissionError(true);
+      setStatus('Microphone access is required');
+      setIsActive(false);
+      stopRecording();
+    }
   };
 
-  const stopAssistant = () => {
+  const stopAssistant = useCallback(() => {
     console.log('🛑 Stopping assistant...');
-
+    shouldProcessRef.current = false;
+    isSpeakingRef.current = false;
+    
     stopRecording();
 
     if (synthesisRef.current) {
@@ -564,85 +526,53 @@ const VoiceNavigationAssistant = () => {
     setStatus('Click to activate voice assistant');
     setPulseAnimation(false);
     isNavigatingRef.current = false;
-    isSpeakingRef.current = false;
-  };
+  }, [stopRecording]);
 
-  const requestMicrophonePermission = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      stream.getTracks().forEach(track => track.stop());
-      setMicPermission('granted');
-      setShowPermissionError(false);
-      return true;
-    } catch (error) {
-      console.error('❌ Permission denied:', error);
-      setMicPermission('denied');
-      setShowPermissionError(true);
-      setStatus('Microphone access denied');
-      return false;
-    }
-  };
-
-  const toggleListening = async () => {
+  const toggleListening = useCallback(() => {
     if (isActive) {
+      console.log('🛑 Toggling off...');
       stopAssistant();
-      return;
-    }
-
-    if (micPermission === 'denied') {
-      setStatus('Microphone access denied');
-      setShowPermissionError(true);
-      return;
-    }
-
-    setStatus('Requesting microphone access...');
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          autoGainControl: true,
-          channelCount: 1,
-          sampleRate: 16000
-        }
-      });
-
-      stream.getTracks().forEach(track => track.stop());
-      setMicPermission('granted');
-      setShowPermissionError(false);
+    } else {
+      console.log('🎤 Toggling on...');
       startAssistant();
-
-    } catch (error) {
-      console.error('❌ Permission error:', error);
-      setMicPermission('denied');
-      setShowPermissionError(true);
-      setStatus('Microphone access is required');
     }
-  };
+  }, [isActive, stopAssistant]);
+
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (isActive) {
+        stopAssistant();
+      }
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg border border-gray-700"
-    >
+    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg">
       <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 max-w-2xl mx-auto">
-        <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
+        <h1 
+          className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
           style={{
             fontFamily: 'cursive',
             color: '#00d4ff',
             textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
             letterSpacing: '1px',
             lineHeight: '1.2'
-          }}>
+          }}
+        >
           Planet Q<br className="sm:hidden" /> Productions
         </h1>
 
-        <h2 className="text-xl sm:text-2xl md:text-3xl mb-6 sm:mb-8 text-center"
+        <h2 
+          className="text-xl sm:text-2xl md:text-3xl mb-6 sm:mb-8 text-center"
           style={{
             fontFamily: 'cursive',
             color: '#ff00ff',
             textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
             letterSpacing: '0.5px',
             lineHeight: '1.3'
-          }}>
+          }}
+        >
           Q_World Studios
         </h2>
 
@@ -657,12 +587,15 @@ const VoiceNavigationAssistant = () => {
         )}
 
         <div className="relative mb-8">
-          <div className={`absolute inset-0 rounded-full transition-all duration-300 ${pulseAnimation ? 'animate-ping' : ''
+          <div 
+            className={`absolute inset-0 rounded-full transition-all duration-300 ${
+              pulseAnimation ? 'animate-ping' : ''
             }`}
             style={{
               background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%)',
               transform: 'scale(1.2)'
-            }} />
+            }} 
+          />
 
           <div
             className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-purple-500/30"
@@ -671,8 +604,8 @@ const VoiceNavigationAssistant = () => {
               boxShadow: isActive
                 ? '0 0 60px rgba(0,212,255,0.6), inset 0 0 40px rgba(0,100,150,0.3)'
                 : '0 0 30px rgba(0,212,255,0.3), inset 0 0 20px rgba(0,100,150,0.2)'
-            }}>
-
+            }}
+          >
             <video
               ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
@@ -691,84 +624,91 @@ const VoiceNavigationAssistant = () => {
               <div className="absolute inset-0 bg-red-500/5 animate-pulse" />
             )}
           </div>
-            <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
-              <div className="relative">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              toggleListening();
-            }}
-            disabled={micPermission === 'denied'}
-            className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg transition-all duration-300 ${isActive
-              ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50'
-              : micPermission === 'denied'
-                ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                : 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50'
-              }`}
-            style={{
-              WebkitTapHighlightColor: 'transparent',
-              touchAction: 'manipulation',
-              transform: `${isActive ? 'scale(1.1)' : 'scale(1)'}`,
-              transition: 'transform 150ms ease, background 200ms ease',
-               userSelect: 'none',
-               zIndex: 50,
-              pointerEvents: micPermission === 'denied' ? 'none' : 'auto'
-            }}
-            aria-label={isActive ? 'Stop voice assistant' : 'Start voice assistant'}
-          >
-            {isActive ? (
-              <div className="flex items-center justify-center w-full h-full">
-                <MicVocal className="w-7 h-7 md:w-8 md:h-8" />
-                <div className="absolute inset-0 rounded-full opacity-20 bg-red-400 animate-ping"></div>
-              </div>
-            ) : micPermission === 'denied' ? (
-              <div className="flex flex-col items-center justify-center w-full h-full">
-                <AlertCircle size={24} className="text-white" />
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center w-full h-full">
-                <Mic className="w-6 h-6 md:w-7 md:h-7" />
-              </div>
-            )}
 
-            {/* Visual feedback for touch devices */}
-            {touchActive && (
-              <span className="absolute inset-0 rounded-full bg-white/20"></span>
-            )}
-          </button>
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
+            <div className="relative">
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  toggleListening();
+                }}
+                onTouchStart={handleTouchStart}
+                onTouchEnd={handleTouchEnd}
+                disabled={micPermission === 'denied'}
+                className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg transition-all duration-300 ${
+                  isActive
+                    ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50'
+                    : micPermission === 'denied'
+                    ? 'bg-gray-500 cursor-not-allowed opacity-50'
+                    : 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50'
+                }`}
+                style={{
+                  WebkitTapHighlightColor: 'transparent',
+                  touchAction: 'manipulation',
+                  transform: `${isActive ? 'scale(1.1)' : 'scale(1)'}`,
+                  transition: 'transform 150ms ease, background 200ms ease',
+                  userSelect: 'none',
+                  zIndex: 50,
+                  pointerEvents: micPermission === 'denied' ? 'none' : 'auto'
+                }}
+                aria-label={isActive ? 'Stop voice assistant' : 'Start voice assistant'}
+              >
+                {isActive ? (
+                  <div className="flex items-center justify-center w-full h-full">
+                    <MicVocal className="w-7 h-7 md:w-8 md:h-8" />
+                    <div className="absolute inset-0 rounded-full opacity-20 bg-red-400 animate-ping"></div>
+                  </div>
+                ) : micPermission === 'denied' ? (
+                  <div className="flex flex-col items-center justify-center w-full h-full">
+                    <AlertCircle size={24} className="text-white" />
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center w-full h-full">
+                    <Mic className="w-6 h-6 md:w-7 md:h-7" />
+                  </div>
+                )}
 
-          {/* Status indicator */}
-          <div
-            className={`absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-full text-center text-sm font-medium transition-all duration-200 ${isActive ? 'opacity-100 text-white' : 'opacity-0 text-gray-300'
-              } whitespace-nowrap`}
-          >
-            {status}
+                {/* Visual feedback for touch devices */}
+                {touchActive && (
+                  <span className="absolute inset-0 rounded-full bg-white/20"></span>
+                )}
+              </button>
+
+              {/* Status indicator */}
+              <div
+                className={`absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-full text-center text-sm font-medium transition-all duration-200 ${
+                  isActive ? 'opacity-100 text-white' : 'opacity-0 text-gray-300'
+                } whitespace-nowrap`}
+              >
+                {status}
+              </div>
+            </div>
           </div>
         </div>
-          </div>
-        </div>
 
-        <h3 className="text-2xl md:text-3xl mb-6 text-center"
+        <h3 
+          className="text-2xl md:text-3xl mb-6 text-center"
           style={{
             fontFamily: 'cursive',
             color: '#ff00ff',
             textShadow: '0 0 15px rgba(255, 0, 255, 0.5)',
             letterSpacing: '1px'
-          }}>
+          }}
+        >
           Music Creation
         </h3>
 
-        <h4 className="text-3xl md:text-4xl mb-8 text-center"
+        <h4 
+          className="text-3xl md:text-4xl mb-8 text-center"
           style={{
             fontFamily: 'cursive',
             color: '#00d4ff',
             textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
             letterSpacing: '2px'
-          }}>
+          }}
+        >
           AI Radio Station
         </h4>
-
-     
       </div>
     </div>
   );
