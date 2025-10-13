@@ -471,20 +471,41 @@ const VoiceNavigationAssistant = () => {
       setTouchActive(true);
     }
   };
+  // In your component, update the touch handlers like this:
 
-  const handleTouchEnd = () => {
-    clearTimeout(touchTimerRef.current);
 
-    if (isActive && touchActive) {
-      // If user lifts finger while active, stop listening after a short delay
-      interactionTimeoutRef.current = setTimeout(() => {
-        if (isListening) {
-          stopAssistant();
-        }
-      }, 2000);
+  const handleTouchMove = (e) => {
+    if (touchStart !== null) {
+      // Only prevent default if we're actually handling a swipe
+      const touch = e.touches[0];
+      const diff = Math.abs(touch.clientX - touchStart);
+
+      // If the movement is more horizontal than vertical, prevent default
+      if (diff > 10) {  // Threshold to determine if it's a horizontal swipe
+        e.preventDefault();
+      }
+      setTouchEnd(touch.clientX);
     }
-    setTouchActive(false);
   };
+
+  const handleTouchEnd = (e) => {
+  clearTimeout(touchTimerRef.current);
+  setTouchActive(false);
+};
+
+  // const handleTouchEnd = () => {
+  //   clearTimeout(touchTimerRef.current);
+
+  //   if (isActive && touchActive) {
+  //     // If user lifts finger while active, stop listening after a short delay
+  //     interactionTimeoutRef.current = setTimeout(() => {
+  //       if (isListening) {
+  //         stopAssistant();
+  //       }
+  //     }, 2000);
+  //   }
+  //   setTouchActive(false);
+  // };
 
 
   // Clean up all resources when component unmounts
@@ -600,8 +621,8 @@ const VoiceNavigationAssistant = () => {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg border border-gray-700" 
-   >
+    <div className="flex flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg border border-gray-700"
+    >
       {/* <div className="absolute inset-0 overflow-hidden">
         {[...Array(100)].map((_, i) => (
           <div
@@ -717,12 +738,10 @@ const VoiceNavigationAssistant = () => {
 
         <div className="relative">
           <button
-            onTouchStart={handleTouchStart}
-            onTouchEnd={handleTouchEnd}
-            onMouseDown={isMobile ? undefined : () => setTouchActive(true)}
-            onMouseUp={isMobile ? undefined : () => setTouchActive(false)}
-            onMouseLeave={isMobile ? undefined : () => setTouchActive(false)}
-            onClick={!isMobile ? toggleListening : undefined}
+            onClick={(e) => {
+              e.stopPropagation();
+              toggleListening();
+            }}
             disabled={micPermission === 'denied'}
             className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg transition-all duration-300 ${isActive
               ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50'
@@ -733,8 +752,11 @@ const VoiceNavigationAssistant = () => {
             style={{
               WebkitTapHighlightColor: 'transparent',
               touchAction: 'manipulation',
-              transform: `${isActive ? 'scale(1.1)' : touchActive ? 'scale(0.95)' : 'scale(1)'}`,
-              transition: 'transform 150ms ease, background 200ms ease'
+              transform: `${isActive ? 'scale(1.1)' : 'scale(1)'}`,
+              transition: 'transform 150ms ease, background 200ms ease',
+               userSelect: 'none',
+               zIndex: 50,
+              pointerEvents: micPermission === 'denied' ? 'none' : 'auto'
             }}
             aria-label={isActive ? 'Stop voice assistant' : 'Start voice assistant'}
           >

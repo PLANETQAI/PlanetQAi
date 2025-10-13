@@ -385,19 +385,17 @@ const RootPage = () => {
   };
 
   // Handle touch events for swipe functionality
-const handleTouchStart = (e) => {
-  if (e.touches.length === 1) {
-    // Only prevent default if we can
-    try {
-      e.preventDefault();
-    } catch (err) {
-      // Ignore the error if preventDefault fails
-      console.warn('Could not preventDefault on touchstart:', err);
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 1) {
+      // Don't call preventDefault() here to avoid the passive event warning
+      // We'll use CSS to handle touch actions instead
+      setTouchStart(e.touches[0].clientX);
+      setTouchEnd(null);
+
+      // If you need to prevent default for specific cases, use non-passive event listeners
+      // by adding { passive: false } when adding the event listener
     }
-    setTouchStart(e.touches[0].clientX);
-    setTouchEnd(null);
-  }
-};
+  };
 
   const handleTouchMove = (e) => {
     if (touchStart !== null) {
@@ -477,13 +475,13 @@ const handleTouchStart = (e) => {
   }, [touchStart]);
 
   // Prevent click propagation on interactive elements
-const preventPropagation = (e) => {
-  e.stopPropagation();
-  e.nativeEvent?.stopImmediatePropagation?.();
-  if (e.type === 'touchstart' || e.type === 'touchmove') {
-    e.preventDefault();
-  }
-};
+  const preventPropagation = (e) => {
+    e.stopPropagation();
+    e.nativeEvent?.stopImmediatePropagation?.();
+    if (e.type === 'touchstart' || e.type === 'touchmove') {
+      e.preventDefault();
+    }
+  };
 
   const handlePlaneqgames = (e) => {
     e.stopPropagation();
@@ -621,8 +619,12 @@ const preventPropagation = (e) => {
   // );
 
   const qWorldStudios = (
-    <div className="w-full card-content">
-      <VoiceNavigationAssistant  />
+    <div
+      className="min-h-screen flex flex-col justify-center items-center bg-[#050816] top-0 relative z-10 p-4 sm:p-8 md:p-12 lg:p-20 overflow-y-auto"
+      onClick={preventPropagation}
+      onTouchStart={preventPropagation}
+    >
+      <VoiceNavigationAssistant />
     </div>
   );
 
