@@ -18,7 +18,7 @@ const VoiceNavigationAssistant = () => {
   const [pulseAnimation, setPulseAnimation] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [isMounted, setIsMounted] = useState(false);
-  
+
   const router = useRouter();
   const mediaStreamRef = useRef(null);
   const synthesisRef = useRef(null);
@@ -77,40 +77,95 @@ const VoiceNavigationAssistant = () => {
     return () => window.removeEventListener('resize', checkIfMobile);
   }, []);
 
+  // Check microphone permission function
+  const checkMicrophonePermission = useCallback(async () => {
+    try {
+      // First check if we can query the permission state without triggering the prompt
+      if (navigator.permissions && navigator.permissions.query) {
+        try {
+          const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
+          
+          const updatePermissionState = () => {
+            const state = permissionStatus.state;
+            setMicPermission(state);
+            setShowPermissionError(state === 'denied');
+            return state;
+          };
+          
+          const currentState = updatePermissionState();
+          
+          // If we already have permission, no need to request it
+          if (currentState === 'granted') {
+            return 'granted';
+          }
+          
+          permissionStatus.onchange = updatePermissionState;
+          
+          // If permission is denied, don't try to request it
+          if (currentState === 'denied') {
+            return 'denied';
+          }
+        } catch (error) {
+          console.log('Permissions API query failed, falling back to basic check');
+        }
+      }
+      
+      // If we get here, either Permissions API is not supported or permission is 'prompt'
+      try {
+        // This will trigger the permission prompt if not already granted/denied
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+        stream.getTracks().forEach(track => track.stop());
+        setMicPermission('granted');
+        setShowPermissionError(false);
+        return 'granted';
+      } catch (error) {
+        console.log('Microphone permission denied or not available', error);
+        setMicPermission('denied');
+        setShowPermissionError(true);
+        return 'denied';
+      }
+    } catch (error) {
+      console.error('Error checking microphone permission:', error);
+      setMicPermission('denied');
+      setShowPermissionError(true);
+      return 'denied';
+    }
+  }, []);
+
+  // Check and request microphone permission
+  const requestMicrophonePermission = useCallback(async () => {
+    try {
+      // This will trigger the permission prompt if not already granted/denied
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      stream.getTracks().forEach(track => track.stop());
+      setMicPermission('granted');
+      setShowPermissionError(false);
+      return true;
+    } catch (error) {
+      console.log('Microphone permission denied or not available', error);
+      setMicPermission('denied');
+      setShowPermissionError(true);
+      return false;
+    }
+  }, []);
+
   // Initialize speech synthesis and check microphone permission
   useEffect(() => {
     synthesisRef.current = window.speechSynthesis;
-
-    const checkMicrophonePermission = async () => {
-      if (navigator.permissions && navigator.permissions.query) {
-        try {
-          const permissionStatus = await navigator.permissions.query({
-            name: 'microphone'
-          }).catch(() => null);
-
-          if (permissionStatus) {
-            setMicPermission(permissionStatus.state);
-            
-            // Clear error if permission is granted
-            if (permissionStatus.state === 'granted') {
-              setShowPermissionError(false);
-            }
-            
-            permissionStatus.onchange = () => {
-              setMicPermission(permissionStatus.state);
-              if (permissionStatus.state === 'granted') {
-                setShowPermissionError(false);
-              }
-            };
-            return;
-          }
-        } catch (error) {
-          console.log('Permissions API not available');
+    
+    // Check if we should retry permission on page load
+    const retryPermission = localStorage.getItem('retryMicrophonePermission') === 'true';
+    
+    if (retryPermission) {
+      localStorage.removeItem('retryMicrophonePermission');
+      requestMicrophonePermission().then(granted => {
+        if (granted && isActive) {
+          startAssistant();
         }
-      }
-    };
-
-    checkMicrophonePermission();
+      });
+    } else {
+      checkMicrophonePermission();
+    }
 
     return () => {
       shouldProcessRef.current = false;
@@ -124,7 +179,19 @@ const VoiceNavigationAssistant = () => {
         synthesisRef.current.cancel();
       }
     };
-  }, []);
+  }, [checkMicrophonePermission, isActive, requestMicrophonePermission]);
+
+  // Check permission when active state changes
+  useEffect(() => {
+    checkMicrophonePermission();
+  }, [isActive, checkMicrophonePermission]);
+
+  // Set flag to retry permission on next page load if currently denied
+  useEffect(() => {
+    if (micPermission === 'denied' && isMounted) {
+      localStorage.setItem('retryMicrophonePermission', 'true');
+    }
+  }, [micPermission, isMounted]);
 
   const speak = (text) => {
     return new Promise((resolve) => {
@@ -431,15 +498,8 @@ const VoiceNavigationAssistant = () => {
 
   const startAssistant = async () => {
     console.log('🚀 Starting assistant...');
-    
-    // If permission is denied, show error and exit early
-    if (micPermission === 'denied') {
-      setStatus('Microphone access denied');
-      setShowPermissionError(true);
-      return;
-    }
 
-    // Set active state immediately for UI feedback
+    // Set initial UI state
     setIsActive(true);
     setStatus('Initializing...');
     setTranscript('');
@@ -450,7 +510,17 @@ const VoiceNavigationAssistant = () => {
     shouldProcessRef.current = true;
 
     try {
-      // Get the microphone stream
+      // Check current permission state
+      const permissionState = await checkMicrophonePermission();
+      
+      if (permissionState === 'denied') {
+        setStatus('Microphone access denied. Please enable it in your browser settings.');
+        setShowPermissionError(true);
+        setIsActive(false);
+        return;
+      }
+
+      // Get the microphone stream with optimized settings
       const constraints = {
         audio: {
           echoCancellation: true,
@@ -466,41 +536,59 @@ const VoiceNavigationAssistant = () => {
           })
         }
       };
-      
-      const stream = await navigator.mediaDevices.getUserMedia(constraints);
-      mediaStreamRef.current = stream;
-      setMicPermission('granted');
-      setShowPermissionError(false); // Clear any previous errors
 
-      // Initialize audio processing with the stream
-      const processingInitialized = await initAudioProcessing(stream);
-      if (!processingInitialized) {
-        throw new Error('Failed to initialize audio processing');
-      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints);
+        mediaStreamRef.current = stream;
+        setMicPermission('granted');
+        setShowPermissionError(false);
 
-      setIsListening(true);
-      setStatus(isMobile ? 'Listening...' : 'Listening continuously... Speak naturally!');
+        // Initialize audio processing with the stream
+        const processingInitialized = await initAudioProcessing(stream);
+        if (!processingInitialized) {
+          throw new Error('Failed to initialize audio processing');
+        }
 
-      // Mobile-specific timeout
-      if (isMobile) {
-        interactionTimeoutRef.current = setTimeout(() => {
-          if (isListening) stopAssistant();
-        }, 30000);
-      }
+        setIsListening(true);
+        setStatus(isMobile ? 'Listening...' : 'Listening continuously... Speak naturally!');
 
-      // Start welcome video
-      if (!welcomeFinished && videoRef.current) {
-        videoRef.current.currentTime = 0;
-        videoRef.current.muted = isMobile;
-        videoRef.current.playsInline = true;
-        videoRef.current.setAttribute('playsinline', 'true');
-        videoRef.current.play().catch(err => console.warn('⚠️ Video autoplay prevented:', err));
+        // Mobile-specific timeout
+        if (isMobile) {
+          interactionTimeoutRef.current = setTimeout(() => {
+            if (isListening) stopAssistant();
+          }, 30000);
+        }
+
+        // Start welcome video
+        if (!welcomeFinished && videoRef.current) {
+          videoRef.current.currentTime = 0;
+          videoRef.current.muted = isMobile;
+          videoRef.current.playsInline = true;
+          videoRef.current.setAttribute('playsinline', 'true');
+          videoRef.current.play().catch(err => 
+            console.warn('⚠️ Video autoplay prevented:', err)
+          );
+        }
+      } catch (error) {
+        console.error('❌ Failed to access microphone:', error);
+        if (error.name === 'NotAllowedError' || error.name === 'PermissionDeniedError') {
+          setStatus('Microphone access was denied. Please check your browser settings.');
+          setMicPermission('denied');
+          setShowPermissionError(true);
+        } else if (error.name === 'NotFoundError' || error.name === 'DevicesNotFoundError') {
+          setStatus('No microphone found. Please connect a microphone and try again.');
+          setShowPermissionError(true);
+        } else if (error.name === 'NotReadableError' || error.name === 'TrackStartError') {
+          setStatus('Microphone is already in use by another application.');
+          setShowPermissionError(true);
+        } else {
+          setStatus('Failed to access microphone. Please try again.');
+          setShowPermissionError(true);
+        }
+        throw error;
       }
     } catch (error) {
       console.error('❌ Failed to start assistant:', error);
-      setMicPermission('denied');
-      setShowPermissionError(true);
-      setStatus('Microphone access is required');
       setIsActive(false);
       stopRecording();
     }
@@ -510,7 +598,7 @@ const VoiceNavigationAssistant = () => {
     console.log('🛑 Stopping assistant...');
     shouldProcessRef.current = false;
     isSpeakingRef.current = false;
-    
+
     stopRecording();
 
     if (synthesisRef.current) {
@@ -528,15 +616,6 @@ const VoiceNavigationAssistant = () => {
     isNavigatingRef.current = false;
   }, [stopRecording]);
 
-  const toggleListening = useCallback(() => {
-    if (isActive) {
-      console.log('🛑 Toggling off...');
-      stopAssistant();
-    } else {
-      console.log('🎤 Toggling on...');
-      startAssistant();
-    }
-  }, [isActive, stopAssistant]);
 
   // Cleanup on unmount
   useEffect(() => {
@@ -547,10 +626,54 @@ const VoiceNavigationAssistant = () => {
     };
   }, []);
 
+
+  // const requestMicrophonePermission = useCallback(async () => {
+  //   try {
+  //     const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+  //     // Stop all tracks to release the microphone immediately
+  //     stream.getTracks().forEach(track => track.stop());
+  //     setMicPermission('granted');
+  //     setShowPermissionError(false);
+  //     return true;
+  //   } catch (error) {
+  //     console.error('Microphone access denied:', error);
+  //     setMicPermission('denied');
+  //     setShowPermissionError(true);
+  //     setStatus('Microphone access denied');
+  //     return false;
+  //   }
+  // }, []);
+
+  // Handle start button click
+  const handleStartListening = useCallback(async (e) => {
+    e?.stopPropagation();
+
+    if (micPermission === 'denied') {
+      setShowPermissionError(true);
+      return;
+    }
+
+    if (micPermission !== 'granted') {
+      const permissionGranted = await requestMicrophonePermission();
+      if (!permissionGranted) return;
+    }
+
+    console.log('🎤 Starting voice assistant...');
+    await startAssistant();
+  }, [micPermission, requestMicrophonePermission, startAssistant]);
+
+  // Handle stop button click
+  const handleStopListening = useCallback((e) => {
+    e?.stopPropagation();
+    console.log('🛑 Stopping voice assistant...');
+    stopAssistant();
+  }, [stopAssistant]);
+
+
   return (
     <div className="flex bg-[#17101d9c] flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg">
       <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 max-w-2xl mx-auto">
-        <h1 
+        <h1
           className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
           style={{
             fontFamily: 'cursive',
@@ -563,7 +686,7 @@ const VoiceNavigationAssistant = () => {
           Planet Q<br className="sm:hidden" /> Productions
         </h1>
 
-        <h2 
+        <h2
           className="text-xl sm:text-2xl md:text-3xl mb-6 sm:mb-8 text-center"
           style={{
             fontFamily: 'cursive',
@@ -576,25 +699,70 @@ const VoiceNavigationAssistant = () => {
           Q_World Studios
         </h2>
 
-        {showPermissionError && (
-          <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg flex items-center gap-3 max-w-md">
-            <AlertCircle className="text-red-400 flex-shrink-0" size={24} />
-            <div className="text-sm text-red-200">
-              <p className="font-semibold mb-1">Microphone Access Required</p>
-              <p>Please enable microphone permissions in your browser settings.</p>
+        {showPermissionError && micPermission === 'denied' && (
+          <div className="mb-6 p-4 bg-red-500/20 border border-red-500 rounded-lg flex flex-col gap-3 max-w-md">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="text-red-400 flex-shrink-0 mt-0.5" size={20} />
+              <div className="text-sm text-red-200">
+                <p className="font-semibold mb-1">Microphone Access Required</p>
+                <p className="mb-3">Please enable microphone permissions to use voice commands.</p>
+                <button
+                  onClick={async () => {
+                    try {
+                      // First try to check the permission state
+                      const permission = await checkMicrophonePermission();
+                      
+                      if (permission === 'granted') {
+                        setMicPermission('granted');
+                        setShowPermissionError(false);
+                        if (isActive) {
+                          startAssistant();
+                        }
+                        return;
+                      }
+                      
+                      // If we get here, permission is still not granted
+                      // Direct user to browser settings
+                      if (navigator.permissions) {
+                        setStatus('Please enable microphone access in your browser settings.');
+                      } else {
+                        // Fallback for browsers that don't support Permissions API
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        setMicPermission('granted');
+                        setShowPermissionError(false);
+                        if (isActive) {
+                          startAssistant();
+                        }
+                      }
+                    } catch (error) {
+                      console.error('Failed to get microphone permission:', error);
+                      setStatus('Please enable microphone access in your browser settings.');
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-medium rounded-md transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 focus:ring-offset-gray-900"
+                >
+                  {navigator.permissions ? 'Open Browser Settings' : 'Try Again'}
+                </button>
+              </div>
+            </div>
+            <div className="text-xs text-red-300 mt-1">
+              <p>Please allow microphone access in your browser settings to use voice commands.</p>
+              {navigator.permissions && (
+                <p className="mt-1">Look for the microphone icon in your browser's address bar and allow access.</p>
+              )}
             </div>
           </div>
         )}
 
         <div className="relative mb-8">
-          <div 
-            className={`absolute inset-0 rounded-full transition-all duration-300 ${
-              pulseAnimation ? 'animate-ping' : ''
-            }`}
+          <div
+            className={`absolute inset-0 rounded-full transition-all duration-300 ${pulseAnimation ? 'animate-ping' : ''
+              }`}
             style={{
               background: 'radial-gradient(circle, rgba(0,212,255,0.3) 0%, transparent 70%)',
               transform: 'scale(1.2)'
-            }} 
+            }}
           />
 
           <div
@@ -610,6 +778,7 @@ const VoiceNavigationAssistant = () => {
               ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
               autoPlay
+              loop
               muted
               playsInline
               onEnded={() => {
@@ -629,62 +798,71 @@ const VoiceNavigationAssistant = () => {
 
           <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
             <div className="relative">
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  toggleListening();
-                }}
-                onTouchStart={handleTouchStart}
-                onTouchEnd={handleTouchEnd}
-                disabled={micPermission === 'denied'}
-                className={`relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg transition-all duration-300 ${
-                  isActive
-                    ? 'bg-red-500 hover:bg-red-600 shadow-red-500/50'
-                    : micPermission === 'denied'
-                    ? 'bg-gray-500 cursor-not-allowed opacity-50'
-                    : 'bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50'
-                }`}
-                style={{
-                  userSelect: 'none',
-                  zIndex: 50,
-                  pointerEvents: micPermission === 'denied' ? 'none' : 'auto'
-                }}
-                aria-label={isActive ? 'Stop voice assistant' : 'Start voice assistant'}
-              >
-                {isActive ? (
+              {isActive ? (
+                <button
+                  onClick={handleStopListening}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg bg-red-500 hover:bg-red-600 shadow-red-500/50 transition-all duration-300"
+                  style={{
+                    userSelect: 'none',
+                    zIndex: 50
+                  }}
+                  aria-label="Stop voice assistant"
+                >
                   <div className="flex items-center justify-center w-full h-full">
                     <MicVocal className="w-7 h-7 md:w-8 md:h-8" />
                     <div className="absolute inset-0 rounded-full opacity-20 bg-red-400 animate-ping"></div>
                   </div>
-                ) : micPermission === 'denied' ? (
-                  <div className="flex flex-col items-center justify-center w-full h-full">
+                  {touchActive && (
+                    <span className="absolute inset-0 rounded-full bg-white/20"></span>
+                  )}
+                </button>
+              ) : micPermission === 'denied' ? (
+                <div className="relative group">
+                  <button
+                    onClick={() => setShowPermissionError(true)}
+                    className="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-500 cursor-not-allowed opacity-50"
+                    aria-label="Microphone access denied"
+                    disabled
+                  >
                     <AlertCircle size={24} className="text-white" />
+                  </button>
+                  <div className="absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-48 text-center text-sm text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Microphone access denied
                   </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center w-full h-full">
-                    <Mic className="w-6 h-6 md:w-7 md:h-7" />
-                  </div>
-                )}
-
-                {/* Visual feedback for touch devices */}
-                {touchActive && (
-                  <span className="absolute inset-0 rounded-full bg-white/20"></span>
-                )}
-              </button>
+                </div>
+              ) : (
+                <button
+                  onClick={handleStartListening}
+                  onTouchStart={handleTouchStart}
+                  onTouchEnd={handleTouchEnd}
+                  className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50 transition-all duration-300"
+                  style={{
+                    userSelect: 'none',
+                    zIndex: 50
+                  }}
+                  aria-label="Start voice assistant"
+                >
+                  <Mic className="w-6 h-6 md:w-7 md:h-7" />
+                  {touchActive && (
+                    <span className="absolute inset-0 rounded-full bg-white/20"></span>
+                  )}
+                </button>
+              )}
 
               {/* Status indicator */}
-              <div
-                className={`absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-full text-center text-sm font-medium transition-all duration-200 ${
-                  isActive ? 'opacity-100 text-white' : 'opacity-0 text-gray-300'
-                } whitespace-nowrap`}
+              {/* <div
+                className={`absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-full text-center text-sm font-medium transition-all duration-200 ${isActive ? 'opacity-100 text-white' : 'opacity-0 text-gray-300'
+                  } whitespace-nowrap`}
               >
                 {status}
-              </div>
+              </div> */}
             </div>
           </div>
         </div>
 
-        <h3 
+        <h3
           className="text-2xl md:text-3xl mb-6 text-center"
           style={{
             fontFamily: 'cursive',
@@ -696,7 +874,7 @@ const VoiceNavigationAssistant = () => {
           Music Creation
         </h3>
 
-        <h4 
+        <h4
           className="text-3xl md:text-4xl mb-8 text-center"
           style={{
             fontFamily: 'cursive',
