@@ -492,9 +492,17 @@ const VoiceNavigationAssistant = () => {
     }
   };
 
-  const handleTouchEnd = () => {
+  const handleTouchEnd = (e) => {
     clearTimeout(touchTimerRef.current);
     setTouchActive(false);
+
+    // If the assistant is active, this was a tap on the "Stop" button.
+    if (isActive) {
+      // Prevent the browser from firing a delayed "click" event.
+      e.preventDefault();
+      // Trigger the stop action immediately for mobile reliability.
+      handleStopListening(e);
+    }
   };
 
   useEffect(() => {
@@ -570,12 +578,24 @@ const VoiceNavigationAssistant = () => {
 
         if (!welcomeFinished && videoRef.current) {
           videoRef.current.currentTime = 0;
-          videoRef.current.muted = isMobile;
           videoRef.current.playsInline = true;
           videoRef.current.setAttribute('playsinline', 'true');
-          videoRef.current.play().catch(err =>
-            console.warn('⚠️ Video autoplay prevented:', err)
-          );
+
+          // Try to play with sound first
+          videoRef.current.muted = false;
+          videoRef.current.play().catch(error => {
+            // If it fails, it's likely due to autoplay policies.
+            console.warn('⚠️ Video with sound was blocked by the browser. Retrying in muted mode.', error.name);
+            // Mute the video and try playing again.
+            if (error.name === 'NotAllowedError') {
+              videoRef.current.muted = true;
+              videoRef.current.play().catch(err => {
+                console.error('❌ Video failed to play even in muted mode:', err);
+              });
+            } else {
+              console.error('❌ An unexpected error occurred during video playback:', error);
+            }
+          });
         }
       } catch (error) {
         console.error('❌ Failed to access microphone:', error);
