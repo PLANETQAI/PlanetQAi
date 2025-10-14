@@ -198,7 +198,6 @@ const VoiceNavigationAssistant = () => {
     }
 
     return () => {
-      shouldProcessRef.current = false;
       if (abortControllerRef.current) {
         abortControllerRef.current.abort();
       }
@@ -268,7 +267,10 @@ const VoiceNavigationAssistant = () => {
 
   const processAudioChunk = async (audioBuffer) => {
     if (!shouldProcessRef.current || isProcessing || isSpeakingRef.current) {
-      console.log('⏭️ Skipping processing - stopped or busy');
+      // Detailed diagnostic log
+      console.log(
+        `⏭️ Skipping processing. Reason: shouldProcess=${shouldProcessRef.current}, isProcessing=${isProcessing}, isSpeaking=${isSpeakingRef.current}`
+      );
       return;
     }
 
@@ -287,6 +289,8 @@ const VoiceNavigationAssistant = () => {
 
       const formData = new FormData();
       formData.append('audio', wavBlob, 'chunk.wav');
+
+      console.log('📡 Calling /api/speech/transcribe...'); // Add specific log for API call
 
       const response = await fetch('/api/speech/transcribe', {
         method: 'POST',
