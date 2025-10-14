@@ -131,7 +131,7 @@ export default auth(async (req) => {
 
 export const config = {
   matcher: [
-    "/((?!api/auth|auth|images|api/link/getlink|videos/*|robot|aistudio|api/gallery/create|api/thumbnail/modifythumbnail|vidoes|_next/static|_next/image|favicon.ico|api/webhooks|api/stripe-webhook|api/credits/webhook|api/subscriptions/webhook|forgot-password|reset-password|verify-account|^/|/share/).+)",
+    "/((?!api/auth|auth|images|api/link/getlink|videos/*|robot|aistudio|api/gallery/create|api/thumbnail/modifythumbnail|vidoes|_next/static|_next/image|favicon.ico|audio-processor.js|api/webhooks|api/stripe-webhook|api/credits/webhook|api/subscriptions/webhook|forgot-password|reset-password|verify-account|^/|/share/).+)",
     "/admin/:path*",
     "/api/admin/:path*",
   ],
