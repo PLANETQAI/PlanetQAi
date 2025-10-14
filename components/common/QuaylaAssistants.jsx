@@ -38,7 +38,27 @@ const VoiceNavigationAssistant = () => {
 
   const videoUrl = "/videos/generator_final.mp4";
 
-  // 1. Feature Detection Hook
+  // --- DIAGNOSTIC HOOK ---
+  useEffect(() => {
+    const testWorkletPath = async () => {
+      console.log("DIAGNOSTIC: Testing path '/audio-processor.js'");
+      try {
+        const response = await fetch('/audio-processor.js');
+        console.log(`DIAGNOSTIC: Fetch response status: ${response.status}`);
+        if (response.ok) {
+          const text = await response.text();
+          console.log("DIAGNOSTIC: Fetch successful. File content starts with:", text.substring(0, 150));
+        } else {
+          console.error(`DIAGNOSTIC: Fetch failed with status ${response.status}. The file might be missing or at the wrong path.`);
+        }
+      } catch (e) {
+        console.error("DIAGNOSTIC: Fetch threw an error. This could be a network issue or an invalid URL.", e);
+      }
+    };
+    testWorkletPath();
+  }, []);
+
+  // Feature Detection Hook
   useEffect(() => {
     const supported =
       !!(window.AudioContext || window.webkitAudioContext) &&
@@ -97,7 +117,6 @@ const VoiceNavigationAssistant = () => {
   // Check microphone permission function
   const checkMicrophonePermission = useCallback(async () => {
     try {
-      // First check if we can query the permission state without triggering the prompt
       if (navigator.permissions && navigator.permissions.query) {
         try {
           const permissionStatus = await navigator.permissions.query({ name: 'microphone' });
@@ -111,14 +130,12 @@ const VoiceNavigationAssistant = () => {
 
           const currentState = updatePermissionState();
 
-          // If we already have permission, no need to request it
           if (currentState === 'granted') {
             return 'granted';
           }
 
           permissionStatus.onchange = updatePermissionState;
 
-          // If permission is denied, don't try to request it
           if (currentState === 'denied') {
             return 'denied';
           }
@@ -127,9 +144,7 @@ const VoiceNavigationAssistant = () => {
         }
       }
 
-      // If we get here, either Permissions API is not supported or permission is 'prompt'
       try {
-        // This will trigger the permission prompt if not already granted/denied
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         stream.getTracks().forEach(track => track.stop());
         setMicPermission('granted');
@@ -152,7 +167,6 @@ const VoiceNavigationAssistant = () => {
   // Check and request microphone permission
   const requestMicrophonePermission = useCallback(async () => {
     try {
-      // This will trigger the permission prompt if not already granted/denied
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       stream.getTracks().forEach(track => track.stop());
       setMicPermission('granted');
@@ -170,7 +184,6 @@ const VoiceNavigationAssistant = () => {
   useEffect(() => {
     synthesisRef.current = window.speechSynthesis;
 
-    // Check if we should retry permission on page load
     const retryPermission = localStorage.getItem('retryMicrophonePermission') === 'true';
 
     if (retryPermission) {
@@ -294,7 +307,6 @@ const VoiceNavigationAssistant = () => {
           return newText;
         });
 
-        // Check if navigation command was detected
         if (result.navigation) {
           console.log('🎯 Navigation detected:', result.navigation.action);
           isNavigatingRef.current = true;
@@ -303,13 +315,10 @@ const VoiceNavigationAssistant = () => {
             console.log('🧭 Navigating to:', result.navigation.route);
             setStatus(result.navigation.message);
 
-            // Speak and then navigate
             await speak(result.navigation.message);
 
-            // Stop everything
             stopAssistant();
 
-            // Navigate after a short delay
             setTimeout(() => {
               router.push(`/${result.navigation.route}`);
             }, 500);
@@ -322,7 +331,6 @@ const VoiceNavigationAssistant = () => {
           } else if (result.navigation.action === 'greeting' || result.navigation.action === 'help') {
             setStatus('Listening for your command...');
             await speak(result.navigation.message);
-            // Continue listening after greeting/help
           }
         }
       }
@@ -347,7 +355,6 @@ const VoiceNavigationAssistant = () => {
     const buffer = new ArrayBuffer(44 + audioBuffer.length * 2);
     const view = new DataView(buffer);
 
-    // WAV header
     writeString(view, 0, 'RIFF');
     view.setUint32(4, 36 + audioBuffer.length * 2, true);
     writeString(view, 8, 'WAVE');
@@ -383,8 +390,6 @@ const VoiceNavigationAssistant = () => {
       const AudioContext = window.AudioContext || window.webkitAudioContext;
       audioContextRef.current = new AudioContext({ sampleRate: 16000 });
 
-      // On some browsers, especially mobile, the AudioContext needs to be resumed
-      // by a user gesture before you can add a module.
       if (audioContextRef.current.state === 'suspended') {
         await audioContextRef.current.resume();
       }
@@ -393,9 +398,8 @@ const VoiceNavigationAssistant = () => {
 
       const source = audioContextRef.current.createMediaStreamSource(stream);
 
-      // Create a gain node to prevent feedback - mute the output
       const gainNode = audioContextRef.current.createGain();
-      gainNode.gain.value = 0; // Mute the microphone input playback
+      gainNode.gain.value = 0;
 
       audioProcessorRef.current = new AudioWorkletNode(
         audioContextRef.current,
@@ -407,7 +411,6 @@ const VoiceNavigationAssistant = () => {
           const audioData = new Float32Array(event.data.audioData);
           audioChunksRef.current.push(audioData);
 
-          // Process every 2 seconds of audio (2 chunks)
           if (audioChunksRef.current.length >= 2) {
             const combinedBuffer = new Float32Array(
               audioChunksRef.current.reduce((acc, chunk) => acc + chunk.length, 0)
@@ -419,16 +422,13 @@ const VoiceNavigationAssistant = () => {
               offset += chunk.length;
             });
 
-            // Clear the chunks for next collection
             audioChunksRef.current = [];
 
-            // Process the audio
             processAudioChunk(combinedBuffer);
           }
         }
       };
 
-      // Connect with gain node to prevent feedback
       source.connect(audioProcessorRef.current);
       audioProcessorRef.current.connect(gainNode);
       gainNode.connect(audioContextRef.current.destination);
@@ -438,7 +438,6 @@ const VoiceNavigationAssistant = () => {
 
     } catch (error) {
       console.error('❌ Error initializing audio:', error);
-      // Add more specific error logging
       if (error.message.includes("load a worklet's module")) {
         console.error("💡 Tip: Check if '/audio-processor.js' is accessible in your production environment's public folder and that the server has the correct MIME types configured for .js files.");
       }
@@ -465,7 +464,6 @@ const VoiceNavigationAssistant = () => {
     clearTimeout(interactionTimeoutRef.current);
     setIsListening(false);
 
-    // Clean up audio processing
     if (audioProcessorRef.current) {
       try {
         audioProcessorRef.current.port.postMessage('stop');
@@ -476,7 +474,6 @@ const VoiceNavigationAssistant = () => {
       audioProcessorRef.current = null;
     }
 
-    // Clean up media stream
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach(track => {
         track.stop();
@@ -485,7 +482,6 @@ const VoiceNavigationAssistant = () => {
     }
   }, [isMounted]);
 
-  // Touch event handlers for mobile
   const handleTouchStart = () => {
     if (!isActive) {
       touchTimerRef.current = setTimeout(() => {
@@ -501,7 +497,6 @@ const VoiceNavigationAssistant = () => {
     setTouchActive(false);
   };
 
-  // Clean up all resources when component unmounts
   useEffect(() => {
     return () => {
       clearTimeout(touchTimerRef.current);
@@ -518,7 +513,6 @@ const VoiceNavigationAssistant = () => {
   const startAssistant = async () => {
     console.log('🚀 Starting assistant...');
 
-    // Set initial UI state
     setIsActive(true);
     setStatus('Initializing...');
     setTranscript('');
@@ -529,7 +523,6 @@ const VoiceNavigationAssistant = () => {
     shouldProcessRef.current = true;
 
     try {
-      // Check current permission state
       const permissionState = await checkMicrophonePermission();
 
       if (permissionState === 'denied') {
@@ -539,7 +532,6 @@ const VoiceNavigationAssistant = () => {
         return;
       }
 
-      // Get the microphone stream with optimized settings
       const constraints = {
         audio: {
           echoCancellation: true,
@@ -562,7 +554,6 @@ const VoiceNavigationAssistant = () => {
         setMicPermission('granted');
         setShowPermissionError(false);
 
-        // Initialize audio processing with the stream
         const processingInitialized = await initAudioProcessing(stream);
         if (!processingInitialized) {
           throw new Error('Failed to initialize audio processing');
@@ -571,14 +562,12 @@ const VoiceNavigationAssistant = () => {
         setIsListening(true);
         setStatus(isMobile ? 'Listening...' : 'Listening continuously... Speak naturally!');
 
-        // Mobile-specific timeout
         if (isMobile) {
           interactionTimeoutRef.current = setTimeout(() => {
             if (isListening) stopAssistant();
           }, 30000);
         }
 
-        // Start welcome video
         if (!welcomeFinished && videoRef.current) {
           videoRef.current.currentTime = 0;
           videoRef.current.muted = isMobile;
@@ -589,7 +578,6 @@ const VoiceNavigationAssistant = () => {
           );
         }
       } catch (error) {
-        // 2. Specific Error Handling
         console.error('❌ Failed to access microphone:', error);
         let message = 'Failed to access microphone. Please try again.';
         switch (error.name) {
@@ -647,7 +635,6 @@ const VoiceNavigationAssistant = () => {
   }, [stopRecording]);
 
 
-  // Cleanup on unmount
   useEffect(() => {
     return () => {
       if (isActive) {
@@ -674,14 +661,12 @@ const VoiceNavigationAssistant = () => {
     await startAssistant();
   }, [micPermission, requestMicrophonePermission, startAssistant]);
 
-  // Handle stop button click
   const handleStopListening = useCallback((e) => {
     e?.stopPropagation();
     console.log('🛑 Stopping voice assistant...');
     stopAssistant();
   }, [stopAssistant]);
 
-  // 3. Render "Not Supported" message
   if (!isSupported) {
     return (
       <div className="flex bg-[#17101d9c] flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg">
@@ -748,7 +733,6 @@ const VoiceNavigationAssistant = () => {
                 <button
                   onClick={async () => {
                     try {
-                      // First try to check the permission state
                       const permission = await checkMicrophonePermission();
 
                       if (permission === 'granted') {
@@ -760,12 +744,9 @@ const VoiceNavigationAssistant = () => {
                         return;
                       }
 
-                      // If we get here, permission is still not granted
-                      // Direct user to browser settings
                       if (navigator.permissions) {
                         setStatus('Please enable microphone access in your browser settings.');
                       } else {
-                        // Fallback for browsers that don't support Permissions API
                         const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                         stream.getTracks().forEach(track => track.stop());
                         setMicPermission('granted');
