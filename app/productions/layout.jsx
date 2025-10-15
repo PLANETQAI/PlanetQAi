@@ -2,6 +2,7 @@
 
 import { AnimatePresence, motion } from "framer-motion";
 import dynamic from "next/dynamic";
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -33,17 +34,23 @@ const RadioLayout = ({ children }) => {
   return (
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       <StarsWrapper />
-
       {/* Navigation */}
       <header className="relative z-50">
         <nav className="container mx-auto px-4 py-6">
           <div className="flex flex-row md:flex-row md:items-center md:justify-between justify-between">
-            <Link href="/radio" className="text-2xl font-bold mb-4 md:mb-0">
-              <span className="bg-clip-text text-transparent bg-gradient-to-r from-cyan-400 to-blue-600">
-                Planet Q Music Store
+
+            <Link href="/radio" className="flex items-center gap-2">
+              <Image
+                src="/images/small.webp"
+                alt="PlanetQAi Logo"
+                width={40}
+                height={40}
+                className="rounded-lg"
+              />
+              <span className="font-bold text-lg hidden sm:inline bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+                PlanetQAi
               </span>
             </Link>
-
             {/* Mobile menu button */}
             <div className="md:hidden">
               <button
@@ -103,11 +110,10 @@ const RadioLayout = ({ children }) => {
 const NavLink = ({ link, isActive, mobile = false }) => (
   <Link
     href={link.path}
-    className={`relative py-2 text-sm font-medium transition-colors ${
-      isActive
+    className={`relative py-2 text-sm font-medium transition-colors ${isActive
         ? "text-cyan-400"
         : "text-gray-300 hover:text-cyan-400"
-    } ${mobile ? 'text-lg py-3' : ''}`}
+      } ${mobile ? 'text-lg py-3' : ''}`}
   >
     {link.name}
     {isActive && (
