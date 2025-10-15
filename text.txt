@@ -1,15 +1,12 @@
-email: planetqproductions@gmail.com
-password: 1234567890
+Good Morning, I went on the website this morning and noticed that you got the chat bot working, but she still needs some improvements, like the double voice in the background when you give her commands. We should not be able to hear that lol. Anyways here are some things that I noticed that need to be changed and it will be finished.
 
+1. Quayla repeats herself, She only need to explain herself one time. Also you can't give her a command unless you are logged in. If you are not logged in you should be able to give her a command but she should bring you to the login screen and tell you to log in instead of answering you. 
 
-###
-Previous Credentails: 
-MongoDB_DATABASE_URL="mongodb+srv://root:randompassword@cluster0.ab1cd.mongodb.net/mydb?retryWrites=true&w=majority"
+2. Can you add the 3D background Quayla's other page at
+https://www.planetqradio.com/chat 
 
-node scripts/verify-admin.js
-Email: admin@planetqai.com
-Password: Admin123!
+3. Please delete the Planet Q Store Title from these pages 
 
+https://www.planetqradio.com/productions/about 
 
-###
-thhhttttttty
+https://www.planetqradio.com/productions

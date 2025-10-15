@@ -17,23 +17,6 @@ const spotifyEmbeds = [
   }
 ];
 
-// Background pattern component
-const BackgroundPattern = () => (
-  <div className="fixed inset-0 overflow-hidden -z-10">
-    <div className="absolute inset-0 bg-[#0a0a1a] opacity-90">
-      <div
-        className="absolute inset-0 opacity-10"
-        style={{
-          backgroundImage:
-            "linear-gradient(to right, rgba(6, 182, 212, 0.1) 1px, transparent 1px), linear-gradient(to bottom, rgba(6, 182, 212, 0.1) 1px, transparent 1px)",
-          backgroundSize: "40px 40px",
-        }}
-      ></div>
-    </div>
-    <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-purple-500/5"></div>
-  </div>
-);
-
 const RadioContent = () => {
   const router = useRouter();
 

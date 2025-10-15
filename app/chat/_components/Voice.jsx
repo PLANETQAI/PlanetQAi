@@ -17,11 +17,11 @@ export default function VoiceAssistant() {
   const [chatHistory, setChatHistory] = useState([]);
   const [songData, setSongData] = useState(null);
   const { openGenerator, closeGenerator, showGenerator } = useGenerator();
-  const { 
-    credits: userCredits, 
-    creditsLoading, 
-    creditsError, 
-    fetchUserCredits 
+  const {
+    credits: userCredits,
+    creditsLoading,
+    creditsError,
+    fetchUserCredits
   } = useUser();
   const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
 
@@ -214,7 +214,7 @@ export default function VoiceAssistant() {
         : {};
 
     return (
-      <div className="space-y-4 p-4 rounded-xl bg-gray-950 shadow-md border border-gray-800">
+      <div className="space-y-4 p-4 rounded-xl shadow-md border border-gray-800">
         {/* Tool Section */}
         <div>
           <div className="font-semibold text-purple-400 mb-1">🔧 Tool</div>
@@ -264,137 +264,141 @@ export default function VoiceAssistant() {
 
 
   return (
-    <div className="flex flex-col h-screen bg-gray-900 text-white">
-      {/* Generator Component */}
-      {showGenerator && session && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-3xl relative">
-            <button
-              onClick={closeGenerator}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <div className="mt-8 p-6 bg-gray-800 rounded-lg max-h-[calc(90vh-4rem)] overflow-y-auto">
-              <QuaylaGenerator 
-                session={session} 
-                selectedPrompt={songData}
-                onCreditsUpdate={fetchUserCredits}
-                onClose={closeGenerator}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
-        <div className="relative  w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-120 lg:h-120   mb-4">
-          <div className={`absolute inset-0 rounded-full ${connected
-            ? 'bg-gradient-to-r from-green-400 to-blue-500'
-            : 'bg-gradient-to-r from-gray-400 to-gray-600'
-            } p-0.5`}>
-            <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
-              <video
-                autoPlay
-                loop
-                muted
-                playsInline
-                className="w-full h-full object-cover"
-              >
-                <source src="/videos/generator.mp4" type="video/mp4" />
-                Your browser does not support the video tag.
-              </video>
-            </div>
-          </div>
-          {connected && (
-            <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900"></div>
-          )}
-        </div>
-        <div className={`text-sm font-medium mb-4 ${connected ? 'text-green-400' : 'text-gray-400'
-          }`}>
-          {connected ? 'Listening...' : connecting ? 'Connecting...' : 'Tap to start'}
-        </div>
-        <div className="space-y-4">
-          {!connected && !connecting && (
-            <button
-              onClick={connect}
-              className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden w-full text-center"
-            >
-              <span className="relative z-10 flex items-center justify-center">
-                <FaMicrophone className="mr-2" />
-                Start Assistant
-              </span>
-              <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-            </button>
-          )}
-          {connected && (
-            <button
-              onClick={disconnect}
-              className="group w-full relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden"
-            >
-              <span className="relative z-10 flex items-center justify-center">
-                <FaMicrophoneSlash className="mr-2" />
-                Stop Assistant
-              </span>
-              <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-            </button>
-          )}
+    <div>
+      {/* Stars Background */}
+      
+      <div className="relative flex flex-col min-h-screen text-white">
 
-          {errorMsg && (
-            <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 pt-0.5">
-                  <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-100">Something went wrong</h3>
-                  <div className="mt-1 text-sm text-red-200">
-                    We're having trouble processing your request. Please try again in a moment.
+        {/* Generator Component */}
+        {showGenerator && session && (
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+            <div className="bg-gray-900 rounded-lg p-6 w-full max-w-3xl relative">
+              <button
+                onClick={closeGenerator}
+                className="absolute top-4 right-4 text-gray-400 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+              <div className="mt-8 p-6 bg-gray-800 rounded-lg max-h-[calc(90vh-4rem)] overflow-y-auto">
+                <QuaylaGenerator
+                  session={session}
+                  selectedPrompt={songData}
+                  onCreditsUpdate={fetchUserCredits}
+                  onClose={closeGenerator}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
+          <div className="relative  w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-120 lg:h-120   mb-4">
+            <div className={`absolute inset-0 rounded-full ${connected
+              ? 'bg-gradient-to-r from-green-400 to-blue-500'
+              : 'bg-gradient-to-r from-gray-400 to-gray-600'
+              } p-0.5`}>
+              <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
+                >
+                  <source src="/videos/generator.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
+              </div>
+            </div>
+            {connected && (
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900"></div>
+            )}
+          </div>
+          <div className={`text-sm font-medium mb-4 ${connected ? 'text-green-400' : 'text-gray-400'
+            }`}>
+            {connected ? 'Listening...' : connecting ? 'Connecting...' : 'Tap to start'}
+          </div>
+          <div className="space-y-4">
+            {!connected && !connecting && (
+              <button
+                onClick={connect}
+                className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden w-full text-center"
+              >
+                <span className="relative z-10 flex items-center justify-center">
+                  <FaMicrophone className="mr-2" />
+                  Start Assistant
+                </span>
+                <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              </button>
+            )}
+            {connected && (
+              <button
+                onClick={disconnect}
+                className="group w-full relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden"
+              >
+                <span className="relative z-10 flex items-center justify-center">
+                  <FaMicrophoneSlash className="mr-2" />
+                  Stop Assistant
+                </span>
+                <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+              </button>
+            )}
+
+            {errorMsg && (
+              <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 pt-0.5">
+                    <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
                   </div>
-                  <div className="mt-3 flex">
-                    <a
-                      href="/support"
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                    >
-                      Contact Support
-                    </a>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-100">Something went wrong</h3>
+                    <div className="mt-1 text-sm text-red-200">
+                      We're having trouble processing your request. Please try again in a moment.
+                    </div>
+                    <div className="mt-3 flex">
+                      <a
+                        href="/support"
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                      >
+                        Contact Support
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {connected && (
-            <div className="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-lg">
-              🎤 Ready to create music! Start talking to begin.
-            </div>
-          )}
-        </div>
-        {chatHistory.length > 0 && (
-          <div className="mt-6">
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {Array.from(
-                chatHistory
-                  .filter((item) => item.type === "function_call")
-                  .reduce((map, item) => {
-                    // Use function name as key to ensure uniqueness
-                    if (!map.has(item.name)) {
-                      map.set(item.name, item);
-                    }
-                    return map;
-                  }, new Map())
-                  .values()
-              ).map((item, index) => (
-                <div key={index} className="p-3 rounded">
-                  <div className="text-cyan-300 whitespace-pre-wrap">
-                    {formatFunctionCall(item)}
+            {connected && (
+              <div className="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-lg">
+                🎤 Ready to create music! Start talking to begin.
+              </div>
+            )}
+          </div>
+          {chatHistory.length > 0 && (
+            <div className="mt-6">
+              <div className="space-y-4 max-h-96 overflow-y-auto">
+                {Array.from(
+                  chatHistory
+                    .filter((item) => item.type === "function_call")
+                    .reduce((map, item) => {
+                      // Use function name as key to ensure uniqueness
+                      if (!map.has(item.name)) {
+                        map.set(item.name, item);
+                      }
+                      return map;
+                    }, new Map())
+                    .values()
+                ).map((item, index) => (
+                  <div key={index} className="p-3 rounded">
+                    <div className="text-cyan-300 whitespace-pre-wrap">
+                      {formatFunctionCall(item)}
+                    </div>
                   </div>
-                </div>
-              ))}
-              {/* {chatHistory
+                ))}
+                {/* {chatHistory
                 .filter((item) => item.type === "function_call") // ✅ only show function calls
                 .map((item, index) => (
                   <div key={index} className="p-3 rounded">
@@ -429,12 +433,12 @@ export default function VoiceAssistant() {
                     </div>
                   </div>
                 ))} */}
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
 
-        {/* {chatHistory.length > 0 && (
+          {/* {chatHistory.length > 0 && (
           <div className="bg-gray-800 rounded-lg p-6 mt-6">
             <div className="space-y-4 max-h-96 overflow-y-auto">
               {chatHistory.map((item, index) => (
@@ -508,18 +512,19 @@ export default function VoiceAssistant() {
             </div>
           </div>
         )} */}
-      </div>
+        </div>
 
-      {session && (
-        <CreditPurchaseModal
-          isOpen={showCreditPurchaseModal}
-          onClose={() => setShowCreditPurchaseModal(false)}
-          creditsNeeded={0}
-          onSuccess={() => {
-            fetchUserCredits()
-          }}
-        />
-      )}
+        {session && (
+          <CreditPurchaseModal
+            isOpen={showCreditPurchaseModal}
+            onClose={() => setShowCreditPurchaseModal(false)}
+            creditsNeeded={0}
+            onSuccess={() => {
+              fetchUserCredits()
+            }}
+          />
+        )}
+      </div>
     </div>
   );
 }

@@ -1,12 +1,14 @@
 "use client";
 
 import { AlertCircle, Mic, MicVocal } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 
 const VoiceNavigationAssistant = () => {
   // State for feature detection
   const [isSupported, setIsSupported] = useState(true);
+   const { data: session, status: sessionStatus } = useSession();
 
   // State for mobile optimization
   const [isMobile, setIsMobile] = useState(false);
@@ -319,6 +321,9 @@ const VoiceNavigationAssistant = () => {
             console.log('🧭 Navigating to:', result.navigation.route);
             setStatus(result.navigation.message);
 
+            if (videoRef.current) {
+              videoRef.current.pause();
+            }
             await speak(result.navigation.message);
 
             stopAssistant();
@@ -329,6 +334,9 @@ const VoiceNavigationAssistant = () => {
 
           } else if (result.navigation.action === 'exit') {
             setStatus(result.navigation.message);
+            if (videoRef.current) {
+              videoRef.current.pause();
+            }
             await speak(result.navigation.message);
             stopAssistant();
 
