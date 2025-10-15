@@ -2,6 +2,7 @@ import { auth } from '@/auth'
 import { cn } from '@/lib/utils'
 import { Analytics } from '@vercel/analytics/react'
 import dynamic from 'next/dynamic'
+import { Toaster } from 'react-hot-toast'
 import '../app/globals.css'
 import { Providers } from './providers'
 
@@ -40,6 +41,23 @@ export default async function RootLayout({ children }) {
             {children}
           </Providers>
           <Analytics />
+          <Toaster 
+            position="top-center"
+            toastOptions={{
+              style: {
+                background: '#1f2937',
+                color: '#fff',
+                border: '1px solid #374151',
+                padding: '12px 16px',
+                borderRadius: '8px',
+                boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
+              },
+              duration: 10000,
+              success: {
+                duration: 5000,
+              },
+            }}
+          />
         </div>
       </body>
     </html>

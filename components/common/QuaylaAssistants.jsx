@@ -1,9 +1,10 @@
 "use client";
 
-import { AlertCircle, Mic, MicVocal } from 'lucide-react';
-import { useSession } from 'next-auth/react';
-import { useRouter } from 'next/navigation';
+import { AlertCircle, Mic, MicVocal, LogIn } from 'lucide-react';
+import { signIn, useSession } from 'next-auth/react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
+import toast from 'react-hot-toast';
 
 const VoiceNavigationAssistant = () => {
   // State for feature detection
@@ -530,26 +531,83 @@ const VoiceNavigationAssistant = () => {
     };
   }, []);
 
-  const startAssistant = async () => {
-    console.log('🚀 Starting assistant...');
+  const showLoginToast = () => {
+    toast.custom((t) => (
+      <div className={`${t.visible ? 'animate-enter' : 'animate-leave'}
+        max-w-md w-full bg-gray-900 text-white shadow-lg rounded-lg pointer-events-auto flex ring-1 ring-gray-700 ring-opacity-100`}>
+        <div className="flex-1 w-0 p-4">
+          <div className="flex items-start">
+            <div className="flex-shrink-0 pt-0.5">
+              <LogIn className="h-6 w-6 text-red-400" />
+            </div>
+            <div className="ml-3 flex-1">
+              <p className="text-sm font-medium text-white">
+                Login Required
+              </p>
+              <p className="mt-1 text-sm text-gray-300">
+                I can only respond when you log in.
+              </p>
+              <div className="mt-2">
+                <button
+                  onClick={() => {
+                    toast.dismiss(t.id);
+                    signIn(undefined, { callbackUrl: window.location.pathname });
+                  }}
+                  className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md shadow-sm text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
+                >
+                  Sign In
+                </button>
+              </div>
+            </div>
+            <div className="ml-4 flex-shrink-0 flex">
+              <button
+                onClick={() => toast.dismiss(t.id)}
+                className="bg-gray-900 rounded-md inline-flex text-gray-400 hover:text-gray-300 focus:outline-none"
+              >
+                <span className="sr-only">Close</span>
+                <svg className="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    ), {
+      duration: 10000,
+      position: 'top-center',
+    });
+  };
 
+  const startAssistant = async () => {
+    // Check if user is logged in
+    if (!session) {
+      showLoginToast();
+      setIsActive(false);
+      return;
+    }
+
+    console.log('🚀 Starting assistant...');
     setIsActive(true);
     setStatus('Initializing...');
-    setTranscript('');
-    setShowPermissionError(false);
-    setWelcomeFinished(false);
-    isNavigatingRef.current = false;
-    isSpeakingRef.current = false;
-    shouldProcessRef.current = true;
+    setIsProcessing(true);
 
     try {
-      const permissionState = await checkMicrophonePermission();
+      // Cancel any pending requests
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+      abortControllerRef.current = new AbortController();
 
-      if (permissionState === 'denied') {
-        setStatus('Microphone access denied. Please enable it in your browser settings.');
-        setShowPermissionError(true);
-        setIsActive(false);
-        return;
+      // Check microphone permission first
+      const permission = await checkMicrophonePermission();
+      if (permission !== 'granted') {
+        const granted = await requestMicrophonePermission();
+        if (!granted) {
+          setStatus('Microphone access is required');
+          setIsProcessing(false);
+          return;
+        }
       }
 
       const constraints = {
