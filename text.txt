@@ -1,12 +1,36 @@
-Good Morning, I went on the website this morning and noticed that you got the chat bot working, but she still needs some improvements, like the double voice in the background when you give her commands. We should not be able to hear that lol. Anyways here are some things that I noticed that need to be changed and it will be finished.
+Hey what's going on again man? I just finished playing with the website and went through everything that had a little flaw. And I will pay you $25 if you can handle this little situation. 
 
-1. Quayla repeats herself, She only need to explain herself one time. Also you can't give her a command unless you are logged in. If you are not logged in you should be able to give her a command but she should bring you to the login screen and tell you to log in instead of answering you. 
+1. Can you find a way to add free credits to user accounts from the administrator account? 
 
-2. Can you add the 3D background Quayla's other page at
-https://www.planetqradio.com/chat 
+Also there should be a free V.I.P. option to let the administrator let certain users use the radio station for free without ever paying. 
 
-3. Please delete the Planet Q Store Title from these pages 
+The administrator should never have to pay for the radio station. 
 
-https://www.planetqradio.com/productions/about 
+2. When you log in from the main page planetqradio.com it will bring you straight to the Q World Studio page right now at planetqradio.com/aistudio. 
+It should bring you back to the main page after you login. 
 
-https://www.planetqradio.com/productions
+3. In the Q World Studios page Quayla should tell you how to manually use the generators on your own or she should tell you she can arrange a song for you. 
+
+She should also tell you that after your song is finished it will be in your personalized audio player 
+
+Also can you put the 3D background there on that page also? 
+
+4. Quayla still repeats herself on the main page she only need to talk once and complete her sentence before you give her commands. 
+
+Also can you make her microphone a little smaller? The microphone is too big and can you change the microphone color back to the turquoise green color you had on there the first time? 
+
+5. On the Radio Station Player, Can you change the word Chatbot to the word Quayla in cursive writing like on the main
+page? 
+
+6. On the planetqradio.com/chat 
+page, it should automatically tell you that you have no credits if you try to use the chat but the way it's set up now, if you have no credits and press the start assistance it will tell you something went wrong we're having trouble processing your request and then it has a contact support option. But when you press the contact support option it gives you an error can you link that contact support to the planetproductions@yahoo.com email please. 
+
+7. The music player icon with the music notes on the menu bar should not be visible for regular users. It should only be available for the administrator account 
+
+8. In the Planet Q Store planetqradio.com/productions/album if you clicked the planet Q icon to bring you back to the main page it does not bring you to the main page at planetqradio.com
+The same for the radio station page where you have to buy credits before entering the page.
+
+9. Please put a menu credit bar on planetqradio.com/studio-main 
+And can you make that chatbot the same size as the other chatbots. Right now she is too big 
+
+also a menu credit bar in the planet q store planetqradio.com/productions/album

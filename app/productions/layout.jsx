@@ -38,7 +38,6 @@ const RadioLayout = ({ children }) => {
       <header className="relative z-50">
         <nav className="container mx-auto px-4 py-6">
           <div className="flex flex-row md:flex-row md:items-center md:justify-between justify-between">
-
             <Link href="/radio" className="flex items-center gap-2">
               <Image
                 src="/images/small.webp"

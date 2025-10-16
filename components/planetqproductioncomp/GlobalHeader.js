@@ -11,23 +11,24 @@ import { IoIosLogOut } from 'react-icons/io'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 
 export default function GlobalHeader({ session }) {
+	console.log('GlobalHeader: session', session)
 	const router = useRouter()
 	const [userCredits, setUserCredits] = useState(null)
 	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
-	
+
 	// Fetch user credits on component mount and refresh every 5 minutes
 	useEffect(() => {
 		if (session?.user) {
 			fetchUserCredits()
-			
+
 			// Set up interval to refresh credits
 			const intervalId = setInterval(fetchUserCredits, 5 * 60 * 1000)
-			
+
 			// Clean up interval on unmount
 			return () => clearInterval(intervalId)
 		}
 	}, [session])
-	
+
 	// Function to fetch user credits
 	const fetchUserCredits = async () => {
 		try {
@@ -81,24 +82,26 @@ export default function GlobalHeader({ session }) {
 				{session && (
 					<div className="flex items-center gap-3 md:gap-5">
 						{/* Add Music Button */}
-						<Link
-							href="/planetqproductions"
-							className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-sm rounded-lg px-3 py-2 font-medium transition-colors duration-200"
-						>
-							<FaMusic className="text-white" />
-							<span className="hidden sm:inline">Add Music</span>
-						</Link>
+						{session?.user?.role === 'Admin' && (
+							<Link
+								href="/planetqproductions"
+								className="flex items-center gap-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white text-sm rounded-lg px-3 py-2 font-medium transition-colors duration-200"
+							>
+								<FaMusic className="text-white" />
+								<span className="hidden sm:inline">Add Music</span>
+							</Link>
+						)}
 
 						{/* Downloads Button */}
 						<Link
 							href="/my-songs"
 							className="flex items-center gap-1 bg-slate-700 hover:bg-slate-600 text-white text-sm rounded-lg px-3 py-2 font-medium transition-colors duration-200"
 						>
-							<Image 
-								src="/icons/tape.svg" 
-								alt="Downloads" 
-								width={25} 
-								height={25} 
+							<Image
+								src="/videos/aistudio.png"
+								alt="Downloads"
+								width={25}
+								height={25}
 								className="text-blue-400"
 							/>
 							<span className="hidden sm:inline">Downloads</span>
@@ -112,7 +115,7 @@ export default function GlobalHeader({ session }) {
 									{userCredits ? userCredits.credits.toLocaleString() : '...'}
 								</span>
 							</div>
-							<button 
+							<button
 								onClick={() => setShowCreditPurchaseModal(true)}
 								className="bg-blue-600 hover:bg-blue-700 text-white rounded-lg p-2 flex items-center transition-colors duration-200"
 								title="Buy Credits"
@@ -135,13 +138,13 @@ export default function GlobalHeader({ session }) {
 				{/* Login/Signup buttons for non-authenticated users */}
 				{!session && (
 					<div className="flex gap-3">
-						<Link 
+						<Link
 							href="/login"
 							className="bg-blue-600 hover:bg-blue-700 text-white text-sm rounded-lg px-4 py-2 font-medium transition-colors duration-200"
 						>
 							Login
 						</Link>
-						<Link 
+						<Link
 							href="/signup"
 							className="bg-purple-600 hover:bg-purple-700 text-white text-sm rounded-lg px-4 py-2 font-medium transition-colors duration-200"
 						>

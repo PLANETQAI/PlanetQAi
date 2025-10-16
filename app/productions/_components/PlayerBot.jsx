@@ -54,8 +54,17 @@ function PlayerBot() {
               <source src="/videos/generator.mp4" type="video/mp4" />
             </video>
           </Link>
-          <p className="text-blue-500 text-lg font-bold animate-pulse">
-            Chat Bot
+          <p 
+          className="text-blue-500 text-lg font-bold animate-pulse"
+          style={{
+            fontFamily: 'cursive',
+            color: '#00d4ff',
+            textShadow: '0 0 20px rgba(0, 212, 255, 0.5)',
+            letterSpacing: '1px',
+            lineHeight: '1.2'
+          }}
+          >
+            Quayla
           </p>
         </div>
 

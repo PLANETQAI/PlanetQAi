@@ -913,7 +913,7 @@ const VoiceNavigationAssistant = () => {
                   onClick={handleStopListening}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
-                  className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg bg-red-500 hover:bg-red-600 shadow-red-500/50 transition-all duration-300"
+                  className="relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full shadow-lg bg-red-500 hover:bg-red-600 shadow-red-500/50 transition-all duration-300"
                   style={{
                     userSelect: 'none',
                     zIndex: 50
@@ -921,7 +921,7 @@ const VoiceNavigationAssistant = () => {
                   aria-label="Stop voice assistant"
                 >
                   <div className="flex items-center justify-center w-full h-full">
-                    <MicVocal className="w-7 h-7 md:w-8 md:h-8" />
+                    <MicVocal className="w-5 h-5 md:w-6 md:h-6" />
                     <div className="absolute inset-0 rounded-full opacity-20 bg-red-400 animate-ping"></div>
                   </div>
                   {touchActive && (
@@ -932,11 +932,11 @@ const VoiceNavigationAssistant = () => {
                 <div className="relative group">
                   <button
                     onClick={() => setShowPermissionError(true)}
-                    className="flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full bg-gray-500 cursor-not-allowed opacity-50"
+                    className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-700 cursor-not-allowed opacity-70"
                     aria-label="Microphone access denied"
                     disabled
                   >
-                    <AlertCircle size={24} className="text-white" />
+                    <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-gray-300" />
                   </button>
                   <div className="absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-48 text-center text-sm text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     Microphone access denied
@@ -947,14 +947,14 @@ const VoiceNavigationAssistant = () => {
                   onClick={handleStartListening}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
-                  className="relative flex items-center justify-center w-16 h-16 md:w-20 md:h-20 rounded-full shadow-lg bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-cyan-500/50 transition-all duration-300"
+                  className="relative flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full shadow-lg bg-gradient-to-br from-emerald-400 to-teal-500 hover:from-emerald-500 hover:to-teal-600 shadow-emerald-500/50 transition-all duration-300"
                   style={{
                     userSelect: 'none',
                     zIndex: 50
                   }}
                   aria-label="Start voice assistant"
                 >
-                  <Mic className="w-6 h-6 md:w-7 md:h-7" />
+                  <Mic className="w-5 h-5 md:w-6 md:h-6 text-white" />
                   {touchActive && (
                     <span className="absolute inset-0 rounded-full bg-white/20"></span>
                   )}
