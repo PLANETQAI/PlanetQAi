@@ -1,14 +1,15 @@
 'use client';
 
-import { useState, useEffect } from 'react';
-import { 
-  PencilIcon, 
-  TrashIcon, 
-  CheckCircleIcon, 
-  XCircleIcon,
+import { Menu, Transition } from '@headlessui/react';
+import {
   ArrowPathIcon,
-  MagnifyingGlassIcon
+  CheckCircleIcon,
+  MagnifyingGlassIcon,
+  TrashIcon,
+  XCircleIcon
 } from '@heroicons/react/24/outline';
+import { MoreVertical, Star } from 'lucide-react';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 export default function UsersManagement() {
@@ -20,6 +21,9 @@ export default function UsersManagement() {
   const [selectedUser, setSelectedUser] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [actionType, setActionType] = useState('');
+  const [editingUser, setEditingUser] = useState(null);
+  const [creditAmount, setCreditAmount] = useState('');
+
 
   useEffect(() => {
     fetchUsers();
@@ -30,11 +34,11 @@ export default function UsersManagement() {
       setLoading(true);
       // Fetch real user data from the API
       const response = await fetch(`/api/admin/users?page=${currentPage}&search=${searchTerm}`);
-      
+
       if (!response.ok) {
         throw new Error('Failed to fetch users');
       }
-      
+
       const data = await response.json();
       setUsers(data.users);
       setTotalPages(data.totalPages || 1);
@@ -58,26 +62,58 @@ export default function UsersManagement() {
     setIsModalOpen(true);
   };
 
+const handleAddCredits = async (user, amount) => {
+  try {
+    const response = await fetch('/api/admin/users', {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ 
+        action: "addCredits",
+        userId: user.id,
+        credits: amount
+      })
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || 'Failed to update credits');
+    }
+
+    const data = await response.json();
+    setUsers(users.map(u => u.id === user.id ? { ...u, credits: data.credits } : u));
+    toast.success(`Added ${amount} credits to ${user.fullName}`);
+    setEditingUser(null);
+    setCreditAmount('');
+  } catch (error) {
+    console.error('Error updating credits:', error);
+    toast.error(error.message || 'Failed to update credits');
+  }
+};
+
   const confirmAction = async () => {
     try {
       if (!selectedUser) return;
 
       // Prepare the request based on action type
       let method = 'PATCH';
-      let requestBody = { action: actionType };
-      
+      let requestBody = { 
+        action: actionType,
+        userId: selectedUser.id 
+      };
+
       // For delete action, use DELETE method
       if (actionType === 'delete') {
         method = 'DELETE';
       } else if (actionType === 'addCredits') {
-        requestBody.userId = selectedUser.id;
-        requestBody.amount = 50;
-      }else if (actionType === 'suspend') {
-        requestBody.userId = selectedUser.id;
+        const amount = parseInt(creditAmount) || 0;
+        if (amount <= 0) {
+          throw new Error('Please enter a valid credit amount');
+        }
+        requestBody.credits = amount;
       }
 
       // Construct the API URL
-      const apiUrl = actionType === 'delete' 
+      const apiUrl = actionType === 'delete'
         ? `/api/admin/users?userId=${selectedUser.id}`
         : '/api/admin/users';
 
@@ -105,12 +141,14 @@ export default function UsersManagement() {
         toast.success(`User ${selectedUser.fullName} has been verified`);
       } else if (actionType === 'addCredits') {
         const data = await response.json();
+        const amount = parseInt(creditAmount) || 0;
         setUsers(users.map(u => u.id === selectedUser.id ? { ...u, credits: data.credits } : u));
-        toast.success(`Added 50 credits to ${selectedUser.fullName}`);
+        toast.success(`Added ${amount} credits to ${selectedUser.fullName}`);
+        setCreditAmount(''); // Clear the input field
       }
 
       setIsModalOpen(false);
-      
+
       // Refresh the user list after a short delay
       setTimeout(() => fetchUsers(), 1000);
     } catch (error) {
@@ -123,7 +161,7 @@ export default function UsersManagement() {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">User Management</h1>
-        <button 
+        <button
           onClick={fetchUsers}
           className="flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md"
         >
@@ -183,11 +221,10 @@ export default function UsersManagement() {
                       <td className="px-6 py-4 whitespace-nowrap">{user.fullName}</td>
                       <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
-                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${
-                          user.role === 'Admin' ? 'bg-purple-100 text-purple-800' :
-                          user.role === 'Premium' ? 'bg-green-100 text-green-800' :
-                          'bg-blue-100 text-blue-800'
-                        }`}>
+                        <span className={`px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${user.role === 'Admin' ? 'bg-purple-100 text-purple-800' :
+                            user.role === 'Premium' ? 'bg-green-100 text-green-800' :
+                              'bg-blue-100 text-blue-800'
+                          }`}>
                           {user.role}
                         </span>
                       </td>
@@ -207,37 +244,110 @@ export default function UsersManagement() {
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                        <div className="flex space-x-2">
-                          <button 
-                            onClick={() => handleUserAction(user, 'addCredits')}
-                            className="text-indigo-400 hover:text-indigo-300"
-                            title="Add Credits"
-                          >
-                            <PencilIcon className="h-5 w-5" />
-                          </button>
-                          {!user.isVerified && (
-                            <button 
-                              onClick={() => handleUserAction(user, 'verify')}
-                              className="text-green-400 hover:text-green-300"
-                              title="Verify User"
-                            >
-                              <CheckCircleIcon className="h-5 w-5" />
-                            </button>
-                          )}
-                          <button 
-                            onClick={() => handleUserAction(user, 'suspend')}
-                            className="text-yellow-400 hover:text-yellow-300"
-                            title="Suspend User"
-                          >
-                            <XCircleIcon className="h-5 w-5" />
-                          </button>
-                          <button 
-                            onClick={() => handleUserAction(user, 'delete')}
-                            className="text-red-400 hover:text-red-300"
-                            title="Delete User"
-                          >
-                            <TrashIcon className="h-5 w-5" />
-                          </button>
+                        <div className="relative">
+                          <Menu>
+                            {({ open }) => (
+                              <>
+                                <Menu.Button className="flex items-center text-gray-400 hover:text-gray-200 focus:outline-none">
+                                  <MoreVertical className="h-5 w-5" />
+                                </Menu.Button>
+
+                                <Transition
+                                  show={open}
+                                  enter="transition ease-out duration-100"
+                                  enterFrom="transform opacity-0 scale-95"
+                                  enterTo="transform opacity-100 scale-100"
+                                  leave="transition ease-in duration-75"
+                                  leaveFrom="transform opacity-100 scale-100"
+                                  leaveTo="transform opacity-0 scale-95"
+                                >
+                                  <Menu.Items static className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                                    <div className="py-1">
+                                      {/* Credits Input */}
+                                      <div className="px-4 py-2 border-b border-gray-700">
+                                        <label className="block text-xs text-gray-300 mb-1">Add Credits</label>
+                                        <div className="flex space-x-2">
+                                          <input
+                                            type="number"
+                                            value={creditAmount}
+                                            onChange={(e) => setCreditAmount(e.target.value)}
+                                            className="flex-1 px-2 py-1 text-sm text-black rounded"
+                                            placeholder="Amount"
+                                          />
+                                          <button
+                                            onClick={() => handleAddCredits(user, parseInt(creditAmount) || 0)}
+                                            className="text-green-400 hover:text-green-300"
+                                            title="Add Credits"
+                                          >
+                                            <CheckCircleIcon className="h-5 w-5" />
+                                          </button>
+                                        </div>
+                                      </div>
+
+                                      {/* Quick Actions */}
+                                      <Menu.Item>
+                                        {({ active }) => (
+                                          <button
+                                            onClick={() => {
+                                              setCreditAmount('1000000');
+                                              handleUserAction(user, 'addCredits');
+                                            }}
+                                            className={`${active ? 'bg-gray-700 text-white' : 'text-gray-200'
+                                              } flex w-full items-center px-4 py-2 text-sm`}
+                                          >
+                                            <Star className="h-4 w-4 mr-2 text-yellow-400" />
+                                            Make VIP (1 Credit)
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+
+                                      {/* Other Actions */}
+                                      {!user.isVerified && (
+                                        <Menu.Item>
+                                          {({ active }) => (
+                                            <button
+                                              onClick={() => handleUserAction(user, 'verify')}
+                                              className={`${active ? 'bg-gray-700 text-white' : 'text-gray-200'
+                                                } flex w-full items-center px-4 py-2 text-sm`}
+                                            >
+                                              <CheckCircleIcon className="h-4 w-4 mr-2 text-green-400" />
+                                              Verify User
+                                            </button>
+                                          )}
+                                        </Menu.Item>
+                                      )}
+
+                                      <Menu.Item>
+                                        {({ active }) => (
+                                          <button
+                                            onClick={() => handleUserAction(user, 'suspend')}
+                                            className={`${active ? 'bg-gray-700 text-white' : 'text-gray-200'
+                                              } flex w-full items-center px-4 py-2 text-sm`}
+                                          >
+                                            <XCircleIcon className="h-4 w-4 mr-2 text-yellow-400" />
+                                            {user.suspended ? 'Unsuspend' : 'Suspend'} User
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+
+                                      <Menu.Item>
+                                        {({ active }) => (
+                                          <button
+                                            onClick={() => handleUserAction(user, 'delete')}
+                                            className={`${active ? 'bg-red-600 text-white' : 'text-red-400'
+                                              } flex w-full items-center px-4 py-2 text-sm`}
+                                          >
+                                            <TrashIcon className="h-4 w-4 mr-2" />
+                                            Delete User
+                                          </button>
+                                        )}
+                                      </Menu.Item>
+                                    </div>
+                                  </Menu.Items>
+                                </Transition>
+                              </>
+                            )}
+                          </Menu>
                         </div>
                       </td>
                     </tr>
@@ -252,11 +362,10 @@ export default function UsersManagement() {
                 <button
                   onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
                   disabled={currentPage === 1}
-                  className={`relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md ${
-                    currentPage === 1
+                  className={`relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md ${currentPage === 1
                       ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                       : 'bg-gray-800 text-white hover:bg-gray-600'
-                  }`}
+                    }`}
                 >
                   Previous
                 </button>
@@ -266,11 +375,10 @@ export default function UsersManagement() {
                 <button
                   onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
                   disabled={currentPage === totalPages}
-                  className={`relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md ${
-                    currentPage === totalPages
+                  className={`relative inline-flex items-center px-4 py-2 border border-gray-600 text-sm font-medium rounded-md ${currentPage === totalPages
                       ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
                       : 'bg-gray-800 text-white hover:bg-gray-600'
-                  }`}
+                    }`}
                 >
                   Next
                 </button>
@@ -289,7 +397,7 @@ export default function UsersManagement() {
               {actionType === 'delete' && `Are you sure you want to delete user ${selectedUser.fullName}?`}
               {actionType === 'suspend' && `Are you sure you want to suspend user ${selectedUser.fullName}?`}
               {actionType === 'verify' && `Are you sure you want to verify user ${selectedUser.fullName}?`}
-              {actionType === 'addCredits' && `Add 50 credits to user ${selectedUser.fullName}?`}
+              {actionType === 'addCredits' && `Add ${creditAmount} credits to user ${selectedUser.fullName}?`}
             </p>
             <div className="flex justify-end space-x-3">
               <button
@@ -300,11 +408,10 @@ export default function UsersManagement() {
               </button>
               <button
                 onClick={confirmAction}
-                className={`px-4 py-2 rounded-md ${
-                  actionType === 'delete'
+                className={`px-4 py-2 rounded-md ${actionType === 'delete'
                     ? 'bg-red-600 hover:bg-red-700'
                     : 'bg-indigo-600 hover:bg-indigo-700'
-                }`}
+                  }`}
               >
                 Confirm
               </button>

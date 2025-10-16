@@ -1,7 +1,7 @@
 "use client";
-import { useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import StarsWrapper from "@/components/canvas/StarsWrapper";
+import { useRouter } from "next/navigation";
+import { useRef, useState } from "react";
 
 export default function Landing() {
   const router = useRouter();
@@ -38,7 +38,7 @@ export default function Landing() {
         {/* Video container with max width */}
         <div className="w-full max-w-[500px] flex flex-col items-center justify-center">
           {/* Video with play button */}
-          <div className="relative w-[90vw] h-[90vw] max-w-[500px] max-h-[500px] rounded-full overflow-hidden border-4 border-purple-400/30 shadow-[0_0_50px_rgba(167,139,250,0.3)]">
+          <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-purple-400/30 shadow-[0_0_50px_rgba(167,139,250,0.3)]">
             <video
               ref={videoRef}
               className="w-full h-full object-cover"

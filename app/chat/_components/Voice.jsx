@@ -372,7 +372,7 @@ export default function VoiceAssistant() {
                     </div>
                     <div className="mt-3 flex">
                       <a
-                        href="/support"
+                        href="mailto:planetproductions@yahoo.com"
                         className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
                       >
                         Contact Support

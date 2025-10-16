@@ -1,6 +1,6 @@
-import { NextResponse } from 'next/server';
-import prisma from '@/lib/prisma';
 import { auth } from '@/auth';
+import prisma from '@/lib/prisma';
+import { NextResponse } from 'next/server';
 
 export async function GET(req) {
   try {
@@ -83,6 +83,7 @@ export async function PATCH(req) {
     const session = await auth();
     
     if (!session || session.user.role !== 'Admin') {
+      console.log(session.user.role);
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
     
