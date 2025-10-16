@@ -36,18 +36,18 @@ export async function GET(req) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
-    // Get credit logs for the user to calculate current balance
-    const creditLogs = await prisma.creditLog.findMany({
-      where: { userId },
-      orderBy: { createdAt: "desc" },
+    // Get user with current credits
+    const userWithCredits = await prisma.user.findUnique({
+      where: { id: userId },
+      select: {
+        credits: true,
+        role: true,
+      },
     });
-
-    // Calculate current credit balance from logs
-    const credits = creditLogs.length > 0 ? creditLogs[0].balanceAfter : 0;
 
     // Default values for fields that might not exist in the schema yet
     const userCredits = {
-      credits,
+      credits: userWithCredits?.credits || 0,
       maxMonthlyCredits: 5000, // Default value
       totalCreditsUsed: 0, // Calculate this if needed
       role: user.role,

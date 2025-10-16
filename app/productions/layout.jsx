@@ -1,12 +1,11 @@
 "use client";
 
-import { AnimatePresence, motion } from "framer-motion";
+import { motion } from "framer-motion";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { FiMenu, FiX } from "react-icons/fi";
+import Header from "./_components/Header";
 
 // Dynamically import components with SSR disabled
 const StarsWrapper = dynamic(() => import("@/components/canvas/StarsWrapper"), {
@@ -35,59 +34,7 @@ const RadioLayout = ({ children }) => {
     <div className="min-h-screen bg-black text-white relative overflow-hidden">
       <StarsWrapper />
       {/* Navigation */}
-      <header className="relative z-50">
-        <nav className="container mx-auto px-4 py-6">
-          <div className="flex flex-row md:flex-row md:items-center md:justify-between justify-between">
-            <Link href="/" className="flex items-center gap-2">
-              <Image
-                src="/images/small.webp"
-                alt="PlanetQAi Logo"
-                width={40}
-                height={40}
-                className="rounded-lg"
-              />
-              <span className="font-bold text-lg hidden sm:inline bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-                PlanetQAi
-              </span>
-            </Link>
-            {/* Mobile menu button */}
-            <div className="md:hidden">
-              <button
-                onClick={() => setIsOpen(!isOpen)}
-                className="p-2 text-gray-300 hover:text-cyan-400 focus:outline-none"
-                aria-label="Toggle menu"
-              >
-                {isOpen ? <FiX size={24} /> : <FiMenu size={24} />}
-              </button>
-            </div>
-
-            {/* Desktop Navigation */}
-            <div className="hidden md:flex flex-wrap gap-6">
-              {navLinks.map((link) => (
-                <NavLink key={link.path} link={link} isActive={isActive(link.path)} />
-              ))}
-            </div>
-
-            {/* Mobile Navigation */}
-            <AnimatePresence>
-              {isOpen && (
-                <motion.div
-                  initial={{ opacity: 0, y: -20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
-                  className="md:hidden absolute top-20 left-0 right-0 bg-gray-900/95 backdrop-blur-sm py-4 px-6 z-50"
-                >
-                  <div className="flex flex-col space-y-4">
-                    {navLinks.map((link) => (
-                      <NavLink key={link.path} link={link} isActive={isActive(link.path)} mobile />
-                    ))}
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-        </nav>
-      </header>
+      <Header />
 
       <main className="relative z-10">{children}</main>
 

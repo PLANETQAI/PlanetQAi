@@ -1,5 +1,6 @@
 'use client'
 
+import { useUser } from '@/context/UserContext'
 import { CreditCard, Plus } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Image from 'next/image'
@@ -13,8 +14,13 @@ import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 export default function GlobalHeader({ session }) {
 	console.log('GlobalHeader: session', session)
 	const router = useRouter()
-	const [userCredits, setUserCredits] = useState(null)
 	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
+
+	const {
+		credits: userCredits,
+		fetchUserCredits,
+	} = useUser()
+
 
 	// Fetch user credits on component mount and refresh every 5 minutes
 	useEffect(() => {
@@ -29,29 +35,41 @@ export default function GlobalHeader({ session }) {
 		}
 	}, [session])
 
-	// Function to fetch user credits
-	const fetchUserCredits = async () => {
-		try {
-			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-			console.log('GlobalHeader: Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
-			const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
-				method: 'GET',
-				credentials: 'include',
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			})
+	console.log('GlobalHeader: credits', userCredits)
 
-			if (response.ok) {
-				const data = await response.json()
-				setUserCredits(data)
-			} else {
-				console.error('Failed to fetch credits')
-			}
-		} catch (error) {
-			console.error('Error fetching credits:', error)
-		}
-	}
+	// Function to fetch user credits
+	// const fetchUserCredits = async () => {
+	// 	try {
+	// 		const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
+	// 		console.log('GlobalHeader: Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
+
+	// 		const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
+	// 			method: 'GET',
+	// 			credentials: 'include',
+	// 			headers: {
+	// 				'Content-Type': 'application/json',
+	// 				'Cache-Control': 'no-cache',
+	// 				'Pragma': 'no-cache'
+	// 			}
+	// 		})
+
+	// 		if (!response.ok) {
+	// 			throw new Error(`HTTP error! status: ${response.status}`)
+	// 		}
+
+	// 		const data = await response.json()
+	// 		console.log('Fetched credits data:', data) // Debug log
+
+	// 		setUserCredits({
+	// 			credits: data.credits || 0,
+	// 			...data // Include any other data from the response
+	// 		})
+	// 	} catch (error) {
+	// 		console.error('Error fetching credits:', error)
+	// 		// Set a default value or error state if needed
+	// 		setUserCredits({ credits: 0 })
+	// 	}
+	// }
 
 	async function logoutHandler(event) {
 		event.preventDefault()
@@ -112,6 +130,7 @@ export default function GlobalHeader({ session }) {
 							<div className="bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2">
 								<CreditCard className="text-blue-400 w-4 h-4" />
 								<span className="text-white font-medium text-sm">
+									{/* {userCredits ? userCredits.credits.toLocaleString() : '...'} */}
 									{userCredits ? userCredits.credits.toLocaleString() : '...'}
 								</span>
 							</div>
