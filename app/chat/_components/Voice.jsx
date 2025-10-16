@@ -266,7 +266,7 @@ export default function VoiceAssistant() {
   return (
     <div>
       {/* Stars Background */}
-      
+
       <div className="relative flex flex-col min-h-screen text-white">
 
         {/* Generator Component */}
@@ -322,14 +322,26 @@ export default function VoiceAssistant() {
           <div className="space-y-4">
             {!connected && !connecting && (
               <button
-                onClick={connect}
-                className="group relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden w-full text-center"
+                onClick={(e) => {
+                  if (userCredits?.credits < 160) {
+                    e.preventDefault();
+                    setShowCreditPurchaseModal(true);
+                  } else {
+                    connect();
+                  }
+                }}
+                className={`group relative px-6 py-3 ${userCredits?.credits < 160
+                    ? 'bg-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
+                  } text-white rounded-full font-medium shadow-lg transition-all duration-300 overflow-hidden w-full text-center`}
               >
                 <span className="relative z-10 flex items-center justify-center">
                   <FaMicrophone className="mr-2" />
-                  Start Assistant
+                  {userCredits?.credits < 160 ? 'Insufficient Credits' : 'Start Assistant'}
                 </span>
-                <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                {userCredits?.credits >= 160 && (
+                  <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
+                )}
               </button>
             )}
             {connected && (
