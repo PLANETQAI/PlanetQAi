@@ -888,13 +888,15 @@ const VoiceNavigationAssistant = () => {
               ref={videoRef}
               className="absolute inset-0 w-full h-full object-cover"
               autoPlay
-              loop
               muted
               playsInline
               onEnded={() => {
                 console.log('✅ Welcome video finished');
                 setWelcomeFinished(true);
                 setStatus('Ready! Listening continuously...');
+                if (videoRef.current) {
+                  videoRef.current.pause();
+                }
               }}
             >
               <source src={videoUrl} type="video/mp4" />

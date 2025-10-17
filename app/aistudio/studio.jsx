@@ -168,18 +168,17 @@ export default function Studio({ session }) {
 				/>
 
 				<div
-					className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-purple-500/30 mx-auto"
+					className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-purple-500/30 mx-auto cursor-pointer"
 					style={{
 						background: 'radial-gradient(circle at center, rgba(30,30,60,0.9), rgba(10,10,30,0.95))',
 						boxShadow: '0 0 30px rgba(0,212,255,0.3), inset 0 0 20px rgba(0,100,150,0.2)'
 					}}
+					onClick={togglePlayPause}
 				>
 					<video
 						ref={videoRef}
 						className="absolute inset-0 w-full h-full object-cover"
-						autoPlay
 						playsInline
-						onClick={() => router.push('/chat')}
 						onKeyDown={(e) => e.key === ' ' && e.preventDefault()}
 						onEnded={() => videoRef.current?.pause()}
 						tabIndex="0"
