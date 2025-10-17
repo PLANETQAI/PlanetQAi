@@ -104,15 +104,16 @@ export async function PATCH(req) {
       return NextResponse.json({ error: 'User not found' }, { status: 404 });
     }
     
-    // Prevent modifying other admin users unless you're modifying yourself
-    if (user.role === 'Admin' && user.id !== session.user.id) {
+    let result;
+
+    // Handle different actions
+    // Allow credit additions for any user, but restrict other modifications on fellow admins.
+    if (action !== 'addCredits' && user.role === 'Admin' && user.id !== session.user.id) {
       return NextResponse.json(
-        { error: 'Cannot modify other admin users' },
+        { error: `Cannot perform '${action}' on another admin user` },
         { status: 403 }
       );
     }
-    
-    let result;
     
     // Handle different actions
     switch (action) {
