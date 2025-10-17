@@ -179,7 +179,7 @@ export default function Studio({ session }) {
 						className="absolute inset-0 w-full h-full object-cover"
 						autoPlay
 						playsInline
-						onClick={togglePlayPause}
+						onClick={() => router.push('/chat')}
 						onKeyDown={(e) => e.key === ' ' && e.preventDefault()}
 						onEnded={() => videoRef.current?.pause()}
 						tabIndex="0"
@@ -218,26 +218,7 @@ export default function Studio({ session }) {
 					</div>
 				</div>
 			</div>
-			<div className="flex justify-center items-center">
-				{isPlaying && (
-					<div className=" w-fit mt-8 text-center border-2 border-gray-300 p-4 rounded-lg my-4">
-						<p className="mt-4 text-sm text-gray-300 max-w-md mx-auto">
-							Just say your idea out loud while Quayla creates your track. We'll handle the rest!
-						</p>
-						<button
-							onClick={() => router.push('/chat')}
-							className="relative inline-flex items-center justify-center px-8 py-3 text-lg font-medium text-white bg-gradient-to-r from-purple-600 to-blue-600 rounded-full hover:from-purple-700 hover:to-blue-700 transition-all duration-300 shadow-lg transform hover:scale-105"
-						>
-							<img
-								src="/images/chat-bot/q.png"  // Replace with your image path
-								alt="Let me do the work"
-								className="w-6 h-6 mr-2 rounded-full"
-							/>
-							Let me do the work
-						</button>
-					</div>
-				)}
-			</div>
+		
 
 			<Tabs defaultValue="suno" className="w-full mb-8" onValueChange={setActiveGenerator}>
 				<TabsList className="grid w-full grid-cols-2 mb-6">
