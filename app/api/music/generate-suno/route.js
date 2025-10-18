@@ -1,8 +1,7 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
-import { CreditManager } from "@/lib/credit-stripe-utils";
 import axios from "axios";
+import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -21,11 +20,11 @@ export async function POST(req) {
   
   try {
     // Log the incoming request URL and method
-    console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
+    // console.log(`[${new Date().toISOString()}] ${req.method} ${req.url}`);
     
     // Get user session
     const session = await auth();
-    console.log('Session data:', session ? 'Authenticated' : 'No session');
+    // console.log('Session data:', session ? 'Authenticated' : 'No session');
     
     if (!session) {
       console.log('Authentication failed - no session');
@@ -33,14 +32,14 @@ export async function POST(req) {
     }
 
     const userId = session.user.id;
-    console.log('User ID:', userId);
+    // console.log('User ID:', userId);
     
     // Log request headers for debugging
     const headers = {};
     req.headers.forEach((value, key) => {
       headers[key] = key === 'authorization' ? '***' : value;
     });
-    console.log('Request headers:', headers);
+    // console.log('Request headers:', headers);
     
     // Parse request body
     let body;
@@ -62,15 +61,15 @@ export async function POST(req) {
     }
     
     const { prompt, title, tags, style, tempo, mood, lyricsType = 'generate' } = body;
-    console.log('Suno generation parameters:', { 
-      prompt: prompt ? `${prompt.substring(0, 50)}...` : 'No prompt',
-      title: title || 'No title',
-      tags: tags || 'No tags',
-      style: style || 'Not specified (will use default)',
-      tempo: tempo || 'Not specified (will use default)',
-      mood: mood || 'Not specified (will use default)',
-      lyricsType
-    });
+    // console.log('Suno generation parameters:', { 
+    //   prompt: prompt ? `${prompt.substring(0, 50)}...` : 'No prompt',
+    //   title: title || 'No title',
+    //   tags: tags || 'No tags',
+    //   style: style || 'Not specified (will use default)',
+    //   tempo: tempo || 'Not specified (will use default)',
+    //   mood: mood || 'Not specified (will use default)',
+    //   lyricsType
+    // });
 
     if (!prompt) {
       return NextResponse.json(
@@ -93,7 +92,7 @@ export async function POST(req) {
       estimatedCredits += excessWordPacks * SUNO_EXCESS_WORDS_COST;
     }
     
-    console.log(`Suno backend credit calculation: ${wordCount} words = ${estimatedCredits} credits`);
+    // console.log(`Suno backend credit calculation: ${wordCount} words = ${estimatedCredits} credits`);
 
     // Check if user has enough credits but don't deduct them yet
     // We'll only deduct credits when the generation is successful
@@ -107,9 +106,9 @@ export async function POST(req) {
       });
 
       // Add detailed logging to debug credit issues
-      console.log(`Credit check for user ${userId} (${user?.email}):`);      console.log(`- Available credits: ${user?.credits || 0}`);
-      console.log(`- Required credits: ${estimatedCredits}`);
-      console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`);
+      // console.log(`Credit check for user ${userId} (${user?.email}):`);      console.log(`- Available credits: ${user?.credits || 0}`);
+      // console.log(`- Required credits: ${estimatedCredits}`);
+      // console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`);
       
       if (!user) {
         throw new Error("User not found");
@@ -211,9 +210,9 @@ export async function POST(req) {
     };
 
     // Log the request details for debugging
-    console.log('Suno API request URL:', url);
-    console.log('Suno API request payload:', JSON.stringify(payload, null, 2));
-    console.log('Suno API key available:', !!apiKey);
+    // console.log('Suno API request URL:', url);
+    // console.log('Suno API request payload:', JSON.stringify(payload, null, 2));
+    // console.log('Suno API key available:', !!apiKey);
     
     // Make the API call to PiAPI Suno
     const response = await axios.post(url, payload, {

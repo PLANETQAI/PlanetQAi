@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
 import axios from "axios";
+import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
 
@@ -92,10 +92,10 @@ export async function POST(req) {
       });
 
       // Add detailed logging to debug credit issues
-      console.log(`Credit check for user ${userId} (${user?.email}):`);
-      console.log(`- Available credits: ${user?.credits || 0}`);
-      console.log(`- Required credits: ${estimatedCredits}`);
-      console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`);
+      // console.log(`Credit check for user ${userId} (${user?.email}):`);
+      // console.log(`- Available credits: ${user?.credits || 0}`);
+      // console.log(`- Required credits: ${estimatedCredits}`);
+      // console.log(`- Has enough credits: ${user && user.credits >= estimatedCredits ? 'YES' : 'NO'}`);
       
       if (!user) {
         throw new Error("User not found");
@@ -180,9 +180,11 @@ export async function POST(req) {
     // Create style prompt based on style, tempo, and mood
     const stylePrompt = `${style} music with ${tempo} tempo and ${mood} mood`;
 
-    // Format lyrics with timestamps (simplified version)
-    // In a real implementation, you might want to use a more sophisticated algorithm
-    const lyrics = formatLyricsWithTimestamps(prompt);
+    // Create a structured prompt that includes style, tempo, and mood
+    const structuredPrompt = `Style: ${style}\nTempo: ${tempo}\nMood: ${mood}\n\nLyrics:\n${prompt}`;
+    
+    // Format the structured prompt with timestamps
+    const lyrics = formatLyricsWithTimestamps(structuredPrompt);
 
     // Prepare the GoAPI Diffrhythm payload
     const payload = {
@@ -190,12 +192,12 @@ export async function POST(req) {
         service_mode: "async",
         webhook_config: {
           endpoint: `${process.env.NEXT_PUBLIC_APP_URL}/api/music/webhook`,
-          secret: "your_webhook_secret" // You should use a secure secret
+          secret: process.env.WEBHOOK_SECRET // Use environment variable for security
         }
       },
       input: {
         lyrics: lyrics,
-        style_prompt: stylePrompt
+        style_prompt: stylePrompt // Keep the style prompt as well for backward compatibility
       },
       model: "Qubico/diffrhythm",
       task_type: taskType
