@@ -173,7 +173,7 @@ export default function Studio({ session }) {
 						background: 'radial-gradient(circle at center, rgba(30,30,60,0.9), rgba(10,10,30,0.95))',
 						boxShadow: '0 0 30px rgba(0,212,255,0.3), inset 0 0 20px rgba(0,100,150,0.2)'
 					}}
-					onClick={togglePlayPause}
+					onClick={() => router.push('/chat')}
 				>
 					<video
 						ref={videoRef}
