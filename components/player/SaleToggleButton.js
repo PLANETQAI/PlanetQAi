@@ -1,12 +1,11 @@
 "use client";
 
-import { useState, useEffect } from 'react';
 import { DollarSign, Lock } from 'lucide-react';
+import { useState } from 'react';
+import { Button } from '../ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '../ui/dialog';
 import { Input } from '../ui/input';
-import { Button } from '../ui/button';
 import { Label } from '../ui/label';
-import { RadioGroup, RadioGroupItem } from '../ui/radio-group';
 
 
 let renderCount = 0;
@@ -104,8 +103,7 @@ export default function SaleToggleButton({
         throw new Error('Failed to update song status');
       }
 
-      const updatedSong = await response.json();
-      console.log("Update Song", updatedSong)      
+      const updatedSong = await response.json();    
       if (onStatusChange) {
         onStatusChange(updatedSong);
       }

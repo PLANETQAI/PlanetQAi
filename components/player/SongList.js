@@ -1,7 +1,6 @@
 'use client'
 
-import React from 'react'
-import { Music, Clock } from 'lucide-react'
+import { Clock, Music } from 'lucide-react'
 import SaleToggleButton from './SaleToggleButton'
 
 const SongList = ({ 
@@ -12,7 +11,6 @@ const SongList = ({
 }) => {
   // Helper function to check if a song is pending
 
-  console.log('Checking for pending songs...', songs)
   const isSongPending = (song) => {
     // Check if the song has a status tag indicating it's pending
     if (song.tags && song.tags.some(tag => tag === 'status:pending')) {

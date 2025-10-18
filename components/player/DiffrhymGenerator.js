@@ -1,26 +1,22 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import Link from 'next/link'
-import AudioPlayer from './audioPlayer'
-import SongList from './SongList'
-import SongDetail from './SongDetail'
-import { TbInfoHexagonFilled } from 'react-icons/tb'
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'
-import { normalizeValue } from '@/utils/functions'
 import {
 	Select,
 	SelectContent,
-	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
-	SelectValue,
-  } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { Music, Zap, Clock, CreditCard, AlertCircle } from 'lucide-react'
+	SelectValue
+} from "@/components/ui/select"
+import { normalizeValue } from '@/utils/functions'
+import axios from 'axios'
+import { AlertCircle, Clock, CreditCard, Music, Zap } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { TbInfoHexagonFilled } from 'react-icons/tb'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
+import SongDetail from './SongDetail'
+import SongList from './SongList'
 
 const DiffrhymGenerator = ({
 	session,
@@ -141,7 +137,6 @@ const DiffrhymGenerator = ({
 	const checkPendingSongs = async () => {
 		try {
 			// Simply refresh the songs list to get any newly completed songs
-			console.log('Checking for completed songs...')
 			await fetchUserSongs()
 			await fetchUserCredits()
 		} catch (error) {
@@ -151,7 +146,7 @@ const DiffrhymGenerator = ({
 	
 	// Fetch user's songs from the database
 	const fetchUserSongs = async () => {
-		console.log('Starting to fetch Diffrhym songs...')
+		
 		try {
 			// First check if the user is authenticated by getting the session
 			const sessionResponse = await fetch('/api/auth/session')
@@ -164,7 +159,7 @@ const DiffrhymGenerator = ({
 			
 			// Fetch all user songs and filter locally
 			const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-			console.log('Fetching songs from:', `${apiBaseUrl}/api/songs`)
+
 			const response = await fetch(`${apiBaseUrl}/api/songs`, {
 				method: 'GET',
 				credentials: 'include',
@@ -178,22 +173,20 @@ const DiffrhymGenerator = ({
 			}
 			
 			const data = await response.json()
-			console.log('All songs from API:', data)
+			
 			if (data.songs && Array.isArray(data.songs)) {
 				// Log all songs for debugging
-				console.log('All songs from database:', data.songs);
+				
 				
 				// Filter songs for Diffrhym with more detailed logging
 				const diffrhymSongs = data.songs.filter(song => {
 					// Check if song has required fields
 					if (!song.id || !song.audioUrl) {
-						console.log('Skipping song with missing required fields:', song.id);
 						return false;
 					}
 					
 					// Check provider field
 					if (song.provider === 'diffrhym') {
-						console.log('Including song with provider=diffrhym:', song.id, song.title);
 						return true;
 					}
 					
@@ -201,23 +194,17 @@ const DiffrhymGenerator = ({
 					if (song.tags && Array.isArray(song.tags)) {
 						const isDiffrhym = song.tags.some(tag => tag === 'provider:diffrhym');
 						if (isDiffrhym) {
-							console.log('Including song with provider:diffrhym tag:', song.id, song.title);
 							return true;
 						}
 					}
 					
-					console.log('Excluding song (not diffrhym):', song.id, song.title);
 					return false;
 				});
-				
-				console.log(`Filtered ${diffrhymSongs.length} Diffrhym songs from ${data.songs.length} total songs`);
-				
+			
 				// Sort songs by creation date (newest first)
 				const sortedSongs = diffrhymSongs.sort((a, b) => {
 					return new Date(b.createdAt) - new Date(a.createdAt)
 				})
-				
-				console.log('Raw songs from database:', sortedSongs)
 				
 				// Map database songs to the format used in the component
 				const formattedSongs = sortedSongs.map(song => {
@@ -264,12 +251,10 @@ const DiffrhymGenerator = ({
 					return formattedSong;
 				})
 				
-				console.log('Formatted songs for UI:', formattedSongs)
 				setGeneratedSongs(formattedSongs)
 				
 				// If songs exist, select the first (newest) one
 				if (formattedSongs.length > 0) {
-					console.log('Selecting first song:', formattedSongs[0])
 					selectSong(0)
 				}
 			}
@@ -281,8 +266,6 @@ const DiffrhymGenerator = ({
 	// Cleanup function for component unmount
 	useEffect(() => {
 		return () => {
-			// Any cleanup needed when component unmounts
-			console.log('DiffrhymGenerator component unmounting')
 		}
 	}, [])
 
@@ -358,11 +341,7 @@ const DiffrhymGenerator = ({
 			const excessWordPacks = Math.ceil(excessWords / 10);
 			credits += excessWordPacks * 4;
 		}
-		
-		// Log the calculation for debugging
-		console.log(`Q_World Studio credit calculation: ${wordCount} words = ${credits} credits`);
-		console.log(`User has ${userCredits?.credits || 0} credits available`);
-		
+				
 		return credits;
 	}
 
@@ -387,7 +366,6 @@ const DiffrhymGenerator = ({
 		}, 100)
 		
 		setTimerInterval(interval)
-		console.log(`Timer started at ${new Date(now).toLocaleTimeString()}`)
 	}
 	
 	// Stop timer function
@@ -403,7 +381,6 @@ const DiffrhymGenerator = ({
 		if (generationStartTime) {
 			const elapsed = now - generationStartTime
 			setGenerationDuration(elapsed)
-			console.log(`Timer stopped. Total time: ${formatTime(elapsed)}`)
 		}
 	}
 	
@@ -411,21 +388,17 @@ const DiffrhymGenerator = ({
 	const checkStatus = async (taskId, songId) => {
 		try {
 			setStatusCheckCount(prev => prev + 1)
-			console.log(`Checking status for task ${taskId}... (Check #${statusCheckCount + 1})`)
-			
+		
 			// Call the status API
 			const response = await axios.get(`/api/music/status?taskId=${taskId}&songId=${songId}`)
 			
 			const statusData = response.data
 			setLastStatusResponse(statusData)
 			setGenerationStatus(statusData.status || 'unknown')
-			
-			console.log(`Status: ${statusData.status || 'unknown'}`)
-			
+
 			// If completed, get the audio URL and stop the timer
 			if (statusData.status === 'completed' && statusData.output && statusData.output.audio_url) {
 				setGeneratedAudio(statusData.output.audio_url)
-				console.log(`Audio URL: ${statusData.output.audio_url}`)
 				
 				// Stop the timer
 				stopTimer()
@@ -442,7 +415,6 @@ const DiffrhymGenerator = ({
 				if (pollingInterval) {
 					clearInterval(pollingInterval)
 					setPollingInterval(null)
-					console.log('Status polling stopped - song is ready')
 				}
 			}
 			
@@ -452,7 +424,6 @@ const DiffrhymGenerator = ({
 					const songResponse = await axios.get(`/api/songs/${songId}`)
 					if (songResponse.data && songResponse.data.audioUrl) {
 						setGeneratedAudio(songResponse.data.audioUrl)
-						console.log(`Song updated in database with audio URL: ${songResponse.data.audioUrl}`)
 						
 						// Update generation status
 						setGenerationStatus('completed')
@@ -470,7 +441,6 @@ const DiffrhymGenerator = ({
 						if (pollingInterval) {
 							clearInterval(pollingInterval)
 							setPollingInterval(null)
-							console.log('Status polling stopped - song is ready in database')
 						}
 					}
 				} catch (songErr) {
@@ -530,17 +500,15 @@ const DiffrhymGenerator = ({
 
 			// Show generating status
 			setGenerationStatus('generating')
-			console.log('Starting music generation with new API...')
+			console.log('Starting music generation with new API...', payload)
 
 			// Make the API request to the new generate_v1 endpoint
 			const response = await axios.post('/api/music/generate', payload)
-			console.log('Generation response:', response.data)
+			
 
 			// Handle the response
 			if (response.data && response.data.success) {
 				const { taskId, songId, status } = response.data
-				
-				console.log('Music generation initiated successfully', { taskId, songId, status })
 				
 				// Update generation status
 				setGenerationStatus(status || 'pending')
@@ -559,7 +527,6 @@ const DiffrhymGenerator = ({
 					if (statusData && (statusData.status === 'completed' || statusData.status === 'failed')) {
 						clearInterval(statusInterval)
 						setPollingInterval(null)
-						console.log('Status polling stopped - song is ready or failed')
 						
 						// Update loading state based on status
 						if (statusData.status === 'completed') {
@@ -715,9 +682,7 @@ const deleteSong = async (songId) => {
 		if (!response.ok) {
 			throw new Error(`Failed to delete song: ${response.status} ${response.statusText}`)
 		}
-		
-		console.log(`Song ${songId} deleted successfully`)
-		
+			
 		// Remove the song from the local state
 		const updatedSongs = generatedSongs.filter(song => song.id !== songId)
 		setGeneratedSongs(updatedSongs)

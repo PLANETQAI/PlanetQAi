@@ -30,7 +30,6 @@ const fetchUserSongs = async (
     }
     
     const data = await response.json()
-    console.log('All songs from API:', data)
     if (data.songs && Array.isArray(data.songs)) {
       // Filter songs for Suno (include both completed and pending songs)
       const sunoSongs = data.songs.filter(song => {
@@ -45,7 +44,6 @@ const fetchUserSongs = async (
         return false;
       });
       
-      console.log(`Filtered ${sunoSongs.length} Suno songs from ${data.songs.length} total songs`);
       
       // Sort songs by creation date (newest first)
       const sortedSongs = sunoSongs.sort((a, b) => {

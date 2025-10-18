@@ -12,7 +12,7 @@ import { IoIosLogOut } from 'react-icons/io'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 
 export default function GlobalHeader({ session }) {
-	console.log('GlobalHeader: session', session)
+	
 	const router = useRouter()
 	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
 
@@ -35,7 +35,7 @@ export default function GlobalHeader({ session }) {
 		}
 	}, [session])
 
-	console.log('GlobalHeader: credits', userCredits)
+
 
 	// Function to fetch user credits
 	// const fetchUserCredits = async () => {

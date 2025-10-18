@@ -1,27 +1,23 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
-import axios from 'axios'
-import Link from 'next/link'
-import AudioPlayer from './audioPlayer'
-import SongList from './SongList'
-import SongDetail from './SongDetail'
-import { TbInfoHexagonFilled } from 'react-icons/tb'
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'
-import { normalizeValue } from '@/utils/functions'
 import {
 	Select,
 	SelectContent,
-	SelectGroup,
 	SelectItem,
-	SelectLabel,
 	SelectTrigger,
-	SelectValue,
+	SelectValue
 } from "@/components/ui/select"
-import { Slider } from "@/components/ui/slider"
-import { Music, Zap, Clock, CreditCard, AlertCircle } from 'lucide-react'
+import { normalizeValue } from '@/utils/functions'
+import axios from 'axios'
+import { AlertCircle, CreditCard, Music, Zap } from 'lucide-react'
+import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { TbInfoHexagonFilled } from 'react-icons/tb'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
-import fetchUserSongsUtil from './fetchUserSongs'
+import SongDetail from './SongDetail'
+import SongList from './SongList'
+
 
 const SunoGenerator = ({
 	session,
@@ -145,8 +141,6 @@ const SunoGenerator = ({
 
 	const checkPendingSongs = async () => {
 		try {
-			// Simply refresh the songs list to get any newly completed songs
-			console.log('Checking for completed songs...')
 			await fetchUserSongs()
 			await fetchUserCredits()
 		} catch (error) {
@@ -184,7 +178,6 @@ const SunoGenerator = ({
 		}, 100)
 		
 		setTimerInterval(interval)
-		console.log(`Timer started at ${new Date(now).toLocaleTimeString()}`)
 	}
 	
 	// Stop timer function
@@ -200,7 +193,6 @@ const SunoGenerator = ({
 		if (generationStartTime) {
 			const elapsed = now - generationStartTime
 			setGenerationDuration(elapsed)
-			console.log(`Timer stopped. Total time: ${formatTime(elapsed)}`)
 		}
 	}
 	
@@ -208,7 +200,6 @@ const SunoGenerator = ({
 	const checkStatus = async (taskId, songId) => {
 		try {
 			setStatusCheckCount(prev => prev + 1)
-			console.log(`Checking status for task ${taskId}... (Check #${statusCheckCount + 1})`)
 			
 			// Call the status_suno API for Suno tasks
 			const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${songId}`)
@@ -217,14 +208,9 @@ const SunoGenerator = ({
 			setLastStatusResponse(statusData)
 			setGenerationStatus(statusData.status || 'unknown')
 			
-			console.log(`Status: ${statusData.status || 'unknown'}`)
-			
-			// If completed, handle the Suno-specific response format
 			if (statusData.status === 'completed' && statusData.output) {
-				// Handle Suno response which includes songs array with audio, lyrics, and image
 				if (statusData.output.songs && statusData.output.songs.length > 0) {
 					const songs = statusData.output.songs
-					console.log(`Received ${songs.length} songs from Suno`)
 					
 					// Set the generated songs
 					setGeneratedSongs(songs)
@@ -234,14 +220,10 @@ const SunoGenerator = ({
 						setGeneratedAudio(songs[0].song_path)
 						setGeneratedLyrics(songs[0].lyrics)
 						setCoverImage(songs[0].image_path)
-						console.log(`Audio URL: ${songs[0].song_path}`)
-						console.log(`Lyrics: ${songs[0].lyrics.substring(0, 100)}...`)
-						console.log(`Cover Image: ${songs[0].image_path}`)
 					}
 				} else if (statusData.output.audio_url) {
 					// Fallback to simple audio_url if songs array is not available
 					setGeneratedAudio(statusData.output.audio_url)
-					console.log(`Audio URL: ${statusData.output.audio_url}`)
 				}
 				
 				// Update loading state and clear error message
@@ -268,7 +250,7 @@ const SunoGenerator = ({
 					const songResponse = await axios.get(`/api/songs/${songId}`)
 					if (songResponse.data && songResponse.data.audioUrl) {
 						setGeneratedAudio(songResponse.data.audioUrl)
-						console.log(`Song updated in database with audio URL: ${songResponse.data.audioUrl}`)
+						
 						
 						// Update generation status
 						setGenerationStatus('completed')
@@ -286,7 +268,6 @@ const SunoGenerator = ({
 						if (pollingInterval) {
 							clearInterval(pollingInterval)
 							setPollingInterval(null)
-							console.log('Status polling stopped - song is ready in database')
 						}
 					}
 				} catch (songErr) {
@@ -314,7 +295,7 @@ const SunoGenerator = ({
 			
 			const response = await axios.get(`/api/music/status-suno?taskId=${taskId}&songId=${effectiveSongId}`)
 			const data = response.data
-			console.log('Poll result data:', data)
+			
 
 			// Update generation status
 			setGenerationStatus(data.status)
@@ -325,7 +306,7 @@ const SunoGenerator = ({
 			}
 
 			if ((data.status === 'completed' || data.status === 'succeeded') && data.output && data.output.songs && data.output.songs.length > 0) {
-				console.log('Song generation completed successfully', data.output.songs)
+				// console.log('Song generation completed successfully', data.output.songs)
 				
 				// Update user credits after successful generation
 				fetchUserCredits()
@@ -363,14 +344,12 @@ const SunoGenerator = ({
 				if (pollingInterval) {
 					clearInterval(pollingInterval)
 					setPollingInterval(null)
-					console.log('Status polling stopped - song is ready')
+					
 				}
 
 				// Set loading to false
 				setLoading(false)
-				setError('') // Clear any error messages
-				
-				// Force a re-render by updating the selected song index
+					setError('') 
 				setSelectedSongIndex(0)
 				
 				// Refresh the songs list to show the completed song
@@ -409,11 +388,7 @@ const SunoGenerator = ({
 		if (!effectiveSongId) {
 			console.error('Cannot start polling: missing songId', { taskId, songId, currentSongId })
 			return null
-		}
-		
-		// Start polling for results
-		console.log(`Starting polling for task ${taskId} with song ID ${effectiveSongId}`)
-		
+		}		
 		// Clear any existing polling interval
 		if (pollingInterval) {
 			clearInterval(pollingInterval)
@@ -433,14 +408,13 @@ const SunoGenerator = ({
 	
 	// Fetch user's songs from the database
 	const fetchUserSongs = async () => {
-		console.log('Starting to fetch Suno songs...')
+	
 		try {
 			// First check if the user is authenticated by getting the session
 			const sessionResponse = await fetch('/api/auth/session')
 			const sessionData = await sessionResponse.json()
 			
 			if (!sessionData || !sessionData.user) {
-				console.log('User not authenticated, skipping song fetch')
 				return
 			}
 			
@@ -458,7 +432,7 @@ const SunoGenerator = ({
 			}
 			
 			const data = await response.json()
-			console.log('All songs from API:', data)
+			
 
 			if (data.songs && Array.isArray(data.songs)) {
 				// Filter songs for Suno provider
@@ -486,8 +460,7 @@ const SunoGenerator = ({
 					return isSunoSong && (hasAudioUrl || isCurrentSongWithAudio);
 				});
 				
-				console.log(`Filtered ${sunoSongs.length} completed Suno songs from ${data.songs.length} total songs`);
-
+	
 				// Format the songs with proper style, tempo, and mood extraction
 				const formattedSongs = sunoSongs.map(song => {
 					// Extract properties from song data or tags
@@ -657,18 +630,15 @@ const SunoGenerator = ({
 
 			// Show generating status
 			setGenerationStatus('generating')
-			console.log('Starting music generation with Suno API...')
 			
 			// Make the API request to the Suno endpoint
 			const response = await axios.post('/api/music/generate-suno', payload)
-			console.log('Generation response:', response.data)
+			
 
 			// Handle the response
 			if (response.data && response.data.success) {
 				const { taskId, songId } = response.data
-				
-				console.log('Music generation initiated successfully', { taskId, songId })
-				
+		
 				// Update generation status
 				setGenerationStatus('pending')
 				
@@ -702,7 +672,6 @@ const SunoGenerator = ({
 				throw new Error('Failed to generate music. Please try again.')
 			}
 		} catch (err) {
-			console.error('Error generating audio:', err)
 			
 			// Check if this is a credit-related error
 			if (err.response && err.response.status === 403 && err.response.data) {
@@ -774,7 +743,6 @@ const SunoGenerator = ({
 				throw new Error(`Failed to delete song: ${response.status} ${response.statusText}`)
 			}
 			
-			console.log(`Song ${songId} deleted successfully`)
 			
 			// Remove the song from the local state
 			const updatedSongs = generatedSongs.filter(song => song.id !== songId)
