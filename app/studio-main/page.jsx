@@ -60,9 +60,9 @@ export default function Landing() {
       {/* Main content - centered container */}
       <div className="w-full flex flex-col items-center justify-center">
         {/* Animated Hello Music Text */}
-        <h1 className="text-5xl md:text-6xl font-bold italic mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-blue-500" 
+        <h1 className="text-5xl md:text-6xl font-bold italic mb-8 text-transparent bg-clip-text bg-gradient-to-r from-purple-400 via-pink-500 to-blue-500 text-center w-full" 
             style={{
-              display: 'inline-block',
+              display: 'block',
               textShadow: '0 0 15px rgba(167, 139, 250, 0.8)'
             }}>
           Hello Music Creator

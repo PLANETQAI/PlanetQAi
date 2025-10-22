@@ -1,5 +1,6 @@
 'use client'
 
+import StarsWrapper from '@/components/canvas/StarsWrapper'
 import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal'
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'
 import DiffrhymGenerator from '@/components/player/DiffrhymGenerator'
@@ -11,7 +12,6 @@ import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 import 'react-h5-audio-player/lib/styles.css'
-
 
 export default function Studio({ session }) {
 	const searchParams = useSearchParams()
@@ -134,16 +134,9 @@ export default function Studio({ session }) {
 		}))
 	}, [message])
 
-	const backgroundImageStyle = {
-		backgroundImage: 'url("/images/back.png")',
-		backgroundSize: 'cover',
-		backgroundRepeat: 'no-repeat',
-		backgroundPosition: 'center',
-		minHeight: '100vh',
-	}
-
-	return (
-		<div style={backgroundImageStyle}>
+		return (
+		<div className="relative min-h-screen w-full">
+			<StarsWrapper className="fixed inset-0 -z-10" />
 			<GlobalHeader session={session} />
 			{session?.user?.role === 'admin' && (
 				<div className="flex justify-center mb-4">
