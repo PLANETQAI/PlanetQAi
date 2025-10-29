@@ -63,7 +63,7 @@ export function AvatarCybModel({
   const { morphTargetSmoothing } = useControls(
     {
       smoothMorphTarget: true,
-      morphTargetSmoothing: { value: 0.3, min: 0, max: 1, step: 0.01 },
+      morphTargetSmoothing: { value: 0.5, min: 0, max: 1, step: 0.01 },
     },
     { hidden: true }
   );
@@ -77,58 +77,59 @@ export function AvatarCybModel({
     }
   }, [text, actions]);
 
-  // Viseme logic based on text prop - now processes words with natural timing
+  // Viseme logic based on a pre-calculated queue for smoother, word-like animation
   useEffect(() => {
-    if (!text) return;
+    if (!text) {
+      currentViseme.current = 'mouthClose';
+      return;
+    }
 
-    const words = text.split(/\s+/);
-    let currentWordIndex = 0;
-    let isSpeaking = true;
-    
-    const speakNextWord = () => {
-      if (!isSpeaking || currentWordIndex >= words.length) {
+    const visemeQueue = [];
+    const words = text.split(/\s+/).filter(Boolean);
+
+    // Create a sequence of visemes for the whole text
+    for (const word of words) {
+      const chars = word.toUpperCase().split('');
+      for (let i = 0; i < chars.length; i++) {
+        const viseme = CORRESPONDING_VISEME_CYB[chars[i]] || 'mouthClose';
+        const prevVisemeData = visemeQueue.length > 0 ? visemeQueue[visemeQueue.length - 1] : null;
+
+        // Merge consecutive identical visemes to create smoother animation
+        if (prevVisemeData && prevVisemeData.viseme === viseme) {
+          prevVisemeData.duration += 75; // 75ms per character
+        } else {
+          visemeQueue.push({ viseme, duration: 75 });
+        }
+      }
+      // Add a pause between words
+      visemeQueue.push({ viseme: 'mouthClose', duration: 100 });
+    }
+
+    let currentVisemeIndex = 0;
+    let timeoutId;
+    let isAnimating = true;
+
+    const animateVisemes = () => {
+      if (!isAnimating || currentVisemeIndex >= visemeQueue.length) {
         currentViseme.current = 'mouthClose';
         return;
       }
-      
-      const word = words[currentWordIndex];
-      if (word) {
-        // Process each character in the word
-        let charIndex = 0;
-        const wordDuration = Math.max(200, word.length * 100); // Base duration on word length
-        const charInterval = 150; // Time per character
-        
-        const processCharacter = () => {
-          if (charIndex < word.length && isSpeaking) {
-            const char = word[charIndex].toUpperCase();
-            const viseme = CORRESPONDING_VISEME_CYB[char] || 'mouthClose';
-            currentViseme.current = viseme;
-            lastVisemeTime.current = Date.now();
-            charIndex++;
-            
-            // Only continue if we haven't reached the end of the word
-            if (charIndex < word.length) {
-              setTimeout(processCharacter, charInterval);
-            } else {
-              // Move to next word after a small pause
-              currentWordIndex++;
-              setTimeout(speakNextWord, 100); // Pause between words
-            }
-          }
-        };
-        
-        processCharacter();
-      } else {
-        currentWordIndex++;
-        setTimeout(speakNextWord, 0);
-      }
+
+      const { viseme, duration } = visemeQueue[currentVisemeIndex];
+      currentViseme.current = viseme;
+      lastVisemeTime.current = Date.now();
+
+      timeoutId = setTimeout(() => {
+        currentVisemeIndex++;
+        animateVisemes();
+      }, duration);
     };
-    
-    // Start speaking
-    speakNextWord();
-    
+
+    animateVisemes();
+
     return () => {
-      isSpeaking = false;
+      isAnimating = false;
+      clearTimeout(timeoutId);
       currentViseme.current = 'mouthClose';
     };
   }, [text]);
@@ -162,14 +163,14 @@ export function AvatarCybModel({
   }, [nodes.head023?.morphTargetDictionary, nodes.head023?.morphTargetInfluences]);
 
 
-  // Subtle head movement
+  // Subtle head movement and smooth lip-sync
   useFrame((state) => {
     // Handle viseme updates
-    if (!nodes.head023?.morphTargetDictionary) return;
+    if (!nodes.head023?.morphTargetDictionary || !nodes.head023.morphTargetInfluences) return;
     
     // Smoothly transition back to neutral expression when not speaking
     const timeSinceLastViseme = Date.now() - lastVisemeTime.current;
-    if (timeSinceLastViseme > 100 && currentViseme.current !== 'mouthClose') {
+    if (timeSinceLastViseme > 200 && currentViseme.current !== 'mouthClose') {
       currentViseme.current = 'mouthClose';
     }
     
@@ -179,29 +180,27 @@ export function AvatarCybModel({
       headRef.current.rotation.y = Math.sin(time * 0.5) * 0.1; // Gentle side-to-side movement
     }
     
-    try {
-      const visemeToUse = currentViseme.current || 'mouthClose';
-      
-      const jawOpenValue = visemeToUse === 'jawOpen' ? 1 : 0;
-      const mouthCloseValue = visemeToUse === 'mouthClose' ? 1 : 0;
-      
-      // Apply viseme to head
-      if (nodes.head023.morphTargetDictionary.jawOpen !== undefined) {
-        const openIndex = nodes.head023.morphTargetDictionary.jawOpen;
-        if (nodes.head023.morphTargetInfluences) {
-          nodes.head023.morphTargetInfluences[openIndex] = jawOpenValue;
-        }
-      }
-      
-      if (nodes.head023.morphTargetDictionary.mouthClose !== undefined) {
-        const closeIndex = nodes.head023.morphTargetDictionary.mouthClose;
-        if (nodes.head023.morphTargetInfluences) {
-          nodes.head023.morphTargetInfluences[closeIndex] = mouthCloseValue;
-        }
-      }
-      
-    } catch (error) {
-      console.error('Error updating morph targets:', error);
+    // Determine target values for morph targets
+    const jawOpenTarget = currentViseme.current === 'jawOpen' ? 1 : 0;
+    const mouthCloseTarget = currentViseme.current === 'mouthClose' ? 1 : 0;
+
+    // Smoothly interpolate morph targets for natural movement
+    const jawOpenIndex = nodes.head023.morphTargetDictionary.jawOpen;
+    if (jawOpenIndex !== undefined) {
+      nodes.head023.morphTargetInfluences[jawOpenIndex] = THREE.MathUtils.lerp(
+        nodes.head023.morphTargetInfluences[jawOpenIndex],
+        jawOpenTarget,
+        morphTargetSmoothing
+      );
+    }
+    
+    const mouthCloseIndex = nodes.head023.morphTargetDictionary.mouthClose;
+    if (mouthCloseIndex !== undefined) {
+      nodes.head023.morphTargetInfluences[mouthCloseIndex] = THREE.MathUtils.lerp(
+        nodes.head023.morphTargetInfluences[mouthCloseIndex],
+        mouthCloseTarget,
+        morphTargetSmoothing
+      );
     }
   });
 
