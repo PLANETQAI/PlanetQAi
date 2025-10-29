@@ -1,6 +1,6 @@
 export const CORRESPONDING_VISEME_CYB = {
   A: "jawOpen",
-  B: "jawOpen",
+  B: "mouthClose",
   C: "jawOpen",
   D: "jawOpen",
   E: "jawOpen",
@@ -11,10 +11,10 @@ export const CORRESPONDING_VISEME_CYB = {
   J: "jawOpen",
   K: "jawOpen",
   L: "jawOpen",
-  M: "mouthClose", // M, B, P are typically closed-mouth sounds
+  M: "mouthClose",
   N: "jawOpen",
   O: "jawOpen",
-  P: "mouthClose", // M, B, P are typically closed-mouth sounds
+  P: "mouthClose", 
   Q: "jawOpen",
   R: "jawOpen",
   S: "jawOpen",

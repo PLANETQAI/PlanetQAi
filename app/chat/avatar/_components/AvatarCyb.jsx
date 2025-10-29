@@ -1,11 +1,11 @@
 import { useAnimations, useFBX, useGLTF } from "@react-three/drei";
 import { useFrame, useGraph } from "@react-three/fiber";
 import { useControls } from "leva";
-import React, { useEffect, useRef, useState } from "react";
 import PropTypes from 'prop-types';
+import React, { useEffect, useRef, useState } from "react";
+import * as THREE from 'three';
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
 import { CORRESPONDING_VISEME_CYB } from "./constants_cyb";
-import * as THREE from 'three';
 
 export function AvatarCybModel({
   position = [0, 0, 0],
@@ -13,7 +13,7 @@ export function AvatarCybModel({
   text,
   onModelLoad,
   modelPath = "/models/CYBERHEAD.glb",
-  idleAnimationPath = "/animations/idle.fbx",
+  idleAnimationPath = "/animations/Idle.fbx",
 }) {
   AvatarCybModel.propTypes = {
     position: PropTypes.array,
@@ -39,13 +39,48 @@ export function AvatarCybModel({
   const clone = React.useMemo(() => SkeletonUtils.clone(scene), [scene]);
   const { nodes, materials } = useGraph(clone);
   
-  // Load FBX animations
-  const { animations: idleAnimation } = useFBX(idleAnimationPath, undefined, (loader) => {
-    console.log('Animations loaded');
-    setAssetsLoaded(prev => ({ ...prev, animations: true }));
-  });
+  // Initialize with empty animations array in case loading fails
+  const [animations, setAnimations] = useState([]);
+  const [animationError, setAnimationError] = useState(null);
+
+  // Load FBX animations with error handling
+  useEffect(() => {
+    let mounted = true;
+    
+    const loadAnimation = async () => {
+      try {
+        // Try to load the animation
+        const { animations: loadedAnimations } = await new Promise((resolve, reject) => {
+          useFBX.preload(idleAnimationPath, 
+            (result) => resolve({ animations: result.animations }),
+            undefined, // Progress callback
+            (error) => reject(error)
+          );
+        });
+        
+        if (mounted) {
+          console.log('Animations loaded successfully');
+          setAnimations(loadedAnimations);
+          setAssetsLoaded(prev => ({ ...prev, animations: true }));
+        }
+      } catch (error) {
+        console.warn('Failed to load animation:', error);
+        if (mounted) {
+          setAnimationError(error);
+          // Continue without animations
+          setAssetsLoaded(prev => ({ ...prev, animations: true }));
+        }
+      }
+    };
+    
+    loadAnimation();
+    
+    return () => {
+      mounted = false;
+    };
+  }, [idleAnimationPath]);
   
-  const { actions } = useAnimations(idleAnimation, clone);
+  const { actions } = useAnimations(animations, clone);
   
   // Call onModelLoad when all assets are loaded
   useEffect(() => {
@@ -70,63 +105,89 @@ export function AvatarCybModel({
 
   // Animation control based on text prop
   useEffect(() => {
-    if (text) {
-      actions.mixamorigHips?.reset().play();
-    } else {
-      actions.mixamorigHips?.stop();
+    if (animationError) {
+      console.warn('Animation not available due to loading error');
+      return;
     }
-  }, [text, actions]);
+    
+    if (text) {
+      try {
+        actions.mixamorigHips?.reset().play();
+      } catch (error) {
+        console.warn('Failed to play animation:', error);
+      }
+    } else {
+      try {
+        actions.mixamorigHips?.stop();
+      } catch (error) {
+        console.warn('Failed to stop animation:', error);
+      }
+    }
+  }, [text, actions, animationError]);
 
-  // Viseme logic based on word-by-word animation for a more natural feel
+  // Viseme logic based on a detailed queue with phonetic timing
   useEffect(() => {
     if (!text) {
       currentViseme.current = 'mouthClose';
       return;
     }
 
+    const visemeQueue = [];
     const words = text.split(/\s+/).filter(Boolean);
-    let wordIndex = 0;
-    const timeouts = [];
+    const VOWELS = ['A', 'E', 'I', 'O', 'U'];
+
+    for (const word of words) {
+      const chars = word.toUpperCase().split('');
+      for (let i = 0; i < chars.length; i++) {
+        const char = chars[i];
+        const viseme = CORRESPONDING_VISEME_CYB[char] || 'mouthClose';
+        
+        // Determine duration based on character type for more natural timing
+        let duration = 75; // Default consonant duration
+        if (VOWELS.includes(char)) {
+            duration = 120; // Vowel duration
+        } else if (viseme === 'mouthClose') {
+            duration = 80; // Closed-mouth consonant duration
+        }
+
+        const prevVisemeData = visemeQueue.length > 0 ? visemeQueue[visemeQueue.length - 1] : null;
+
+        // Merge consecutive identical visemes to create a smoother flow
+        if (prevVisemeData && prevVisemeData.viseme === viseme) {
+          prevVisemeData.duration += duration;
+        } else {
+          visemeQueue.push({ viseme, duration });
+        }
+      }
+      // Add a pause between words
+      visemeQueue.push({ viseme: 'mouthClose', duration: 150 });
+    }
+
+    let currentVisemeIndex = 0;
+    let timeoutId;
     let isAnimating = true;
 
-    const clearAllTimeouts = () => {
-      timeouts.forEach(clearTimeout);
-    };
-
-    const animateWord = () => {
-      if (!isAnimating || wordIndex >= words.length) {
+    const animateVisemes = () => {
+      if (!isAnimating || currentVisemeIndex >= visemeQueue.length) {
         currentViseme.current = 'mouthClose';
         return;
       }
 
-      const word = words[wordIndex];
-      const wordDuration = Math.max(150, word.length * 100);
-      const pauseDuration = 120;
-
-      // Open mouth for the duration of the word
-      currentViseme.current = 'jawOpen';
+      const { viseme, duration } = visemeQueue[currentVisemeIndex];
+      currentViseme.current = viseme;
       lastVisemeTime.current = Date.now();
 
-      // Schedule mouth close after the word
-      const closeTimeout = setTimeout(() => {
-        currentViseme.current = 'mouthClose';
-        lastVisemeTime.current = Date.now();
-
-        // Schedule next word after a pause
-        const nextWordTimeout = setTimeout(() => {
-          wordIndex++;
-          animateWord();
-        }, pauseDuration);
-        timeouts.push(nextWordTimeout);
-      }, wordDuration);
-      timeouts.push(closeTimeout);
+      timeoutId = setTimeout(() => {
+        currentVisemeIndex++;
+        animateVisemes();
+      }, duration);
     };
 
-    animateWord();
+    animateVisemes();
 
     return () => {
       isAnimating = false;
-      clearAllTimeouts();
+      clearTimeout(timeoutId);
       currentViseme.current = 'mouthClose';
     };
   }, [text]);
