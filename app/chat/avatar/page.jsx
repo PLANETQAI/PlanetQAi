@@ -120,9 +120,8 @@ export default function AvatarTestView() { // Renamed to AvatarTestView for clar
         style={{
           position: "relative",
           width: "100%",
-          height: height,
+          height: "100%",
           transition: "all 0.3s ease",
-          overflow: "hidden",
           zIndex: 1
         }}
       >
