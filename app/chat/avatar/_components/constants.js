@@ -1,37 +1,30 @@
-export const TEXTURE_PATH = "/textures/avatarBackground.png";
+export const TEXTURE_PATH = "/images/video-player.jpg";
 
-// Updated to match the available morph targets: mouthOpen and mouthSmile
 export const CORRESPONDING_VISEME = {
-  // Vowels and open sounds
   A: "mouthOpen",
-  E: "mouthSmile",
-  I: "mouthSmile",
-  O: "mouthOpen",
-  U: "mouthOpen",
-  
-  // Consonants and other sounds
-  B: "mouthSmile",
-  C: "mouthSmile",
-  D: "mouthSmile",
-  F: "mouthSmile",
+  B: "mouthOpen",
+  C: "mouthOpen",
+  D: "mouthOpen",
+  E: "mouthOpen",
+  F: "mouthOpen",
   G: "mouthOpen",
   H: "mouthOpen",
-  J: "mouthSmile",
+  I: "mouthOpen",
+  J: "mouthOpen",
   K: "mouthOpen",
-  L: "mouthSmile",
-  M: "mouthSmile",
-  N: "mouthSmile",
-  P: "mouthSmile",
+  L: "mouthOpen",
+  M: "mouthOpen",
+  N: "mouthOpen",
+  O: "mouthOpen",
+  P: "mouthOpen",
   Q: "mouthOpen",
-  R: "mouthSmile",
-  S: "mouthSmile",
-  T: "mouthSmile",
-  V: "mouthSmile",
+  R: "mouthOpen",
+  S: "mouthOpen",
+  T: "mouthOpen",
+  U: "mouthOpen",
+  V: "mouthOpen",
   W: "mouthOpen",
-  X: "mouthSmile",
-  Y: "mouthSmile",
-  Z: "mouthSmile",
-  
-  // Default/fallback
-  ' ': 'mouthSmile'
+  X: "mouthOpen",
+  Y: "mouthOpen",
+  Z: "mouthOpen",
 };

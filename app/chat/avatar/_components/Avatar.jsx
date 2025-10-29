@@ -1,11 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
-import { useGraph } from "@react-three/fiber";
-import { useGLTF, useAnimations, useFBX } from "@react-three/drei";
-import { CORRESPONDING_VISEME } from "./constants";
-import * as THREE from "three";
-import { useFrame } from "@react-three/fiber";
+import { useFBX, useGLTF } from "@react-three/drei";
+import { useFrame, useGraph } from "@react-three/fiber";
 import { useControls } from "leva";
+import React, { useEffect, useRef, useState } from "react";
+import * as THREE from "three";
 import * as SkeletonUtils from 'three/examples/jsm/utils/SkeletonUtils';
+import { CORRESPONDING_VISEME } from "./constants";
 
 export function Avatar({
   position = [0, 0, 0],

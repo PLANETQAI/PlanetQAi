@@ -1,109 +1,190 @@
 'use client';
 
-import { Suspense, useState } from 'react';
-import { Canvas } from '@react-three/fiber';
-import { Environment, OrbitControls, Text, Loader } from '@react-three/drei';
-import { AnimatedAvatarHead } from './_components/AnimatedAvatarHead';
-import * as THREE from 'three';
+import StarsWrapper from '@/components/canvas/StarsWrapper';
+import dynamic from 'next/dynamic';
+import { Suspense, useEffect, useMemo, useRef, useState } from "react";
 
-const AnimatedAvatarPage = () => {
-  const [text, setText] = useState('');
-  const [isSpeaking, setIsSpeaking] = useState(false);
+// Dynamically import Canvas with no SSR
+const Canvas = dynamic(
+  () => import('@react-three/fiber').then((mod) => mod.Canvas),
+  { ssr: false }
+);
 
-  const handleSpeak = () => {
-    if (text.trim()) {
-      setIsSpeaking(true);
-      // Auto-reset after speaking
-      setTimeout(() => {
-        setIsSpeaking(false);
-      }, text.split(' ').length * 300 + 1000);
+// Dynamically import ExperienceTest with no SSR
+const ExperienceTest = dynamic(
+  () => import('../_components/ExperienceTest'),
+  { ssr: false }
+);
+
+export default function AvatarTestView() { // Renamed to AvatarTestView for clarity
+  const [text, setText] = useState("");
+  const [speak, setSpeak] = useState(false);
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  const [isModelLoaded, setIsModelLoaded] = useState(false);
+  const [isClient, setIsClient] = useState(false);
+
+  // Set client-side flag to prevent hydration mismatches
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  const containerRef = useRef(null);
+
+  const height = useMemo(() => {
+    if (!isClient) return '500px'; // Default height during SSR
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+    return width < 768 ? `${Math.round(height * 0.68)}px` : `${Math.round(width * 0.3)}px`;
+  }, [isFullScreen, isClient]);
+
+
+
+  useEffect(() => {
+    const handleFullScreenChange = () => {
+      setIsFullScreen(!!document.fullscreenElement);
+    };
+
+    document.addEventListener("fullscreenchange", handleFullScreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullScreenChange);
+    };
+  }, []);
+
+
+  useEffect(() => {
+    if (speak) {
+      console.log("Cybernetic avatar is speaking:", text);
+      // Set a fixed duration for recording purposes (30 seconds)
+      const speechDuration = 30000; // 30 seconds
+      const timer = setTimeout(() => {
+        setSpeak(false);
+      }, speechDuration);
+      return () => clearTimeout(timer);
     }
-  };
+  }, [speak, text]); // Changed dependency from speakingText to text
 
-  const [error, setError] = useState(null);
+  // Show loading state until client-side rendering is ready
+  if (!isClient) {
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        backgroundColor: '#050816',
+        color: '#fff',
+        fontSize: '1.2rem',
+        zIndex: 1000
+      }}>
+        <div style={{
+          textAlign: 'center',
+          padding: '20px',
+          borderRadius: '10px',
+          background: 'rgba(10, 10, 10, 0.8)'
+        }}>
+          Initializing 3D environment...
+        </div>
+      </div>
+    );
+  }
 
-  // Handle model loading errors
-  const handleModelError = (error) => {
-    console.error('Model loading error:', error);
-    setError('Failed to load the 3D model. Please check the console for details.');
-  };
-
+  // Main content once model is loaded
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 p-4">
-      <h1 className="text-3xl font-bold text-white mb-8">Animated Avatar Head</h1>
-      
-      {error && (
-        <div className="bg-red-500 text-white p-4 rounded-lg mb-4 max-w-2xl w-full">
-          <p className="font-bold">Error:</p>
-          <p>{error}</p>
-          <p className="mt-2 text-sm">Check if the model file exists at: /public/models/avatar-head.glb</p>
+    <div
+      style={{
+        height: "97vh",
+        width: "99vw",
+        backgroundColor: "#050816",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "space-between",
+        overflow: "hidden",
+        position: "relative"
+      }}
+    >
+      <div style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 0
+      }}>
+        <StarsWrapper />
+      </div>
+      <div
+        ref={containerRef}
+        style={{
+          position: "relative",
+          width: "100%",
+          height: height,
+          transition: "all 0.3s ease",
+          overflow: "hidden",
+          zIndex: 1
+        }}
+      >
+        <Suspense fallback={null}>
+          <Canvas
+            shadows
+            camera={{ position: [0, 0, 10], fov: 20 }}
+            style={{
+              height: "100%",
+              width: "100%",
+              transition: "opacity 0.5s ease-in-out"
+            }}
+          >
+            <Suspense fallback={null}>
+              <ExperienceTest 
+                speakingText={text}
+                onModelLoad={() => {
+                  console.log('Model loaded!');
+                  setIsModelLoaded(true);
+                }}
+              />
+            </Suspense>
+          </Canvas>
+        </Suspense>
+      </div>
+
+      {!isFullScreen && (
+        <div
+          style={{
+            width: "100%",
+            height: "20vh",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            padding: "10px 20px",
+            backgroundColor: "rgba(5, 8, 22, 0.7)",
+            boxSizing: "border-box",
+            backdropFilter: "blur(10px)",
+            position: "relative",
+            zIndex: 1
+          }}
+        >
+          <textarea
+            rows={4}
+            value={text}
+            placeholder="Type something for the avatar to say..."
+            style={{
+              padding: "10px",
+              width: "70%",
+              borderRadius: "10px",
+              border: "1px solid #555",
+              resize: "none",
+              fontSize: "16px",
+              backgroundColor: "#1e1e1e",
+              color: "#fff",
+              boxShadow: "0 2px 4px rgba(0, 0, 0, 0.1)",
+              boxSizing: "border-box",
+            }}
+            onChange={(e) => setText(e.target.value)}
+          />
         </div>
       )}
-      
-      <div className="w-full max-w-2xl h-[500px] bg-black/20 rounded-lg overflow-hidden mb-8">
-        <Canvas
-          camera={{ position: [0, 0, 2], fov: 50 }}
-          gl={{ antialias: true, alpha: true }}
-        >
-          <ambientLight intensity={0.5} />
-          <spotLight
-            position={[10, 10, 10]}
-            angle={0.15}
-            penumbra={1}
-            intensity={1}
-            castShadow
-          />
-          <Suspense fallback={null}>
-            <AnimatedAvatarHead 
-              position={[0, 0, 0]} 
-              scale={0.5}
-              text={text}
-              speak={isSpeaking}
-              setSpeak={setIsSpeaking}
-              onError={handleModelError}
-            />
-            <Environment preset="sunset" />
-          </Suspense>
-          <OrbitControls 
-            enableZoom={true}
-            enablePan={false}
-            minPolarAngle={Math.PI / 4}
-            maxPolarAngle={Math.PI / 1.5}
-          />
-        </Canvas>
-      </div>
-
-      <div className="w-full max-w-2xl space-y-4">
-        <div className="flex space-x-4">
-          <input
-            type="text"
-            value={text}
-            onChange={(e) => setText(e.target.value)}
-            placeholder="Type something for the avatar to say..."
-            className="flex-1 p-3 rounded-lg bg-gray-800 text-white border border-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
-            onKeyPress={(e) => e.key === 'Enter' && handleSpeak()}
-          />
-          <button
-            onClick={handleSpeak}
-            disabled={!text.trim() || isSpeaking}
-            className={`px-6 py-3 rounded-lg font-medium ${
-              !text.trim() || isSpeaking
-                ? 'bg-gray-600 cursor-not-allowed'
-                : 'bg-blue-600 hover:bg-blue-700'
-            } text-white transition-colors`}
-          >
-            {isSpeaking ? 'Speaking...' : 'Speak'}
-          </button>
-        </div>
-        
-        <div className="text-gray-400 text-sm">
-          <p>Try saying: "Hello, welcome to PlanetQAi!"</p>
-          <p>Use the mouse to rotate and zoom around the avatar.</p>
-        </div>
-      </div>
-      <Loader />
     </div>
   );
-};
-
-export default AnimatedAvatarPage;
+}

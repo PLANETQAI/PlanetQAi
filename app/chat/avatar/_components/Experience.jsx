@@ -1,9 +1,9 @@
-import { Environment, useTexture, Circle } from "@react-three/drei";
-import { Avatar } from "./Avatar";
+import { Circle, Environment, useTexture } from "@react-three/drei";
 import { useThree } from "@react-three/fiber";
-import { TEXTURE_PATH } from "./constants";
 import PropTypes from "prop-types";
 import * as THREE from 'three';
+import { Avatar } from "./Avatar";
+import { TEXTURE_PATH } from "./constants";
 
 const Experience = ({ speakingText, speak, setSpeak }) => {
   const texture = useTexture(TEXTURE_PATH);
@@ -29,7 +29,7 @@ const Experience = ({ speakingText, speak, setSpeak }) => {
         </group>
         
         {/* Avatar */}
-        <group position={[0, -0.5, 0]} scale={2.5}>
+        <group position={[0, -4.5, 0]} scale={2.5}>
           <Avatar 
             text={speakingText} 
             speak={speak} 
