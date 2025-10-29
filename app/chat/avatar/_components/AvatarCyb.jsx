@@ -77,59 +77,56 @@ export function AvatarCybModel({
     }
   }, [text, actions]);
 
-  // Viseme logic based on a pre-calculated queue for smoother, word-like animation
+  // Viseme logic based on word-by-word animation for a more natural feel
   useEffect(() => {
     if (!text) {
       currentViseme.current = 'mouthClose';
       return;
     }
 
-    const visemeQueue = [];
     const words = text.split(/\s+/).filter(Boolean);
-
-    // Create a sequence of visemes for the whole text
-    for (const word of words) {
-      const chars = word.toUpperCase().split('');
-      for (let i = 0; i < chars.length; i++) {
-        const viseme = CORRESPONDING_VISEME_CYB[chars[i]] || 'mouthClose';
-        const prevVisemeData = visemeQueue.length > 0 ? visemeQueue[visemeQueue.length - 1] : null;
-
-        // Merge consecutive identical visemes to create smoother animation
-        if (prevVisemeData && prevVisemeData.viseme === viseme) {
-          prevVisemeData.duration += 75; // 75ms per character
-        } else {
-          visemeQueue.push({ viseme, duration: 75 });
-        }
-      }
-      // Add a pause between words
-      visemeQueue.push({ viseme: 'mouthClose', duration: 100 });
-    }
-
-    let currentVisemeIndex = 0;
-    let timeoutId;
+    let wordIndex = 0;
+    const timeouts = [];
     let isAnimating = true;
 
-    const animateVisemes = () => {
-      if (!isAnimating || currentVisemeIndex >= visemeQueue.length) {
+    const clearAllTimeouts = () => {
+      timeouts.forEach(clearTimeout);
+    };
+
+    const animateWord = () => {
+      if (!isAnimating || wordIndex >= words.length) {
         currentViseme.current = 'mouthClose';
         return;
       }
 
-      const { viseme, duration } = visemeQueue[currentVisemeIndex];
-      currentViseme.current = viseme;
+      const word = words[wordIndex];
+      const wordDuration = Math.max(150, word.length * 100);
+      const pauseDuration = 120;
+
+      // Open mouth for the duration of the word
+      currentViseme.current = 'jawOpen';
       lastVisemeTime.current = Date.now();
 
-      timeoutId = setTimeout(() => {
-        currentVisemeIndex++;
-        animateVisemes();
-      }, duration);
+      // Schedule mouth close after the word
+      const closeTimeout = setTimeout(() => {
+        currentViseme.current = 'mouthClose';
+        lastVisemeTime.current = Date.now();
+
+        // Schedule next word after a pause
+        const nextWordTimeout = setTimeout(() => {
+          wordIndex++;
+          animateWord();
+        }, pauseDuration);
+        timeouts.push(nextWordTimeout);
+      }, wordDuration);
+      timeouts.push(closeTimeout);
     };
 
-    animateVisemes();
+    animateWord();
 
     return () => {
       isAnimating = false;
-      clearTimeout(timeoutId);
+      clearAllTimeouts();
       currentViseme.current = 'mouthClose';
     };
   }, [text]);
