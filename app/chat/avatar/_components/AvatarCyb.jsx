@@ -1,6 +1,5 @@
 import { useAnimations, useFBX, useGLTF } from "@react-three/drei";
 import { useFrame, useGraph } from "@react-three/fiber";
-import { useControls } from "leva";
 import PropTypes from 'prop-types';
 import React, { useEffect, useRef, useState } from "react";
 import * as THREE from 'three';
@@ -95,13 +94,7 @@ export function AvatarCybModel({
   const visemeInterval = useRef(null);
   const headRef = useRef(); // Ref for the head group
 
-  const { morphTargetSmoothing } = useControls(
-    {
-      smoothMorphTarget: true,
-      morphTargetSmoothing: { value: 0.5, min: 0, max: 1, step: 0.01 },
-    },
-    { hidden: true }
-  );
+  const morphTargetSmoothing = 0.5;
 
   // Animation control based on text prop
   useEffect(() => {
