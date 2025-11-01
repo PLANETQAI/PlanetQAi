@@ -69,30 +69,22 @@ export default function VoiceAssistant() {
     const { createSession } = await import("../../../lib/voice/voiceAgent.js");
     const session = createSession();
 
+    // Store the original speak function
+    const originalSpeak = session.speak;
+    
+    // Override the speak method to set the text before speaking
+    session.speak = async function(text, options) {
+      // Set the text immediately when speak is called
+      setCurrentAIMessage(text);
+      // Call the original speak method
+      return originalSpeak.call(this, text, options);
+    };
+
     session.on("history_updated", (newHistory) => {
       setChatHistory(prevHistory => {
         // Only update if the history actually changed
         if (JSON.stringify(prevHistory) === JSON.stringify(newHistory)) {
           return prevHistory;
-        }
-        
-        // Find the latest AI message that's different from the current one
-        if (newHistory && newHistory.length > 0) {
-          const lastAIMessage = [...newHistory]
-            .reverse()
-            .find(item => item.role === 'assistant' && item.type === 'message');
-            
-          if (lastAIMessage) {
-            const messageContent = getMessageContent(lastAIMessage);
-            
-            // Only update if the message content has actually changed
-            if (messageContent && messageContent !== currentAIMessage) {
-              // Use a small timeout to ensure the voice has started
-              setTimeout(() => {
-                setCurrentAIMessage(messageContent);
-              }, 100); // Small delay to sync with voice
-            }
-          }
         }
         
         return newHistory || [];
