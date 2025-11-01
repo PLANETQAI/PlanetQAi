@@ -70,19 +70,33 @@ export default function VoiceAssistant() {
     const session = createSession();
 
     session.on("history_updated", (newHistory) => {
-      setChatHistory(newHistory || []);
-      
-      // Find the latest AI message
-      if (newHistory && newHistory.length > 0) {
-        const lastAIMessage = [...newHistory]
-          .reverse()
-          .find(item => item.role === 'assistant' && item.type === 'message');
-          
-        if (lastAIMessage) {
-          const messageContent = getMessageContent(lastAIMessage);
-          setCurrentAIMessage(messageContent);
+      setChatHistory(prevHistory => {
+        // Only update if the history actually changed
+        if (JSON.stringify(prevHistory) === JSON.stringify(newHistory)) {
+          return prevHistory;
         }
-      }
+        
+        // Find the latest AI message that's different from the current one
+        if (newHistory && newHistory.length > 0) {
+          const lastAIMessage = [...newHistory]
+            .reverse()
+            .find(item => item.role === 'assistant' && item.type === 'message');
+            
+          if (lastAIMessage) {
+            const messageContent = getMessageContent(lastAIMessage);
+            
+            // Only update if the message content has actually changed
+            if (messageContent && messageContent !== currentAIMessage) {
+              // Use a small timeout to ensure the voice has started
+              setTimeout(() => {
+                setCurrentAIMessage(messageContent);
+              }, 100); // Small delay to sync with voice
+            }
+          }
+        }
+        
+        return newHistory || [];
+      });
     });
 
     setVoiceSession(session);
