@@ -38,6 +38,8 @@ export default function VoiceAssistant() {
     fetchUserCredits
   } = useUser();
   const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
+  console.log("Current AI Message:", currentAIMessage);
+  console.log("Chat History:", chatHistory);
 
   const handleGenerateSong = useCallback(async (songData) => {
     if (!session) {
@@ -69,16 +71,28 @@ export default function VoiceAssistant() {
     const { createSession } = await import("../../../lib/voice/voiceAgent.js");
     const session = createSession();
 
-    // Store the original speak function
-    const originalSpeak = session.speak;
-    
-    // Override the speak method to set the text before speaking
-    session.speak = async function(text, options) {
-      // Set the text immediately when speak is called
-      setCurrentAIMessage(text);
-      // Call the original speak method
-      return originalSpeak.call(this, text, options);
-    };
+    // Handle assistant messages and audio synchronization
+    session.on("message", (message) => {
+      console.log("Assistant message received:", message);
+      if (message.role === "assistant" && message.content?.length > 0) {
+        // Find the first content item with a transcript
+        const contentItem = message.content.find(c => c.transcript);
+        
+        // Extract the transcript text
+        const textContent = contentItem?.transcript || "";
+          
+        if (textContent) {
+          // Set the message immediately when we receive it
+          setCurrentAIMessage(textContent);
+          console.log("Assistant message set:", textContent);
+        }
+      }
+    });
+
+    // Clear the message when the AI is done speaking
+    session.on("speaking_ended", () => {
+      setCurrentAIMessage("");
+    });
 
     session.on("history_updated", (newHistory) => {
       setChatHistory(prevHistory => {
@@ -86,6 +100,8 @@ export default function VoiceAssistant() {
         if (JSON.stringify(prevHistory) === JSON.stringify(newHistory)) {
           return prevHistory;
         }
+        
+        // No need to update currentAIMessage here as it's handled in the initial load effect
         
         return newHistory || [];
       });
@@ -104,12 +120,31 @@ export default function VoiceAssistant() {
     };
   }, [voiceSession]);
 
-  // Fetch user credits on component mount and when session changes
+  // Initialize and update message from history when component mounts or chatHistory changes
   useEffect(() => {
+    if (chatHistory.length > 0) {
+      const lastAssistantMessage = [...chatHistory]
+        .reverse()
+        .find(msg => msg.role === "assistant");
+        
+      if (lastAssistantMessage && lastAssistantMessage.content?.length > 0) {
+        // Find the first content item with a transcript
+        const contentItem = lastAssistantMessage.content.find(c => c.transcript);
+        
+        // Extract the transcript text
+        const textContent = contentItem?.transcript || "";
+          
+        if (textContent) {
+          setCurrentAIMessage(textContent);
+          console.log("Initial message set from history:", textContent);
+        }
+      }
+    }
+    
     if (session?.user) {
       fetchUserCredits().catch(console.error);
     }
-  }, [session, fetchUserCredits]);
+  }, [session, fetchUserCredits, chatHistory]);
 
   useEffect(() => {
     // Find the most recent create_song call by reversing the array
@@ -324,16 +359,17 @@ export default function VoiceAssistant() {
             </div>
           </div>
         )}
-        <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
-          <div className="relative  w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-120 lg:h-120   mb-4">
-            <div className="absolute inset-0 rounded-full p-0.5">
-              <div className="relative w-full h-full  overflow-hidden">
+        <div className="container mx-auto px-4 py-8 max-w-5xl flex flex-col items-center">
+          {/* Main Content Area */}
+          <div className="w-full max-w-4xl">
+            {/* Video Container - Larger and centered */}
+            <div className="relative w-full aspect-square max-w-2xl mx-auto mb-8">
+              <div className="absolute inset-0 rounded-2xl overflow-hidden shadow-xl">
                 <Canvas
                   shadows
                   camera={{ position: [0, 0, 10], fov: 20 }}
+                  className="w-full h-full"
                   style={{
-                    height: "100%",
-                    width: "100%",
                     transition: "opacity 0.5s ease-in-out"
                   }}
                 >
@@ -347,93 +383,93 @@ export default function VoiceAssistant() {
                   </Suspense>
                 </Canvas>
               </div>
+              {connected && (
+                <div className="absolute bottom-4 right-4 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900"></div>
+              )}
             </div>
-            {connected && (
-              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-green-500 rounded-full border-2 border-gray-900"></div>
-            )}
-          </div>
-          <div className={`text-sm font-medium mb-4 ${connected ? 'text-green-400' : 'text-gray-400'
-            }`}>
-            {connected ? 'Listening...' : connecting ? 'Connecting...' : 'Tap to start'}
-          </div>
-          <div className="space-y-4">
-            {!connected && !connecting && (
-              <button
-                onClick={(e) => {
-                  if (userCredits?.credits < 160) {
-                    e.preventDefault();
-                    setShowCreditPurchaseModal(true);
-                  } else {
-                    connect();
-                  }
-                }}
-                className={`group relative px-6 py-3 ${userCredits?.credits < 160
-                    ? 'bg-gray-500 cursor-not-allowed'
-                    : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
-                  } text-white rounded-full font-medium shadow-lg transition-all duration-300 overflow-hidden w-full text-center`}
-              >
-                <span className="relative z-10 flex items-center justify-center">
-                  <FaMicrophone className="mr-2" />
-                  {userCredits?.credits < 160 ? 'Insufficient Credits' : 'Start Assistant'}
-                </span>
-                {userCredits?.credits >= 160 && (
-                  <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-                )}
-              </button>
-            )}
-            {connected && (
-              <button
-                onClick={disconnect}
-                className="group w-full relative px-6 py-3 bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 overflow-hidden"
-              >
-                <span className="relative z-10 flex items-center justify-center">
-                  <FaMicrophoneSlash className="mr-2" />
-                  Stop Assistant
-                </span>
-                <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></span>
-              </button>
-            )}
 
-            {errorMsg && (
-              <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
-                <div className="flex items-start">
-                  <div className="flex-shrink-0 pt-0.5">
-                    <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                    </svg>
-                  </div>
-                  <div className="ml-3">
-                    <h3 className="text-sm font-medium text-red-100">Something went wrong</h3>
-                    <div className="mt-1 text-sm text-red-200">
-                      We're having trouble processing your request. Please try again in a moment.
+            {/* Status Text */}
+            <div className={`text-center text-lg font-medium mb-6 ${connected ? 'text-green-400' : 'text-gray-400'}`}>
+              {connected ? '🎤 Listening...' : connecting ? 'Connecting...' : 'Tap the button below to start'}
+            </div>
+
+            {/* Controls */}
+            <div className="space-y-4 max-w-md mx-auto">
+              {!connected && !connecting ? (
+                <button
+                  onClick={(e) => {
+                    if (userCredits?.credits < 160) {
+                      e.preventDefault();
+                      setShowCreditPurchaseModal(true);
+                    } else {
+                      connect();
+                    }
+                  }}
+                  className={`group relative px-8 py-4 text-lg ${
+                    userCredits?.credits < 160
+                      ? 'bg-gray-500 cursor-not-allowed'
+                      : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
+                  } text-white rounded-full font-medium shadow-lg transition-all duration-300 w-full text-center`}
+                >
+                  <span className="relative z-10 flex items-center justify-center">
+                    <FaMicrophone className="mr-3 text-xl" />
+                    {userCredits?.credits < 160 ? 'Insufficient Credits' : 'Start Assistant'}
+                  </span>
+                  {userCredits?.credits >= 160 && (
+                    <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
+                  )}
+                </button>
+              ) : connected ? (
+                <button
+                  onClick={disconnect}
+                  className="group relative px-8 py-4 text-lg bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 w-full"
+                >
+                  <span className="relative z-10 flex items-center justify-center">
+                    <FaMicrophoneSlash className="mr-3 text-xl" />
+                    Stop Assistant
+                  </span>
+                  <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
+                </button>
+              ) : null}
+
+
+              {errorMsg && (
+                <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
+                  <div className="flex items-start">
+                    <div className="flex-shrink-0 pt-0.5">
+                      <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                      </svg>
                     </div>
-                    <div className="mt-3 flex">
-                      <a
-                        href="mailto:planetproductions@yahoo.com"
-                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                      >
-                        Contact Support
-                      </a>
+                    <div className="ml-3">
+                      <h3 className="text-sm font-medium text-red-100">Something went wrong</h3>
+                      <div className="mt-1 text-sm text-red-200">
+                        We're having trouble processing your request. Please try again in a moment.
+                      </div>
+                      <div className="mt-3 flex">
+                        <a
+                          href="mailto:planetproductions@yahoo.com"
+                          className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                        >
+                          Contact Support
+                        </a>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            )}
-
-            {connected && (
-              <div className="bg-green-900/50 border border-green-500 text-green-200 px-4 py-3 rounded-lg">
-                🎤 Ready to create music! Start talking to begin.
-              </div>
-            )}
+              )}
+            </div>
           </div>
-          {chatHistory.length > 0 && (
-            <div className="mt-6">
-              <div className="space-y-4 max-h-96 overflow-y-auto">
+
+          {/* Chat History - Auto-shown when there are function calls */}
+          {chatHistory.some(item => item.type === "function_call") && (
+            <div className="w-full max-w-2xl mx-auto mt-6">
+              <h3 className="text-lg font-medium text-gray-300 mb-3">Recent Actions</h3>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
                 {Array.from(
                   chatHistory
                     .filter((item) => item.type === "function_call")
                     .reduce((map, item) => {
-                      // Use function name as key to ensure uniqueness
                       if (!map.has(item.name)) {
                         map.set(item.name, item);
                       }
@@ -441,126 +477,15 @@ export default function VoiceAssistant() {
                     }, new Map())
                     .values()
                 ).map((item, index) => (
-                  <div key={index} className="p-3 rounded">
-                    <div className="text-cyan-300 whitespace-pre-wrap">
+                  <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
+                    <div className="text-cyan-300 whitespace-pre-wrap text-sm">
                       {formatFunctionCall(item)}
                     </div>
                   </div>
                 ))}
-                {/* {chatHistory
-                .filter((item) => item.type === "function_call") // ✅ only show function calls
-                .map((item, index) => (
-                  <div key={index} className="p-3 rounded">
-                    <div className="text-cyan-300 whitespace-pre-wrap">
-                      {formatFunctionCall(item)}
-                      <div className="mt-2 space-x-2">
-                        {item.name === "create_song" && (
-                          <button
-                            onClick={() =>
-                              handleCreateSong(
-                                JSON.stringify(item.parsedArguments, null, 2)
-                              )
-                            }
-                            className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm"
-                          >
-                            Handle Create Song
-                          </button>
-                        )}
-                        {item.name === "save_progress" && (
-                          <button
-                            onClick={() =>
-                              handleSaveProgress(
-                                JSON.stringify(item.parsedArguments, null, 2)
-                              )
-                            }
-                            className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm"
-                          >
-                            Handle Save Progress
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                ))} */}
               </div>
             </div>
           )}
-
-
-          {/* {chatHistory.length > 0 && (
-          <div className="bg-gray-800 rounded-lg p-6 mt-6">
-            <div className="space-y-4 max-h-96 overflow-y-auto">
-              {chatHistory.map((item, index) => (
-                <div key={index} className="flex space-x-3">
-                  <div
-                    className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium ${item.role === "user" ? "bg-blue-600" : "bg-purple-600"
-                      }`}
-                  >
-                    {item.role === "user" ? "U" : "AI"}
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-gray-300">
-                      {item.type === "message" && (
-                        <div className="whitespace-pre-wrap">
-                          {getMessageContent(item)}
-                        </div>
-                      )}
-                      {item.type === "function_call" && (
-                        <div className="text-cyan-300 whitespace-pre-wrap">
-                          {formatFunctionCall(item)}
-                          <div className="mt-2 space-x-2">
-                            {item.name === "create_song" && (
-                              <button
-                                onClick={() =>
-                                  handleCreateSong(
-                                    JSON.stringify(
-                                      item.parsedArguments,
-                                      null,
-                                      2
-                                    )
-                                  )
-                                }
-                                className="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded text-sm"
-                              >
-                                Handle Create Song
-                              </button>
-                            )}
-                            {item.name === "save_progress" && (
-                              <button
-                                onClick={() =>
-                                  handleSaveProgress(
-                                    JSON.stringify(
-                                      item.parsedArguments,
-                                      null,
-                                      2
-                                    )
-                                  )
-                                }
-                                className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded text-sm"
-                              >
-                                Handle Save Progress
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      )}
-                      {item.type === "function_call_output" && (
-                        <div className="text-green-300 text-sm whitespace-pre-wrap">
-                          {formatFunctionOutput(item)}
-                        </div>
-                      )}
-                      {item.type === "error" && (
-                        <div className="text-red-300 whitespace-pre-wrap">
-                          {getMessageContent(item)}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )} */}
         </div>
 
         {session && (

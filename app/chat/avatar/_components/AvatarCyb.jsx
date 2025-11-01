@@ -208,7 +208,7 @@ export function AvatarCybModel({
           }
         }, 100); // Blink duration (100ms)
       }
-    }, 2000); // Blink every 2 seconds
+    }, 8000); // Blink every 2 seconds
 
     return () => clearInterval(blinkInterval);
   }, [nodes.head023?.morphTargetDictionary, nodes.head023?.morphTargetInfluences]);
