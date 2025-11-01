@@ -4,22 +4,9 @@ import CreditPurchaseModal from "@/components/credits/CreditPurchaseModal";
 import { useGenerator } from "@/context/GeneratorContext";
 import { useUser } from "@/context/UserContext";
 import { useSession } from 'next-auth/react';
-import dynamic from 'next/dynamic';
-import { Suspense, useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { FaMicrophone, FaMicrophoneSlash, FaMusic } from "react-icons/fa";
 import QuaylaGenerator from "./Generator_v1";
-
-// Dynamically import Canvas with no SSR
-const Canvas = dynamic(
-  () => import('@react-three/fiber').then((mod) => mod.Canvas),
-  { ssr: false }
-);
-
-// Dynamically import ExperienceTest with no SSR
-const ExperienceTest = dynamic(
-  () => import('../avatar/_components/ExperienceTest'),
-  { ssr: false }
-);
 
 export default function VoiceAssistant() {
   const { data: session, status } = useSession();
@@ -29,7 +16,6 @@ export default function VoiceAssistant() {
   const [errorMsg, setErrorMsg] = useState("");
   const [chatHistory, setChatHistory] = useState([]);
   const [songData, setSongData] = useState(null);
-  const [currentAIMessage, setCurrentAIMessage] = useState("");
   const { openGenerator, closeGenerator, showGenerator } = useGenerator();
   const {
     credits: userCredits,
@@ -71,18 +57,6 @@ export default function VoiceAssistant() {
 
     session.on("history_updated", (newHistory) => {
       setChatHistory(newHistory || []);
-      
-      // Find the latest AI message
-      if (newHistory && newHistory.length > 0) {
-        const lastAIMessage = [...newHistory]
-          .reverse()
-          .find(item => item.role === 'assistant' && item.type === 'message');
-          
-        if (lastAIMessage) {
-          const messageContent = getMessageContent(lastAIMessage);
-          setCurrentAIMessage(messageContent);
-        }
-      }
     });
 
     setVoiceSession(session);
@@ -320,26 +294,21 @@ export default function VoiceAssistant() {
         )}
         <div className="container mx-auto px-4 py-8 max-w-4xl flex flex-col items-center justify-center">
           <div className="relative  w-64 h-64 sm:w-80 sm:h-80 md:w-96 md:h-96 lg:w-120 lg:h-120   mb-4">
-            <div className="absolute inset-0 rounded-full p-0.5">
-              <div className="relative w-full h-full  overflow-hidden">
-                <Canvas
-                  shadows
-                  camera={{ position: [0, 0, 10], fov: 20 }}
-                  style={{
-                    height: "100%",
-                    width: "100%",
-                    transition: "opacity 0.5s ease-in-out"
-                  }}
+            <div className={`absolute inset-0 rounded-full ${connected
+              ? 'bg-gradient-to-r from-green-400 to-blue-500'
+              : 'bg-gradient-to-r from-gray-400 to-gray-600'
+              } p-0.5`}>
+              <div className="relative w-full h-full rounded-full overflow-hidden bg-gray-900">
+                <video
+                  autoPlay
+                  loop
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover"
                 >
-                  <Suspense fallback={null}>
-                    <ExperienceTest 
-                      speakingText={currentAIMessage}
-                      onModelLoad={() => {
-                        console.log('Model loaded in Voice component!');
-                      }}
-                    />
-                  </Suspense>
-                </Canvas>
+                  <source src="/videos/generator.mp4" type="video/mp4" />
+                  Your browser does not support the video tag.
+                </video>
               </div>
             </div>
             {connected && (
