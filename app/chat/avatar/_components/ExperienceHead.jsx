@@ -21,8 +21,8 @@ function Scene() {
   // Responsive scaling based on viewport
   const isMobile = viewport.width < 5; // Threshold for mobile viewport width
   const baseSize = Math.min(viewport.width, viewport.height);
-  const modelScale = isMobile ? baseSize * 0.9 : baseSize * 0.5;
-  const initialCameraZ = isMobile ? 4 : 8;
+  const modelScale = isMobile ? baseSize * 1.2 : baseSize * 0.5;
+  const initialCameraZ = isMobile ? 3.5 : 8;
 
   return (
     <group>
@@ -45,7 +45,7 @@ function Scene() {
         enableZoom={true}
         enablePan={false}
         enableRotate={true}
-        minDistance={3}
+        minDistance={2.5}
         maxDistance={8}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={3 * Math.PI / 4}
