@@ -22,10 +22,11 @@ function Scene() {
   const isMobile = viewport.width < 5; // Threshold for mobile viewport width
   const baseSize = Math.min(viewport.width, viewport.height);
   const modelScale = isMobile ? baseSize * 0.9 : baseSize * 0.5;
+  const initialCameraZ = isMobile ? 4 : 8;
 
   return (
     <group>
-      <PerspectiveCamera makeDefault position={[0, 0, 8]} fov={50} />
+      <PerspectiveCamera makeDefault position={[0, 0, initialCameraZ]} fov={50} />
 
       {/* Lighting */}
       <ambientLight intensity={0.8} />
