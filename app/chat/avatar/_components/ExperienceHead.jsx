@@ -1,8 +1,7 @@
 'use client'
-import * as THREE from 'three'
-import React, { Suspense } from 'react'
+import { Environment, OrbitControls, PerspectiveCamera, useGLTF } from '@react-three/drei'
 import { Canvas, useThree } from '@react-three/fiber'
-import { useGLTF, OrbitControls, Environment, PerspectiveCamera } from '@react-three/drei'
+import { Suspense, useEffect, useState } from 'react'
 
 function Model(props) {
   const { nodes, materials } = useGLTF('/models/avatar-head.glb')
@@ -18,15 +17,30 @@ useGLTF.preload('/models/avatar-head.glb')
 function Scene() {
   const { viewport } = useThree();
 
-  // Responsive scaling based on viewport
-  const isMobile = viewport.width < 5; // Threshold for mobile viewport width
-  const baseSize = Math.min(viewport.width, viewport.height);
-  const modelScale = isMobile ? baseSize * 1.2 : baseSize * 0.5;
-  const initialCameraZ = isMobile ? 3.5 : 8;
+const [isMobile, setIsMobile] = useState(false);
+
+useEffect(() => {
+  const checkMobile = () => {
+    setIsMobile(window.innerWidth < 768);
+  };
+  
+  // Initial check
+  checkMobile();
+  
+  // Add event listener for window resize
+  window.addEventListener('resize', checkMobile);
+  
+  // Cleanup
+  return () => window.removeEventListener('resize', checkMobile);
+}, []);
+
+// Use the state in your scale calculation
+const modelScale = Math.min(viewport.width, viewport.height) * (isMobile ? 1.3 : 0.9);
 
   return (
     <group>
-      <PerspectiveCamera makeDefault position={[0, 0, initialCameraZ]} fov={50} near={0.01} />
+      {/* Position camera to frame the larger model */}
+      <PerspectiveCamera makeDefault position={[0, 0, 5]} fov={50} near={0.01} />
 
       {/* Lighting */}
       <ambientLight intensity={0.8} />
@@ -35,18 +49,18 @@ function Scene() {
       
       {/* Model */}
       <Suspense fallback={null}>
-        <group scale={modelScale}>
+        <group scale={modelScale} position={[0, -0.1, 0]}>
             <Model />
         </group>
       </Suspense>
       
-      {/* Controls */}
+      {/* Adjust controls to match the new scale */}
       <OrbitControls 
         enableZoom={true}
         enablePan={false}
         enableRotate={true}
-        minDistance={2.5}
-        maxDistance={8}
+        minDistance={3}
+        maxDistance={10}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={3 * Math.PI / 4}
       />

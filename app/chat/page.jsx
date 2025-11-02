@@ -366,7 +366,7 @@ export default function TestPage() {
         </div>
       )}
       <div className="w-full max-w-5xl flex flex-col items-center">
-        <div className="w-full h-[65vh] rounded-lg overflow-hidden">
+        <div className="w-full h-[80vh] rounded-lg overflow-hidden">
           <ExperienceHead />
         </div>
 
