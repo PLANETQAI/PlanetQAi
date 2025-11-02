@@ -19,8 +19,9 @@ function Scene() {
   const { viewport } = useThree();
 
   // Responsive scaling based on viewport
+  const isMobile = viewport.width < 5; // Threshold for mobile viewport width
   const baseSize = Math.min(viewport.width, viewport.height);
-  const modelScale = baseSize * 0.5; // Adjusted scale for a better fit without the circle
+  const modelScale = isMobile ? baseSize * 0.9 : baseSize * 0.5;
 
   return (
     <group>
