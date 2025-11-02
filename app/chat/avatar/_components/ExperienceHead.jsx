@@ -53,8 +53,10 @@ function Scene() {
         <group 
           scale={modelScale} 
           position={[0, -0.1, 0]}
-          onPointerEnter={() => setAutoRotate(false)}
-          onPointerDown={() => setAutoRotate(false)}
+          onClick={(e) => {
+            e.stopPropagation();
+            setAutoRotate(prev => !prev);
+          }}
         >
             <Model />
         </group>

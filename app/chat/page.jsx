@@ -369,80 +369,80 @@ export default function TestPage() {
         <div className="w-full h-[80vh] rounded-lg overflow-hidden">
           <ExperienceHead />
         </div>
+        <div className='fixed bottom-16 left-0 right-0 z-10'>   {/* Status Text */}
+          <div className={`text-center text-lg font-medium mb-6 transition-opacity duration-500 ${controlsVisible ? 'opacity-100' : 'opacity-0'} ${connected ? 'text-green-400' : 'text-gray-400'}`}>
+            {connected ? '🎤 Listening...' : connecting ? 'Connecting...' : 'Tap the button below to start'}
+          </div>
 
-        {/* Status Text */}
-        <div className={`ext-center text-lg font-medium mb-6 transition-opacity duration-500 ${controlsVisible ? 'opacity-100' : 'opacity-0'} ${connected ? 'text-green-400' : 'text-gray-400'}`}>
-          {connected ? '🎤 Listening...' : connecting ? 'Connecting...' : 'Tap the button below to start'}
-        </div>
-
-        {/* Controls */}
-        <div className={`w-full space-y-4 max-w-md mx-auto px-4 transition-opacity duration-500 ${controlsVisible ? 'opacity-100' : 'opacity-0'}`}>
-          {!connected && !connecting ? (
-            <div className="w-full flex justify-center">
-              <button
-                onClick={(e) => {
-                  if (userCredits?.credits < 160) {
-                    e.preventDefault();
-                    setShowCreditPurchaseModal(true);
-                  } else {
-                    connect();
-                  }
-                }}
-                className={`group relative w-20 h-20 flex flex-col items-center justify-center ${userCredits?.credits < 160
+          {/* Controls */}
+          <div className={`w-full space-y-4 max-w-md mx-auto px-4 transition-opacity duration-500 ${controlsVisible ? 'opacity-100' : 'opacity-0'}`}>
+            {!connected && !connecting ? (
+              <div className="w-full flex justify-center">
+                <button
+                  onClick={(e) => {
+                    if (userCredits?.credits < 160) {
+                      e.preventDefault();
+                      setShowCreditPurchaseModal(true);
+                    } else {
+                      connect();
+                    }
+                  }}
+                  className={`group relative w-20 h-20 flex flex-col items-center justify-center ${userCredits?.credits < 160
                     ? 'bg-gray-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
-                  } text-white rounded-full font-medium shadow-lg transition-all duration-300`}
+                    } text-white rounded-full font-medium shadow-lg transition-all duration-300`}
+                >
+                  <span className="relative z-10 flex items-center justify-center">
+                    <FaMicrophone className="text-2xl" />
+                  </span>
+                  <span className="text-xs mt-1">
+                    {userCredits?.credits < 160 ? 'Insufficient' : 'Start'}
+                  </span>
+                  {userCredits?.credits >= 160 && (
+                    <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
+                  )}
+                </button>
+              </div>
+            ) : connected ? (
+              <button
+                onClick={disconnect}
+                className="group relative w-20 h-20 flex flex-col items-center justify-center bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300"
               >
                 <span className="relative z-10 flex items-center justify-center">
-                  <FaMicrophone className="text-2xl" />
+                  <FaMicrophoneSlash className="text-2xl" />
                 </span>
-                <span className="text-xs mt-1">
-                  {userCredits?.credits < 160 ? 'Insufficient' : 'Start'}
-                </span>
-                {userCredits?.credits >= 160 && (
-                  <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
-                )}
+                <span className="text-xs mt-1">Stop</span>
+                <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
               </button>
-            </div>
-          ) : connected ? (
-            <button
-              onClick={disconnect}
-              className="group relative w-20 h-20 flex flex-col items-center justify-center bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300"
-            >
-              <span className="relative z-10 flex items-center justify-center">
-                <FaMicrophoneSlash className="text-2xl" />
-              </span>
-              <span className="text-xs mt-1">Stop</span>
-              <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
-            </button>
-          ) : null}
+            ) : null}
 
-          {errorMsg && (
-            <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
-              <div className="flex items-start">
-                <div className="flex-shrink-0 pt-0.5">
-                  <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                  </svg>
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-100">Something went wrong</h3>
-                  <div className="mt-1 text-sm text-red-200">
-                    {errorMsg}
+            {errorMsg && (
+              <div className="bg-red-900/50 border border-red-500 text-red-200 p-4 rounded-lg space-y-3">
+                <div className="flex items-start">
+                  <div className="flex-shrink-0 pt-0.5">
+                    <svg className="h-5 w-5 text-red-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
                   </div>
-                  <div className="mt-3 flex">
-                    <a
-                      href="mailto:planetproductions@yahoo.com"
-                      className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
-                    >
-                      Contact Support
-                    </a>
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-100">Something went wrong</h3>
+                    <div className="mt-1 text-sm text-red-200">
+                      {errorMsg}
+                    </div>
+                    <div className="mt-3 flex">
+                      <a
+                        href="mailto:planetproductions@yahoo.com"
+                        className="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded-md text-red-100 bg-red-800 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
+                      >
+                        Contact Support
+                      </a>
+                    </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-        </div>
+            )}
+          </div></div>
+
       </div>
 
       {/* Recent Actions Dialog */}
