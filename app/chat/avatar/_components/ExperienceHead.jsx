@@ -26,7 +26,7 @@ function Scene() {
 
   return (
     <group>
-      <PerspectiveCamera makeDefault position={[0, 0, initialCameraZ]} fov={50} />
+      <PerspectiveCamera makeDefault position={[0, 0, initialCameraZ]} fov={50} near={0.01} />
 
       {/* Lighting */}
       <ambientLight intensity={0.8} />
