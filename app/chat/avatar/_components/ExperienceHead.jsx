@@ -17,25 +17,26 @@ useGLTF.preload('/models/avatar-head.glb')
 function Scene() {
   const { viewport } = useThree();
 
-const [isMobile, setIsMobile] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [autoRotate, setAutoRotate] = useState(true);
 
-useEffect(() => {
-  const checkMobile = () => {
-    setIsMobile(window.innerWidth < 768);
-  };
-  
-  // Initial check
-  checkMobile();
-  
-  // Add event listener for window resize
-  window.addEventListener('resize', checkMobile);
-  
-  // Cleanup
-  return () => window.removeEventListener('resize', checkMobile);
-}, []);
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+    
+    // Initial check
+    checkMobile();
+    
+    // Add event listener for window resize
+    window.addEventListener('resize', checkMobile);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
-// Use the state in your scale calculation
-const modelScale = Math.min(viewport.width, viewport.height) * (isMobile ? 1.3 : 0.9);
+  // Use the state in your scale calculation
+  const modelScale = Math.min(viewport.width, viewport.height) * (isMobile ? 1.1 : 0.9);
 
   return (
     <group>
@@ -49,13 +50,20 @@ const modelScale = Math.min(viewport.width, viewport.height) * (isMobile ? 1.3 :
       
       {/* Model */}
       <Suspense fallback={null}>
-        <group scale={modelScale} position={[0, -0.1, 0]}>
+        <group 
+          scale={modelScale} 
+          position={[0, -0.1, 0]}
+          onPointerEnter={() => setAutoRotate(false)}
+          onPointerDown={() => setAutoRotate(false)}
+        >
             <Model />
         </group>
       </Suspense>
       
       {/* Adjust controls to match the new scale */}
       <OrbitControls 
+        autoRotate={autoRotate}
+        autoRotateSpeed={2.0}
         enableZoom={true}
         enablePan={false}
         enableRotate={true}
