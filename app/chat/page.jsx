@@ -38,6 +38,7 @@ export default function TestPage() {
     fetchUserCredits
   } = useUser();
   const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
+  const [controlsVisible, setControlsVisible] = useState(false);
   console.log("Current AI Message:", currentAIMessage);
   console.log("Chat History:", chatHistory);
 
@@ -77,10 +78,10 @@ export default function TestPage() {
       if (message.role === "assistant" && message.content?.length > 0) {
         // Find the first content item with a transcript
         const contentItem = message.content.find(c => c.transcript);
-        
+
         // Extract the transcript text
         const textContent = contentItem?.transcript || "";
-          
+
         if (textContent) {
           // Set the message immediately when we receive it
           setCurrentAIMessage(textContent);
@@ -100,9 +101,9 @@ export default function TestPage() {
         if (JSON.stringify(prevHistory) === JSON.stringify(newHistory)) {
           return prevHistory;
         }
-        
+
         // No need to update currentAIMessage here as it's handled in the initial load effect
-        
+
         return newHistory || [];
       });
     });
@@ -126,21 +127,21 @@ export default function TestPage() {
       const lastAssistantMessage = [...chatHistory]
         .reverse()
         .find(msg => msg.role === "assistant");
-        
+
       if (lastAssistantMessage && lastAssistantMessage.content?.length > 0) {
         // Find the first content item with a transcript
         const contentItem = lastAssistantMessage.content.find(c => c.transcript);
-        
+
         // Extract the transcript text
         const textContent = contentItem?.transcript || "";
-          
+
         if (textContent) {
           setCurrentAIMessage(textContent);
           console.log("Initial message set from history:", textContent);
         }
       }
     }
-    
+
     if (session?.user) {
       fetchUserCredits().catch(console.error);
     }
@@ -241,6 +242,15 @@ export default function TestPage() {
     }
   }, [showGenerator, connected]);
 
+  // Show controls after 6 seconds to ensure model is loaded
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setControlsVisible(true);
+    }, 6000);
+
+    return () => clearTimeout(timer);
+  }, []);
+
   const getMessageContent = (item) => {
     if (!item.content) return "Message";
 
@@ -333,73 +343,76 @@ export default function TestPage() {
   return (
     <main className="w-full h-screen flex items-center justify-center p-4">
       <StarsWrapper className="fixed inset-0 -z-10" />
-       {showGenerator && session && (
-          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg p-6 w-full max-w-3xl relative">
-              <button
-                onClick={closeGenerator}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <div className="mt-8 p-6 bg-gray-800 rounded-lg max-h-[calc(90vh-4rem)] overflow-y-auto">
-                <QuaylaGenerator
-                  session={session}
-                  selectedPrompt={songData}
-                  onCreditsUpdate={fetchUserCredits}
-                  onClose={closeGenerator}
-                />
-              </div>
+      {showGenerator && session && (
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+          <div className="bg-gray-900 rounded-lg p-6 w-full max-w-3xl relative">
+            <button
+              onClick={closeGenerator}
+              className="absolute top-4 right-4 text-gray-400 hover:text-white"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+              </svg>
+            </button>
+            <div className="mt-8 p-6 bg-gray-800 rounded-lg max-h-[calc(90vh-4rem)] overflow-y-auto">
+              <QuaylaGenerator
+                session={session}
+                selectedPrompt={songData}
+                onCreditsUpdate={fetchUserCredits}
+                onClose={closeGenerator}
+              />
             </div>
           </div>
-        )}
+        </div>
+      )}
       <div className="w-full max-w-5xl flex flex-col items-center">
         <div className="w-full h-[65vh] rounded-lg overflow-hidden">
           <ExperienceHead />
         </div>
-        
+
         {/* Status Text */}
-        <div className={`ext-center text-lg font-medium mb-6 ${connected ? 'text-green-400' : 'text-gray-400'}`}>
+        <div className={`ext-center text-lg font-medium mb-6 transition-opacity duration-500 ${controlsVisible ? 'opacity-100' : 'opacity-0'} ${connected ? 'text-green-400' : 'text-gray-400'}`}>
           {connected ? '🎤 Listening...' : connecting ? 'Connecting...' : 'Tap the button below to start'}
         </div>
 
         {/* Controls */}
-        <div className="w-full space-y-4 max-w-md mx-auto px-4">
+        <div className={`w-full space-y-4 max-w-md mx-auto px-4 transition-opacity duration-500 ${controlsVisible ? 'opacity-100' : 'opacity-0'}`}>
           {!connected && !connecting ? (
-            <button
-              onClick={(e) => {
-                if (userCredits?.credits < 160) {
-                  e.preventDefault();
-                  setShowCreditPurchaseModal(true);
-                } else {
-                  connect();
-                }
-              }}
-              className={`group relative px-8 pb-4 text-lg ${
-                userCredits?.credits < 160
-                  ? 'bg-gray-500 cursor-not-allowed'
-                  : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
-              } text-white rounded-full font-medium shadow-lg transition-all duration-300 w-full text-center`}
-            >
-              <span className="relative z-10 flex items-center justify-center">
-                <FaMicrophone className="mr-3 text-xl" />
-                {userCredits?.credits < 160 ? 'Insufficient Credits' : 'Start Assistant'}
-              </span>
-              {userCredits?.credits >= 160 && (
-                <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
-              )}
-            </button>
+            <div className="w-full flex justify-center">
+              <button
+                onClick={(e) => {
+                  if (userCredits?.credits < 160) {
+                    e.preventDefault();
+                    setShowCreditPurchaseModal(true);
+                  } else {
+                    connect();
+                  }
+                }}
+                className={`group relative w-20 h-20 flex flex-col items-center justify-center ${userCredits?.credits < 160
+                    ? 'bg-gray-500 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
+                  } text-white rounded-full font-medium shadow-lg transition-all duration-300`}
+              >
+                <span className="relative z-10 flex items-center justify-center">
+                  <FaMicrophone className="text-2xl" />
+                </span>
+                <span className="text-xs mt-1">
+                  {userCredits?.credits < 160 ? 'Insufficient' : 'Start'}
+                </span>
+                {userCredits?.credits >= 160 && (
+                  <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
+                )}
+              </button>
+            </div>
           ) : connected ? (
             <button
               onClick={disconnect}
-              className="group relative px-8 py-4 text-lg bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300 w-full"
+              className="group relative w-20 h-20 flex flex-col items-center justify-center bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300"
             >
               <span className="relative z-10 flex items-center justify-center">
-                <FaMicrophoneSlash className="mr-3 text-xl" />
-                Stop Assistant
+                <FaMicrophoneSlash className="text-2xl" />
               </span>
+              <span className="text-xs mt-1">Stop</span>
               <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
             </button>
           ) : null}
@@ -474,7 +487,7 @@ export default function TestPage() {
             ))}
           </div>
           <DialogFooter>
-            <Button 
+            <Button
               onClick={() => setShowRecentActions(false)}
               className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
             >
@@ -484,16 +497,16 @@ export default function TestPage() {
         </DialogContent>
       </Dialog>
 
-        {session && (
-          <CreditPurchaseModal
-            isOpen={showCreditPurchaseModal}
-            onClose={() => setShowCreditPurchaseModal(false)}
-            creditsNeeded={0}
-            onSuccess={() => {
-              fetchUserCredits()
-            }}
-          />
-        )}
+      {session && (
+        <CreditPurchaseModal
+          isOpen={showCreditPurchaseModal}
+          onClose={() => setShowCreditPurchaseModal(false)}
+          creditsNeeded={0}
+          onSuccess={() => {
+            fetchUserCredits()
+          }}
+        />
+      )}
     </main>
   );
 }
