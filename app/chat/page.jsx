@@ -356,12 +356,12 @@ export default function TestPage() {
           </div>
         )}
       <div className="w-full max-w-5xl flex flex-col items-center">
-        <div className="w-full h-[75vh] rounded-lg overflow-hidden">
+        <div className="w-full h-[65vh] rounded-lg overflow-hidden">
           <ExperienceHead />
         </div>
         
         {/* Status Text */}
-        <div className={`mt-6 text-center text-lg font-medium mb-6 ${connected ? 'text-green-400' : 'text-gray-400'}`}>
+        <div className={`ext-center text-lg font-medium mb-6 ${connected ? 'text-green-400' : 'text-gray-400'}`}>
           {connected ? '🎤 Listening...' : connecting ? 'Connecting...' : 'Tap the button below to start'}
         </div>
 
@@ -377,7 +377,7 @@ export default function TestPage() {
                   connect();
                 }
               }}
-              className={`group relative px-8 py-4 text-lg ${
+              className={`group relative px-8 pb-4 text-lg ${
                 userCredits?.credits < 160
                   ? 'bg-gray-500 cursor-not-allowed'
                   : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
