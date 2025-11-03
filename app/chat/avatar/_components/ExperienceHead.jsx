@@ -36,7 +36,7 @@ function Scene() {
   }, []);
 
   // Use the state in your scale calculation
-  const modelScale = Math.min(viewport.width, viewport.height) * (isMobile ? 1.1 : 0.9);
+  const modelScale = Math.min(viewport.width, viewport.height) * (isMobile ? 1 : 0.8);
 
   return (
     <group>

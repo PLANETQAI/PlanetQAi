@@ -396,7 +396,7 @@ export default function TestPage() {
                     <FaMicrophone className="text-2xl" />
                   </span>
                   <span className="text-xs mt-1">
-                    {userCredits?.credits < 160 ? 'Insufficient' : 'Start'}
+                    {userCredits?.credits < 160 ? 'Insufficient' : ''}
                   </span>
                   {userCredits?.credits >= 160 && (
                     <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
@@ -404,6 +404,7 @@ export default function TestPage() {
                 </button>
               </div>
             ) : connected ? (
+              <div className="w-full flex justify-center">
               <button
                 onClick={disconnect}
                 className="group relative w-20 h-20 flex flex-col items-center justify-center bg-gradient-to-r from-red-500 to-pink-600 text-white rounded-full font-medium shadow-lg hover:shadow-red-500/30 transition-all duration-300"
@@ -411,9 +412,10 @@ export default function TestPage() {
                 <span className="relative z-10 flex items-center justify-center">
                   <FaMicrophoneSlash className="text-2xl" />
                 </span>
-                <span className="text-xs mt-1">Stop</span>
+                {/* <span className="text-xs mt-1">Stop</span> */}
                 <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
               </button>
+              </div>
             ) : null}
 
             {errorMsg && (
