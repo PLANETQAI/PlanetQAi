@@ -35,8 +35,11 @@ function Scene() {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Use the state in your scale calculation
-  const modelScale = Math.min(viewport.width, viewport.height) * (isMobile ? 1 : 0.8);
+  const baseScale = isMobile ? 1.0 : 0.7;  // Reduced scale for mobile
+const modelScale = Math.min(viewport.width, viewport.height) * baseScale;
+
+// Adjust Y position based on device
+const modelPosition = isMobile ? [0, 0.2, 0] : [0, -0.1, 0];
 
   return (
     <group>
@@ -52,7 +55,7 @@ function Scene() {
       <Suspense fallback={null}>
         <group 
           scale={modelScale} 
-          position={[0, -0.1, 0]}
+          position={modelPosition}
           onClick={(e) => {
             e.stopPropagation();
             setAutoRotate(prev => !prev);
