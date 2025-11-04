@@ -1,0 +1,220 @@
+// app/video-player/_components/VideoGenerator.jsx
+'use client';
+
+import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Textarea } from '@/components/ui/textarea';
+import { Download, Loader2, Video as VideoIcon } from 'lucide-react';
+import { useSession } from 'next-auth/react';
+import { useState } from 'react';
+import toast from 'react-hot-toast';
+import { useMedia } from '../_hooks/useMedia';
+import MediaList from './MediaList';
+
+const VideoGenerator = ({ session }) => {
+  const { data: sessionData } = useSession();
+  const [prompt, setPrompt] = useState('');
+  const [style, setStyle] = useState('cinematic');
+  const [duration, setDuration] = useState(8);
+  const [quality, setQuality] = useState('standard');
+  const [loading, setLoading] = useState(false);
+  const [generatedVideo, setGeneratedVideo] = useState(null);
+  const { media, fetchMedia } = useMedia('video');
+
+  // Style options
+  const styleOptions = [
+    { value: 'cinematic', label: 'Cinematic' },
+    { value: 'realistic', label: 'Realistic' },
+    { value: 'anime', label: 'Anime' },
+    { value: '3d', label: '3D Animation' },
+    { value: 'watercolor', label: 'Watercolor' },
+    { value: 'pixel', label: 'Pixel Art' }
+  ];
+
+  // Duration options
+  const durationOptions = [
+    { value: 5, label: '5 seconds' },
+    { value: 8, label: '8 seconds' },
+    { value: 12, label: '12 seconds' },
+    { value: 20, label: '20 seconds' }
+  ];
+
+  // Quality options
+  const qualityOptions = [
+    { value: 'standard', label: 'Standard' },
+    { value: 'hd', label: 'High Definition' }
+  ];
+
+  // Handle video generation
+  const handleGenerateVideo = async () => {
+    if (!prompt.trim()) {
+      toast.error('Please enter a video description');
+      return;
+    }
+
+    setLoading(true);
+    setGeneratedVideo(null);
+
+    try {
+      const response = await fetch('/api/media/video', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          prompt,
+          style,
+          duration,
+          quality,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to generate video')
+      }
+
+      setGeneratedVideo(data.mediaUrl)
+    } catch (error) {
+      console.error('Error generating video:', error)
+      setLoading(false)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div className="space-y-6">
+      <div className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium mb-2">Video Description *</label>
+          <Textarea
+            value={prompt}
+            onChange={(e) => setPrompt(e.target.value)}
+            placeholder="Describe the video you want to generate..."
+            rows={3}
+            disabled={loading}
+            className="bg-gray-700/50 border-gray-600 focus:border-purple-500 focus:ring-purple-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div>
+            <label className="block text-sm font-medium mb-2">Style</label>
+            <Select value={style} onValueChange={setStyle} disabled={loading}>
+              <SelectTrigger className="bg-gray-700/50 border-gray-600">
+                <SelectValue placeholder="Select style" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {styleOptions.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="hover:bg-gray-700"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Duration</label>
+            <Select value={duration} onValueChange={setDuration} disabled={loading}>
+              <SelectTrigger className="bg-gray-700/50 border-gray-600">
+                <SelectValue placeholder="Select duration" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {durationOptions.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="hover:bg-gray-700"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-2">Quality</label>
+            <Select value={quality} onValueChange={setQuality} disabled={loading}>
+              <SelectTrigger className="bg-gray-700/50 border-gray-600">
+                <SelectValue placeholder="Select quality" />
+              </SelectTrigger>
+              <SelectContent className="bg-gray-800 border-gray-700">
+                {qualityOptions.map((option) => (
+                  <SelectItem 
+                    key={option.value} 
+                    value={option.value}
+                    className="hover:bg-gray-700"
+                  >
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          onClick={handleGenerateVideo}
+          disabled={loading || !prompt.trim()}
+          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+        >
+          {loading ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Generating...
+            </>
+          ) : (
+            <>
+              <VideoIcon className="mr-2 h-4 w-4" />
+              Generate Video
+            </>
+          )}
+        </Button>
+      </div>
+
+      {generatedVideo && (
+        <div className="mt-8 space-y-4">
+          <div className="relative group">
+            <div className="relative rounded-lg overflow-hidden bg-gray-800/50 border border-gray-700/50">
+              <video
+                src={generatedVideo}
+                controls
+                className="w-full h-auto rounded-lg"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-4">
+                <Button
+                  onClick={() => {
+                    const link = document.createElement('a')
+                    link.href = generatedVideo
+                    link.download = `ai-video-${Date.now()}.mp4`
+                    document.body.appendChild(link)
+                    link.click()
+                    document.body.removeChild(link)
+                  }}
+                  size="sm"
+                  className="bg-white/10 hover:bg-white/20 backdrop-blur-md"
+                >
+                  <Download className="mr-2 h-4 w-4" />
+                  Download
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      <MediaList session={sessionData} type="video" />
+    </div>
+  );
+}
+
+export default VideoGenerator;

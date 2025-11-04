@@ -24,6 +24,10 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'via.placeholder.com',
       },
+      {
+        protocol: 'https',
+        hostname: 'oaidalleapiprodscus.blob.core.windows.net', 
+      },
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
