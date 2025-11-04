@@ -57,8 +57,8 @@ export async function GET(request) {
         duration: data.seconds || media.duration,
         width: data.size ? parseInt(data.size.split('x')[0]) : media.width,
         height: data.size ? parseInt(data.size.split('x')[1]) : media.height,
-        usage: [
-          ...(media.tags.filter(tag => !tag.startsWith('status:'))),
+        usage : [
+          ...((media.tags || []).filter(tag => tag && !tag.startsWith('status:'))),
           `status:${data.status}`,
           `progress:${data.progress || 0}`,
           ...(data.video_url ? ['has_video:true'] : []),
