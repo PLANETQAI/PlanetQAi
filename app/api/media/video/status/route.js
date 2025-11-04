@@ -57,13 +57,14 @@ export async function GET(request) {
         duration: data.seconds || media.duration,
         width: data.size ? parseInt(data.size.split('x')[0]) : media.width,
         height: data.size ? parseInt(data.size.split('x')[1]) : media.height,
-        usage : [
-          ...((media.tags || []).filter(tag => tag && !tag.startsWith('status:'))),
-          `status:${data.status}`,
-          `progress:${data.progress || 0}`,
-          ...(data.video_url ? ['has_video:true'] : []),
-          ...(data.thumbnail_url ? ['has_thumbnail:true'] : [])
-        ],
+        usage: {
+          status: data.status,
+          progress: data.progress || 0,
+          hasVideo: !!data.video_url,
+          hasThumbnail: !!data.thumbnail_url,
+          lastUpdated: new Date().toISOString(),
+          ...(media.usage || {}) // Preserve any existing usage data
+        },
       },
     });
 
