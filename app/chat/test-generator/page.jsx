@@ -1,134 +1,42 @@
 'use client';
 
-import { useState, useEffect, useContext } from 'react';
-import { useSession } from 'next-auth/react';
-import SunoGenerator from '../_components/Generator_v1';
-import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal';
-import { useGenerator } from '@/context/GeneratorContext';
-import { useUser } from '@/context/UserContext';
+import { useState } from "react";
+import GenerateSong from "../_components/GenerateSong";
 
-export default function TestGenerator() {
-  const { data: session, status } = useSession();
-  const { showGenerator, openGenerator, closeGenerator } = useGenerator();
-  const [userCredits, setUserCredits] = useState(null);
-  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
-  const [testSongData, setTestSongData] = useState({
-    text: 'Wish You Were Here this is a test song for my love reminding us the past',
-    title: 'Wish You Were Here for me daling here ',
-    mood: 'happy',
-  });
-
-  // Get fetchUserCredits from UserContext
-  const { fetchUserCredits } = useUser();
-
-  // Fetch credits when component mounts or session changes
-  useEffect(() => {
-    if (session?.user) {
-      fetchUserCredits().catch(console.error);
+export default function ChatPage() {
+const [showDialog, setShowDialog] = useState(false)
+  
+  const songsToGenerate = [
+    {
+      title: "Summer Vibes",
+      prompt: "Upbeat pop song about summer",
+      tags: ["pop", "upbeat", "summer"]
+    },
+    {
+      title: "Midnight Dreams",
+      prompt: "Dreamy ballad about late nights",
+      tags: ["ballad", "dreamy", "night"]
     }
-  }, [session, fetchUserCredits]);
+  ]
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-8">
-      <div className="max-w-2xl mx-auto">
-        <h1 className="text-3xl font-bold mb-8">Generator Component Test</h1>
-
-        <div className="bg-gray-800 p-6 rounded-lg mb-8">
-          <h2 className="text-xl font-semibold mb-4">Test Song Data</h2>
-          <pre className="bg-gray-900 p-4 rounded overflow-x-auto">
-            {JSON.stringify(testSongData, null, 2)}
-          </pre>
-        </div>
-
-        <div className="flex flex-wrap gap-4 mb-8">
-          <button
-            onClick={() => openGenerator()}
-            disabled={status === 'loading'}
-            className="px-6 py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {status === 'loading' ? 'Loading...' : 'Open Generator'}
-          </button>
-
-          <button
-            onClick={() => {
-              // Update with new test data
-              const moods = ['happy', 'sad', 'energetic', 'calm', 'romantic', 'angry'];
-              const styles = ['pop', 'rock', 'electronic', 'hip-hop', 'jazz', 'classical'];
-              const genres = ['pop', 'rock', 'electronic', 'r&b', 'jazz', 'classical', 'lofi'];
-
-              setTestSongData({
-                title: `Test Song ${Math.floor(Math.random() * 1000)}`,
-                prompt: `A ${moods[Math.floor(Math.random() * moods.length)]} ${styles[Math.floor(Math.random() * styles.length)]} song about number ${Math.floor(Math.random() * 1000)}`,
-                mood: moods[Math.floor(Math.random() * moods.length)],
-                style: styles[Math.floor(Math.random() * styles.length)],
-                genre: genres[Math.floor(Math.random() * genres.length)],
-                bpm: Math.floor(60 + Math.random() * 140)
-              });
-            }}
-            className="px-6 py-3 bg-gray-700 hover:bg-gray-600 rounded-lg font-medium transition-colors"
-            disabled={status === 'loading'}
-          >
-            Generate Random Test Data
-          </button>
-        </div>
-
-        <div className="bg-gray-800 p-6 rounded-lg">
-          <h2 className="text-xl font-semibold mb-4">Instructions</h2>
-          <ul className="list-disc pl-5 space-y-2 text-gray-300">
-            <li>Click "Open Generator" to test the Generator component</li>
-            <li>Use "Generate Random Test Data" to update the song data with random values</li>
-            <li>Check browser console for success/error logs</li>
-            <li>Test different scenarios by modifying the test data</li>
-            <li>Make sure you're logged in to test the full functionality</li>
-          </ul>
-
-          <div className="mt-6 p-4 bg-gray-700/50 rounded-lg">
-            <h3 className="font-semibold mb-2">Current Session Status:</h3>
-            <div className="flex items-center gap-2">
-              <div className={`w-3 h-3 rounded-full ${status === 'authenticated' ? 'bg-green-500' : status === 'loading' ? 'bg-yellow-500' : 'bg-red-500'}`}></div>
-              <span className="text-sm">
-                {status === 'authenticated'
-                  ? `Logged in as ${session?.user?.email || session?.user?.name || 'User'}`
-                  : status === 'loading' ? 'Loading session...' : 'Not logged in'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Generator Modal */}
-      {showGenerator && (
-        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
-          <div className="relative bg-gray-800 rounded-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <button
-              onClick={() => closeGenerator()}
-              className="absolute top-4 right-4 text-gray-400 hover:text-white"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-              </svg>
-            </button>
-            <div className="mt-8 p-6 bg-gray-800 rounded-lg">
-              <SunoGenerator 
-                session={session} 
-                selectedPrompt={testSongData}
-                onCreditsUpdate={fetchUserCredits}
-                onClose={closeGenerator}
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      {session && (
-					<CreditPurchaseModal
-						isOpen={showCreditPurchaseModal}
-						onClose={() => setShowCreditPurchaseModal(false)}
-						creditsNeeded={0}
-						onSuccess={() => {
-							fetchUserCredits()
-						}}
-					/>
-				)}
-    </div>
+     <>
+      <button onClick={() => setShowDialog(true)} className="bg-green-500 mt-40 mx-30 hover:bg-blue-600 text-white py-2 px-4 rounded">
+        Generate Song
+      </button>
+      
+      <GenerateSong
+        isOpen={showDialog}
+        onClose={() => setShowDialog(false)}
+        songDetailsQueue={songsToGenerate}
+        onSuccess={(newSongs) => {
+          console.log('Song completed!', newSongs)
+        }}
+        onAllComplete={(allSongs) => {
+          console.log('All songs done!', allSongs)
+          // Refresh your main song list
+        }}
+      />
+    </>
   );
 }

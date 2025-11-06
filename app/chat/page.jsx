@@ -2,21 +2,13 @@
 
 import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal';
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader';
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle
-} from '@/components/ui/dialog';
 import { useGenerator } from '@/context/GeneratorContext';
 import { useUser } from '@/context/UserContext';
 import { useSession } from 'next-auth/react';
 import { useCallback, useEffect, useState } from 'react';
 import { FaMicrophone, FaMicrophoneSlash, FaMusic } from "react-icons/fa";
 import StarsWrapper from '../../components/canvas/StarsWrapper';
-import QuaylaGenerator from "./_components/Generator_v1";
+import GenerateSong from './_components/GenerateSong';
 import ExperienceHead from './avatar/_components/ExperienceHead';
 
 
@@ -41,82 +33,108 @@ export default function TestPage() {
   const [hasToolCalls, setHasToolCalls] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generationStatus, setGenerationStatus] = useState({ success: null, message: '' });
-  const [currentSongData, setCurrentSongData] = useState(null);
+  const [songsToGenerate, setSongsToGenerate] = useState([]);
+  const [showDialog, setShowDialog] = useState(false);
 
   // Update hasToolCalls and isGenerating based on chatHistory
   useEffect(() => {
     const toolCalls = chatHistory.filter(item => item.type === "function_call");
     const hasToolCallsNow = toolCalls.length > 0;
 
-    // Check if there's a create_song tool call that we should be generating
-    const hasCreateSongCall = toolCalls.some(item => item.name === 'create_song');
-
+    // Find all create_song tool calls
+    const createSongCalls = toolCalls
+      .filter(item => item.name === 'create_song' && (item.arguments || item.parsedArguments))
+      .map(call => {
+        // Handle both arguments and parsedArguments
+        const args = typeof call.arguments === 'string'
+          ? JSON.parse(call.arguments)
+          : call.parsedArguments || call.arguments || {};
+        return { ...call, parsedArgs: args };
+      });
+    const hasCreateSongCall = createSongCalls.length > 0;
+    console.log("hasToolCallsNow:", hasToolCallsNow);
+    console.log("hasCreateSongCall:", hasCreateSongCall, createSongCalls);
     if (hasToolCallsNow && !hasToolCalls) {
       setHasToolCalls(true);
-
-      // Only set isGenerating if it's a create_song call
+      setShowDialog(true)
+      // If there are create_song calls, prepare the songs to generate
       if (hasCreateSongCall) {
-        setIsGenerating(true);
-        setGenerationStatus({ success: null, message: 'Generating your song...' });
+        const songs = createSongCalls.map(({ parsedArgs }) => ({
+          title: parsedArgs.title || 'Untitled',
+          prompt: parsedArgs.description ||
+            `A ${parsedArgs.mood || 'catchy'} ${parsedArgs.genre || 'pop'} song`,
+          tags: parsedArgs.tags || [],
+          mood: parsedArgs.mood || 'neutral',
+          genre: parsedArgs.genre || 'pop',
+          style: parsedArgs.style || '',
+          tempo: parsedArgs.tempo || 'medium'
+        }));
+
+
+        setSongsToGenerate(songs);
+
       }
     }
   }, [chatHistory, hasToolCalls]);
 
   console.log("Current AI Message:", currentAIMessage);
   console.log("Chat History:", chatHistory);
+  console.log("hasToolCalls:", hasToolCalls);
+  console.log("songsToGenerate:", songsToGenerate);
+  console.log("Song Data:", songData);
 
-const handleGenerateSong = useCallback(async (songData) => {
-  console.log('handleGenerateSong called with:', songData);
-  
-  if (!session) {
-    console.log('No session found');
-    setErrorMsg("Please sign in to generate songs");
-    return false;
-  }
+  const handleGenerateSong = useCallback(async (songData) => {
+    console.log('handleGenerateSong called with:', songData);
 
-  try {
-    console.log('Setting isGenerating to true');
-    setIsGenerating(true);
-    
-    console.log('Fetching user credits...');
-    const credits = await fetchUserCredits();
-    console.log('User credits:', credits);
-    
-    if (!credits || credits.credits < 85) {
-      console.log('Insufficient credits');
-      setShowCreditPurchaseModal(true);
-      setIsGenerating(false);
+    if (!session) {
+      console.log('No session found');
+      setErrorMsg("Please sign in to generate songs");
       return false;
     }
 
-    console.log('Setting song data and opening generator');
-    setSongData(songData);
-    
     try {
-      console.log('Calling openGenerator...');
-      openGenerator();
-      console.log('Setting up dialog close timeout');
-    setTimeout(() => {
-      console.log('Closing dialog');
-      setIsGenerating(false);
-      setHasToolCalls(false);
-    }, 500);
-      console.log('openGenerator called successfully');
-    } catch (error) {
-      console.error('Error in openGenerator:', error);
-      throw error;
-    }
-    
+      console.log('Setting isGenerating to true');
+      setIsGenerating(true);
 
-    
-    return true;
-  } catch (error) {
-    console.error('Error checking credits:', error);
-    setErrorMsg("Failed to check credits. Please try again.");
-    setIsGenerating(false);
-    return false;
-  }
-}, [session, openGenerator, fetchUserCredits]);
+      console.log('Fetching user credits...');
+      const credits = await fetchUserCredits();
+      console.log('User credits:', credits);
+
+      if (!credits || credits.credits < 85) {
+        console.log('Insufficient credits');
+        setShowCreditPurchaseModal(true);
+        setIsGenerating(false);
+        return false;
+      }
+
+      console.log('Setting song data and opening generator');
+      setSongData(songData);
+
+      try {
+        console.log('Calling openGenerator...');
+        openGenerator();
+        console.log('Setting up dialog close timeout');
+        setTimeout(() => {
+          console.log('Closing dialog');
+          setIsGenerating(false);
+          setHasToolCalls(false);
+        }, 500);
+        console.log('openGenerator called successfully');
+      } catch (error) {
+        console.error('Error in openGenerator:', error);
+        throw error;
+      }
+
+
+
+      return true;
+    } catch (error) {
+      console.error('Error checking credits:', error);
+      setErrorMsg("Failed to check credits. Please try again.");
+      setIsGenerating(false);
+      return false;
+    }
+  }, [session, openGenerator, fetchUserCredits]);
 
   const initializeSession = useCallback(async () => {
     if (voiceSession) return voiceSession;
@@ -148,15 +166,36 @@ const handleGenerateSong = useCallback(async (songData) => {
     });
 
     session.on("history_updated", (newHistory) => {
+      // First, check if we have any song calls
+      const songCalls = newHistory
+        .filter(item =>
+          item.type === "function_call" &&
+          item.name === "create_song" &&
+          item.arguments
+        );
+
+      // Only update state if there are song calls
+      if (songCalls.length > 0) {
+        const songs = songCalls.map(call => ({
+          title: call.arguments.title || 'Untitled',
+          prompt: call.arguments.description ||
+            `A ${call.arguments.mood || 'catchy'} ${call.arguments.genre || 'pop'} song`,
+          tags: call.arguments.tags || [],
+          mood: call.arguments.mood || 'neutral',
+          genre: call.arguments.genre || 'pop',
+          style: call.arguments.style || '',
+          tempo: call.arguments.tempo || 'medium'
+        }));
+
+        setSongsToGenerate(songs);
+        setShowDialog(true);
+      }
+
+      // Then update the chat history
       setChatHistory(prevHistory => {
-        // Only update if the history actually changed
-        if (JSON.stringify(prevHistory) === JSON.stringify(newHistory)) {
-          return prevHistory;
-        }
-
-        // No need to update currentAIMessage here as it's handled in the initial load effect
-
-        return newHistory || [];
+        return JSON.stringify(prevHistory) === JSON.stringify(newHistory)
+          ? prevHistory
+          : (newHistory || []);
       });
     });
 
@@ -176,17 +215,50 @@ const handleGenerateSong = useCallback(async (songData) => {
   // Initialize and update message from history when component mounts or chatHistory changes
   useEffect(() => {
     if (chatHistory.length > 0) {
+      // Find all assistant messages with function calls
+      const assistantMessages = chatHistory.filter(
+        msg => msg.role === "assistant" && msg.type === "function_call"
+      );
+
+      // Find all create_song tool calls in descending order
+      const createSongCalls = assistantMessages
+        .filter(item => item.name === 'create_song')
+        .reverse(); // To maintain chronological order
+
+      if (createSongCalls.length > 0) {
+        const songs = createSongCalls.map(call => {
+          // Safely parse arguments
+          const args = call.arguments
+            ? call.arguments
+            : call.arguments
+              ? JSON.parse(call.arguments)
+              : {};
+
+          return {
+            title: args.title || 'Untitled',
+            prompt: args.description ||
+              `A ${args.mood || 'catchy'} ${args.genre || 'pop'} song`,
+            tags: args.tags || [],
+            mood: args.mood || 'neutral',
+            genre: args.genre || 'pop',
+            style: args.style || '',
+            tempo: args.tempo || 'medium'
+          };
+        });
+
+        console.log("Songs to generate:", songs);
+        setSongsToGenerate(songs);
+        setShowDialog(true);
+      }
+
+      // Handle text content from the last assistant message
       const lastAssistantMessage = [...chatHistory]
         .reverse()
-        .find(msg => msg.role === "assistant");
+        .find(msg => msg.role === "assistant" && msg.content?.length > 0);
 
-      if (lastAssistantMessage && lastAssistantMessage.content?.length > 0) {
-        // Find the first content item with a transcript
+      if (lastAssistantMessage?.content?.length > 0) {
         const contentItem = lastAssistantMessage.content.find(c => c.transcript);
-
-        // Extract the transcript text
         const textContent = contentItem?.transcript || "";
-
         if (textContent) {
           setCurrentAIMessage(textContent);
           console.log("Initial message set from history:", textContent);
@@ -199,27 +271,6 @@ const handleGenerateSong = useCallback(async (songData) => {
     }
   }, [session, fetchUserCredits, chatHistory]);
 
-  useEffect(() => {
-    // Find the most recent create_song call by reversing the array
-    const createSongCall = [...chatHistory]
-      .reverse()
-      .find(
-        (item) =>
-          item.type === "function_call" &&
-          item.name === "create_song" &&
-          item.parsedArguments
-      );
-
-    if (createSongCall && createSongCall.parsedArguments) {
-      setSongData({
-        title: createSongCall.parsedArguments.title || 'Untitled',
-        description: createSongCall.parsedArguments.description || '',
-        genre: createSongCall.parsedArguments.genre || 'pop',
-        mood: createSongCall.parsedArguments.mood || 'neutral'
-      });
-      setShowGenerator(true);
-    }
-  }, [chatHistory]);
 
   const connect = async () => {
     setConnecting(true);
@@ -336,8 +387,8 @@ const handleGenerateSong = useCallback(async (songData) => {
 
   const formatFunctionCall = (item) => {
     const tool = item.name || "Unknown tool";
-    const args = item.parsedArguments
-      ? item.parsedArguments
+    const args = item.arguments
+      ? item.arguments
       : item.arguments
         ? JSON.parse(item.arguments)
         : {};
@@ -398,28 +449,6 @@ const handleGenerateSong = useCallback(async (songData) => {
       <StarsWrapper className="fixed inset-0 -z-10" />
       <GlobalHeader session={session} />
       <div className='w-full flex items-center justify-center'>
-        {showGenerator && session && (
-          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50">
-            <div className="bg-gray-900 rounded-lg p-6 w-full max-w-3xl relative">
-              <button
-                onClick={closeGenerator}
-                className="absolute top-4 right-4 text-gray-400 hover:text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
-              <div className="mt-8 p-6 bg-gray-800 rounded-lg max-h-[calc(90vh-4rem)] overflow-y-auto">
-                <QuaylaGenerator
-                  session={session}
-                  selectedPrompt={songData}
-                  onCreditsUpdate={fetchUserCredits}
-                  onClose={closeGenerator}
-                />
-              </div>
-            </div>
-          </div>
-        )}
         <div className="w-full max-w-5xl flex flex-col items-center">
           <div className="w-full h-[80vh] rounded-lg overflow-hidden">
             <ExperienceHead />
@@ -502,97 +531,23 @@ const handleGenerateSong = useCallback(async (songData) => {
 
         </div>
 
-        {/* Recent Actions Dialog */}
-        <Dialog
-          open={hasToolCalls || isGenerating}
-          onOpenChange={(open) => {
-            if (!open) {
-              setHasToolCalls(false);
-              setIsGenerating(false);
-            }
+        <GenerateSong
+          isOpen={showDialog}
+          onClose={() => {
+            setShowDialog(false);
+            setSongsToGenerate([]);
           }}
-        >
-          <DialogContent className="sm:max-w-2xl bg-gray-900">
-            <DialogHeader>
-              <DialogTitle className="text-2xl text-white">
-                {isGenerating ? 'Generating Your Song' : 'Quayla Creator'}
-              </DialogTitle>
-              <DialogDescription className="text-gray-400">
-                {isGenerating ? generationStatus.message : 'Create a song'}
-              </DialogDescription>
-            </DialogHeader>
-            <div className="min-h-[200px] flex items-center justify-center">
-              {isGenerating ? (
-                <div className="flex flex-col items-center justify-center space-y-4 py-8">
-                  <div className="relative">
-                    <div className="w-16 h-16 border-4 border-purple-500 border-t-transparent rounded-full animate-spin"></div>
-                    {generationStatus.success === true && (
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <svg className="w-8 h-8 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                        </svg>
-                      </div>
-                    )}
-                  </div>
-                  <p className="text-gray-300">
-                    {generationStatus.success === true
-                      ? 'Done!'
-                      : generationStatus.success === false
-                        ? 'Error generating song'
-                        : 'Creating your masterpiece...'}
-                  </p>
-                </div>
-              ) : hasToolCalls ? (
-                <div className="w-full max-w-2xl mx-aut">
-                  <div className="space-y-3 max-h-60 overflow-y-auto pr-2">
-                    {Array.from(
-                      chatHistory
-                        .filter((item) => item.type === "function_call")
-                        .reduce((map, item) => {
-                          if (!map.has(item.name)) {
-                            map.set(item.name, item);
-                          }
-                          return map;
-                        }, new Map())
-                        .values()
-                    ).map((item, index) => (
-                      <div key={index} className="bg-gray-800/50 p-4 rounded-lg border border-gray-700/50">
-                        <div className="text-cyan-300 whitespace-pre-wrap text-sm">
-                          {formatFunctionCall(item)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ) : null}
-            </div>
-            <DialogFooter className="sm:justify-end">
-              {isGenerating ? (
-                <button
-                  onClick={() => {
-                    setIsGenerating(false);
-                    setHasToolCalls(false);
-                    setGenerationStatus({ success: null, message: '' });
-                  }}
-                  className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-lg text-sm font-medium transition-colors"
-                  disabled={generationStatus.success === true}
-                >
-                  {generationStatus.success === true ? 'Close' : 'Cancel'}
-                </button>
-              ) : (
-                <button
-                  onClick={async () => {
-                    handleGenerateSong(songData);
-                  }}
-                  className="bg-gradient-to-r w-full from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 
-              px-4 py-2 rounded-lg text-sm font-medium text-white shadow transition-all duration-200 flex items-center"
-                >
-                  <FaMusic className="mr-2" /> Create Song
-                </button>
-              )}
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+          songDetailsQueue={songsToGenerate}
+          onSuccess={(newSongs) => {
+            console.log('Song completed!', newSongs);
+          }}
+          onAllComplete={(allSongs) => {
+            console.log('All songs done!', allSongs);
+            setShowDialog(false);
+            setSongsToGenerate([]);
+            // You might want to refresh the songs list here
+          }}
+        />
 
         {session && (
           <CreditPurchaseModal
@@ -605,7 +560,6 @@ const handleGenerateSong = useCallback(async (songData) => {
           />
         )}
       </div>
-
     </main>
   );
 }

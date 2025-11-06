@@ -1,6 +1,6 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
 import { PrismaClient } from "@prisma/client";
+import { NextResponse } from "next/server";
 
 // Route segment config
 export const dynamic = 'force-dynamic';
@@ -26,13 +26,7 @@ export async function GET(req) {
         maxMonthlyCredits: true,
         totalCreditsUsed: true,
         role: true,
-        subscription: {
-          select: {
-            planName: true,
-            status: true,
-            currentPeriodEnd: true,
-          },
-        },
+       
       },
     });
 
