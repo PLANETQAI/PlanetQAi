@@ -32,7 +32,7 @@ const GenerateSong = ({
   const [selectedSongIndex, setSelectedSongIndex] = useState(0)
   
   // Generation state
-  const [status, setStatus] = useState('idle') // idle, generating, pending, processing, completed, failed, queue_complete
+  const [status, setStatus] = useState('idle') // idle, generating, pending, processing, completed, failed, queue_complete, waiting
   const [error, setError] = useState('')
   const [taskId, setTaskId] = useState(null)
   const [songId, setSongId] = useState(null)
@@ -136,9 +136,15 @@ const GenerateSong = ({
         
         // Check if there are more songs in queue
         if (currentIndex < queue.length - 1) {
-          // Move to next song in queue
-          setCurrentIndex(prev => prev + 1)
-          setStatus('idle')
+          // Set status to waiting and start a 5-minute delay before next song
+          setStatus('waiting')
+          
+          // Wait for 5 minutes (300,000 milliseconds) before starting next song
+          setTimeout(() => {
+            // Move to next song in queue after delay
+            setCurrentIndex(prev => prev + 1)
+            setStatus('idle')
+          }, 300000) // 5 minutes in milliseconds
         } else {
           // All songs completed
           setStatus('queue_complete')
@@ -395,6 +401,18 @@ const GenerateSong = ({
           )}
 
           {/* Status indicator */}
+          {status === 'completed' && (
+            <div className="flex items-center text-green-500">
+              <CheckCircle2 className="w-5 h-5 mr-2" />
+              <span>Generation complete!</span>
+            </div>
+          )}
+          {status === 'waiting' && (
+            <div className="flex items-center text-yellow-500">
+              <Clock className="w-5 h-5 mr-2 animate-pulse" />
+              <span>Waiting 5 minutes before next generation...</span>
+            </div>
+          )}
           {isGenerating && (
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />

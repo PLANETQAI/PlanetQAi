@@ -99,7 +99,7 @@ const VideoGenerator = ({ session }) => {
           />
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div className="flex gap-6">
           <div>
             <label className="block text-sm font-medium mb-2">Style</label>
             <Select value={style} onValueChange={setStyle} disabled={loading}>
@@ -139,34 +139,14 @@ const VideoGenerator = ({ session }) => {
               </SelectContent>
             </Select>
           </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-2">Quality</label>
-            <Select value={quality} onValueChange={setQuality} disabled={loading}>
-              <SelectTrigger className="bg-gray-700/50 border-gray-600">
-                <SelectValue placeholder="Select quality" />
-              </SelectTrigger>
-              <SelectContent className="bg-gray-800 border-gray-700">
-                {qualityOptions.map((option) => (
-                  <SelectItem 
-                    key={option.value} 
-                    value={option.value}
-                    className="hover:bg-gray-700"
-                  >
-                    {option.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
         </div>
       </div>
 
-      <div className="flex justify-end">
+      <div className="w-full flex justify-center">
         <Button
           onClick={handleGenerateVideo}
           disabled={loading || !prompt.trim()}
-          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+          className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 w-full p-8 rounded-full shadow-md"
         >
           {loading ? (
             <>

@@ -8,7 +8,7 @@ const IMAGE_GENERATION_CREDITS = 100;
 export async function POST(req) {
   try {
     // Get user session
-   const session = await auth();
+    const session = await auth();
     if (!session) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -80,41 +80,71 @@ export async function POST(req) {
         body: JSON.stringify({
           model: "dall-e-3",
           prompt: prompt,
-          n: Math.min(parseInt(n), 4), // Limit to max 4 images
-          size: quality === "hd" ? "1024x1024" : "1024x1024",
-          quality: quality
+          n: 1,
+          size: "1024x1024",
+          quality: "standard",
         })
       });
 
       if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error("OpenAI API error details:", errorData);
+        
+        // Delete the media record since generation failed
+        try {
+          await prisma.media.delete({
+            where: { id: media.id }
+          });
+          console.log("Deleted media record due to generation failure");
+        } catch (deleteError) {
+          console.error("Error deleting media record:", deleteError);
+        }
+        
+        // Return the error details to the client
+        return NextResponse.json(
+          { 
+            error: 'Content generation failed',
+            details: errorData.error?.message || 'The content was rejected by the safety system',
+            type: errorData.error?.type || 'content_policy_violation',
+            code: errorData.error?.code || 'content_rejected',
+            mediaDeleted: true
+          },
+          { status: 400 }
+        );
       }
 
+
       const data = await response.json();
-      console.log("Image generation response",data);
-      
+      console.log("Image generation response", data);
+
       if (!data.data || !data.data[0]?.url) {
+        // Delete the media record since we didn't get a valid response
+        await prisma.media.delete({
+          where: { id: media.id }
+        });
+        console.log("Deleted media record due to invalid response from OpenAI");
+        
         throw new Error('Invalid response from OpenAI API');
       }
 
 
-const imageUrl = data.data[0].url;
-const revisedPrompt = data.data[0].revised_prompt || prompt;
+      const imageUrl = data.data[0].url;
+      const revisedPrompt = data.data[0].revised_prompt || prompt;
       // Update media record with the generated image URL
-// Update media record with the generated image URL
-    const updatedMedia = await prisma.media.update({
-      where: { id: media.id },
-      data: {
-        fileUrl: imageUrl,
-        thumbnailUrl: imageUrl,
-        width: 1024,
-        height: 1024,
-        completedAt: new Date(),
-        quality,
-        status: 'completed',
-        model: 'dall-e-3'
-      }
-    });
+      // Update media record with the generated image URL
+      const updatedMedia = await prisma.media.update({
+        where: { id: media.id },
+        data: {
+          fileUrl: imageUrl,
+          thumbnailUrl: imageUrl,
+          width: 1024,
+          height: 1024,
+          completedAt: new Date(),
+          quality,
+          status: 'completed',
+          model: 'dall-e-3'
+        }
+      });
 
       // Deduct credits after successful generation
       await prisma.user.update({
@@ -159,9 +189,9 @@ const revisedPrompt = data.data[0].revised_prompt || prompt;
   } catch (error) {
     console.error("Media generation error:", error);
     return NextResponse.json(
-      { 
+      {
         error: "Failed to generate media",
-        details: error.message 
+        details: error.message
       },
       { status: 500 }
     );

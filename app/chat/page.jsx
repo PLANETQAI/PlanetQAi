@@ -36,43 +36,110 @@ export default function TestPage() {
   const [songsToGenerate, setSongsToGenerate] = useState([]);
   const [showDialog, setShowDialog] = useState(false);
 
+  // Helper function to check if a song already exists in the songsToGenerate array
+  const isDuplicateSong = (newSong, existingSongs) => {
+    return existingSongs.some(existingSong => {
+      // Compare by title and prompt for uniqueness
+      return (
+        existingSong.title === newSong.title && 
+        existingSong.prompt === newSong.prompt
+      );
+    });
+  };
+
   // Update hasToolCalls and isGenerating based on chatHistory
   useEffect(() => {
     const toolCalls = chatHistory.filter(item => item.type === "function_call");
     const hasToolCallsNow = toolCalls.length > 0;
 
-    // Find all create_song tool calls
+    // Find all create_song tool calls with proper JSON validation
     const createSongCalls = toolCalls
       .filter(item => item.name === 'create_song' && (item.arguments || item.parsedArguments))
       .map(call => {
-        // Handle both arguments and parsedArguments
-        const args = typeof call.arguments === 'string'
-          ? JSON.parse(call.arguments)
-          : call.parsedArguments || call.arguments || {};
-        return { ...call, parsedArgs: args };
-      });
+        try {
+          let args = {};
+          
+          // Handle both arguments and parsedArguments with proper type checking
+          if (call.parsedArguments && typeof call.parsedArguments === 'object') {
+            args = { ...call.parsedArguments };
+          } else if (call.arguments) {
+            // Safely parse string arguments
+            const rawArgs = typeof call.arguments === 'string' 
+              ? call.arguments.trim() 
+              : JSON.stringify(call.arguments);
+              
+            if (rawArgs) {
+              args = JSON.parse(rawArgs);
+            }
+          }
+          
+          // Ensure we always return an object
+          if (typeof args !== 'object' || args === null) {
+            console.warn('Invalid arguments format, defaulting to empty object');
+            args = {};
+          }
+          
+          return { 
+            ...call, 
+            parsedArgs: args,
+            hasValidArgs: true,
+            // Create a unique ID for each song call based on its content
+            id: `${args.title || 'untitled'}-${args.description || ''}-${Date.now()}`
+          };
+          
+        } catch (error) {
+          console.error('Error parsing song arguments:', error);
+          return {
+            ...call,
+            parsedArgs: {},
+            hasValidArgs: false,
+            error: 'Invalid song parameters format',
+            id: `error-${Date.now()}`
+          };
+        }
+      })
+      // Filter out any calls with invalid arguments
+      .filter(call => call.hasValidArgs);
+
     const hasCreateSongCall = createSongCalls.length > 0;
+    
     console.log("hasToolCallsNow:", hasToolCallsNow);
     console.log("hasCreateSongCall:", hasCreateSongCall, createSongCalls);
+    
     if (hasToolCallsNow && !hasToolCalls) {
       setHasToolCalls(true);
-      setShowDialog(true)
+      setShowDialog(true);
+      
       // If there are create_song calls, prepare the songs to generate
       if (hasCreateSongCall) {
-        const songs = createSongCalls.map(({ parsedArgs }) => ({
-          title: parsedArgs.title || 'Untitled',
-          prompt: parsedArgs.description ||
-            `A ${parsedArgs.mood || 'catchy'} ${parsedArgs.genre || 'pop'} song`,
-          tags: parsedArgs.tags || [],
-          mood: parsedArgs.mood || 'neutral',
-          genre: parsedArgs.genre || 'pop',
-          style: parsedArgs.style || '',
-          tempo: parsedArgs.tempo || 'medium'
-        }));
+        setSongsToGenerate(prevSongs => {
+          // Create new songs from the current calls
+          const newSongs = createSongCalls.map(({ parsedArgs, id }) => ({
+            id: id || `${parsedArgs.title || 'untitled'}-${Date.now()}`,
+            title: parsedArgs.title || 'Untitled',
+            prompt: parsedArgs.description ||
+              `A ${parsedArgs.mood || 'catchy'} ${parsedArgs.genre || 'pop'} song`,
+            tags: parsedArgs.tags || [],
+            mood: parsedArgs.mood || 'neutral',
+            genre: parsedArgs.genre || 'pop',
+            style: parsedArgs.style || '',
+            tempo: parsedArgs.tempo || 'medium'
+          }));
 
+          // Filter out duplicates before updating state
+          const uniqueNewSongs = newSongs.filter(newSong => 
+            !isDuplicateSong(newSong, prevSongs)
+          );
 
-        setSongsToGenerate(songs);
-
+          // Only update if we have new unique songs
+          if (uniqueNewSongs.length > 0) {
+            console.log('Adding new songs:', uniqueNewSongs);
+            return [...prevSongs, ...uniqueNewSongs];
+          }
+          
+          console.log('No new unique songs to add');
+          return prevSongs;
+        });
       }
     }
   }, [chatHistory, hasToolCalls]);

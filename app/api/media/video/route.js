@@ -76,85 +76,111 @@ export async function POST(req) {
     });
 
     try {
-      // Make the API call to OpenAI
-      const formData = new FormData();
-      formData.append('model', 'sora-2');
-      formData.append('prompt', prompt);
-      formData.append('seconds', seconds);
-      formData.append('size', size);
-      formData.append('quality', quality);
-      formData.append('duration', parseInt(duration));
+      // Prepare request body according to Sora API spec
+      const requestBody = {
+        model: 'sora-2',
+        prompt: prompt,
+        seconds: parseInt(seconds) || 4,
+        size: size || '720x1280',
+        quality: quality || 'standard'
+      };
       
+      // Make the API call to OpenAI Sora API
       const response = await fetch('https://api.openai.com/v1/videos', {
         method: 'POST',
         headers: {
-          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`
+          'Authorization': `Bearer ${process.env.OPENAI_API_KEY}`,
+          'Content-Type': 'application/json'
         },
-        body: formData
+        body: JSON.stringify(requestBody)
       });
-
-      if (!response.ok) {
-        throw new Error(`OpenAI API error: ${response.statusText}`);
-      }
 
       const data = await response.json();
       
+      if (!response.ok) {
+        // Delete the media record if API call fails
+        await prisma.media.delete({
+          where: { id: media.id }
+        });
+        
+        throw new Error(data.error?.message || `OpenAI API error: ${response.statusText}`);
+      }
+      
       if (!data.id) {
-        throw new Error('Invalid response from OpenAI API');
+        // Delete the media record if response is invalid
+        await prisma.media.delete({
+          where: { id: media.id }
+        });
+        throw new Error('Invalid response from OpenAI API: Missing video ID');
       }
 
-      // Update media record with the video task ID
-      const updatedMedia = await prisma.media.update({
-        where: { id: media.id },
-        data: {
-          taskId: data.id,
-          status: data.status || 'queued',
-          usage: [
-            ...media.usage.filter(tag => !tag.startsWith('status:')),
-            `status:${data.status || 'queued'}`,
-            `taskId:${data.id}`,
-            `model:sora-2`,
-            `created_at:${new Date().toISOString()}`
-          ],
-        },
-      });
+      try {
+        // Update media record with the video task ID
+        const updatedMedia = await prisma.media.update({
+          where: { id: media.id },
+          data: {
+            taskId: data.id,
+            status: data.status || 'queued',
+            width: parseInt(data.size?.split('x')[0]) || 720,
+            height: parseInt(data.size?.split('x')[1]) || 1280,
+            duration: parseInt(data.seconds) || 4,
+            quality: data.quality || 'standard',
+            model: data.model || 'sora-2',
+            usage: [
+              ...media.usage.filter(tag => !tag.startsWith('status:')),
+              `status:${data.status || 'queued'}`,
+              `taskId:${data.id}`,
+              `model:sora-2`,
+              `created_at:${new Date().toISOString()}`
+            ],
+          },
+        });
 
-      // Deduct credits after successful API call
-      await prisma.user.update({
-        where: { id: userId },
-        data: {
-          credits: {
-            decrement: VIDEO_GENERATION_CREDITS
+        // Deduct credits after successful API call and media update
+        await prisma.user.update({
+          where: { id: userId },
+          data: {
+            credits: {
+              decrement: VIDEO_GENERATION_CREDITS
+            }
           }
-        }
-      });
+        });
 
-      return NextResponse.json({
-        success: true,
-        message: "Video generation started",
-        media: {
-          id: updatedMedia.id,
-          taskId: data.id,
-          status: data.status,
-          creditsUsed: VIDEO_GENERATION_CREDITS,
-          remainingCredits: user.credits - VIDEO_GENERATION_CREDITS
-        }
-      });
+        return NextResponse.json({
+          success: true,
+          message: "Video generation started",
+          media: {
+            id: updatedMedia.id,
+            taskId: data.id,
+            status: data.status,
+            size: data.size,
+            seconds: data.seconds,
+            quality: data.quality,
+            createdAt: data.created_at,
+            creditsUsed: VIDEO_GENERATION_CREDITS,
+            remainingCredits: user.credits - VIDEO_GENERATION_CREDITS
+          }
+        });
+      } catch (updateError) {
+        // If update fails, try to clean up the media record
+        await prisma.media.delete({
+          where: { id: media.id }
+        }).catch(console.error);
+        
+        throw new Error(`Failed to update media record: ${updateError.message}`);
+      }
 
     } catch (error) {
-      // Update media record with error status
-      await prisma.media.update({
-        where: { id: media.id },
-        data: {
-          status: 'failed',
-          usage: [
-            ...media.usage.filter(tag => !tag.startsWith('status:')),
-            'status:failed',
-            `error:${error.message.replace(/\s+/g, '_')}`
-          ],
-        },
-      });
-
+      // Try to clean up the media record if it still exists
+      try {
+        await prisma.media.delete({
+          where: { id: media.id }
+        });
+      } catch (deleteError) {
+        console.error('Error cleaning up media record:', deleteError);
+      }
+      
+      // Return the original error
       throw error;
     }
 
