@@ -30,6 +30,18 @@ const GenerateSong = ({
   const [currentIndex, setCurrentIndex] = useState(0)
   const [completedSongs, setCompletedSongs] = useState([])
   const [selectedSongIndex, setSelectedSongIndex] = useState(0)
+
+  // Update queue when songDetailsQueue changes
+  useEffect(() => {
+    if (songDetailsQueue && songDetailsQueue.length > 0) {
+      console.log('Updating queue with songs:', songDetailsQueue);
+      setQueue(songDetailsQueue);
+      setCurrentIndex(0);
+      setCompletedSongs([]);
+      setSelectedSongIndex(0);
+      setStatus('idle');
+    }
+  }, [songDetailsQueue]);
   
   // Generation state
   const [status, setStatus] = useState('idle') // idle, generating, pending, processing, completed, failed, queue_complete, waiting
@@ -102,21 +114,49 @@ const GenerateSong = ({
   // Poll for result
   const pollForResult = async (taskId, songId) => {
     try {
+      console.log('Polling for result...', { taskId, songId });
       const response = await fetch(`/api/music/status-suno?taskId=${taskId}&songId=${songId}`)
       const data = await response.json()
+      console.log('Polling response:', data);
 
-      setStatus(data.status)
+      // Only update status if we have a valid status from the server
+      if (data.status) {
+        setStatus(data.status);
+      }
 
+      // Handle completed status
       if (data.status === 'completed' && data.output?.songs?.length > 0) {
-        // Success!
-        stopTimer()
+        // Verify the song is actually ready by checking the song URL
+        const songUrl = data.output.songs[0]?.song_path;
+        if (!songUrl) {
+          console.log('Song URL not available yet, continuing to poll...');
+          return; // Continue polling if song URL is not available
+        }
+
+        // Additional verification: try to fetch the song URL to ensure it's accessible
+        try {
+          const songResponse = await fetch(songUrl, { method: 'HEAD' });
+          if (!songResponse.ok) {
+            console.log('Song file not yet available, continuing to poll...');
+            return; // Continue polling if song is not accessible yet
+          }
+        } catch (err) {
+          console.log('Error verifying song URL, continuing to poll...', err);
+          return; // Continue polling if there's an error checking the URL
+        }
+
+        // If we get here, the song is ready
+        console.log('Song generation completed successfully!');
+        stopTimer();
+        
+        // Clear the polling interval
         if (pollingInterval) {
-          clearInterval(pollingInterval)
-          setPollingInterval(null)
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
         }
         
         // Update credits
-        await fetchUserCredits()
+        await fetchUserCredits();
         
         // Add completed songs to the list
         const newSongs = data.output.songs.map(song => ({
@@ -124,52 +164,62 @@ const GenerateSong = ({
           id: songId,
           audioUrl: song.song_path,
           coverImageUrl: song.image_path,
-          status: 'completed'
-        }))
+          status: 'completed',
+          title: queue[currentIndex]?.title || 'Untitled Song',
+          prompt: queue[currentIndex]?.prompt || ''
+        }));
         
-        setCompletedSongs(prev => [...prev, ...newSongs])
+        // Update state with the new songs
+        setCompletedSongs(prev => [...prev, ...newSongs]);
         
         // Notify parent component
         if (onSuccess) {
-          onSuccess(newSongs)
+          onSuccess(newSongs);
         }
         
         // Check if there are more songs in queue
         if (currentIndex < queue.length - 1) {
           // Set status to waiting and start a 5-minute delay before next song
-          setStatus('waiting')
+          setStatus('waiting');
           
           // Wait for 5 minutes (300,000 milliseconds) before starting next song
           setTimeout(() => {
             // Move to next song in queue after delay
-            setCurrentIndex(prev => prev + 1)
-            setStatus('idle')
-          }, 300000) // 5 minutes in milliseconds
+            setCurrentIndex(prev => prev + 1);
+            setStatus('idle');
+          }, 300000); // 5 minutes in milliseconds
         } else {
           // All songs completed
-          setStatus('queue_complete')
-          clearState()
+          setStatus('queue_complete');
+          clearState();
           
           if (onAllComplete) {
-            onAllComplete(completedSongs)
+            onAllComplete([...completedSongs, ...newSongs]);
           }
         }
-      } else if (data.status === 'failed') {
-        stopTimer()
+      } 
+      // Handle failed status
+      else if (data.status === 'failed') {
+        console.error('Song generation failed:', data.error);
+        stopTimer();
+        
+        // Clear the polling interval
         if (pollingInterval) {
-          clearInterval(pollingInterval)
-          setPollingInterval(null)
+          clearInterval(pollingInterval);
+          setPollingInterval(null);
         }
-        setError(data.error?.message || 'Failed to generate music')
+        
+        setError(data.error?.message || 'Failed to generate music');
+        setStatus('failed');
         
         // Check if there are more songs in queue
         if (currentIndex < queue.length - 1) {
-          // Skip to next song
+          // Skip to next song after a short delay
           setTimeout(() => {
-            setCurrentIndex(prev => prev + 1)
-            setStatus('idle')
-            setError('')
-          }, 3000)
+            setCurrentIndex(prev => prev + 1);
+            setStatus('idle');
+            setError('');
+          }, 3000);
         }
       }
     } catch (err) {
@@ -384,7 +434,7 @@ const GenerateSong = ({
             {isGenerating ? 'Generating Your Song' : status === 'queue_complete' ? 'Songs Generated' : 'Song Generator'}
           </DialogTitle>
           <DialogDescription>
-            {currentSong?.title || 'Untitled Song'}
+            {currentSong?.title || queue[0]?.title || 'Untitled Song'}
             {queue.length > 1 && ` (${currentIndex + 1} of ${queue.length})`}
           </DialogDescription>
         </DialogHeader>
@@ -580,15 +630,6 @@ const GenerateSong = ({
           >
             {isGenerating ? 'Close (continues in background)' : 'Close'}
           </button>
-          
-          {isGenerating && (
-            <button
-              onClick={handleForceCancel}
-              className="px-4 py-2 bg-red-500 text-white rounded-md hover:bg-red-600 transition-colors"
-            >
-              Cancel Generation
-            </button>
-          )}
           
           {status === 'queue_complete' && (
             <button

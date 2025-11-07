@@ -81,8 +81,7 @@ export async function POST(req) {
         model: 'sora-2',
         prompt: prompt,
         seconds: parseInt(seconds) || 4,
-        size: size || '720x1280',
-        quality: quality || 'standard'
+        size: size || '720x1280'
       };
       
       // Make the API call to OpenAI Sora API

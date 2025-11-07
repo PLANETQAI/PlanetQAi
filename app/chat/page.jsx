@@ -114,17 +114,23 @@ export default function TestPage() {
       if (hasCreateSongCall) {
         setSongsToGenerate(prevSongs => {
           // Create new songs from the current calls
-          const newSongs = createSongCalls.map(({ parsedArgs, id }) => ({
-            id: id || `${parsedArgs.title || 'untitled'}-${Date.now()}`,
-            title: parsedArgs.title || 'Untitled',
-            prompt: parsedArgs.description ||
-              `A ${parsedArgs.mood || 'catchy'} ${parsedArgs.genre || 'pop'} song`,
-            tags: parsedArgs.tags || [],
-            mood: parsedArgs.mood || 'neutral',
-            genre: parsedArgs.genre || 'pop',
-            style: parsedArgs.style || '',
-            tempo: parsedArgs.tempo || 'medium'
-          }));
+          const newSongs = createSongCalls.map(({ parsedArgs, id }) => {
+            // Log the parsed arguments for debugging
+            console.log('Parsed arguments:', parsedArgs);
+            
+            return {
+              id: id || `${parsedArgs.title || 'untitled'}-${Date.now()}`,
+              title: parsedArgs.title || 'Untitled',
+              prompt: parsedArgs.description || parsedArgs.text ||
+                `A ${parsedArgs.mood || 'catchy'} ${parsedArgs.genre || 'pop'} song`,
+              tags: parsedArgs.tags || [],
+              mood: parsedArgs.mood || 'neutral',
+              genre: parsedArgs.genre || 'pop',
+              style: parsedArgs.style || '',
+              tempo: parsedArgs.tempo || 'medium',
+              lyrics: parsedArgs.text || ''
+            };
+          });
 
           // Filter out duplicates before updating state
           const uniqueNewSongs = newSongs.filter(newSong => 
@@ -239,19 +245,38 @@ export default function TestPage() {
           item.type === "function_call" &&
           item.name === "create_song" &&
           item.arguments
-        );
+        )
+        .map(call => {
+          try {
+            // Parse arguments if they're a string, otherwise use as is
+            const args = typeof call.arguments === 'string' 
+              ? JSON.parse(call.arguments)
+              : call.arguments;
+            
+            return {
+              ...call,
+              parsedArgs: args || {}
+            };
+          } catch (error) {
+            console.error('Error parsing song arguments:', error, call.arguments);
+            return null;
+          }
+        })
+        .filter(Boolean); // Remove any null entries from failed parses
 
-      // Only update state if there are song calls
+      // Only update state if there are valid song calls
       if (songCalls.length > 0) {
-        const songs = songCalls.map(call => ({
-          title: call.arguments.title || 'Untitled',
-          prompt: call.arguments.description ||
-            `A ${call.arguments.mood || 'catchy'} ${call.arguments.genre || 'pop'} song`,
-          tags: call.arguments.tags || [],
-          mood: call.arguments.mood || 'neutral',
-          genre: call.arguments.genre || 'pop',
-          style: call.arguments.style || '',
-          tempo: call.arguments.tempo || 'medium'
+        const songs = songCalls.map(({ parsedArgs, id }) => ({
+          id: id || `${parsedArgs.title || 'untitled'}-${Date.now()}`,
+          title: parsedArgs.title || 'Untitled',
+          prompt: parsedArgs.description || parsedArgs.text ||
+            `A ${parsedArgs.mood || 'catchy'} ${parsedArgs.genre || 'pop'} song`,
+          tags: parsedArgs.tags || [],
+          mood: parsedArgs.mood || 'neutral',
+          genre: parsedArgs.genre || 'pop',
+          style: parsedArgs.style || '',
+          tempo: parsedArgs.tempo || 'medium',
+          lyrics: parsedArgs.text || ''
         }));
 
         setSongsToGenerate(songs);
