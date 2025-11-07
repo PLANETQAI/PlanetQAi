@@ -10,11 +10,24 @@ import { Progress } from '@/components/ui/progress';
 import { formatDistanceToNow } from 'date-fns';
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-hot-toast';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from '@/components/ui/alert-dialog';
 
 const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = '' }) => {
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [mediaToDelete, setMediaToDelete] = useState(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -37,25 +50,38 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
     fetchMedia();
   }, [type]);
 
-  const handleDelete = async (mediaId, e) => {
+  const handleDeleteClick = (mediaId, e) => {
     e.stopPropagation();
-    if (!confirm('Are you sure you want to delete this item?')) return;
+    setMediaToDelete(mediaId);
+    setDeleteDialogOpen(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!mediaToDelete) return;
     
     try {
-      const response = await fetch(`/api/media/${mediaId}`, {
+      const response = await fetch(`/api/media/${mediaToDelete}`, {
         method: 'DELETE',
       });
       
       if (!response.ok) throw new Error('Failed to delete media');
       
-      setMedia(media.filter(item => item.id !== mediaId));
+      setMedia(media.filter(item => item.id !== mediaToDelete));
       toast.success('Media deleted successfully');
       
-      if (onDelete) onDelete(mediaId);
+      if (onDelete) onDelete(mediaToDelete);
     } catch (err) {
       console.error('Error deleting media:', err);
       toast.error('Failed to delete media');
+    } finally {
+      setDeleteDialogOpen(false);
+      setMediaToDelete(null);
     }
+  };
+
+  const cancelDelete = () => {
+    setDeleteDialogOpen(false);
+    setMediaToDelete(null);
   };
 
   const handleDownload = (url, filename, e) => {
@@ -186,7 +212,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
                   variant="ghost"
                   size="icon"
                   className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={(e) => handleDelete(item.id, e)}
+                  onClick={(e) => handleDeleteClick(item.id, e)}
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -195,6 +221,27 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
           </CardFooter>
         </Card>
       ))}
+      
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the media.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDelete}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

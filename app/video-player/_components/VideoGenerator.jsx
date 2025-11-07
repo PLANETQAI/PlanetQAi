@@ -88,12 +88,11 @@ const VideoGenerator = ({ session }) => {
     <div className="space-y-6">
       <div className="space-y-4">
         <div>
-          <label className="block text-sm font-medium mb-2">Video Description *</label>
           <Textarea
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             placeholder="Describe the video you want to generate..."
-            rows={3}
+            rows={6}
             disabled={loading}
             className="bg-gray-700/50 border-gray-600 focus:border-purple-500 focus:ring-purple-500"
           />
