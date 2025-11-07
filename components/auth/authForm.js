@@ -1,13 +1,12 @@
 'use client'
 
-import { useState, useEffect } from 'react'
 import { signIn } from 'next-auth/react'
-import { useRouter } from 'next/navigation'
-import { ToastContainer, toast } from 'react-toastify'
-import Link from 'next/link'
 import Image from 'next/image'
+import Link from 'next/link'
+import { useRouter, useSearchParams } from 'next/navigation'
+import { useEffect, useState } from 'react'
+import { ToastContainer, toast } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { useSearchParams } from 'next/navigation'
 
 export default function AuthForm({ searchParams: propSearchParams }) {
 	// Use both props and URL search params to ensure we catch the redirect in all cases
@@ -160,7 +159,7 @@ export default function AuthForm({ searchParams: propSearchParams }) {
 	return (
 		<div className="relative">
 			<ToastContainer autoClose={1500} draggable closeOnClick />
-			<div className="h-screen w-screen flex min-h-full flex-1  flex-col justify-center px-6 py-12 lg:px-8 bg-[#333A44]">
+			<div className="h-screen w-screen flex min-h-full flex-1  flex-col justify-center px-6 py-12 lg:px-8">
 				<div className=" flex justify-center items-center flex-col sm:mx-auto sm:w-full sm:max-w-sm">
 					<Link href={'/'}>
 						<Image
