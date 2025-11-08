@@ -2,6 +2,52 @@ import { auth } from '@/auth';
 import prisma from '@/lib/prisma';
 import { NextResponse } from 'next/server';
 
+export async function POST(request) {
+  try {
+    const session = await auth();
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { title, description, mediaType, aspectRatio, outputFormat } = await request.json();
+
+    if (!title || !mediaType) {
+      return NextResponse.json(
+        { error: 'Title and mediaType are required' },
+        { status: 400 }
+      );
+    }
+
+    // Create the media record
+    const media = await prisma.media.create({
+      data: {
+        title,
+        description,
+        mediaType,
+        status: 'pending',
+        userId: session.user.id,
+        width: aspectRatio === '16:9' ? 1920 : 1024,
+        height: aspectRatio === '16:9' ? 1080 : 1024,
+        mimeType: `image/${outputFormat || 'png'}`,
+      },
+      select: {
+        id: true,
+        title: true,
+        status: true,
+        createdAt: true,
+      },
+    });
+
+    return NextResponse.json(media);
+  } catch (error) {
+    console.error('Error creating media:', error);
+    return NextResponse.json(
+      { error: 'Failed to create media record' },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(request) {
   try {
     const session = await auth();

@@ -1,26 +1,25 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { Play, Image as ImageIcon, Video, Download, Trash2, Share2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle
+} from '@/components/ui/alert-dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatDistanceToNow } from 'date-fns';
+import { Download, Image as ImageIcon, Play, Share2, Trash2, Video } from 'lucide-react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-import { Alert, AlertDescription } from '@/components/ui/alert';
-import { 
-  AlertDialog, 
-  AlertDialogAction, 
-  AlertDialogCancel, 
-  AlertDialogContent, 
-  AlertDialogDescription, 
-  AlertDialogFooter, 
-  AlertDialogHeader, 
-  AlertDialogTitle 
-} from '@/components/ui/alert-dialog';
 
 const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = '' }) => {
   const [media, setMedia] = useState([]);
@@ -28,6 +27,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
   const [error, setError] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState(null);
+  const [imageErrors, setImageErrors] = useState({});
   const router = useRouter();
 
   useEffect(() => {
@@ -58,17 +58,17 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
 
   const confirmDelete = async () => {
     if (!mediaToDelete) return;
-    
+
     try {
       const response = await fetch(`/api/media/${mediaToDelete}`, {
         method: 'DELETE',
       });
-      
+
       if (!response.ok) throw new Error('Failed to delete media');
-      
+
       setMedia(media.filter(item => item.id !== mediaToDelete));
       toast.success('Media deleted successfully');
-      
+
       if (onDelete) onDelete(mediaToDelete);
     } catch (err) {
       console.error('Error deleting media:', err);
@@ -125,8 +125,8 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
         )}
         <h3 className="text-lg font-medium">No {type}s found</h3>
         <p className="text-sm text-muted-foreground mt-1">
-          {type === 'video' 
-            ? 'Your generated videos will appear here.' 
+          {type === 'video'
+            ? 'Your generated videos will appear here.'
             : 'Your generated images will appear here.'}
         </p>
       </div>
@@ -136,7 +136,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
   return (
     <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 ${className}`}>
       {media.map((item) => (
-        <Card 
+        <Card
           key={item.id}
           onClick={() => onSelect?.(item)}
           className="group cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-200"
@@ -153,16 +153,22 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
                   <Play className="w-8 h-8 text-white" />
                 </div>
               </>
-            ) : (
+            ) : item.fileUrl && !imageErrors[item.id] ? (
               <Image
-                src={item.fileUrl}
+                src={item.fileUrl || '/images/back.png'}
                 alt={item.title || 'Generated image'}
                 fill
                 className="object-cover"
                 unoptimized
+                onError={() => setImageErrors(prev => ({ ...prev, [item.id]: true }))}
               />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center bg-muted">
+                <ImageIcon className="w-8 h-8 text-muted-foreground" />
+              </div>
             )}
-            
+
+
             {item.status === 'processing' && (
               <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/70">
                 <p className="text-xs text-white mb-1">Processing...</p>
@@ -170,7 +176,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
               </div>
             )}
           </div>
-          
+
           <CardHeader className="p-4">
             <div className="flex items-center justify-between">
               <h3 className="font-medium text-sm truncate">{item.title || 'Untitled'}</h3>
@@ -182,7 +188,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
               {item.description}
             </p>
           </CardHeader>
-          
+
           <CardFooter className="p-4 pt-0 flex justify-between items-center">
             <div className="flex items-center text-xs text-muted-foreground">
               <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
@@ -221,7 +227,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
           </CardFooter>
         </Card>
       ))}
-      
+
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -233,7 +239,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={cancelDelete}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
+            <AlertDialogAction
               onClick={confirmDelete}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >

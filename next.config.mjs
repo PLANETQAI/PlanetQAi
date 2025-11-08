@@ -28,6 +28,11 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'oaidalleapiprodscus.blob.core.windows.net', 
       },
+      {
+        protocol: 'https',
+        hostname: 'img.theapi.app',
+        pathname: '/ephemeral/**',
+      }
     ],
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
