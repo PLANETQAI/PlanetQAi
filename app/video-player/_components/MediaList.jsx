@@ -10,7 +10,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle
 } from '@/components/ui/alert-dialog';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
@@ -178,12 +177,12 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
           </div>
 
           <CardHeader className="p-4">
-            <div className="flex items-center justify-between">
+            {/* <div className="flex items-center justify-between">
               <h3 className="font-medium text-sm truncate">{item.title || 'Untitled'}</h3>
               <Badge variant="outline" className="text-xs">
                 {item.mediaType}
               </Badge>
-            </div>
+            </div> */}
             <p className="text-xs text-muted-foreground mt-1 line-clamp-2">
               {item.description}
             </p>

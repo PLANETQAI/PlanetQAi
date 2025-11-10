@@ -44,10 +44,7 @@ export async function POST(req) {
       const body = await req.json();
       const { 
         prompt, 
-        aspect_ratio: aspectRatio = '16:9',
-        duration = '8s',
-        resolution = '720p',
-        negative_prompt = 'static background, low quality, blurry',
+        negative_prompt = 'blurry, low quality, distorted, static, text, watermark, logo, signature, bad quality, low resolution',
         mediaId 
       } = body;
 
@@ -76,6 +73,15 @@ export async function POST(req) {
         return close();
       }
 
+      // Set default values for video generation
+      const videoConfig = {
+        aspect_ratio: '16:9',
+        duration: '8s',
+        resolution: '720p',
+        width: 1280,
+        height: 720
+      };
+
       // Get or create media record
       let media;
       const mediaData = {
@@ -85,8 +91,8 @@ export async function POST(req) {
         status: 'processing',
         progress: 0,
         userId,
-        width: resolution === '720p' ? 1280 : 1920,
-        height: resolution === '720p' ? 720 : 1080,
+        width: videoConfig.width,
+        height: videoConfig.height,
         mimeType: 'video/mp4',
       };
 
@@ -116,9 +122,9 @@ export async function POST(req) {
           input: {
             prompt,
             negative_prompt,
-            aspect_ratio: aspectRatio,
-            duration,
-            resolution,
+            aspect_ratio: videoConfig.aspect_ratio,
+            duration: videoConfig.duration,
+            resolution: videoConfig.resolution,
             generate_audio: false
           },
           config: {

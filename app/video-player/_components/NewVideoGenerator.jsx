@@ -78,10 +78,6 @@ const handleGenerateVideo = async (e) => {
 
     const requestBody = {
       prompt,
-      aspect_ratio: '16:9',
-      duration: '8s',
-      resolution: '720p',
-      negative_prompt: 'low quality, blurry, static, text, watermark'
     };
     console.log('[VideoGen] Sending request to /api/videos/generate with body:', JSON.stringify(requestBody, null, 2));
 
@@ -263,30 +259,6 @@ const handleGenerateVideo = async (e) => {
               disabled={isGenerating}
               row={6}
             />
-          </div>
-
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div>
-              <label className="block text-sm font-medium mb-1">Duration</label>
-              <select
-                className="w-full p-2 border rounded-md bg-gray-800 text-white"
-                disabled={isGenerating}
-              >
-                <option value="4s">4 seconds</option>
-                <option value="8s" selected>8 seconds</option>
-                <option value="12s">12 seconds</option>
-              </select>
-            </div>
-            <div>
-              <label className="block text-sm font-medium mb-1">Resolution</label>
-              <select
-                className="w-full p-2 border rounded-md bg-gray-800 text-white"
-                disabled={isGenerating}
-              >
-                <option value="720p">720p</option>
-                <option value="1080p">1080p</option>
-              </select>
-            </div>
           </div>
 
           {/* Generate Button */}

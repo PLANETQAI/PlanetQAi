@@ -7,8 +7,8 @@ import { Mic, Speaker } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
-import ImageGenerator from '../_components/ImageGenerator'
-import VideoGenerator from '../_components/VideoGenerator'
+import NewImageGenerator from '../_components/NewImageGenerator'
+import NewVideoGenerator from '../_components/NewVideoGenerator'
 
 export default function VideoGeneratorPage() {
   const { data: session, status } = useSession()
@@ -174,14 +174,14 @@ export default function VideoGeneratorPage() {
             </TabsList>
 
             <TabsContent value="video" className="mt-0">
-              <div className=" rounded-xl p-4 md:p-6 border border-gray-700/50">
-                <VideoGenerator session={session} />
-              </div>
+                <div className=" rounded-xl p-4 md:p-6 border border-gray-700/50">
+                  <NewVideoGenerator />
+                </div>
             </TabsContent>
 
             <TabsContent value="image" className="mt-0">
               <div className=" rounded-xl p-4 md:p-6 border border-gray-700/50">
-                <ImageGenerator session={session} />
+                <NewImageGenerator />
               </div>
             </TabsContent>
           </Tabs>
