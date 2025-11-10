@@ -21,12 +21,9 @@ export default function VideoGeneratorPage() {
   const togglePlayPause = () => {
     if (!videoRef.current) return;
 
-    // If video ended, reset to start and play
     if (videoRef.current.ended) {
       videoRef.current.currentTime = 0;
     }
-
-    // Toggle play/pause
     if (videoRef.current.paused) {
       videoRef.current.play()
         .then(() => setIsPlaying(true))
