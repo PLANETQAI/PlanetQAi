@@ -1,10 +1,14 @@
 import NextAuth from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { logInSchema } from './lib/zod'
-import bcrypt from 'bcryptjs'
 import prisma from './lib/prisma'
 
+import { verifyPassword, saltAndHashPassword } from './utils/password';
+
 // Configure NextAuth with proper security settings
+// Force Node.js runtime for auth routes
+export const runtime = 'nodejs';
+
 const authConfig = {
 	// Configure pages for authentication
 	pages: {
@@ -71,9 +75,9 @@ const authConfig = {
 						throw new Error('Please verify your email before logging in. Check your inbox for a verification link.')
 					}
 
-					// Verify password using bcrypt.compareSync
-					const isValidPassword = bcrypt.compareSync(validatedCredentials.password, user.password)
-					if (!isValidPassword) {
+					// Verify password using our Web Crypto API implementation
+					const isPasswordValid = await verifyPassword(credentials.password, user.password);
+					if (!isPasswordValid) {
 						throw new Error('Incorrect password.')
 					}
 

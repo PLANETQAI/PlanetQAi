@@ -1,6 +1,6 @@
 import { auth } from "@/auth";
 import prisma from '@/lib/prisma';
-import NextResponse from 'next/server';
+import { NextResponse } from 'next/server';
 
 // GET /api/media/video/[id] - Get a specific video
 export async function GET(request, { params }) {
