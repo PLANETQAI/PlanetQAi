@@ -1,12 +1,12 @@
-import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { useCallback, useState } from 'react';
 
 export function useSubscriptions() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
   const router = useRouter();
 
-  // Check if user has enough credits (160 credits required for subscription)
+
   const checkCredits = useCallback(async () => {
     try {
       const response = await fetch('/api/credits-api', {
