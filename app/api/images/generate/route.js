@@ -1,4 +1,5 @@
 import { auth } from "@/auth";
+import { uploadToCloudinary } from '@/lib/cloudinary';
 import prisma from '@/lib/prisma';
 import axios from "axios";
 
@@ -209,11 +210,16 @@ export async function POST(req) {
           if (statusData.status === 'completed') {
             const imageUrl = statusData.output?.image_urls?.[0];
             if (imageUrl) {
-              // Update media with final URL
+              // Upload to Cloudinary
+              const cloudinaryUploadResult = await uploadToCloudinary(imageUrl, `generated-image-${media.id}`);
+              console.log("Cloudiary Result", cloudinaryUploadResult)
+              const cloudinaryUrl = cloudinaryUploadResult.secure_url;
+
+              // Update media with final Cloudinary URL
               await prisma.media.update({
                 where: { id: media.id },
                 data: {
-                  fileUrl: imageUrl,
+                  fileUrl: cloudinaryUrl, // Use the Cloudinary URL
                   status: 'completed',
                   progress: 100,
                   completedAt: new Date()

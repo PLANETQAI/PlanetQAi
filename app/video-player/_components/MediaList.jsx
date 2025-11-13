@@ -1,5 +1,6 @@
 'use client';
 
+import MediaPreviewModal from '@/components/MediaPreviewModal';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,14 +21,71 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
-const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = '' }) => {
+const MediaList = ({ type = 'video', onDelete, className = '' }) => {
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
+  const [previewMedia, setPreviewMedia] = useState(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [shareLink, setShareLink] = useState('');
+  const [isLinkCopied, setIsLinkCopied] = useState(false);
+  const [selectedMedia, setSelectedMedia] = useState([]);
+  const [email, setEmail] = useState('');
   const router = useRouter();
+
+  const toggleMediaSelection = (mediaId) => {
+    setSelectedMedia(prev => 
+      prev.includes(mediaId) 
+        ? prev.filter(id => id !== mediaId)
+        : [...prev, mediaId]
+    );
+  };
+
+  const handleGenerateLink = async (mediaIds) => {
+    try {
+      // In a real app, you would call your API to generate a shareable link
+      // For now, we'll just create a simple shareable link
+      const baseUrl = window.location.origin;
+      const shareUrl = `${baseUrl}/share?media=${mediaIds.join(',')}`;
+      setShareLink(shareUrl);
+      setShowShareModal(true);
+    } catch (err) {
+      console.error('Error generating share link:', err);
+      toast.error('Failed to generate share link');
+    }
+  };
+
+  const handleCopyToClipboard = () => {
+    navigator.clipboard.writeText(shareLink);
+    setIsLinkCopied(true);
+    setTimeout(() => setIsLinkCopied(false), 2000);
+  };
+
+  const handleSendEmail = async () => {
+    if (!email) {
+      toast.error('Please enter an email address');
+      return;
+    }
+
+    try {
+      // In a real app, you would call your API to send the email
+      // For now, we'll just show a success message
+      toast.success(`Share link sent to ${email}`);
+      setEmail('');
+    } catch (err) {
+      console.error('Error sending email:', err);
+      toast.error('Failed to send email');
+    }
+  };
+
+  const handleShareMedia = (mediaItem, e) => {
+    e?.stopPropagation();
+    setSelectedMedia([mediaItem.id]);
+    handleGenerateLink([mediaItem.id]);
+  };
 
   useEffect(() => {
     const fetchMedia = async () => {
@@ -137,7 +195,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
       {media.map((item) => (
         <Card
           key={item.id}
-          onClick={() => onSelect?.(item)}
+          onClick={() => setPreviewMedia(item)}
           className="group cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-200"
         >
           <div className="relative aspect-video bg-muted">
@@ -197,10 +255,7 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
                 variant="ghost"
                 size="icon"
                 className="h-8 w-8"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onShare?.(item);
-                }}
+                onClick={(e) => handleShareMedia(item, e)}
               >
                 <Share2 className="h-4 w-4" />
               </Button>
@@ -226,7 +281,12 @@ const MediaList = ({ type = 'video', onSelect, onDelete, onShare, className = ''
           </CardFooter>
         </Card>
       ))}
-
+  {previewMedia && (
+    <MediaPreviewModal 
+      media={previewMedia} 
+      onClose={() => setPreviewMedia(null)} 
+    />
+  )}
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>

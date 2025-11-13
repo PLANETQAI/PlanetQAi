@@ -2,6 +2,7 @@
 import { auth } from "@/auth";
 import prisma from '@/lib/prisma';
 import axios from "axios";
+import { uploadToCloudinary } from '@/lib/cloudinary';
 
 // Constants for credit calculation
 const VIDEO_GENERATION_CREDITS = 40; // Higher cost for video generation
@@ -209,11 +210,15 @@ export async function POST(req) {
           if (statusData.status === 'completed') {
             const videoUrl = statusData.output?.video;
             if (videoUrl) {
-              // Update media with final URL
+              // Upload to Cloudinary
+              const cloudinaryUploadResult = await uploadToCloudinary(videoUrl, `generated-video-${media.id}`);
+              const cloudinaryUrl = cloudinaryUploadResult.secure_url;
+
+              // Update media with final Cloudinary URL
               await prisma.media.update({
                 where: { id: media.id },
                 data: {
-                  fileUrl: videoUrl,
+                  fileUrl: cloudinaryUrl, // Use the Cloudinary URL
                   status: 'completed',
                   progress: 100,
                   completedAt: new Date()
