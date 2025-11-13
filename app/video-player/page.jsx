@@ -47,7 +47,7 @@ export default function VideoGeneratorPage() {
     const video = videoRef.current;
     if (!video) return;
 
-    // Update play state when video state changes
+  
     const handlePlay = () => setIsPlaying(true);
     const handlePause = () => setIsPlaying(false);
     const handleEnded = () => setIsPlaying(false);
