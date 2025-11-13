@@ -3,12 +3,9 @@ import Credentials from 'next-auth/providers/credentials'
 import { logInSchema } from './lib/zod'
 import prisma from './lib/prisma'
 
-import { verifyPassword, saltAndHashPassword } from './utils/password';
+import { compare } from 'bcryptjs';
 
 // Configure NextAuth with proper security settings
-// Force Node.js runtime for auth routes
-export const runtime = 'nodejs';
-
 const authConfig = {
 	// Configure pages for authentication
 	pages: {
@@ -17,7 +14,7 @@ const authConfig = {
 	},
 	
 	// Set a secure secret for NextAuth
-	secret: process.env.NEXTAUTH_SECRET || 'planetqai-temporary-secret-key-change-me-in-production',
+	secret: process.env.AUTH_SECRET,
 	
 	// Trust the host in all environments to avoid CSRF issues
 	trustHost: true,
@@ -75,9 +72,10 @@ const authConfig = {
 						throw new Error('Please verify your email before logging in. Check your inbox for a verification link.')
 					}
 
-					// Verify password using our Web Crypto API implementation
-					const isPasswordValid = await verifyPassword(credentials.password, user.password);
-					if (!isPasswordValid) {
+					// Verify password using bcrypt
+					          // Verify password using bcrypt
+          const isPasswordValid = await compare(credentials.password, user.password);
+          if (!isPasswordValid) {
 						throw new Error('Incorrect password.')
 					}
 

@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server'
-import { signInSchema } from '@/lib/zod'
-import { saltAndHashPassword } from '@/utils/password'
-import { ZodError } from 'zod'
-import prisma from '@/lib/prisma'
-import crypto from 'crypto'
-import { sendEmail } from '@/utils/email/emailService'
-import { accountVerificationTemplate } from '@/utils/email/emailTemplates'
+import { hash } from 'bcryptjs';
+import { ZodError } from 'zod';
+import prisma from '@/lib/prisma';
+import crypto from 'crypto';
+import { sendEmail } from '@/utils/email/emailService';
+import { accountVerificationTemplate } from '@/utils/email/emailTemplates';
 
 // Function to generate a random 6-digit code
 function generateVerificationCode() {
@@ -142,7 +141,7 @@ export async function POST(req) {
 		}
 
 		// Hash the password before saving
-		const hashedPassword = saltAndHashPassword(password)
+		const hashedPassword = await hash(password, 10);
 
 		if (!hashedPassword) {
 			throw new Error('Password hashing failed')

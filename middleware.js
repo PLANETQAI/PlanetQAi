@@ -1,6 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "./auth";
 
+export const runtime = 'nodejs';
+
 const CUSTOM_DOMAIN = process.env.NEXT_PUBLIC_APP_URL || "https://www.planetqproductions.com";
 
 // Define paths that should be excluded from middleware processing

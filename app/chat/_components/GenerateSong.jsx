@@ -1,10 +1,10 @@
 'use client'
 
-import SongDetail from '@/components/player/SongDetail'
 import {
   Alert,
   AlertDescription,
 } from '@/components/ui/alert'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogContent,
@@ -14,15 +14,17 @@ import {
 } from '@/components/ui/dialog'
 import { useUser } from '@/context/UserContext'
 import { AlertCircle, CheckCircle2, Clock, Loader2, Music, Zap } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-const GenerateSong = ({ 
-  isOpen, 
-  onClose, 
+const GenerateSong = ({
+  isOpen,
+  onClose,
   songDetailsQueue = [], // Array of song details to generate
   onSuccess,
   onAllComplete
 }) => {
+  const router = useRouter()
   const { credits: userCredits, fetchUserCredits } = useUser()
   console.log("songDetailsQueue:", songDetailsQueue);
   // Queue management
@@ -42,16 +44,16 @@ const GenerateSong = ({
       setStatus('idle');
     }
   }, [songDetailsQueue]);
-  
+
   // Generation state
   const [status, setStatus] = useState('idle') // idle, generating, pending, processing, completed, failed, queue_complete, waiting
   const [error, setError] = useState('')
   const [taskId, setTaskId] = useState(null)
   const [songId, setSongId] = useState(null)
-  
+
   // Polling
   const [pollingInterval, setPollingInterval] = useState(null)
-  
+
   // Timer
   const [startTime, setStartTime] = useState(null)
   const [currentTime, setCurrentTime] = useState(0)
@@ -95,11 +97,11 @@ const GenerateSong = ({
     const now = Date.now()
     setStartTime(now)
     setCurrentTime(0)
-    
+
     const interval = setInterval(() => {
       setCurrentTime(Date.now() - now)
     }, 1000)
-    
+
     setTimerInterval(interval)
   }
 
@@ -148,16 +150,16 @@ const GenerateSong = ({
         // If we get here, the song is ready
         console.log('Song generation completed successfully!');
         stopTimer();
-        
+
         // Clear the polling interval
         if (pollingInterval) {
           clearInterval(pollingInterval);
           setPollingInterval(null);
         }
-        
+
         // Update credits
         await fetchUserCredits();
-        
+
         // Add completed songs to the list
         const newSongs = data.output.songs.map(song => ({
           ...song,
@@ -168,20 +170,20 @@ const GenerateSong = ({
           title: queue[currentIndex]?.title || 'Untitled Song',
           prompt: queue[currentIndex]?.prompt || ''
         }));
-        
+
         // Update state with the new songs
         setCompletedSongs(prev => [...prev, ...newSongs]);
-        
+
         // Notify parent component
         if (onSuccess) {
           onSuccess(newSongs);
         }
-        
+
         // Check if there are more songs in queue
         if (currentIndex < queue.length - 1) {
           // Set status to waiting and start a 5-minute delay before next song
           setStatus('waiting');
-          
+
           // Wait for 5 minutes (300,000 milliseconds) before starting next song
           setTimeout(() => {
             // Move to next song in queue after delay
@@ -192,26 +194,26 @@ const GenerateSong = ({
           // All songs completed
           setStatus('queue_complete');
           clearState();
-          
+
           if (onAllComplete) {
             onAllComplete([...completedSongs, ...newSongs]);
           }
         }
-      } 
+      }
       // Handle failed status
       else if (data.status === 'failed') {
         console.error('Song generation failed:', data.error);
         stopTimer();
-        
+
         // Clear the polling interval
         if (pollingInterval) {
           clearInterval(pollingInterval);
           setPollingInterval(null);
         }
-        
+
         setError(data.error?.message || 'Failed to generate music');
         setStatus('failed');
-        
+
         // Check if there are more songs in queue
         if (currentIndex < queue.length - 1) {
           // Skip to next song after a short delay
@@ -315,7 +317,7 @@ const GenerateSong = ({
         setCompletedSongs(persistedState.completedSongs || [])
         setTaskId(persistedState.taskId)
         setSongId(persistedState.songId)
-        
+
         // Resume polling
         if (persistedState.taskId && persistedState.songId) {
           setStatus('pending')
@@ -411,7 +413,7 @@ const GenerateSong = ({
       // Remove from completed songs
       const updated = completedSongs.filter(s => s.id !== songId)
       setCompletedSongs(updated)
-      
+
       // Adjust selected index if needed
       if (selectedSongIndex >= updated.length && updated.length > 0) {
         setSelectedSongIndex(updated.length - 1)
@@ -466,7 +468,7 @@ const GenerateSong = ({
           {isGenerating && (
             <div className="flex flex-col items-center gap-4">
               <Loader2 className="w-16 h-16 text-blue-500 animate-spin" />
-              
+
               <div className="text-center">
                 <p className="text-lg font-semibold">{getStatusMessage()}</p>
                 {startTime && (
@@ -482,47 +484,39 @@ const GenerateSong = ({
           {/* Progress stages */}
           {isGenerating && (
             <div className="space-y-2">
-              <div className={`flex items-center gap-2 text-sm ${
-                ['generating', 'pending', 'processing', 'rendering'].includes(status)
-                  ? 'text-foreground' 
+              <div className={`flex items-center gap-2 text-sm ${['generating', 'pending', 'processing', 'rendering'].includes(status)
+                  ? 'text-foreground'
                   : 'text-muted-foreground'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  status === 'generating' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'
-                }`} />
+                }`}>
+                <div className={`w-2 h-2 rounded-full ${status === 'generating' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'
+                  }`} />
                 Initializing
               </div>
-              
-              <div className={`flex items-center gap-2 text-sm ${
-                ['pending', 'processing', 'rendering'].includes(status)
-                  ? 'text-foreground' 
+
+              <div className={`flex items-center gap-2 text-sm ${['pending', 'processing', 'rendering'].includes(status)
+                  ? 'text-foreground'
                   : 'text-muted-foreground'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  status === 'pending' ? 'bg-blue-500 animate-pulse' : 
-                  ['processing', 'rendering'].includes(status) ? 'bg-green-500' : 'bg-gray-300'
-                }`} />
+                }`}>
+                <div className={`w-2 h-2 rounded-full ${status === 'pending' ? 'bg-blue-500 animate-pulse' :
+                    ['processing', 'rendering'].includes(status) ? 'bg-green-500' : 'bg-gray-300'
+                  }`} />
                 Queue
               </div>
-              
-              <div className={`flex items-center gap-2 text-sm ${
-                ['processing', 'rendering'].includes(status)
-                  ? 'text-foreground' 
+
+              <div className={`flex items-center gap-2 text-sm ${['processing', 'rendering'].includes(status)
+                  ? 'text-foreground'
                   : 'text-muted-foreground'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  status === 'processing' ? 'bg-blue-500 animate-pulse' : 
-                  status === 'rendering' ? 'bg-green-500' : 'bg-gray-300'
-                }`} />
+                }`}>
+                <div className={`w-2 h-2 rounded-full ${status === 'processing' ? 'bg-blue-500 animate-pulse' :
+                    status === 'rendering' ? 'bg-green-500' : 'bg-gray-300'
+                  }`} />
                 Processing
               </div>
-              
-              <div className={`flex items-center gap-2 text-sm ${
-                status === 'rendering' ? 'text-foreground' : 'text-muted-foreground'
-              }`}>
-                <div className={`w-2 h-2 rounded-full ${
-                  status === 'rendering' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'
-                }`} />
+
+              <div className={`flex items-center gap-2 text-sm ${status === 'rendering' ? 'text-foreground' : 'text-muted-foreground'
+                }`}>
+                <div className={`w-2 h-2 rounded-full ${status === 'rendering' ? 'bg-blue-500 animate-pulse' : 'bg-gray-300'
+                  }`} />
                 Finalizing
               </div>
             </div>
@@ -551,23 +545,22 @@ const GenerateSong = ({
                 <CheckCircle2 className="w-5 h-5 text-green-500" />
                 Generated Songs ({completedSongs.length})
               </h3>
-              
+
               {/* Song list */}
               <div className="space-y-2">
                 {completedSongs.map((song, index) => (
                   <button
                     key={song.id}
                     onClick={() => setSelectedSongIndex(index)}
-                    className={`w-full p-3 rounded-lg text-left transition-colors ${
-                      selectedSongIndex === index
+                    className={`w-full p-3 rounded-lg text-left transition-colors ${selectedSongIndex === index
                         ? 'bg-blue-100 border-2 border-blue-500'
                         : 'bg-gray-50 border-2 border-gray-200 hover:bg-gray-100'
-                    }`}
+                      }`}
                   >
                     <div className="flex items-center gap-3">
                       {song.coverImageUrl && (
-                        <img 
-                          src={song.coverImageUrl} 
+                        <img
+                          src={song.coverImageUrl}
                           alt={song.title}
                           className="w-12 h-12 rounded object-cover"
                         />
@@ -585,9 +578,18 @@ const GenerateSong = ({
                   </button>
                 ))}
               </div>
+              <div>
+                <Button
+                  onClick={() => router.push('/my-songs')}
+                  className="mt-4 w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center space-x-2"
+                >
+                  <Music className="w-4 h-4" />
+                  <span>Go to My Songs</span>
+                </Button>
+              </div>
 
               {/* Song detail */}
-              {completedSongs[selectedSongIndex] && (
+              {/* {completedSongs[selectedSongIndex] && (
                 <SongDetail
                   song={completedSongs[selectedSongIndex]}
                   onEditTitle={(newTitle) => {
@@ -609,7 +611,7 @@ const GenerateSong = ({
                   }}
                   onDeleteSong={deleteSong}
                 />
-              )}
+              )} */}
             </div>
           )}
 
@@ -630,7 +632,7 @@ const GenerateSong = ({
           >
             {isGenerating ? 'Close (continues in background)' : 'Close'}
           </button>
-          
+
           {status === 'queue_complete' && (
             <button
               onClick={() => {

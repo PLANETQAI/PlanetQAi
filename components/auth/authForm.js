@@ -189,7 +189,7 @@ export default function AuthForm({ searchParams: propSearchParams }) {
 									type="email"
 									autoComplete="email"
 									required
-									className="block w-full rounded-md px-2 border-0 py-1.5 text-gray-300 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
+									className="block w-full rounded-md px-2 border-0 py-1.5 bg-white text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
 									disabled={isLoading}
 									value={email}
 									onChange={e => setEmail(e.target.value)}
@@ -216,7 +216,7 @@ export default function AuthForm({ searchParams: propSearchParams }) {
 									autoComplete="current-password"
 									disabled={isLoading}
 									required
-									className={`block w-full px-2 rounded-md border-0 py-1.5 text-3ray-900 shadow-sm ring-1 ring-inset ${passwordError ? 'ring-red-500' : 'ring-gray-300'} placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
+									className={`block w-full px-2 rounded-md border-0 py-1.5 bg-white text-gray-900 shadow-sm ring-1 ring-inset ${passwordError ? 'ring-red-500' : 'ring-gray-300'} placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6`}
 									value={password}
 									onChange={handlePasswordChange}
 								/>
