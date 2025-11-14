@@ -9,6 +9,7 @@ import {
   MusicalNoteIcon,
   UserIcon
 } from '@heroicons/react/24/outline';
+import { FileVideo } from 'lucide-react';
 import { useSession } from 'next-auth/react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -59,7 +60,7 @@ export default function AdminLayout({ children }) {
     { name: 'Users', href: '/admin/users', icon: UserIcon },
     { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
     { name: 'Songs', href: '/admin/songs', icon: MusicalNoteIcon },
-    { name: 'Media', href: '/admin/media', icon: MusicalNoteIcon },
+    { name: 'Media', href: '/admin/media', icon: FileVideo },
     { name: 'Newsletter', href: '/admin/newsletter', icon: EnvelopeIcon },
   ];
 
