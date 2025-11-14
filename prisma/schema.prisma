@@ -143,8 +143,19 @@ model Media {
   // Relations
   user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   shares           MediaOnShares[]
+  purchases        MediaPurchase[]
 }
 
+model MediaPurchase {
+  id           String   @id @default(uuid())
+  userId       String
+  mediaId      String
+  price        Float
+  purchasedAt  DateTime @default(now())
+
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  media        Media    @relation(fields: [mediaId], references: [id], onDelete: Cascade)
+}
 
 
 model SongPurchase {
@@ -210,6 +221,7 @@ model User {
   purchases         SongPurchase[]
   creditsRemaining  Int                  @default(0)
   subscriptionPlans UserSubscription[]
+  mediaPurchases    MediaPurchase[]
 }
 
 model UserSubscription {

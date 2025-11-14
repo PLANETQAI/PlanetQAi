@@ -15,11 +15,12 @@ import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatDistanceToNow } from 'date-fns';
-import { Download, Image as ImageIcon, Play, Share2, Trash2, Video } from 'lucide-react';
+import { Image as ImageIcon, Play, Share2, Trash2, Video } from 'lucide-react';
 import Image from 'next/image';
-import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
+import MediaSaleToggleButton from './SalesMedia';
+import ShareModal from './ShareModal';
 
 const MediaList = ({ type = 'video', onDelete, className = '' }) => {
   const [media, setMedia] = useState([]);
@@ -32,59 +33,40 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
   const [showShareModal, setShowShareModal] = useState(false);
   const [shareLink, setShareLink] = useState('');
   const [isLinkCopied, setIsLinkCopied] = useState(false);
-  const [selectedMedia, setSelectedMedia] = useState([]);
-  const [email, setEmail] = useState('');
-  const router = useRouter();
+  const [selectedMediaIds, setSelectedMediaIds] = useState([]);
+  const [shareableLink, setShareableLink] = useState('');
 
-  const toggleMediaSelection = (mediaId) => {
-    setSelectedMedia(prev => 
-      prev.includes(mediaId) 
-        ? prev.filter(id => id !== mediaId)
-        : [...prev, mediaId]
-    );
-  };
 
-  const handleGenerateLink = async (mediaIds) => {
+  const handleGenerateLink = (mediaIds) => {
+    if (!mediaIds || mediaIds.length === 0) {
+      toast.error('Please select at least one media item to share');
+      return null;
+    }
+
     try {
-      // In a real app, you would call your API to generate a shareable link
-      // For now, we'll just create a simple shareable link
-      const baseUrl = window.location.origin;
-      const shareUrl = `${baseUrl}/share?media=${mediaIds.join(',')}`;
-      setShareLink(shareUrl);
-      setShowShareModal(true);
-    } catch (err) {
-      console.error('Error generating share link:', err);
+      // Use the first media ID directly for sharing
+      const mediaId = mediaIds[0];
+      
+      // Construct the shareable URL with the media ID and /media path
+      const shareableLink = `${window.location.origin}/share/${mediaId}/media`;
+      
+      setShareableLink(shareableLink);
+      return shareableLink;
+      
+    } catch (error) {
+      console.error('Error generating share link:', error);
       toast.error('Failed to generate share link');
+      return null;
     }
   };
 
-  const handleCopyToClipboard = () => {
-    navigator.clipboard.writeText(shareLink);
-    setIsLinkCopied(true);
-    setTimeout(() => setIsLinkCopied(false), 2000);
-  };
-
-  const handleSendEmail = async () => {
-    if (!email) {
-      toast.error('Please enter an email address');
-      return;
-    }
-
-    try {
-      // In a real app, you would call your API to send the email
-      // For now, we'll just show a success message
-      toast.success(`Share link sent to ${email}`);
-      setEmail('');
-    } catch (err) {
-      console.error('Error sending email:', err);
-      toast.error('Failed to send email');
-    }
-  };
-
-  const handleShareMedia = (mediaItem, e) => {
-    e?.stopPropagation();
-    setSelectedMedia([mediaItem.id]);
-    handleGenerateLink([mediaItem.id]);
+  const handleMediaStatusChange = (updatedMedia) => {
+    setMedia(prevMedia => 
+      prevMedia.map(item => 
+        item.id === updatedMedia.id ? { ...item, ...updatedMedia } : item
+      )
+    );
+    setPreviewMedia(null);
   };
 
   useEffect(() => {
@@ -107,10 +89,20 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
     fetchMedia();
   }, [type]);
 
-  const handleDeleteClick = (mediaId, e) => {
+  const handleDeleteClick = (id, e) => {
     e.stopPropagation();
-    setMediaToDelete(mediaId);
+    setMediaToDelete(id);
     setDeleteDialogOpen(true);
+    setPreviewMedia(null);
+  };
+
+  const handleShareClick = (item, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    setSelectedMediaIds([item.id]);
+    setShowShareModal(true);
+    // Ensure preview doesn't open
+    setPreviewMedia(null);
   };
 
   const confirmDelete = async () => {
@@ -190,6 +182,17 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
     );
   }
 
+  // Add sale price badge if item is for sale
+  const renderSaleBadge = (item) => {
+    if (!item.isForSale || !item.salePrice) return null;
+    
+    return (
+      <div className="absolute top-2 left-2 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-md z-10">
+        ${parseFloat(item.salePrice).toFixed(2)}
+      </div>
+    );
+  };
+
   return (
     <div className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 p-4 ${className}`}>
       {media.map((item) => (
@@ -226,12 +229,12 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
             )}
 
 
-            {item.status === 'processing' && (
+            {item.status === 'processing' ? (
               <div className="absolute bottom-0 left-0 right-0 p-2 bg-black/70">
                 <p className="text-xs text-white mb-1">Processing...</p>
                 <Progress value={item.progress || 0} className="h-1.5" />
               </div>
-            )}
+            ) : renderSaleBadge(item)}
           </div>
 
           <CardHeader className="p-4">
@@ -251,36 +254,44 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
               <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
             </div>
             <div className="flex space-x-1">
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => handleShareMedia(item, e)}
-              >
-                <Share2 className="h-4 w-4" />
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                className="h-8 w-8"
-                onClick={(e) => handleDownload(item.fileUrl, item.title, e)}
-              >
-                <Download className="h-4 w-4" />
-              </Button>
               {item.isOwner && (
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
-                  onClick={(e) => handleDeleteClick(item.id, e)}
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
+                <>
+                  <MediaSaleToggleButton
+                    mediaId={item.id}
+                    isForSale={item.isForSale || false}
+                    salePrice={item.salePrice}
+                    onStatusChange={handleMediaStatusChange}
+                  />
+                  
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-blue-500 hover:bg-blue-500/10 hover:text-blue-600"
+                    onClick={(e) => handleShareClick(item, e)}
+                    title="Share"
+                  >
+                    <Share2 className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-8 w-8 text-destructive hover:bg-destructive/10 hover:text-destructive"
+                    onClick={(e) => handleDeleteClick(item.id, e)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </>
               )}
             </div>
           </CardFooter>
         </Card>
       ))}
+      {previewMedia && (
+        <MediaPreviewModal 
+          media={previewMedia} 
+          onClose={() => setPreviewMedia(null)} 
+        />
+      )}
   {previewMedia && (
     <MediaPreviewModal 
       media={previewMedia} 
@@ -307,6 +318,39 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+        {showShareModal && (
+          <ShareModal
+            isOpen={showShareModal}
+            onClose={() => {
+              setShowShareModal(false);
+              setSelectedMediaIds([]);
+            }}
+            media={media.filter(m => selectedMediaIds.includes(m.id))}
+            onShare={async (selectedMedia, email) => {
+              const mediaIds = selectedMedia.map(m => m.id);
+              const link = await handleGenerateLink(mediaIds);
+              if (link) {
+                // If you want to send an email with the link
+                if (email) {
+                  // Add your email sending logic here
+                  console.log(`Sending share link to ${email}: ${link}`);
+                }
+                return link;
+              }
+              return null;
+            }}
+            shareLink={shareableLink}
+            onCopyLink={() => {
+              if (shareableLink) {
+                navigator.clipboard.writeText(shareableLink);
+                setIsLinkCopied(true);
+                setTimeout(() => setIsLinkCopied(false), 2000);
+                toast.success('Link copied to clipboard!');
+              }
+            }}
+          />
+        )}
     </div>
   );
 };

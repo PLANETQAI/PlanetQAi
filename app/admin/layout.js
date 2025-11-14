@@ -1,19 +1,18 @@
 'use client';
 
-import { usePathname } from 'next/navigation';
-import Link from 'next/link';
-import { useSession } from 'next-auth/react';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
-import { 
-  UserIcon, 
-  MusicalNoteIcon, 
-  EnvelopeIcon, 
-  ChartBarIcon,
-  HomeIcon,
+import {
   ArrowLeftOnRectangleIcon,
-  CreditCardIcon
+  ChartBarIcon,
+  CreditCardIcon,
+  EnvelopeIcon,
+  HomeIcon,
+  MusicalNoteIcon,
+  UserIcon
 } from '@heroicons/react/24/outline';
+import { useSession } from 'next-auth/react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 export default function AdminLayout({ children }) {
   const pathname = usePathname();
@@ -60,6 +59,7 @@ export default function AdminLayout({ children }) {
     { name: 'Users', href: '/admin/users', icon: UserIcon },
     { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
     { name: 'Songs', href: '/admin/songs', icon: MusicalNoteIcon },
+    { name: 'Media', href: '/admin/media', icon: MusicalNoteIcon },
     { name: 'Newsletter', href: '/admin/newsletter', icon: EnvelopeIcon },
   ];
 

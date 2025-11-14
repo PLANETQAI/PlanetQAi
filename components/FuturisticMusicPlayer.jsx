@@ -1,10 +1,10 @@
 'use client'
 
-import { useState, useEffect, useRef } from "react"
-import { Play, Pause, SkipBack, SkipForward, Share2, Repeat, Shuffle, Volume2, Heart, Trash2, MessageCircle, Facebook, Twitter,X } from "lucide-react"
-import SaleToggleButton from "./player/SaleToggleButton"
-import { AlertDialog, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger ,AlertDialogDescription,AlertDialogAction} from "./ui/alert-dialog"
+import { Facebook, Heart, MessageCircle, Pause, Play, Repeat, Share2, Shuffle, SkipBack, SkipForward, Trash2, Twitter, Volume2, X } from "lucide-react"
+import { useEffect, useRef, useState } from "react"
 import toast from "react-hot-toast"
+import SaleToggleButton from "./player/SaleToggleButton"
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog"
 
 const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showShareButton = true }) => {
   const [currentSong, setCurrentSong] = useState(0)
@@ -152,14 +152,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
-  const handleShare = (songIds = null) => {
-    const ids = Array.isArray(songIds) ? songIds : songIds ? [songIds] : null;
-    const songsToShare = ids ? currentSongs.filter((song) => ids.includes(song.id)) : currentSongs;
-    if (onShare) {
-      onShare(songsToShare);
-    }
-    setShowShareModal(false);
-  }
+ 
 
   const handleGenerateLink = async (songIds) => {
     console.log("handleGenerateLink called with songIds:", songIds);

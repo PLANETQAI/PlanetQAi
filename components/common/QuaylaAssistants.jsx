@@ -1,8 +1,8 @@
 "use client";
 
-import { AlertCircle, Mic, MicVocal, LogIn } from 'lucide-react';
+import { AlertCircle, LogIn, Mic, MicVocal } from 'lucide-react';
 import { signIn, useSession } from 'next-auth/react';
-import { useRouter, usePathname } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
 
@@ -39,7 +39,7 @@ const VoiceNavigationAssistant = () => {
   const interactionTimeoutRef = useRef(null);
   const abortControllerRef = useRef(new AbortController());
 
-  const videoUrl = "/videos/generator_final.mp4";
+  const videoUrl = "/videos/home.mp4";
 
   // --- DIAGNOSTIC HOOK ---
   useEffect(() => {
@@ -581,11 +581,11 @@ const VoiceNavigationAssistant = () => {
 
   const startAssistant = async () => {
     // Check if user is logged in
-    if (!session) {
-      showLoginToast();
-      setIsActive(false);
-      return;
-    }
+    // if (!session) {
+    //   showLoginToast();
+    //   setIsActive(false);
+    //   return;
+    // }
 
     console.log('🚀 Starting assistant...');
     setIsActive(true);
