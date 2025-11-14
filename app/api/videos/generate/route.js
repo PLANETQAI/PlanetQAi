@@ -1,8 +1,8 @@
 // app/api/videos/generate/route.js
 import { auth } from "@/auth";
+import { uploadToCloudinary } from '@/lib/cloudinary';
 import prisma from '@/lib/prisma';
 import axios from "axios";
-import { uploadToCloudinary } from '@/lib/cloudinary';
 
 // Constants for credit calculation
 const VIDEO_GENERATION_CREDITS = 40; // Higher cost for video generation
@@ -86,7 +86,7 @@ export async function POST(req) {
       // Get or create media record
       let media;
       const mediaData = {
-        title: `Generated Video - ${new Date().toLocaleString()}`,
+        title: prompt,
         description: prompt,
         mediaType: 'video',
         status: 'processing',

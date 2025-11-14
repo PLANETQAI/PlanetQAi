@@ -134,6 +134,7 @@ model Media {
   isPublic         Boolean   @default(false)
   isForSale        Boolean   @default(false)
   salePrice        Float?
+  creditsUsed      Int       @default(400) 
   
   // Timestamps
   createdAt        DateTime  @default(now())
