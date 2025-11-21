@@ -45,7 +45,6 @@ async function checkUserSubscription(userId) {
 
 // Create a new user subscription
 async function createUserSubscription(userId, planId) {
-  // Start a transaction to ensure data consistency
   return await prisma.$transaction(async (tx) => {
     // 1. Get the user with current credits
     const user = await tx.user.findUnique({
@@ -74,73 +73,105 @@ async function createUserSubscription(userId, planId) {
       throw new Error('Subscription plan not found or inactive');
     }
 
-    // 3. Check for existing active subscription
+    const now = new Date();
+    
+    // 3. Check for any existing subscription (active or expired)
     const existingSubscription = await tx.userSubscription.findFirst({
       where: {
         userId,
-        isActive: true,
-        expiryDate: { gt: new Date() }
+        planId
+      },
+      orderBy: {
+        expiryDate: 'desc'
       }
     });
 
+    // 4. Handle existing subscription
     if (existingSubscription) {
-      throw new Error('User already has an active subscription');
+      // If there's an active subscription, throw error
+      if (existingSubscription.isActive && new Date(existingSubscription.expiryDate) > now) {
+        throw new Error('You already have an active subscription for this plan');
+      }
+      
+      // If there's an expired subscription, update it instead of creating new
+      if (!existingSubscription.isActive || new Date(existingSubscription.expiryDate) <= now) {
+        const expiryDate = new Date();
+        expiryDate.setMonth(expiryDate.getMonth() + 1); // Add 1 month from now
+
+        const updatedSubscription = await tx.userSubscription.update({
+          where: { id: existingSubscription.id },
+          data: {
+            isActive: true,
+            startDate: now,
+            expiryDate,
+            updatedAt: now
+          },
+          include: {
+            plan: {
+              select: {
+                name: true,
+                features: true,
+                durationDays: true
+              }
+            }
+          }
+        });
+
+        return {
+          id: updatedSubscription.id,
+          name: updatedSubscription.plan.name,
+          features: updatedSubscription.plan.features,
+          durationDays: updatedSubscription.plan.durationDays,
+          startDate: updatedSubscription.startDate,
+          expiryDate: updatedSubscription.expiryDate,
+          status: 'RENEWED',
+          creditsDeducted: 0,
+          remainingCredits: user.creditsRemaining
+        };
+      }
     }
 
-    // 4. Define subscription cost
+    // 5. If no existing subscription, proceed with new subscription
     const subscriptionCost = 160; // or plan.creditsRequired if defined in the plan
 
-    // 5. Log credit check details
-    console.log(`Subscription credit check for user ${user.email} (${user.id}):`);
-    console.log(`- Available credits: ${user.creditsRemaining || 0}`);
-    console.log(`- Required credits: ${subscriptionCost}`);
-    console.log(`- Has enough credits: ${user.creditsRemaining >= subscriptionCost ? 'YES' : 'NO'}`);
-
-    // 6. Check if user has enough creditsß
+    // 6. Check if user has enough credits
     if (user.credits < subscriptionCost) {
       throw new Error(`Insufficient credits: needed ${subscriptionCost}, have ${user.credits}`);
     }
 
-    // 7. Calculate expiry date
-    const now = new Date();
+    // 7. Calculate expiry date (1 month from now)
     const expiryDate = new Date();
-    expiryDate.setDate(now.getDate() + (plan.durationDays || 30));
+    expiryDate.setMonth(expiryDate.getMonth() + 1);
 
-    // 8. Create subscription and update user credits in a single transaction
-    const [subscription] = await Promise.all([
-      tx.userSubscription.create({
-        data: {
-          userId,
-          planId,
-          startDate: now,
-          expiryDate,
-          isActive: true,
-        },
-        include: {
-          plan: {
-            select: {
-              name: true,
-              features: true,
-              durationDays: true
-            }
+    // 8. Create new subscription
+    const subscription = await tx.userSubscription.create({
+      data: {
+        userId,
+        planId,
+        startDate: now,
+        expiryDate,
+        isActive: true,
+      },
+      include: {
+        plan: {
+          select: {
+            name: true,
+            features: true,
+            durationDays: true
           }
         }
-      }),
-      tx.user.update({
-        where: { id: userId },
-        data: {
-          creditsRemaining: { decrement: subscriptionCost },
-          credits: { decrement: subscriptionCost },
-          totalCreditsUsed: { increment: subscriptionCost }
-        }
-      })
-    ]);
+      }
+    });
 
-    // 9. Log successful subscription
-    console.log(`Subscription created successfully for user ${user.email}:`);
-    console.log(`- Plan: ${subscription.plan.name}`);
-    console.log(`- Credits deducted: ${subscriptionCost}`);
-    console.log(`- New credit balance: ${user.creditsRemaining - subscriptionCost}`);
+    // 9. Update user credits
+    await tx.user.update({
+      where: { id: userId },
+      data: {
+        creditsRemaining: { decrement: subscriptionCost },
+        credits: { decrement: subscriptionCost },
+        totalCreditsUsed: { increment: subscriptionCost }
+      }
+    });
 
     return {
       id: subscription.id,
