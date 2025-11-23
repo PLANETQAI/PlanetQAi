@@ -2,7 +2,7 @@
 
 import StarsWrapper from "@/components/canvas/StarsWrapper";
 import { useRouter } from "next/navigation";
-import PlayerBot from "./_components/PlayerBot";
+import AzurePlayerBot from './_components/AzureCastPlayer';
 import RadioSubscriptionFlow from './_components/RadioSubscriptionFlow';
 
 // List of Spotify playlist or track embed URLs
@@ -37,7 +37,8 @@ const RadioContent = () => {
           Click Play and Vibe Out
         </p>
         <div className="w-full flex justify-center">
-          <PlayerBot />
+          {/* <PlayerBot /> */}
+          <AzurePlayerBot />
         </div>
         {/* <div className="space-y-10">
           {spotifyEmbeds.map((embed, idx) => (
