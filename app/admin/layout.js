@@ -61,6 +61,7 @@ export default function AdminLayout({ children }) {
     { name: 'Subscription Plans', href: '/admin/subscription-plans', icon: CreditCardIcon },
     { name: 'Songs', href: '/admin/songs', icon: MusicalNoteIcon },
     { name: 'Media', href: '/admin/media', icon: FileVideo },
+    { name: 'AzureCast', href: '/admin/azurecast', icon: FileVideo },
     { name: 'Newsletter', href: '/admin/newsletter', icon: EnvelopeIcon },
   ];
 
