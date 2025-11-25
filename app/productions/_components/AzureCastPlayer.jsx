@@ -374,7 +374,7 @@ export default function AzurePlayerBot() {
         <div className="absolute inset-0">
           {/* Background layer - always visible */}
           <div className="absolute inset-0">
-            {albumArtUrl ? (
+            {isPlaying && albumArtUrl ? (
               <Image
                 key={albumArtUrl}
                 src={albumArtUrl}
