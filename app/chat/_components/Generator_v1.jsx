@@ -1,17 +1,17 @@
 'use client'
 
-import React, { useState, useEffect,useCallback } from 'react'
+import { normalizeValue } from '@/utils/functions'
 import axios from 'axios'
 import Link from 'next/link'
+import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { useCallback, useEffect, useState } from 'react'
 import { TbInfoHexagonFilled } from 'react-icons/tb'
-import { usePathname, useSearchParams, useRouter } from 'next/navigation'
-import { normalizeValue } from '@/utils/functions'
 
-import { Music, Zap, Clock, CreditCard, AlertCircle } from 'lucide-react'
 import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal'
 import SongDetail from '@/components/player/SongDetail'
 import SongList from '@/components/player/SongList'
-import { useUser } from "@/context/UserContext";
+import { useUser } from "@/context/UserContext"
+import { AlertCircle, CreditCard, Music, Zap } from 'lucide-react'
 
 
 const QuaylaGenerator = ({
@@ -593,8 +593,8 @@ const QuaylaGenerator = ({
     }
 
     // Log the calculation for debugging
-    console.log(`Suno credit calculation: ${wordCount} words = ${credits} credits`);
-    console.log(`User has ${userCredits?.credits || 0} credits available`);
+    // console.log(`Suno credit calculation: ${wordCount} words = ${credits} credits`);
+    // console.log(`User has ${userCredits?.credits || 0} credits available`);
 
     return credits;
   }
@@ -623,8 +623,8 @@ const QuaylaGenerator = ({
       setEstimatedCredits(estimatedCredits)
 
       // Check if user has enough credits
-      if (userCredits && userCredits.credits < estimatedCredits) {
-        setCreditsNeeded(estimatedCredits - userCredits.credits)
+      if (userCredits && userCredits.credits?.normal < estimatedCredits) {
+        setCreditsNeeded(estimatedCredits - userCredits.credits?.normal)
         setShowCreditPurchaseModal(true)
         setLoading(false)
         setGenerationStatus(null)
@@ -811,10 +811,10 @@ const QuaylaGenerator = ({
             <div className="flex items-center gap-1 bg-blue-700/50 px-3 py-1 rounded-full">
               <Zap className="w-4 h-4 text-yellow-400" />
               <span className="text-white text-sm font-medium">
-                {userCredits.credits.toLocaleString()} Planet_Q_Coins
+                {userCredits.credits?.normal.toLocaleString()} Planet_Q_Coins
               </span>
             </div>
-            {userCredits.credits < 85 && (
+            {userCredits.credits?.normal < 85 && (
               <button
                 onClick={() => setShowCreditPurchaseModal(true)}
                 className="text-blue-300 hover:text-blue-200 text-sm underline flex items-center justify-center gap-1 mx-auto">
@@ -964,9 +964,9 @@ const QuaylaGenerator = ({
       {error && (
         <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg flex flex-col gap-2">
           <p className="text-red-300 text-sm">{error}</p>
-          {(generationStatus === 'completed' || error || (userCredits?.credits < 85)) && (
+          {(generationStatus === 'completed' || error || (userCredits?.credits?.normal < 85)) && (
             <div className="mt-4 flex justify-end gap-3">
-              {userCredits?.credits < 85 && !error && generationStatus !== 'completed' && (
+              {userCredits?.credits?.normal < 85 && !error && generationStatus !== 'completed' && (
                 <button
                   onClick={() => setShowCreditPurchaseModal(true)}
                   className="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white rounded-md text-sm transition-colors flex items-center gap-2"

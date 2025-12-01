@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Activity, ArrowDown, ArrowUp, Award, Clock, Zap } from "lucide-react";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Area, CartesianGrid, Line, LineChart, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 
@@ -32,6 +33,7 @@ export default function RewardGraphDialog(
 { isOpen, onClose }
 ) {
   const { data: session } = useSession();
+  const route = useRouter();
   const currentUserId = session?.user?.id;
   const [data, setData] = useState([]);
   const [userPosition, setUserPosition] = useState(null);
@@ -257,15 +259,7 @@ useEffect(() => {
               <div className="font-bold">{stats.totalRewards}</div>
             </div>
           </div>
-          {/* <div className="flex items-center">
-            <div className="p-2 rounded-full bg-blue-500/10 text-blue-400 mr-3">
-              <Users className="w-4 h-4" />
-            </div>
-            <div>
-              <div className="text-xs text-slate-400">Active Users</div>
-              <div className="font-bold">{stats.totalUsers}</div>
-            </div>
-          </div> */}
+       
           <div className="flex items-center">
             <div className="p-2 rounded-full bg-yellow-500/10 text-yellow-400 mr-3">
               <Award className="w-4 h-4" />
@@ -283,6 +277,11 @@ useEffect(() => {
               <div className="text-xs text-slate-400">Last Updated</div>
               <div className="font-mono text-sm">{stats.lastUpdated}</div>
             </div>
+          </div>
+             <div className="flex items-center">
+            <Button onClick={() => route.push('/payment/withdraw')} className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">
+              Withdraw
+            </Button>
           </div>
         </div>
 

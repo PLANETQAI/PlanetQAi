@@ -556,14 +556,14 @@ export default function TestPage() {
                 <div className="w-full flex justify-center">
                   <button
                     onClick={(e) => {
-                      if (userCredits?.credits < 160) {
+                      if (userCredits?.credits?.normal < 160) {
                         e.preventDefault();
                         setShowCreditPurchaseModal(true);
                       } else {
                         connect();
                       }
                     }}
-                    className={`group relative w-20 h-20 flex flex-col items-center justify-center ${userCredits?.credits < 160
+                    className={`group relative w-20 h-20 flex flex-col items-center justify-center ${userCredits?.credits?.normal < 160
                       ? 'bg-gray-500 cursor-not-allowed'
                       : 'bg-gradient-to-r from-red-500 to-pink-600 hover:shadow-red-500/30'
                       } text-white rounded-full font-medium shadow-lg transition-all duration-300`}
@@ -572,9 +572,9 @@ export default function TestPage() {
                       <FaMicrophone className="text-2xl" />
                     </span>
                     <span className="text-xs mt-1">
-                      {userCredits?.credits < 160 ? 'Insufficient' : ''}
+                      {userCredits?.credits?.normal < 160 ? 'Insufficient' : ''}
                     </span>
-                    {userCredits?.credits >= 160 && (
+                    {userCredits?.credits?.normal >= 160 && (
                       <span className="absolute inset-0 bg-gradient-to-r from-red-600 to-pink-700 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-full"></span>
                     )}
                   </button>

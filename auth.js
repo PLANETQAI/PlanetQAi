@@ -1,7 +1,7 @@
-import NextAuth from 'next-auth'
-import Credentials from 'next-auth/providers/credentials'
-import { logInSchema } from './lib/zod'
-import prisma from './lib/prisma'
+import NextAuth from 'next-auth';
+import Credentials from 'next-auth/providers/credentials';
+import prisma from './lib/prisma';
+import { logInSchema } from './lib/zod';
 
 import { compare } from 'bcryptjs';
 
@@ -12,13 +12,13 @@ const authConfig = {
 		signIn: '/login',
 		error: '/login',
 	},
-	
+
 	// Set a secure secret for NextAuth
 	secret: process.env.AUTH_SECRET,
-	
+
 	// Trust the host in all environments to avoid CSRF issues
 	trustHost: true,
-	
+
 	providers: [
 		Credentials({
 			// Disable CSRF protection for credentials provider
@@ -51,9 +51,9 @@ const authConfig = {
 							max_download: true,
 							totalDownloads: true,
 							createdAt: true,
-							lastLoginAt: true
-							// Explicitly select only the fields we need
-							// This prevents errors if some fields are missing in the database
+							lastLoginAt: true,
+							stripeCustomerId: true,
+							stripeAccountId: true,
 						}
 					})
 					console.log(user)
@@ -73,9 +73,9 @@ const authConfig = {
 					}
 
 					// Verify password using bcrypt
-					          // Verify password using bcrypt
-          const isPasswordValid = await compare(credentials.password, user.password);
-          if (!isPasswordValid) {
+					// Verify password using bcrypt
+					const isPasswordValid = await compare(credentials.password, user.password);
+					if (!isPasswordValid) {
 						throw new Error('Incorrect password.')
 					}
 
@@ -107,6 +107,8 @@ const authConfig = {
 				token.max_download = user.max_download
 				token.totalDownloads = user.totalDownloads
 				token.createdAt = user.createdAt
+				token.stripeCustomerId = user.stripeCustomerId
+				token.stripeAccountId = user.stripeAccountId
 			}
 			return token
 		},
@@ -121,6 +123,8 @@ const authConfig = {
 				session.user.max_download = token.max_download
 				session.user.totalDownloads = token.totalDownloads
 				session.user.createdAt = token.createdAt
+				session.user.stripeCustomerId = token.stripeCustomerId
+				session.user.stripeAccountId = token.stripeAccountId
 			}
 			return session
 		},

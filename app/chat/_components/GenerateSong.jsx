@@ -244,8 +244,8 @@ const GenerateSong = ({
       }
 
       // Check credits
-      if (userCredits?.credits < creditsNeeded) {
-        throw new Error(`Insufficient credits. Need ${creditsNeeded - userCredits.credits} more.`)
+      if (userCredits?.credits?.normal < creditsNeeded) {
+        throw new Error(`Insufficient credits. Need ${creditsNeeded - userCredits.credits?.normal} more.`)
       }
 
       // Generate
@@ -619,7 +619,7 @@ const GenerateSong = ({
           {userCredits && (
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Zap className="w-4 h-4 text-yellow-500" />
-              <span>{userCredits.credits} credits remaining</span>
+              <span>{userCredits.credits?.normal} credits remaining</span>
             </div>
           )}
         </div>
