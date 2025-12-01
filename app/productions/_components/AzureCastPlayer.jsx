@@ -1,18 +1,24 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import Image from "next/image";
-import Link from "next/link";
+import CreditPurchaseModal from "@/components/credits/CreditPurchaseModal";
+import { useUser } from "@/context/UserContext";
+import { useListeningRewards } from "@/hooks/useListeningRewards";
 import {
-  Play,
+  List,
   Pause,
-  SkipForward,
-  SkipBack,
-  Volume2,
+  Play,
   Repeat,
   Shuffle,
-  List,
+  SkipBack,
+  SkipForward,
+  Volume2
 } from "lucide-react";
+import { useSession } from "next-auth/react";
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
+import RewardGraphDialog from "./RewardGraphDialog";
+
 
 const API_BASE = process.env.NEXT_PUBLIC_AZURACAST_API;
 const STATION_ID = process.env.NEXT_PUBLIC_STATION_ID;
@@ -73,11 +79,12 @@ function getYoutubeEmbedUrl(youtubeUrl) {
 }
 
 export default function AzurePlayerBot() {
+  const { data: session } = useSession();
   const audioRef = useRef(null);
   const videoRef = useRef(null);
   const ytPlayerRef = useRef(null);
   const [isYtPlayerReady, setIsYtPlayerReady] = useState(false);
-  const [isYtApiLoaded, setIsYtApiLoaded] = useState(false);
+  const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false);
 
   const [nowPlaying, setNowPlaying] = useState(null);
   const [queue, setQueue] = useState([]);
@@ -86,7 +93,18 @@ export default function AzurePlayerBot() {
   const [isShuffle, setIsShuffle] = useState(false);
   const [isRepeat, setIsRepeat] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
+  const [showPoints, setShowPoints] = useState(false);
   const [selectedQueueIndex, setSelectedQueueIndex] = useState(null);
+
+  const {
+    credits: userCredits,
+    fetchUserCredits,
+  } = useUser()
+
+ 
+
+  const { points, rawPoints } = useListeningRewards(false, isPlaying, userCredits);
+
 
   const fetchNowPlaying = useCallback(async () => {
     try {
@@ -154,7 +172,7 @@ export default function AzurePlayerBot() {
   useEffect(() => {
     if (videoRef.current) {
       if (isPlaying) {
-        videoRef.current.play().catch(() => {});
+        videoRef.current.play().catch(() => { });
       } else {
         videoRef.current.pause();
       }
@@ -273,6 +291,37 @@ export default function AzurePlayerBot() {
     setSelectedQueueIndex(index);
     setShowPlaylist(false);
   };
+
+  async function togglePlayPause() {
+    if (!session) {
+      window.location.href = "/login?redirect=/productions";
+      return;
+    }
+
+    // Check if user has an active radio subscription or enough credits
+    const now = new Date();
+    const hasActiveSubscription =
+      userCredits?.credits.isRadioSubscribed &&
+      new Date(userCredits.credits.radioSubscriptionExpiresAt) > now;
+
+    if (!hasActiveSubscription) {
+      if ((userCredits?.credits?.radio?.current || 0) <= 0) {
+        setShowCreditPurchaseModal(true);
+        return;
+      }
+      try {
+        // Refresh credits, backend will handle deduction
+        await fetchUserCredits();
+      } catch (error) {
+        console.error("Error refreshing credits:", error);
+        return;
+      }
+    }
+
+    // Toggle play/pause state
+    setIsPlaying((p) => !p);
+  }
+
 
   return (
     <div className="w-full sm:w-[80%] mx-auto">
@@ -397,9 +446,8 @@ export default function AzurePlayerBot() {
           {/* YouTube Video Layer - shows when playing */}
           {youtubeEmbedUrl && (
             <div
-              className={`absolute inset-0 bg-black transition-opacity duration-500 ${
-                isPlaying ? "opacity-100 z-10" : "opacity-0 z-0"
-              }`}
+              className={`absolute inset-0 bg-black transition-opacity duration-500 ${isPlaying ? "opacity-100 z-10" : "opacity-0 z-0"
+                }`}
             >
               <div id="youtube-player-container" className="w-full h-full" />
             </div>
@@ -426,9 +474,8 @@ export default function AzurePlayerBot() {
                   src={coverSrc}
                   alt="Album Art"
                   fill
-                  className={`object-cover ${
-                    isPlaying ? "animate-spin-slow" : ""
-                  }`}
+                  className={`object-cover ${isPlaying ? "animate-spin-slow" : ""
+                    }`}
                   unoptimized
                 />
                 {/* Pulsing ring effect when playing */}
@@ -453,11 +500,10 @@ export default function AzurePlayerBot() {
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span
-                    className={`inline-block text-xs px-2 py-1 rounded transition-all ${
-                      isPlaying
-                        ? "bg-red-500/30 text-red-300 animate-pulse"
-                        : "bg-purple-500/30 text-purple-300"
-                    }`}
+                    className={`inline-block text-xs px-2 py-1 rounded transition-all ${isPlaying
+                      ? "bg-red-500/30 text-red-300 animate-pulse"
+                      : "bg-purple-500/30 text-purple-300"
+                      }`}
                   >
                     {isPlaying ? "● LIVE" : "LIVE"}
                   </span>
@@ -480,11 +526,10 @@ export default function AzurePlayerBot() {
             <div className="flex items-center justify-between w-full">
               <button
                 onClick={() => setIsShuffle((s) => !s)}
-                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${
-                  isShuffle
-                    ? "border-purple-500 bg-purple-500/20 text-purple-400"
-                    : "border-gray-500 bg-black/50 text-gray-400"
-                } hover:border-white hover:text-white flex items-center justify-center transition-all`}
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${isShuffle
+                  ? "border-purple-500 bg-purple-500/20 text-purple-400"
+                  : "border-gray-500 bg-black/50 text-gray-400"
+                  } hover:border-white hover:text-white flex items-center justify-center transition-all`}
               >
                 <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -499,15 +544,14 @@ export default function AzurePlayerBot() {
               </button>
 
               <button
-                onClick={() => setIsPlaying((p) => !p)}
-                className="w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-linear-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg shadow-purple-500/50"
+                onClick={togglePlayPause}
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center ${(!userCredits || (userCredits.radio?.current <= 0 && !userCredits.isRadioSubscribed)) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
+                  }`}
+                disabled={!userCredits || (userCredits.radio?.current <= 0 && !userCredits.isRadioSubscribed)}
               >
-                {isPlaying ? (
-                  <Pause className="w-6 h-6 sm:w-7 sm:h-7" />
-                ) : (
-                  <Play className="w-6 h-6 sm:w-7 sm:h-7" />
-                )}
+                {isPlaying ? <Pause /> : <Play />}
               </button>
+
 
               <button
                 onClick={() => {
@@ -520,11 +564,10 @@ export default function AzurePlayerBot() {
 
               <button
                 onClick={() => setIsRepeat((r) => !r)}
-                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${
-                  isRepeat
-                    ? "border-purple-500 bg-purple-500/20 text-purple-400"
-                    : "border-gray-500 bg-black/50 text-gray-400"
-                } hover:border-white hover:text-white flex items-center justify-center transition-all`}
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${isRepeat
+                  ? "border-purple-500 bg-purple-500/20 text-purple-400"
+                  : "border-gray-500 bg-black/50 text-gray-400"
+                  } hover:border-white hover:text-white flex items-center justify-center transition-all`}
               >
                 <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -543,13 +586,38 @@ export default function AzurePlayerBot() {
                   className="w-32 sm:w-40"
                 />
               </div>
+              <div className="flex gap-5">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowPoints((p) => !p)}
+                    className="relative w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-500 bg-black/50 text-yellow-400 hover:border-white hover:text-yellow-300 flex items-center justify-center transition-all group text-lg"
+                  >
+                    💰
+                    {isPlaying && (
+                      <span className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                    )}
+                  </button>
 
-              <button
-                onClick={() => setShowPlaylist((s) => !s)}
-                className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white flex items-center justify-center"
-              >
-                <List />
-              </button>
+                  {showPoints && (
+                    <div className="absolute bottom-full right-0 mb-2 w-32 p-2 bg-gray-900/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-700 z-50">
+                      <div className="text-xs text-gray-300">Points Earned</div>
+                      <div className="text-sm font-bold text-yellow-400">{points || 0}</div>
+                      <div className="text-xxs text-gray-400">Raw: {rawPoints || 0}</div>
+                      <div className="absolute -bottom-1 right-3 w-3 h-3 bg-gray-900/90 transform rotate-45 border-r border-b border-gray-700"></div>
+                    </div>
+                  )}
+                </div>
+
+
+
+                <button
+                  onClick={() => setShowPlaylist((s) => !s)}
+                  className="w-8 h-8 sm:w-10 sm:h-10 rounded-full border border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white flex items-center justify-center"
+                >
+                  <List />
+                </button>
+              </div>
+
             </div>
           </div>
         </div>
@@ -569,11 +637,10 @@ export default function AzurePlayerBot() {
                 <button
                   key={item.sh_id || `next-${idx}`}
                   onClick={() => onSelectQueueItem(idx)}
-                  className={`w-full text-left p-2 rounded-lg transition-all ${
-                    idx === selectedQueueIndex
-                      ? "bg-purple-500/30 border border-purple-500"
-                      : "bg-gray-800 hover:bg-gray-700"
-                  }`}
+                  className={`w-full text-left p-2 rounded-lg transition-all ${idx === selectedQueueIndex
+                    ? "bg-purple-500/30 border border-purple-500"
+                    : "bg-gray-800 hover:bg-gray-700"
+                    }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-gray-400 text-xs w-6">{idx + 1}</span>
@@ -602,6 +669,21 @@ export default function AzurePlayerBot() {
             </p>
           </div>
         )}
+
+     
+          <RewardGraphDialog isOpen={showPoints} onClose={() => setShowPoints(false)}/>
+
+        {/* Credit Purchase Modal */}
+        <CreditPurchaseModal
+          isOpen={showCreditPurchaseModal}
+          onClose={() => setShowCreditPurchaseModal(false)}
+          creditsNeeded="0"
+          creditType="radio"
+          onSuccess={async () => {
+            await fetchUserCredits();
+            // Optionally refresh the playlist or other data
+          }}
+        />
       </div>
     </div>
   );

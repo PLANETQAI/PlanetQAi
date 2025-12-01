@@ -1,17 +1,9 @@
-import { NextResponse } from "next/server";
 import { auth } from "@/auth";
+import { getPackagesByType } from "@/lib/stripe_package";
 import { PrismaClient } from "@prisma/client";
-import { CREDIT_PACKAGES } from "@/lib/stripe_package";
+import { NextResponse } from "next/server";
 
 const prisma = new PrismaClient();
-
-// Define credit packages
-// const CREDIT_PACKAGES = [
-//   { id: "prod_SNif9JuV1hG0Ux", name: "Small Pack", credits: 100, price: 5 },
-//   { id: "prod_SNihFWLdp5m3Uj", name: "Medium Pack", credits: 300, price: 12 },
-//   { id: "prod_SNijf10zShItPz", name: "Large Pack", credits: 700, price: 25 },
-//   { id: "prod_SNijpow92xtGMW", name: "Extra Large Pack", credits: 1500, price: 45 },
-// ];
 
 // GET handler to retrieve user credits and available credit packages
 export async function GET(req) {
@@ -41,37 +33,33 @@ export async function GET(req) {
       where: { id: userId },
       select: {
         credits: true,
+        radioCredits: true,
         role: true,
+        isRadioSubscribed: true,
+        radioSubscriptionExpiresAt: true
       },
     });
 
-    // Default values for fields that might not exist in the schema yet
-    const userCredits = {
-      credits: userWithCredits?.credits || 0,
-      maxMonthlyCredits: 5000, // Default value
-      totalCreditsUsed: 0, // Calculate this if needed
-      role: user.role,
-      subscription: {
-        planName: "Free",
-        status: "active",
-        currentPeriodEnd: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), // 30 days from now
-      },
-    };
-
-    // Get user's recent credit logs for display
-    const recentCreditLogs = await prisma.creditLog.findMany({
+    // Get credit logs for both credit types
+    const creditLogs = await prisma.creditLog.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
-      take: 5,
-      select: {
-        amount: true,
-        balanceAfter: true,
-        description: true,
-        createdAt: true,
-      },
+      take: 10,
     });
 
-    // Get user's recent songs
+    // Group logs by credit type
+    const creditBalances = {
+      normal: {
+        current: userWithCredits?.credits || 0,
+        logs: creditLogs.filter(log => log.creditType === 'normal')
+      },
+      radio: {
+        current: userWithCredits?.radioCredits || 0,
+        logs: creditLogs.filter(log => log.creditType === 'radio')
+      }
+    };
+
+    // Get recent songs and media
     const recentSongs = await prisma.song.findMany({
       where: { userId },
       orderBy: { createdAt: "desc" },
@@ -84,16 +72,44 @@ export async function GET(req) {
       },
     });
 
+    const recentMedia = await prisma.media.findMany({
+      where: { userId },
+      orderBy: { createdAt: "desc" },
+      take: 5,
+      select: {
+        id: true,
+        title: true,
+        creditsUsed: true,
+        mediaType: true,
+        createdAt: true,
+      },
+    });
+
+    // Get credit packages by type
+    const normalPackages = getPackagesByType('normal');
+    const radioPackages = getPackagesByType('radio');
+    const subscriptionPlans = getPackagesByType('subscription');
+
     return NextResponse.json({
       success: true,
-      credits: userCredits.credits,
-      maxMonthlyCredits: userCredits.maxMonthlyCredits,
-      totalCreditsUsed: userCredits.totalCreditsUsed,
-      role: userCredits.role,
-      subscription: userCredits.subscription,
-      creditLogs: recentCreditLogs,
-      recentSongs,
-      packages: CREDIT_PACKAGES,
+      credits: {
+        normal: creditBalances.normal.current,
+        radio: creditBalances.radio.current,
+        totalCreditsUsed: userWithCredits?.totalCreditsUsed || 0,
+        isRadioSubscribed: userWithCredits?.isRadioSubscribed,
+        radioSubscriptionExpiresAt: userWithCredits?.radioSubscriptionExpiresAt
+      },
+      packages: {
+        normal: normalPackages,
+        radio: radioPackages,
+        subscriptions: subscriptionPlans,
+      },
+      role: user.role,
+      creditLogs: creditLogs,
+      recentActivity: {
+        songs: recentSongs,
+        media: recentMedia,
+      },
     });
   } catch (error) {
     console.error("Credit check error:", error);
@@ -115,13 +131,34 @@ export async function POST(req) {
 
     const userId = session.user.id;
     const body = await req.json();
-    const { packageId } = body;
+    const { packageId, creditType = 'normal' } = body;
+
+    // Get all packages of the requested type
+    const packages = getPackagesByType(creditType);
+
+
+    // Log available packages for debugging
+    console.log("Available packages:", packages);
+    console.log("Requested package ID:", packageId);
 
     // Validate package ID
-    const selectedPackage = CREDIT_PACKAGES.find((pkg) => pkg.id === packageId);
+    const selectedPackage = packages.find((pkg) => pkg.id === packageId);
+    console.log("Selected package:", selectedPackage);
+
     if (!selectedPackage) {
+      console.log("Available packages:", packages);
+      console.log("Requested package ID:", packageId);
       return NextResponse.json(
-        { error: "Invalid package selected" },
+        { error: `Invalid package selected. Package ID '${packageId}' not found in available packages.` },
+        { status: 400 }
+      );
+    }
+
+    // Validate credits field
+    if (typeof selectedPackage.credits === 'undefined') {
+      console.log("Selected package missing credits:", selectedPackage);
+      return NextResponse.json(
+        { error: `Selected package '${selectedPackage.id}' is missing the 'credits' field.` },
         { status: 400 }
       );
     }
@@ -134,6 +171,7 @@ export async function POST(req) {
         email: true,
         fullName: true,
         credits: true,
+        radioCredits: true,
         stripeCustomerId: true,
       },
     });
@@ -148,7 +186,7 @@ export async function POST(req) {
     // Always create a new Stripe customer to avoid test/live mode conflicts
     // Delete existing customer ID and create a new one
     let customerId;
-    
+
     // Create a new customer regardless of existing ID
     const customer = await stripe.customers.create({
       email: user.email,
@@ -165,33 +203,57 @@ export async function POST(req) {
       data: { stripeCustomerId: customerId },
     });
 
+    const isRadio = creditType === 'radio';
+
+    const successUrl = isRadio
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/productions?success=true&session_id={CHECKOUT_SESSION_ID}`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}`;
+
+    const cancelUrl = isRadio
+      ? `${process.env.NEXT_PUBLIC_APP_URL}/productions?canceled=true`
+      : `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?canceled=true`;
+
+
+    const lineItem = creditType === 'radio'
+      ? {
+        price: selectedPackage.id, // Use the recurring price ID
+        quantity: 1,
+      }
+      : {
+        price_data: {
+          currency: 'usd',
+          product_data: {
+            name: selectedPackage.name,
+            description: selectedPackage.description || `${selectedPackage.credits} Credits for PlanetQAi`,
+            metadata: {
+              packageId: selectedPackage.id,
+              creditType: creditType,
+              credits: selectedPackage.credits.toString(),
+            },
+          },
+          unit_amount: selectedPackage.price * 100,
+        },
+        quantity: 1,
+      };
+
     // Create Stripe checkout session
     const checkoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
-      line_items: [
-        {
-          price_data: {
-            currency: "usd",
-            product_data: {
-              name: selectedPackage.name,
-              description: `${selectedPackage.credits} credits for PlanetQAi`,
-              metadata: {
-                packageId: selectedPackage.id,
-              },
-            },
-            unit_amount: selectedPackage.price * 100, // Convert to cents
-          },
-          quantity: 1,
-        },
-      ],
-      mode: "payment",
-      success_url: `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?success=true&session_id={CHECKOUT_SESSION_ID}`,
-      cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/aistudio?canceled=true`,
+      line_items: [lineItem],
+      mode: creditType === 'radio' ? 'subscription' : 'payment',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
       metadata: {
         userId: userId,
         packageId: selectedPackage.id,
-        credits: selectedPackage.credits.toString(),
+        credits: creditType === 'radio' ? selectedPackage.credits.toString() : selectedPackage.credits.toString(),
+        creditType: creditType,
+        ...(creditType === 'radio' && {
+          interval: selectedPackage.interval,
+          interval_count: selectedPackage.interval_count.toString(),
+          subscriptionType: 'radio'
+        })
       },
     });
 

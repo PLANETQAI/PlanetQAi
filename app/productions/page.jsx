@@ -5,18 +5,6 @@ import { useRouter } from "next/navigation";
 import AzurePlayerBot from './_components/AzureCastPlayer';
 import RadioSubscriptionFlow from './_components/RadioSubscriptionFlow';
 
-// List of Spotify playlist or track embed URLs
-const spotifyEmbeds = [
-  {
-    title: "Artist 1",
-    url: "https://open.spotify.com/embed/artist/2QAFHW7dvr7EbnlPY7PDbq?utm_source=generator"
-  },
-  {
-    title: "Artist 2",
-    url: "https://open.spotify.com/embed/artist/5AWlrst9quIeaE4VWSvOVA?utm_source=generator"
-  }
-];
-
 const RadioContent = () => {
   const router = useRouter();
 
@@ -40,30 +28,6 @@ const RadioContent = () => {
           {/* <PlayerBot /> */}
           <AzurePlayerBot />
         </div>
-        {/* <div className="space-y-10">
-          {spotifyEmbeds.map((embed, idx) => (
-            <div
-              key={idx}
-              className="bg-gray-900/70 rounded-2xl shadow-lg p-6 flex flex-col items-center"
-            >
-              <h2 className="text-2xl font-bold mb-4 text-cyan-300 text-center">
-                {embed.title}
-              </h2>
-              <div className="w-full flex justify-center">
-                <iframe
-                  src={embed.url}
-                  width="100%"
-                  height="800"
-                  allow="autoplay; clipboard-write; encrypted-media; picture-in-picture"
-                  loading="lazy"
-                  className="rounded-xl border-none shadow-xl"
-                  title={embed.title}
-                  style={{ minWidth: 250, maxWidth: 700 }}
-                ></iframe>
-              </div>
-            </div>
-          ))}
-        </div> */}
       </div>
     </div>
   );

@@ -21,7 +21,6 @@ export default function GlobalHeader({ session }) {
 		fetchUserCredits,
 	} = useUser()
 
-
 	// Fetch user credits on component mount and refresh every 5 minutes
 	useEffect(() => {
 		if (session?.user) {
@@ -36,40 +35,6 @@ export default function GlobalHeader({ session }) {
 	}, [session])
 
 
-
-	// Function to fetch user credits
-	// const fetchUserCredits = async () => {
-	// 	try {
-	// 		const apiBaseUrl = process.env.NEXT_PUBLIC_APP_URL || ''
-	// 		console.log('GlobalHeader: Fetching credits from:', `${apiBaseUrl}/api/credits-api`)
-
-	// 		const response = await fetch(`${apiBaseUrl}/api/credits-api`, {
-	// 			method: 'GET',
-	// 			credentials: 'include',
-	// 			headers: {
-	// 				'Content-Type': 'application/json',
-	// 				'Cache-Control': 'no-cache',
-	// 				'Pragma': 'no-cache'
-	// 			}
-	// 		})
-
-	// 		if (!response.ok) {
-	// 			throw new Error(`HTTP error! status: ${response.status}`)
-	// 		}
-
-	// 		const data = await response.json()
-	// 		console.log('Fetched credits data:', data) // Debug log
-
-	// 		setUserCredits({
-	// 			credits: data.credits || 0,
-	// 			...data // Include any other data from the response
-	// 		})
-	// 	} catch (error) {
-	// 		console.error('Error fetching credits:', error)
-	// 		// Set a default value or error state if needed
-	// 		setUserCredits({ credits: 0 })
-	// 	}
-	// }
 
 	async function logoutHandler(event) {
 		event.preventDefault()
@@ -127,12 +92,23 @@ export default function GlobalHeader({ session }) {
 
 						{/* Credits Display */}
 						<div className="flex items-center gap-2">
-							<div className="bg-slate-800 rounded-lg px-3 py-2 flex items-center gap-2">
-								<CreditCard className="text-blue-400 w-4 h-4" />
-								<span className="text-white font-medium text-sm">
-									{/* {userCredits ? userCredits.credits.toLocaleString() : '...'} */}
-									{userCredits ? userCredits.credits.toLocaleString() : '...'}
-								</span>
+							<div className="bg-slate-800 rounded-lg px-3 py-2 flex flex-col gap-1">
+								{/* Normal Credits */}
+								<div className="flex items-center gap-2">
+									<CreditCard className="text-blue-400 w-4 h-4" />
+									<span className="text-white font-medium text-xs sm:text-sm">
+										{userCredits?.credits?.normal !== undefined ? userCredits.credits.normal.toLocaleString() : '...'}
+									</span>
+								</div>
+								{/* Radio Credits */}
+								<div className="flex items-center gap-2">
+									<svg className="w-4 h-4 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19V6l12-3v13M9 19c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zm12-3c0 1.105-1.343 2-3 2s-3-.895-3-2 1.343-2 3-2 3 .895 3 2zM9 10l12-3" />
+									</svg>
+									<span className="text-white font-medium text-xs sm:text-sm">
+										{userCredits?.credits?.radio !== undefined ? userCredits.credits.radio.toLocaleString() : '...'}
+									</span>
+								</div>
 							</div>
 							<button
 								onClick={() => setShowCreditPurchaseModal(true)}

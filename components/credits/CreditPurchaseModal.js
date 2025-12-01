@@ -1,145 +1,133 @@
 'use client'
 
-import React, { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import { 
-  Dialog, 
-  DialogContent, 
-  DialogHeader, 
-  DialogTitle,
-  DialogDescription,
-  DialogFooter
-} from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
-import { Zap, Package, CheckCircle, Loader2 } from 'lucide-react'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle
+} from '@/components/ui/dialog'
+import {
+  NORMAL_CREDIT_PACKAGES,
+  RADIO_SUBSCRIPTION_PLANS,
+  SUBSCRIPTION_PLANS
+} from '@/lib/stripe_package'
+import { CheckCircle, Loader2, Package, Zap } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useEffect, useState } from 'react'
 
 const CreditPurchaseModal = ({ 
   isOpen, 
   onClose, 
   creditsNeeded = 0,
+  creditType = 'normal',
   onSuccess = () => {} 
 }) => {
   const router = useRouter()
   const [selectedPackage, setSelectedPackage] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
-  const [packages, setPackages] = useState([
-    { id: "prod_SQkShxszzVfSea", name: "Small Pack", credits: 100, price: 5 },
-    { id: "prod_SQkSMOMbFVZIqD", name: "Medium Pack", credits: 300, price: 12 },
-    { id: "prod_SQkSemW9YYNuto", name: "Large Pack", credits: 700, price: 25 },
-    { id: "prod_SQkSmmaeLkOgSY", name: "Extra Large Pack", credits: 1500, price: 45 },
-  ])
+  const [packages, setPackages] = useState([])
+  const [isLoading, setIsLoading] = useState(false)
 
-  // Fetch available credit packages when the modal opens
-  React.useEffect(() => {
-    if (isOpen) {
-      fetchCreditPackages()
-    }
-  }, [isOpen])
-
-  const fetchCreditPackages = async () => {
+  // Set available packages based on credit type
+  useEffect(() => {
+    if (!isOpen) return
+    
     try {
-      // First check if the user is authenticated by getting the session
-      const sessionResponse = await fetch('/api/auth/session')
-      const sessionData = await sessionResponse.json()
+      let availablePackages = []
       
-      // If not authenticated, redirect to login page
-      if (!sessionData || !sessionData.user) {
-        console.log('User not authenticated, redirecting to login')
-        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-        return
+      if (creditType === 'normal') {
+        availablePackages = NORMAL_CREDIT_PACKAGES
+      } else if (creditType === 'radio') {
+        availablePackages = RADIO_SUBSCRIPTION_PLANS
+      } else if (creditType === 'subscription') {
+        availablePackages = SUBSCRIPTION_PLANS
       }
       
-      // Now fetch credit packages with the authenticated session
-      const response = await fetch('/api/credits-api', {
-        method: 'GET',
-        credentials: 'include', // This ensures cookies are sent with the request
-        headers: {
-          'Content-Type': 'application/json'
-        }
-      })
+      setPackages(availablePackages)
       
-      if (!response.ok) {
-        // If unauthorized, redirect to login
-        if (response.status === 401) {
-          window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-          return
-        }
-        throw new Error(`Failed to fetch credit packages: ${response.status} ${response.statusText}`)
-      }
-      
-      const data = await response.json()
-      if (data.packages && data.packages.length > 0) {
-        setPackages(data.packages)
-        
-        // Auto-select the smallest package that covers the needed credits
+      // Auto-select the first package by default
+      if (availablePackages.length > 0) {
+        // For radio subscriptions, try to find a suitable package based on credits needed
         if (creditsNeeded > 0) {
-          const suitablePackage = data.packages.find(pkg => pkg.credits >= creditsNeeded)
-          if (suitablePackage) {
-            setSelectedPackage(suitablePackage.id)
-          } else {
-            setSelectedPackage(data.packages[0].id)
-          }
+          const suitablePackage = availablePackages.find(pkg => pkg.credits >= creditsNeeded)
+          setSelectedPackage(suitablePackage ? suitablePackage.id : availablePackages[0].id)
+        } else {
+          setSelectedPackage(availablePackages[0].id)
         }
       }
     } catch (error) {
-      console.error('Error fetching credit packages:', error)
+      console.error('Error setting up packages:', error)
+      setError('Failed to load packages. Please try again.')
     }
-  }
+  }, [isOpen, creditType, creditsNeeded])
 
   const handlePurchase = async () => {
-    if (!selectedPackage) return
+    if (!selectedPackage) return;
     
-    setLoading(true)
-    setError(null)
+    setLoading(true);
+    setError(null);
     
     try {
       // First check if the user is authenticated by getting the session
-      const sessionResponse = await fetch('/api/auth/session')
-      const sessionData = await sessionResponse.json()
+      const sessionResponse = await fetch('/api/auth/session');
+      const sessionData = await sessionResponse.json();
       
       // If not authenticated, redirect to login page
       if (!sessionData || !sessionData.user) {
-        console.log('User not authenticated, redirecting to login')
-        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-        return
+        console.log('User not authenticated, redirecting to login');
+        window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname);
+        return;
       }
       
-      // Now process purchase with the authenticated session
+      // Verify the selected package exists
+      const selectedPkg = packages.find(pkg => pkg.id === selectedPackage);
+      if (!selectedPkg) {
+        throw new Error('Selected package not found');
+      }
+      
+      // Prepare the request body with required fields
+      const requestBody = {
+        packageId: selectedPackage,
+        creditType: creditType
+      };
+      
+      // Process the purchase
       const response = await fetch('/api/credits-api', {
         method: 'POST',
-        credentials: 'include', // This ensures cookies are sent with the request
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          packageId: selectedPackage,
-        }),
-      })
+        body: JSON.stringify(requestBody),
+      });
       
-      const data = await response.json()
+      const data = await response.json();
       
       if (!response.ok) {
         // If unauthorized, redirect to login
         if (response.status === 401) {
-          window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-          return
+          window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname);
+          return;
         }
-        throw new Error(data.error || 'Failed to create checkout session')
+        throw new Error(data.error || 'Failed to process your request');
       }
       
       // Check if we got a Stripe checkout URL
       if (data.url) {
-        console.log('Redirecting to Stripe checkout:', data.url)
+        console.log('Redirecting to Stripe checkout:', data.url);
         // Use window.location for a full page redirect to Stripe
-        window.location.href = data.url
-        return
+        window.location.href = data.url;
+        return;
       }
       
       // Handle direct success (should not happen with Stripe integration)
       if (data.success) {
-        onSuccess(data)
-        onClose()
+        onSuccess(data);
+        onClose();
       }
     } catch (error) {
       console.error('Purchase error:', error)
@@ -170,36 +158,49 @@ const CreditPurchaseModal = ({
           </DialogDescription>
         </DialogHeader>
         
-        <div className="grid grid-cols-1 gap-4 py-4">
-          {packages.map((pkg) => (
-            <div 
-              key={pkg.id}
-              className={`p-4 rounded-lg border cursor-pointer transition-all ${
-                selectedPackage === pkg.id 
-                  ? 'bg-purple-900/50 border-purple-500' 
-                  : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
-              }`}
-              onClick={() => setSelectedPackage(pkg.id)}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Package className={`${selectedPackage === pkg.id ? 'text-purple-400' : 'text-gray-400'}`} />
-                  <div>
-                    <h3 className="font-medium">{pkg.name}</h3>
-                    <p className="text-sm text-gray-300">{pkg.credits} credits</p>
+        {isLoading ? (
+          <div className="flex justify-center items-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+          </div>
+        ) : error ? (
+          <div className="text-red-500 text-center py-4">{error}</div>
+        ) : packages.length === 0 ? (
+          <div className="text-center py-4 text-muted-foreground">No credit packages available</div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 py-4">
+            {packages.map((pkg) => (
+              <div 
+                key={pkg.id}
+                className={`p-4 rounded-lg border cursor-pointer transition-all ${
+                  selectedPackage === pkg.id 
+                    ? 'bg-purple-900/50 border-purple-500' 
+                    : 'bg-slate-700/30 border-slate-600 hover:border-slate-500'
+                }`}
+                onClick={() => setSelectedPackage(pkg.id)}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <Package className={`${selectedPackage === pkg.id ? 'text-purple-400' : 'text-gray-400'}`} />
+                    <div>
+                      <h3 className="font-medium">{pkg.name}</h3>
+                      <p className="text-sm text-gray-300">
+                        {creditType === 'radio' 
+                          ? `${pkg.interval_count} Months` || '1 month' 
+                          : `${pkg.credits} Planet Q Coins`}
+                      </p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold">${pkg.price}</span>
+                    {selectedPackage === pkg.id && (
+                      <CheckCircle className="text-purple-400" size={18} />
+                    )}
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <span className="font-bold">${pkg.price}</span>
-                  {selectedPackage === pkg.id && (
-                    <CheckCircle className="text-purple-400" size={18} />
-                  )}
-                </div>
               </div>
-            </div>
-          ))}
-        </div>
-        
+            ))}
+          </div>
+        )}
         {error && (
           <div className="bg-red-500/20 border border-red-500/30 p-2 rounded-md text-sm text-red-300">
             {error}
@@ -210,7 +211,7 @@ const CreditPurchaseModal = ({
           <Button 
             variant="outline" 
             onClick={onClose}
-            className="w-full sm:w-auto border-slate-600 text-gray-300 hover:bg-slate-700 hover:text-white"
+            className="w-full sm:w-auto border-slate-600 bg-gray-500 hover:bg-slate-700 hover:text-white"
           >
             Cancel
           </Button>

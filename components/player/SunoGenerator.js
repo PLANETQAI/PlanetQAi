@@ -7,6 +7,7 @@ import {
 	SelectTrigger,
 	SelectValue
 } from "@/components/ui/select"
+import { useUser } from "@/context/UserContext"
 import { normalizeValue } from '@/utils/functions'
 import axios from 'axios'
 import { AlertCircle, CreditCard, Music, Zap } from 'lucide-react'
@@ -17,7 +18,6 @@ import { TbInfoHexagonFilled } from 'react-icons/tb'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 import SongDetail from './SongDetail'
 import SongList from './SongList'
-
 
 const SunoGenerator = ({
 	session,
@@ -50,9 +50,12 @@ const SunoGenerator = ({
 	const [error, setError] = useState('')
 	const [loading, setLoading] = useState(false)
 	const [pollingInterval, setPollingInterval] = useState(null)
-	const [userCredits, setUserCredits] = useState(null)
-	const [creditsLoading, setCreditsLoading] = useState(false)
-	const [creditsError, setCreditsError] = useState(null)
+		const {
+			credits: userCredits,
+			fetchUserCredits,
+		} = useUser()
+
+	
 	// State for credit purchase modal
 	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
 	const [creditsNeeded, setCreditsNeeded] = useState(0)
@@ -504,53 +507,6 @@ const SunoGenerator = ({
 		}
 	}
 	
-	// Fetch user credits
-	const fetchUserCredits = async () => {
-		setCreditsLoading(true)
-		setCreditsError(null)
-		
-		try {
-			// First check if the user is authenticated by getting the session
-			const sessionResponse = await fetch('/api/auth/session')
-			const sessionData = await sessionResponse.json()
-			
-			// If not authenticated, redirect to login page
-			if (!sessionData || !sessionData.user) {
-				console.log('User not authenticated, redirecting to login')
-				window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-				return
-			}
-			
-			// Now fetch credits with the authenticated session
-			const response = await fetch('/api/credits-api', {
-				method: 'GET',
-				credentials: 'include', // This ensures cookies are sent with the request
-				headers: {
-					'Content-Type': 'application/json'
-				}
-			})
-			
-			if (!response.ok) {
-				// If unauthorized, redirect to login
-				if (response.status === 401) {
-					window.location.href = '/login?redirectTo=' + encodeURIComponent(window.location.pathname)
-					return
-				}
-				const errorData = await response.json().catch(() => ({}))
-				throw new Error(errorData.error || `Failed to fetch credits: ${response.status} ${response.statusText}`)
-			}
-			
-			const data = await response.json()
-			setUserCredits(data)
-			// Notify parent component that credits have been updated
-			onCreditsUpdate(data)
-		} catch (error) {
-			console.error('Error fetching credits:', error)
-			setCreditsError(error.message || 'Failed to load credits. Please try again.')
-		} finally {
-			setCreditsLoading(false)
-		}
-	}
 
 	const handleInputChange = (field, value) => {
 		onPromptChange({
@@ -576,10 +532,7 @@ const SunoGenerator = ({
 			const excessWordPacks = Math.ceil(excessWords / 10);
 			credits += excessWordPacks * 5;
 		}
-		
-		// Log the calculation for debugging
-		console.log(`Suno credit calculation: ${wordCount} words = ${credits} credits`);
-		console.log(`User has ${userCredits?.credits || 0} credits available`);
+
 		
 		return credits;
 	}
@@ -608,8 +561,8 @@ const SunoGenerator = ({
 			setEstimatedCredits(estimatedCredits)
 
 			// Check if user has enough credits
-			if (userCredits && userCredits.credits < estimatedCredits) {
-				setCreditsNeeded(estimatedCredits - userCredits.credits)
+			if (userCredits && userCredits.credits?.normal < estimatedCredits) {
+				setCreditsNeeded(estimatedCredits - userCredits.credits?.normal)
 				setShowCreditPurchaseModal(true)
 				setLoading(false)
 				setGenerationStatus(null)
@@ -772,29 +725,15 @@ const SunoGenerator = ({
 			<div className="flex justify-between items-center mb-4">
 				<h3 className="text-2xl font-bold text-white">Generate Music with PlanetQAi</h3>
 				
-				{creditsLoading ? (
-					<div className="flex items-center gap-2 bg-blue-700/30 px-3 py-1 rounded-full">
-						<div className="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
-						<span className="text-blue-300 text-sm font-medium">Loading...</span>
-					</div>
-				) : creditsError ? (
-					<button 
-						onClick={fetchUserCredits}
-						className="flex items-center gap-2 bg-red-500/20 hover:bg-red-500/30 px-3 py-1 rounded-full transition-colors"
-						title={creditsError}
-					>
-						<AlertCircle className="w-4 h-4 text-red-400" />
-						<span className="text-red-300 text-sm font-medium">Error loading credits</span>
-					</button>
-				) : userCredits ? (
+				{ userCredits ? (
 					<div className="flex items-center gap-2">
 						<div className="flex items-center gap-1 bg-blue-700/50 px-3 py-1 rounded-full">
 							<Zap className="w-4 h-4 text-yellow-400" />
 							<span className="text-white text-sm font-medium">
-								{userCredits.credits.toLocaleString()} Planet_Q_Coins
+								{userCredits.credits?.normal.toLocaleString()} Planet_Q_Coins
 							</span>
 						</div>
-						{userCredits.credits < 85 && (
+						{userCredits.credits?.normal < 85 && (
 							<button 
 								onClick={() => setShowCreditPurchaseModal(true)}
 								className="flex items-center gap-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-yellow-900 text-xs font-medium px-2 py-1 rounded-full transition-colors"
@@ -833,35 +772,6 @@ const SunoGenerator = ({
 				/>
 			</div>
 
-			{/* <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-				<div>
-					<label htmlFor="title" className="block text-sm font-medium text-gray-300 mb-1">
-						Song Title
-					</label>
-					<input
-						id="title"
-						type="text"
-						placeholder="Enter a title for your song"
-						value={selectedPrompt.title}
-						onChange={e => handleInputChange('title', e.target.value)}
-						className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
-					/>
-				</div>
-				<div>
-					<label htmlFor="tags" className="block text-sm font-medium text-gray-300 mb-1">
-						Tags (comma separated)
-					</label>
-					<input
-						id="tags"
-						type="text"
-						placeholder="e.g., dance, energetic, futuristic"
-						value={selectedPrompt.tags}
-						onChange={e => handleInputChange('tags', e.target.value)}
-						className="bg-gradient-to-t from-slate-700 to-slate-600 p-3 border border-slate-500 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 w-full"
-					/>
-				</div>
-			</div> */}
-
 			<div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
 				<div>
 					<label htmlFor="style" className="block text-sm font-medium text-gray-300 mb-1">
@@ -883,80 +793,13 @@ const SunoGenerator = ({
 						</SelectContent>
 					</Select>
 				</div>
-				{/* <div>
-					<label htmlFor="tempo" className="block text-sm font-medium text-gray-300 mb-1">
-						Tempo
-					</label>
-					<Select
-						value={selectedPrompt.tempo}
-						onValueChange={(value) => handleInputChange('tempo', value)}
-					>
-						<SelectTrigger className="bg-gradient-to-t from-slate-700 to-slate-600 border border-slate-500 text-white">
-							<SelectValue placeholder="Select tempo" />
-						</SelectTrigger>
-						<SelectContent>
-							{tempoOptions.map(option => (
-								<SelectItem key={option.value} value={option.value}>
-									{option.label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div> */}
-				{/* <div>
-					<label htmlFor="mood" className="block text-sm font-medium text-gray-300 mb-1">
-						Mood
-					</label>
-					<Select
-						value={selectedPrompt.mood}
-						onValueChange={(value) => handleInputChange('mood', value)}
-					>
-						<SelectTrigger className="bg-gradient-to-t from-slate-700 to-slate-600 border border-slate-500 text-white">
-							<SelectValue placeholder="Select mood" />
-						</SelectTrigger>
-						<SelectContent>
-							{moodOptions.map(option => (
-								<SelectItem key={option.value} value={option.value}>
-									{option.label}
-								</SelectItem>
-							))}
-						</SelectContent>
-					</Select>
-				</div> */}
 			</div> 
-
-			{/* Lyrics Type Selector */}
-			{/* <div className="mb-6">
-				<label htmlFor="lyricsType" className="block text-sm font-medium text-gray-300 mb-1">
-					Lyrics Type
-				</label>
-				<Select
-					value={lyricsType}
-					onValueChange={setLyricsType}
-				>
-					<SelectTrigger className="bg-gradient-to-t from-slate-700 to-slate-600 border border-slate-500 text-white">
-						<SelectValue placeholder="Select lyrics type" />
-					</SelectTrigger>
-					<SelectContent>
-						{lyricsTypeOptions.map(option => (
-							<SelectItem key={option.value} value={option.value}>
-								{option.label}
-							</SelectItem>
-						))}
-					</SelectContent>
-				</Select>
-				<p className="text-xs text-gray-400 mt-1">
-					{lyricsType === 'generate' && "AI will generate lyrics based on your description"}
-					{lyricsType === 'instrumental' && "Create music without vocals"}
-					{lyricsType === 'user' && "Your description will be used as lyrics"}
-				</p>
-			</div> */}
 
 			<div className="flex justify-center items-center mb-4">
 				{session ? (
 					<button
 						onClick={generateAudio}
-						disabled={loading || !selectedPrompt.text || creditsLoading}
+						disabled={loading || !selectedPrompt.text}
 						className="bg-blue-600 text-white p-3 rounded-md hover:bg-blue-700 transition-colors duration-300 w-full font-semibold disabled:opacity-50 disabled:cursor-not-allowed">
 						{loading ? (
 							<div className="flex items-center justify-center gap-2">
@@ -991,7 +834,7 @@ const SunoGenerator = ({
 			</div>
 
 			{/* Need more credits button */}
-			{userCredits && userCredits.credits < 50 && (
+			{userCredits && userCredits.credits?.normal < 50 && (
 				<div className="mb-4 text-center">
 					<button
 						onClick={() => setShowCreditPurchaseModal(true)}

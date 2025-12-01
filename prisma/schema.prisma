@@ -9,15 +9,17 @@ datasource db {
 }
 
 model CreditLog {
-  id                String   @id @default(uuid())
+  id                String     @id @default(uuid())
   userId            String
+  creditType        String     @default("normal") // 'normal' or 'radio'
   amount            Int
   balanceAfter      Int
+  radioBalance      Int         @default(0)
   description       String
   relatedEntityId   String?
   relatedEntityType String?
-  createdAt         DateTime @default(now())
-  User              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt         DateTime   @default(now())
+  User              User       @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
 
 model Gallery {
@@ -195,8 +197,14 @@ model User {
   id                String               @id @default(uuid())
   fullName          String
   email             String               @unique
+  
+  // Relations for Referral system
+  referredBy        Referral[]           @relation("Referee")
+  referredUsers     Referral[]           @relation("Referrer")
   password          String
   role              Role                 @default(Basic)
+  credits           Int                  @default(50) // Normal credits
+  radioCredits      Int                  @default(0)  // Radio-specific credits
   totalCreditsUsed  Int                  @default(0)
   maxMonthlyCredits Int                  @default(0)
   max_download      Int                  @default(0)
@@ -204,10 +212,16 @@ model User {
   stripeCustomerId  String?
   createdAt         DateTime             @default(now())
   updatedAt         DateTime             @updatedAt
-  credits           Int                  @default(50)
   isVerified        Boolean              @default(false)
   isSuspended       Boolean              @default(false)
   lastLoginAt       DateTime?
+  radioSubscriptionExpiresAt DateTime?
+  isRadioSubscribed        Boolean   @default(false)
+  lastRadioCreditUpdate    DateTime?
+  totalEarnedCredits       Int       @default(0) // Total credits earned from rewards
+  referralCode            String?   @unique // For referral program
+
+
   CreditLog         CreditLog[]
   Gallery           Gallery[]
   NewsletterLog     NewsletterLog[]
@@ -223,7 +237,46 @@ model User {
   creditsRemaining  Int                  @default(0)
   subscriptionPlans UserSubscription[]
   mediaPurchases    MediaPurchase[]
+  rewards           Reward[]        @relation("UserRewards")
 }
+
+model Reward {
+  id              String   @id @default(uuid())
+  userId          String
+  type            String   // 'listening', 'referral', 'promo'
+  points          Int      // Points earned
+  description     String
+  status          RewardStatus @default(active)
+  expiresAt       DateTime?  // When the points expire
+  metadata        Json?      // Additional data like song ID, referral details
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation("UserRewards", fields: [userId], references: [id], onDelete: Cascade)
+}
+enum RewardStatus {
+  active
+  used
+  expired
+}
+
+enum ReferralStatus {
+  pending
+  completed
+  expired
+}
+
+model Referral {
+  id           String         @id @default(uuid())
+  referrerId   String
+  refereeId    String
+  rewardPoints Int
+  status       ReferralStatus @default(pending)
+  createdAt    DateTime       @default(now())
+
+  referrer     User @relation("Referrer", fields: [referrerId], references: [id])
+  referee      User @relation("Referee", fields: [refereeId], references: [id])
+}
+
 
 model UserSubscription {
   id            String   @id @default(uuid())

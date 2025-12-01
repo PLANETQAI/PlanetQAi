@@ -149,23 +149,17 @@ const handleSubscribe = async () => {
 
   // Check if credits are insufficient
   if (userCredits.credits < 160) {
-    console.log('Insufficient credits, showing credit modal');
     setShowCreditModal(true);
     return;
   }
 
   try {
-    console.log('Creating subscription with plan ID:', radioPlan.id);
+
     const subscriptionResult = await createSubscription(radioPlan.id);
-    console.log('Subscription created successfully:', subscriptionResult);
-    
+
     setHasAccess(true);
-    console.log('hasAccess set to true');
-    
-    // Refresh credits after subscription
-    console.log('Refreshing credits...');
+
     await fetchUserCredits();
-    console.log('Credits refreshed after subscription');
   } catch (err) {
     console.error('Subscription error:', {
       message: err.message,
@@ -174,11 +168,9 @@ const handleSubscribe = async () => {
     });
 
     if (err.message.includes('Insufficient credits')) {
-      console.log('Insufficient credits, showing credit modal');
       setShowCreditModal(true);
     } else {
       const errorMsg = err.response?.data?.message || err.message || 'Failed to subscribe to Radio Plan';
-      console.error('Subscription failed:', errorMsg);
       setError(errorMsg);
     }
   }
