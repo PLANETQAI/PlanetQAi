@@ -132,22 +132,8 @@ export default function AuthForm({ searchParams: propSearchParams }) {
 				toast.success('Logged in successfully!');
 			}
 		
-			// Reduce timeout to make redirection faster
-			const redirectTimer = setTimeout(() => {
-				console.log('Redirecting via router.push to:', redirectUrl);
-				router.push(redirectUrl);
-				
-				// Add a fallback direct navigation in case router.push doesn't work
-				const fallbackTimer = setTimeout(() => {
-					console.log('Fallback redirection via window.location to:', redirectUrl);
-					window.location.href = redirectUrl;
-				}, 500);
-				
-				return () => clearTimeout(fallbackTimer);
-			}, 500); // Reduced from 1000ms to 500ms
-			
-			// Cleanup function
-			return () => clearTimeout(redirectTimer);
+			console.log('Redirecting via router.push to:', redirectUrl);
+			router.push(redirectUrl);
 		} catch (error) {
 			console.error('Login error:', error)
 			// Show user-friendly error message

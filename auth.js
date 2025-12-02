@@ -19,10 +19,38 @@ const authConfig = {
 	// Trust the host in all environments to avoid CSRF issues
 	trustHost: true,
 
+	  // Add session configuration
+  session: {
+    strategy: "jwt",
+    maxAge: 30 * 24 * 60 * 60, // 30 days
+    updateAge: 24 * 60 * 60, // 24 hours
+  },
+
+  // Configure cookies
+  cookies: {
+    sessionToken: {
+      name: `next-auth.session-token`, // Removed __Secure- prefix
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+        domain: new URL(process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000').hostname,
+      }
+    },
+    csrfToken: {
+      name: `next-auth.csrf-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: process.env.NODE_ENV === 'production',
+      }
+    }
+  },
+
 	providers: [
 		Credentials({
-			// Disable CSRF protection for credentials provider
-			csrf: false,
 			credentials: {
 				email: { label: 'Email', type: 'email', placeholder: 'example@gmail.com' },
 				password: { label: 'Password', type: 'password' },
