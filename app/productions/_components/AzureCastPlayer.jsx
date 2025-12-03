@@ -111,7 +111,7 @@ export default function AzurePlayerBot() {
       const res = await fetch(NOW_PLAYING_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("NowPlaying fetch failed");
       const data = await res.json();
-      console.log("Fetched now playing data:", data);
+   
       const stationData = Array.isArray(data) ? data[0] : data;
       if (stationData) {
         setNowPlaying(stationData);

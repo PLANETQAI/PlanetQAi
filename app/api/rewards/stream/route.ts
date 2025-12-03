@@ -1,14 +1,14 @@
 // /app/api/rewards/stream/route.ts
-import { auth } from "@/auth";
+import { getAuthenticatedUser } from "@/lib/api-auth";
 import prisma from "@/lib/prisma";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
   // Optionally, you can restrict to authenticated users
-  const session = await auth();
-  if (!session) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+     const user = await getAuthenticatedUser();
+     if (!user) {
+       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+     }
 
   try {
     // Fetch all rewards, include user info
