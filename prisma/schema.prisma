@@ -219,8 +219,8 @@ model User {
   radioSubscriptionExpiresAt DateTime?
   isRadioSubscribed        Boolean   @default(false)
   lastRadioCreditUpdate    DateTime?
-  totalEarnedCredits       Int       @default(0) // Total credits earned from rewards
-  referralCode            String?   @unique // For referral program
+  totalEarnedCredits       Int       @default(0) 
+  referralCode            String?   @unique 
 
 
   CreditLog         CreditLog[]

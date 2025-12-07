@@ -41,11 +41,32 @@ export async function GET(req) {
           role: true,
           isVerified: true,
           credits: true,
+          radioCredits: true,
           totalCreditsUsed: true,
           createdAt: true,
           updatedAt: true,
           totalDownloads: true,
           max_download: true,
+          radioSubscriptionExpiresAt: true,
+          isRadioSubscribed: true,
+          lastRadioCreditUpdate: true,
+          CreditLog: {
+            select: {
+              id: true,
+              amount: true,
+              creditType: true,
+              amount: true,
+              balanceAfter: true,
+              radioBalance: true,
+              description: true,
+              createdAt: true,
+              userId: true,
+            },
+            orderBy: {
+              createdAt: 'desc'
+            },
+            take: 10 // Get the 10 most recent credit logs
+          },
         },
         orderBy: {
           createdAt: 'desc',

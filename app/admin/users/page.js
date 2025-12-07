@@ -1,5 +1,18 @@
 'use client';
 
+import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { RADIO_SUBSCRIPTION_PLANS } from '@/lib/stripe_package';
 import { Menu, Transition } from '@headlessui/react';
 import {
   ArrowPathIcon,
@@ -9,7 +22,7 @@ import {
   XCircleIcon
 } from '@heroicons/react/24/outline';
 import { MoreVertical, Star } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Fragment, useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 
 export default function UsersManagement() {
@@ -22,8 +35,13 @@ export default function UsersManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [actionType, setActionType] = useState('');
   const [editingUser, setEditingUser] = useState(null);
+  const [isCreditDialogOpen, setIsCreditDialogOpen] = useState(false);
   const [creditAmount, setCreditAmount] = useState('');
-
+  const [creditType, setCreditType] = useState('credits');
+  const [selectedRadioPlan, setSelectedRadioPlan] = useState('');
+  const [isAddingCredits, setIsAddingCredits] = useState(false);
+  const [isRemovingSubscription, setIsRemovingSubscription] = useState(false);
+  const [subscriptionToRemove, setSubscriptionToRemove] = useState(null);
 
   useEffect(() => {
     fetchUsers();
@@ -41,6 +59,7 @@ export default function UsersManagement() {
 
       const data = await response.json();
       setUsers(data.users);
+      console.log("User Data", data.users);
       setTotalPages(data.totalPages || 1);
     } catch (error) {
       console.error('Error fetching users:', error);
@@ -62,33 +81,109 @@ export default function UsersManagement() {
     setIsModalOpen(true);
   };
 
-const handleAddCredits = async (user, amount) => {
-  try {
-    const response = await fetch('/api/admin/users', {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ 
-        action: "addCredits",
-        userId: user.id,
-        credits: amount
-      })
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to update credits');
+  const handleAddCredits = async () => {
+    if (isAddingCredits) return;
+    
+    let amount = parseInt(creditAmount);
+    if (creditType === 'radio' && !selectedRadioPlan) {
+      toast.error('Please select a radio plan');
+      return;
+    }
+    
+    setIsAddingCredits(true);
+    
+    if (creditType === 'radio') {
+      const plan = RADIO_SUBSCRIPTION_PLANS.find(p => p.id === selectedRadioPlan);
+      if (plan) {
+        amount = plan.credits;
+      }
     }
 
-    const data = await response.json();
-    setUsers(users.map(u => u.id === user.id ? { ...u, credits: data.credits } : u));
-    toast.success(`Added ${amount} credits to ${user.fullName}`);
-    setEditingUser(null);
+    if (!amount || amount <= 0) {
+      toast.error('Please enter a valid credit amount');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/admin/users/${editingUser.id}/credits`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          amount,
+          creditType,
+          planId: creditType === 'radio' ? selectedRadioPlan : undefined
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to add credits');
+      }
+
+      const data = await response.json();
+      toast.success(data.message || `Successfully added ${amount} credits to ${editingUser.email}`);
+      setIsCreditDialogOpen(false);
+      setCreditAmount('');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error adding credits:', error);
+      toast.error(error.message || 'Failed to add credits. Please try again.');
+    } finally {
+      setIsAddingCredits(false);
+    }
+  };
+
+  const openCreditDialog = (user) => {
+    setEditingUser(user);
     setCreditAmount('');
-  } catch (error) {
-    console.error('Error updating credits:', error);
-    toast.error(error.message || 'Failed to update credits');
-  }
-};
+    setCreditType('credits');
+    setSelectedRadioPlan('');
+    setIsCreditDialogOpen(true);
+  };
+
+  const confirmRemoveSubscription = (user) => {
+    setSubscriptionToRemove(user);
+  };
+
+  const removeRadioSubscription = async () => {
+    if (!subscriptionToRemove || isRemovingSubscription) return;
+    
+    setIsRemovingSubscription(true);
+    
+    try {
+      const response = await fetch(`/api/admin/users/${subscriptionToRemove.id}/radio-subscription`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || 'Failed to remove radio subscription');
+      }
+
+      const data = await response.json();
+      toast.success(data.message || 'Radio subscription removed successfully');
+      fetchUsers();
+    } catch (error) {
+      console.error('Error removing radio subscription:', error);
+      toast.error(error.message || 'Failed to remove radio subscription');
+    } finally {
+      setIsRemovingSubscription(false);
+      setSubscriptionToRemove(null);
+    }
+  };
+
+  const handleRadioPlanSelect = (planId) => {
+    const plan = RADIO_SUBSCRIPTION_PLANS.find(p => p.id === planId);
+    if (plan) {
+      setCreditAmount(plan.credits.toString());
+    }
+    setSelectedRadioPlan(planId);
+  };
 
   const confirmAction = async () => {
     try {
@@ -211,6 +306,7 @@ const handleAddCredits = async (user, amount) => {
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Role</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Status</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Credits</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Radio Subcription</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Joined</th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">Actions</th>
                   </tr>
@@ -240,6 +336,7 @@ const handleAddCredits = async (user, amount) => {
                         )}
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">{user.credits}</td>
+                      <td className="px-6 py-4 whitespace-nowrap">{user.radioCredits}</td>
                       <td className="px-6 py-4 whitespace-nowrap">
                         {new Date(user.createdAt).toLocaleDateString()}
                       </td>
@@ -253,6 +350,7 @@ const handleAddCredits = async (user, amount) => {
                                 </Menu.Button>
 
                                 <Transition
+                                  as={Fragment}
                                   show={open}
                                   enter="transition ease-out duration-100"
                                   enterFrom="transform opacity-0 scale-95"
@@ -262,29 +360,28 @@ const handleAddCredits = async (user, amount) => {
                                   leaveTo="transform opacity-0 scale-95"
                                 >
                                   <Menu.Items static className="absolute right-0 z-10 mt-2 w-56 origin-top-right rounded-md bg-gray-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-                                    <div className="py-1">
-                                      {/* Credits Input */}
-                                      <div className="px-4 py-2 border-b border-gray-700">
-                                        <label className="block text-xs text-gray-300 mb-1">Add Credits</label>
-                                        <div className="flex space-x-2">
-                                          <input
-                                            type="number"
-                                            value={creditAmount}
-                                            onChange={(e) => setCreditAmount(e.target.value)}
-                                            className="flex-1 px-2 py-1 text-sm text-black rounded"
-                                            placeholder="Amount"
-                                          />
-                                          <button
-                                            onClick={() => handleAddCredits(user, parseInt(creditAmount) || 0)}
-                                            className="text-green-400 hover:text-green-300"
-                                            title="Add Credits"
+                                    <div className="py-1 px-2">
+                                      <div className="flex flex-col space-y-2">
+                                        <Button
+                                          variant="outline"
+                                          size="sm"
+                                          onClick={() => openCreditDialog(user)}
+                                          className="w-full justify-start"
+                                        >
+                                          Add Credits
+                                        </Button>
+                                        {user.isRadioSubscribed && (
+                                          <Button
+                                            variant="destructive"
+                                            size="sm"
+                                            onClick={() => confirmRemoveSubscription(user)}
+                                            disabled={isRemovingSubscription}
+                                            className="w-full justify-start"
                                           >
-                                            <CheckCircleIcon className="h-5 w-5" />
-                                          </button>
-                                        </div>
+                                            {isRemovingSubscription && subscriptionToRemove?.id === user.id ? 'Removing...' : 'Remove Radio'}
+                                          </Button>
+                                        )}
                                       </div>
-
-                                      {/* Quick Actions */}
                                       <Menu.Item>
                                         {({ active }) => (
                                           <button
@@ -419,6 +516,137 @@ const handleAddCredits = async (user, amount) => {
           </div>
         </div>
       )}
+
+      {/* Credit Dialog */}
+      <Dialog open={isCreditDialogOpen} onOpenChange={setIsCreditDialogOpen}>
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Add Credits to {editingUser?.email}</DialogTitle>
+            <DialogDescription>
+              Enter the number of credits to add to this user's account.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-6 w-full">
+            <div className="space-y-4 w-full">
+              <div className="space-y-2">
+                <Label>Credit Type</Label>
+                <Select 
+                  value={creditType} 
+                  onValueChange={(value) => {
+                    setCreditType(value);
+                    setSelectedRadioPlan('');
+                    setCreditAmount('');
+                  }}
+                >
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select credit type" />
+                  </SelectTrigger>
+                  <SelectContent className="w-full">
+                    <SelectItem value="credits" className="w-full">Regular Credits</SelectItem>
+                    <SelectItem value="radio" className="w-full">Radio Credits</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {creditType === 'radio' ? (
+                <div className="space-y-2 w-full">
+                  <Label>Radio Plan</Label>
+                  <Select 
+                    value={selectedRadioPlan}
+                    onValueChange={handleRadioPlanSelect}
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a radio plan" />
+                    </SelectTrigger>
+                    <SelectContent className="w-full">
+                      {RADIO_SUBSCRIPTION_PLANS.map((plan) => (
+                        <SelectItem key={plan.id} value={plan.id} className="w-full">
+                          {plan.name} ({plan.credits} credits - {plan.interval_count} month{plan.interval_count > 1 ? 's' : ''})
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              ) : (
+                <div className="space-y-2 w-full">
+                  <Label htmlFor="creditAmount">Credit Amount</Label>
+                  <Input
+                    id="creditAmount"
+                    type="number"
+                    value={creditAmount}
+                    onChange={(e) => setCreditAmount(e.target.value)}
+                    placeholder="Enter credit amount"
+                    className="w-full"
+                    autoFocus
+                  />
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsCreditDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              type="submit" 
+              onClick={handleAddCredits}
+              disabled={isAddingCredits}
+              className="flex items-center gap-2"
+            >
+              {isAddingCredits ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding...
+                </>
+              ) : 'Add Credits'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Remove Subscription Confirmation Dialog */}
+      <Dialog 
+        open={!!subscriptionToRemove} 
+        onOpenChange={(open) => !open && setSubscriptionToRemove(null)}
+      >
+        <DialogContent className="sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>Remove Radio Subscription</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to remove the radio subscription for {subscriptionToRemove?.email}?
+              This will clear all radio subscription data and set radio credits to 0.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button 
+              variant="outline" 
+              onClick={() => setSubscriptionToRemove(null)}
+              disabled={isRemovingSubscription}
+            >
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={removeRadioSubscription}
+              disabled={isRemovingSubscription}
+              className="flex items-center gap-2"
+            >
+              {isRemovingSubscription ? (
+                <>
+                  <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Removing...
+                </>
+              ) : 'Remove Subscription'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
