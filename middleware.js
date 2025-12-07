@@ -49,6 +49,9 @@ const PUBLIC_ROUTES = [
   "/api/auth/verify-request",
   "/api/auth/new-user",
   "/api/auth/token",
+  "/api/stripe-webhook",
+  "/api/credits/webhook",
+  "/api/subscriptions/webhook",
 ];
 
 // Create a middleware handler that excludes webhook paths
