@@ -6,5 +6,15 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install --legacy-peer-deps",
   "framework": "nextjs",
-  "outputDirectory": ".next"
+  "outputDirectory": ".next",
+  "routes": [
+    {
+      "src": "/api/stripe-webhook",
+      "dest": "/api/stripe-webhook",
+      "methods": ["POST"],
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
+  ]
 }

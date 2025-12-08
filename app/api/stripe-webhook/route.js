@@ -79,11 +79,19 @@ function getPackageByProductId(productId) {
 // ---------------------- Webhook handler ----------------------
 export async function POST(request) {
   log(`Stripe webhook received`);
-  // Add this at the start of your POST function
   const url = new URL(request.url);
-  if (url.pathname === '/api/stripe-webhook') {
-    return NextResponse.redirect(new URL('/api/stripe-webhook/', request.url), 308);
+
+  // Remove any existing redirect logic
+  // Just log the incoming URL for debugging
+  console.log(`Incoming request to: ${url.pathname}`);
+  const isCorrectPath = url.pathname === '/api/stripe-webhook' ||
+    url.pathname === '/api/stripe-webhook/';
+
+  if (!isCorrectPath) {
+    return new NextResponse('Not Found', { status: 404 });
   }
+
+
   // Read raw body (string) — important: do NOT call request.json() or parse body first
   let rawBody;
   try {
