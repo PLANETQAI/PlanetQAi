@@ -79,7 +79,11 @@ function getPackageByProductId(productId) {
 // ---------------------- Webhook handler ----------------------
 export async function POST(request) {
   log(`Stripe webhook received`);
-
+  // Add this at the start of your POST function
+  const url = new URL(request.url);
+  if (url.pathname === '/api/stripe-webhook') {
+    return NextResponse.redirect(new URL('/api/stripe-webhook/', request.url), 308);
+  }
   // Read raw body (string) — important: do NOT call request.json() or parse body first
   let rawBody;
   try {
@@ -202,7 +206,7 @@ export async function POST(request) {
         try {
           let packageName = session.metadata?.packageName || `${creditsToAdd} Credits Package`;
           let packagePrice = session.amount_total || 0;
-          
+
           // Get package details from metadata first (faster)
           if (session.metadata?.packageId) {
             const packageDetails = getPackageByProductId(session.metadata.packageId);
@@ -286,7 +290,7 @@ export async function POST(request) {
           updateData.totalCreditsUsed = (user.totalCreditsUsed || 0) + creditsPerPeriod;
         }
 
-        const updatedUser = await prisma.user.update({ where: { id: subscriptionUserId }, data: updateData, select: { credits: true, radioCredits: true }});
+        const updatedUser = await prisma.user.update({ where: { id: subscriptionUserId }, data: updateData, select: { credits: true, radioCredits: true } });
 
         await prisma.creditLog.create({
           data: {

@@ -52,6 +52,16 @@ const PUBLIC_ROUTES = [
   "/api/stripe-webhook",
   "/api/credits/webhook",
   "/api/subscriptions/webhook",
+  "/api/share",
+  "/share",
+  "/carousel-test",
+  "/planetqgames",
+  "/chat/avatar",
+  "/test",
+  "/public/models",
+  "/models/CYBERHEAD.glb",
+  "public/textures",
+  "/api/test-webhook"
 ];
 
 // Create a middleware handler that excludes webhook paths
