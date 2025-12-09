@@ -7,6 +7,8 @@ import { useUserData } from '@/hooks/useUserData';
 import { ArrowLeft, CheckCircle, Loader2 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+
+import toast from 'react-hot-toast';
 import WithdrawForm from '../_components/WithdrawForm';
 
 // app/payment/withdraw/page.jsx
@@ -15,7 +17,25 @@ export default function WithdrawPage() {
     const [isConnecting, setIsConnecting] = useState(false);
     const router = useRouter();
 
-    console.log("User data", userData)
+    const handleConnectAccount = async () => {
+        try {
+            setIsConnecting(true);
+            const response = await fetch('/api/payments/connect-account');
+            const data = await response.json();
+            
+            if (!response.ok) {
+                throw new Error(data.error || 'Failed to connect Stripe account');
+            }
+            
+            // Redirect to Stripe onboarding
+            window.location.href = data.url;
+        } catch (error) {
+            console.error('Error connecting Stripe account:', error);
+            toast.error(error.message || 'Failed to connect Stripe account');
+        } finally {
+            setIsConnecting(false);
+        }
+    };
 
     if (isLoading) {
         return (
