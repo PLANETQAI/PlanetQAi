@@ -5,7 +5,7 @@ import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
-import { Download, Loader2, Image as ImageIcon, XCircle } from 'lucide-react'; // Added Image and XCircle icons
+import { Download, Image as ImageIcon, Loader2, XCircle } from 'lucide-react'; // Added Image and XCircle icons
 import { useSession } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -75,7 +75,7 @@ export default function NewVideoGenerator() {
       toast.success('Image uploaded successfully!');
     } catch (err) {
       console.error('Image upload error:', err);
-      setError(err.message);
+      setError("Image");
       toast.error(err.message);
       setPromptImageURL('');
       setSelectedImageFile(null);

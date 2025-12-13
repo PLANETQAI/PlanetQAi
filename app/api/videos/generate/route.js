@@ -61,19 +61,19 @@ export async function POST(req) {
         goApiInput = {
           image_url: prompt_image,
           prompt: prompt || '', // Prompt can be optional for image-to-video
-          aspect_ratio: videoConfig.aspect_ratio,
-          duration: videoConfig.duration,
-          resolution: videoConfig.resolution,
-          generate_audio: false
+          aspect_ratio: "auto",
+          duration: "8s",
+          resolution: "720p",
+          generate_audio: true
         };
       } else {
         goApiInput = {
           prompt,
           negative_prompt,
-          aspect_ratio: videoConfig.aspect_ratio,
-          duration: videoConfig.duration,
-          resolution: videoConfig.resolution,
-          generate_audio: false
+           aspect_ratio: "auto",
+          duration: "8s",
+          resolution: "720p",
+          generate_audio: true
         };
       }
 
@@ -86,10 +86,7 @@ export async function POST(req) {
         status: 'processing',
         progress: 0,
         userId,
-        width: videoConfig.width,
-        height: videoConfig.height,
         mimeType: 'video/mp4',
-        // Store prompt_image if available
         ...(prompt_image && { imageUrl: prompt_image }),
       };
 

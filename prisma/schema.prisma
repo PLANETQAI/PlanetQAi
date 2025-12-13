@@ -113,7 +113,7 @@ model Media {
   mediaType        String    // 'image' or 'video'
   fileUrl          String?   // Final URL of the generated media
   thumbnailUrl     String?   // URL of the thumbnail (for video)
-  
+  imageUrl         String?
   // Video specific fields (from Sora-like API response)
   taskId           String?   // Task ID for generation tracking
   status           String?   // queued, processing, completed, failed

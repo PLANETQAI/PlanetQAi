@@ -1,4 +1,3 @@
-// app/api/upload/image/route.js
 import { auth } from "@/auth";
 import { uploadToCloudinary } from '@/lib/cloudinary';
 import { NextResponse } from 'next/server';
@@ -26,6 +25,7 @@ export async function POST(req) {
 
     // Upload to Cloudinary
     const uploadResult = await uploadToCloudinary(dataUri, `user-upload-${session.user.id}-${Date.now()}`);
+    console.log("Upload results",uploadResult)
 
     return NextResponse.json({
       success: true,
