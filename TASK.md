@@ -13,3 +13,6 @@
 - Integrated `components/player/SongMediaSelectionDialog.jsx` into `components/player/SongList.js`. Users can now click on a song's thumbnail in the `SongList` to open the dialog and select new media (video/image) for that song. The `SongList` now uses `song.thumbnailUrl` for displaying the thumbnail.
 - Updated `components/player/DiffrhymGenerator.js` and `components/player/SunoGenerator.js` to pass the `onSongUpdated` prop to `SongList`, allowing `SongList` to notify its parent when a song's media is updated.
 - Added loading indicators and toast notifications to `components/player/SongMediaSelectionDialog.jsx` for the media saving process.
+- Implemented image-to-video generation capability in `app/api/videos/generate/route.js`, allowing video creation from an image URL and a prompt.
+- Created a new API endpoint `app/api/upload/image/route.js` for securely uploading images to Cloudinary and returning their public URLs.
+- Updated `app/video-player/_components/NewVideoGenerator.jsx` to include UI for image selection, preview, and integration with the Cloudinary upload API. The component now supports generating videos from either a text prompt or an uploaded image, with appropriate loading states and button disabling during image upload and video generation.

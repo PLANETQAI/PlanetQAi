@@ -5,7 +5,7 @@ import CreditPurchaseModal from '@/components/credits/CreditPurchaseModal';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { useUser } from '@/context/UserContext';
-import { Download, Loader2 } from 'lucide-react';
+import { Download, Loader2, Image as ImageIcon, XCircle } from 'lucide-react'; // Added Image and XCircle icons
 import { useSession } from 'next-auth/react';
 import { useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
@@ -14,12 +14,16 @@ import MediaListComponent from './MediaList';
 export default function NewVideoGenerator() {
   const { data: session, status } = useSession();
   const [prompt, setPrompt] = useState('');
+  const [selectedImageFile, setSelectedImageFile] = useState(null); // New state for selected image file
+  const [promptImageURL, setPromptImageURL] = useState(''); // New state for Cloudinary URL
+  const [isUploadingImage, setIsUploadingImage] = useState(false); // New state for image upload status
   const [isGenerating, setIsGenerating] = useState(false);
   const [progress, setProgress] = useState(0);
   const [generatedVideo, setGeneratedVideo] = useState(null);
   const [error, setError] = useState('');
   const eventSourceRef = useRef(null);
-  
+  const fileInputRef = useRef(null); // Ref for file input
+
   // Credit system
   const { credits: userCredits, fetchUserCredits } = useUser();
   const [showCreditModal, setShowCreditModal] = useState(false);
@@ -41,14 +45,61 @@ export default function NewVideoGenerator() {
   // Check if user has enough credits
   const hasEnoughCredits = userCredits?.credits.normal >= VIDEO_GENERATION_CREDITS;
 
+  const handleImageChange = async (event) => {
+    const file = event.target.files[0];
+    if (file) {
+      setSelectedImageFile(file);
+      await uploadImage(file);
+    }
+  };
+
+  const uploadImage = async (file) => {
+    setIsUploadingImage(true);
+    setError('');
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+
+      const response = await fetch('/api/upload/image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to upload image');
+      }
+
+      const data = await response.json();
+      setPromptImageURL(data.url);
+      toast.success('Image uploaded successfully!');
+    } catch (err) {
+      console.error('Image upload error:', err);
+      setError(err.message);
+      toast.error(err.message);
+      setPromptImageURL('');
+      setSelectedImageFile(null);
+    } finally {
+      setIsUploadingImage(false);
+    }
+  };
+
+  const handleRemoveImage = () => {
+    setSelectedImageFile(null);
+    setPromptImageURL('');
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ''; // Clear the file input
+    }
+  };
+
 const handleGenerateVideo = async (e) => {
   e.preventDefault();
   console.log('[VideoGen] Form submitted, starting video generation...');
   
-  if (!prompt.trim()) {
-    const errorMsg = 'No prompt provided';
+  if (!prompt.trim() && !promptImageURL) { // Updated validation
+    const errorMsg = 'Please provide a prompt or upload an image.';
     console.error('[VideoGen] Error:', errorMsg);
-    toast.error('Please enter a description for the video');
+    toast.error(errorMsg);
     return;
   }
 
@@ -77,7 +128,8 @@ const handleGenerateVideo = async (e) => {
     eventSourceRef.current = controller;
 
     const requestBody = {
-      prompt,
+      prompt: prompt.trim(),
+      prompt_image: promptImageURL, // Include prompt_image if available
     };
     console.log('[VideoGen] Sending request to /api/videos/generate with body:', JSON.stringify(requestBody, null, 2));
 
@@ -256,15 +308,58 @@ const handleGenerateVideo = async (e) => {
               className="min-h-[120px] text-white"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              disabled={isGenerating}
+              disabled={isGenerating || isUploadingImage}
               row={6}
             />
+          </div>
+
+          {/* Image Upload Section */}
+          <div className="flex items-center space-x-2">
+            <input
+              type="file"
+              accept="image/*"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              className="hidden"
+              id="image-upload"
+              disabled={isGenerating || isUploadingImage}
+            />
+            <label
+              htmlFor="image-upload"
+              className="flex items-center justify-center px-4 py-2 border border-gray-600 rounded-md cursor-pointer hover:bg-gray-700 transition-colors text-white"
+            >
+              {isUploadingImage ? (
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              ) : (
+                <ImageIcon className="mr-2 h-4 w-4" />
+              )}
+              {isUploadingImage ? 'Uploading...' : 'Upload Image'}
+            </label>
+            {selectedImageFile && (
+              <div className="relative flex items-center space-x-2 p-2 border border-gray-600 rounded-md">
+                <img
+                  src={URL.createObjectURL(selectedImageFile)}
+                  alt="Selected"
+                  className="h-10 w-10 object-cover rounded-md"
+                />
+                <span className="text-sm text-white">{selectedImageFile.name}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleRemoveImage}
+                  className="absolute -top-2 -right-2 h-5 w-5 p-0 rounded-full bg-red-500 text-white hover:bg-red-600"
+                >
+                  <XCircle className="h-4 w-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Generate Button */}
           <Button
             type="submit"
-            disabled={isGenerating || !hasEnoughCredits}
+            disabled={isGenerating || isUploadingImage || (!prompt.trim() && !promptImageURL) || !hasEnoughCredits}
             className="w-full p-8 rounded-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 font-bold"
           >
             {isGenerating ? (

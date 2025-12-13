@@ -7,7 +7,7 @@ import axios from "axios";
 // Constants for credit calculation
 const VIDEO_GENERATION_CREDITS = 40; // Higher cost for video generation
 const POLLING_INTERVAL = 3000; // 3 seconds (videos take longer)
-const MAX_POLLING_ATTEMPTS = 60; // ~3 minutes max wait time
+const MAX_POLLING_ATTEMPTS = 60; 
 
 // Reuse the same stream helper
 function createStreamResponse() {
@@ -46,48 +46,42 @@ export async function POST(req) {
       const { 
         prompt, 
         negative_prompt = 'blurry, low quality, distorted, static, text, watermark, logo, signature, bad quality, low resolution',
-        mediaId 
+        mediaId,
+        prompt_image // New field for image-to-video
       } = body;
 
-      if (!prompt) {
-        send({ error: "Prompt is required" });
+      if (!prompt && !prompt_image) {
+        send({ error: "Prompt or prompt_image is required" });
         return close();
       }
 
-      // Check user credits
-      const user = await prisma.user.findUnique({
-        where: { id: userId },
-        select: { id: true, credits: true },
-      });
-
-      if (!user) {
-        send({ error: "User not found" });
-        return close();
+      // Determine the input for the goapi.ai request
+      let goApiInput;
+      if (prompt_image) {
+        goApiInput = {
+          image_url: prompt_image,
+          prompt: prompt || '', // Prompt can be optional for image-to-video
+          aspect_ratio: videoConfig.aspect_ratio,
+          duration: videoConfig.duration,
+          resolution: videoConfig.resolution,
+          generate_audio: false
+        };
+      } else {
+        goApiInput = {
+          prompt,
+          negative_prompt,
+          aspect_ratio: videoConfig.aspect_ratio,
+          duration: videoConfig.duration,
+          resolution: videoConfig.resolution,
+          generate_audio: false
+        };
       }
-
-      if (user.credits < VIDEO_GENERATION_CREDITS) {
-        send({
-          error: "Insufficient credits",
-          creditsNeeded: VIDEO_GENERATION_CREDITS,
-          creditsAvailable: user.credits,
-        });
-        return close();
-      }
-
-      // Set default values for video generation
-      const videoConfig = {
-        aspect_ratio: '16:9',
-        duration: '8s',
-        resolution: '720p',
-        width: 1280,
-        height: 720
-      };
 
       // Get or create media record
       let media;
       const mediaData = {
-        title: prompt,
-        description: prompt,
+        title: prompt || 'Video from image', // Use prompt or a default title
+        description: prompt || 'Video generated from an image', // Use prompt or a default description
         mediaType: 'video',
         status: 'processing',
         progress: 0,
@@ -95,6 +89,8 @@ export async function POST(req) {
         width: videoConfig.width,
         height: videoConfig.height,
         mimeType: 'video/mp4',
+        // Store prompt_image if available
+        ...(prompt_image && { imageUrl: prompt_image }),
       };
 
       if (mediaId) {
@@ -120,14 +116,7 @@ export async function POST(req) {
         {
           model: "veo3",
           task_type: "veo3-video-fast",
-          input: {
-            prompt,
-            negative_prompt,
-            aspect_ratio: videoConfig.aspect_ratio,
-            duration: videoConfig.duration,
-            resolution: videoConfig.resolution,
-            generate_audio: false
-          },
+          input: goApiInput, // Use the dynamically created input
           config: {
             webhook_config: {
               endpoint: `${process.env.NEXT_PUBLIC_APP_URL}/api/videos/webhook`,
