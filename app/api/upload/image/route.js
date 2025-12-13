@@ -21,8 +21,11 @@ export async function POST(req) {
     const arrayBuffer = await file.arrayBuffer();
     const buffer = Buffer.from(arrayBuffer);
 
+    // Convert buffer to data URI
+    const dataUri = `data:${file.type};base64,${buffer.toString('base64')}`;
+
     // Upload to Cloudinary
-    const uploadResult = await uploadToCloudinary(buffer, `user-upload-${session.user.id}-${Date.now()}`);
+    const uploadResult = await uploadToCloudinary(dataUri, `user-upload-${session.user.id}-${Date.now()}`);
 
     return NextResponse.json({
       success: true,
