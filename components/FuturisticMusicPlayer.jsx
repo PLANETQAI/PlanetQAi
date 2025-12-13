@@ -391,9 +391,9 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
             <h2 className="text-2xl font-bold mb-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-glow">
               {currentTrack.title}
             </h2>
-            <p className="text-sm text-purple-300 animate-fade-in">
+            <h3 className="text-2xl font-bold mb-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-glow">
               Created by <span className="font-medium">{currentTrack.User.fullName}</span>
-            </p>
+            </h3>
           </div>
 
           {/* Visualizer */}
@@ -428,8 +428,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
               <button
                 onClick={() => setIsShuffling(!isShuffling)}
                 className={`relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full border-2 sm:border-3 md:border-4 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${isShuffling
-                    ? "border-purple-400 bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg sm:shadow-2xl shadow-purple-500/50"
-                    : "border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10"
+                  ? "border-purple-400 bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg sm:shadow-2xl shadow-purple-500/50"
+                  : "border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10"
                   }`}
                 aria-label={isShuffling ? "Disable shuffle" : "Enable shuffle"}
               >
@@ -496,8 +496,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
               <button
                 onClick={() => setIsLooping(!isLooping)}
                 className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-500 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${isLooping
-                    ? "border-purple-400 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white shadow-lg shadow-purple-500/50"
-                    : "bg-black/50 text-gray-400 hover:border-white hover:text-white"
+                  ? "border-purple-400 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white shadow-lg shadow-purple-500/50"
+                  : "bg-black/50 text-gray-400 hover:border-white hover:text-white"
                   }`}
                 aria-label={isLooping ? "Disable repeat" : "Enable repeat"}
               >
@@ -556,8 +556,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
             <button
               onClick={() => setIsLiked(!isLiked)}
               className={`p-3 rounded-full transition-all duration-300 ${isLiked
-                  ? "text-red-500 bg-red-500/10 shadow-lg shadow-red-500/25"
-                  : "text-gray-400 hover:text-white hover:bg-white/10"
+                ? "text-red-500 bg-red-500/10 shadow-lg shadow-red-500/25"
+                : "text-gray-400 hover:text-white hover:bg-white/10"
                 }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
@@ -582,8 +582,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
               <div
                 key={song.id}
                 className={`group p-2 sm:p-3 md:p-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] ${index === currentSong
-                    ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/50 shadow-lg shadow-purple-500/25 animate-glow-border"
-                    : "bg-white/5 hover:bg-white/10 hover:shadow-lg"
+                  ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/50 shadow-lg shadow-purple-500/25 animate-glow-border"
+                  : "bg-white/5 hover:bg-white/10 hover:shadow-lg"
                   }`}
               >
                 <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
@@ -628,11 +628,11 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
 
                     </div>
                     <div>
-                        <p className="text-xs text-purple-300/80 ml-2 truncate max-w-[100px]" title={`Created by ${song.User.fullName}`}>
-                          {song.User.fullName}
-                        </p> 
-                         <p className="text-xs text-gray-400">Click the image to change albuurm image</p>
-                      </div>
+                      <p className="text-xs text-purple-300/80 ml-2 truncate max-w-[100px]" title={`Created by ${song.User.fullName}`}>
+                        {song.User.fullName}
+                      </p>
+                      <p className="text-xs text-gray-400">Click the image to change albuurm image</p>
+                    </div>
                   </div></div>
 
 
@@ -704,14 +704,14 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                       )}
                     </div>
                   </div>
-                 
+
                 </div>
 
                 {/* Current track indicator */}
                 <div
                   className={`h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300 ${index === currentSong
-                      ? "w-full opacity-100"
-                      : "w-0 opacity-0 group-hover:w-full group-hover:opacity-50"
+                    ? "w-full opacity-100"
+                    : "w-0 opacity-0 group-hover:w-full group-hover:opacity-50"
                     } mt-2 sm:mt-3`}
                 ></div>
               </div>

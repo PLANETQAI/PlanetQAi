@@ -10,3 +10,6 @@
 - Confirmed that the existing song API endpoint at `app/api/songs/[id]/route.js` correctly handles `PATCH` requests for updating a song's `videoUrl` and `thumbnailUrl`, thus no new API implementation was required.
 - Integrated `components/player/SongMediaSelectionDialog.jsx` into `components/FuturisticMusicPlayer.jsx`. Users can now click on a song's image in the playlist to open the dialog and select new media (video/image) for that song.
 - Modified `components/FuturisticMusicPlayer.jsx` to ensure that clicking the song image opens the media selection dialog, while clicking other parts of the song card (title, artist) sets the song as the current playing song.
+- Integrated `components/player/SongMediaSelectionDialog.jsx` into `components/player/SongList.js`. Users can now click on a song's thumbnail in the `SongList` to open the dialog and select new media (video/image) for that song. The `SongList` now uses `song.thumbnailUrl` for displaying the thumbnail.
+- Updated `components/player/DiffrhymGenerator.js` and `components/player/SunoGenerator.js` to pass the `onSongUpdated` prop to `SongList`, allowing `SongList` to notify its parent when a song's media is updated.
+- Added loading indicators and toast notifications to `components/player/SongMediaSelectionDialog.jsx` for the media saving process.

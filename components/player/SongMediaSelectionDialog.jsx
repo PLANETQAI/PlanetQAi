@@ -21,6 +21,7 @@ const SongMediaSelectionDialog = ({ isOpen, onClose, onSelectMedia, songId }) =>
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedMedia, setSelectedMedia] = useState(null);
+  const [isSaving, setIsSaving] = useState(false); // New state for saving status
 
   useEffect(() => {
     if (isOpen) {
@@ -59,6 +60,7 @@ const SongMediaSelectionDialog = ({ isOpen, onClose, onSelectMedia, songId }) =>
 
   const handleConfirmSelection = async () => {
     if (selectedMedia) {
+      setIsSaving(true); // Set saving state to true
       try {
         const updatePayload = {};
         if (selectedMedia.mediaType === 'video') {
@@ -88,6 +90,8 @@ const SongMediaSelectionDialog = ({ isOpen, onClose, onSelectMedia, songId }) =>
       } catch (err) {
         console.error('Error updating song media:', err);
         toast.error(err.message || 'Failed to update song media.');
+      } finally {
+        setIsSaving(false); // Reset saving state
       }
     }
   };
@@ -185,8 +189,8 @@ const SongMediaSelectionDialog = ({ isOpen, onClose, onSelectMedia, songId }) =>
           <Button variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button onClick={handleConfirmSelection} disabled={!selectedMedia}>
-            Set as Song Media
+          <Button onClick={handleConfirmSelection} disabled={!selectedMedia || isSaving}>
+            {isSaving ? 'Saving...' : 'Set as Song Media'}
           </Button>
         </div>
       </DialogContent>

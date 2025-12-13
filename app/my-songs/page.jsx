@@ -11,7 +11,7 @@ const MySongsPage = () => {
   const { data: session } = useSession();
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
-  console.log("Songs",songs)
+
 
   useEffect(() => {
     const fetchSongs = async () => {
