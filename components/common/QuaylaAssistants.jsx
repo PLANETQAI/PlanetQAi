@@ -5,6 +5,7 @@ import { signIn, useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import toast from 'react-hot-toast';
+import { Button } from '../ui/button';
 
 const VoiceNavigationAssistant = () => {
   // State for feature detection
@@ -41,25 +42,7 @@ const VoiceNavigationAssistant = () => {
 
   const videoUrl = "/videos/home.mp4";
 
-  // --- DIAGNOSTIC HOOK ---
-  useEffect(() => {
-    const testWorkletPath = async () => {
-      console.log("DIAGNOSTIC: Testing path '/audio-processor.js'");
-      try {
-        const response = await fetch('/audio-processor.js');
-        console.log(`DIAGNOSTIC: Fetch response status: ${response.status}`);
-        if (response.ok) {
-          const text = await response.text();
-          console.log("DIAGNOSTIC: Fetch successful. File content starts with:", text.substring(0, 150));
-        } else {
-          console.error(`DIAGNOSTIC: Fetch failed with status ${response.status}. The file might be missing or at the wrong path.`);
-        }
-      } catch (e) {
-        console.error("DIAGNOSTIC: Fetch threw an error. This could be a network issue or an invalid URL.", e);
-      }
-    };
-    testWorkletPath();
-  }, []);
+
 
   // Feature Detection Hook
   useEffect(() => {
@@ -786,7 +769,11 @@ const VoiceNavigationAssistant = () => {
 
   return (
     <div className="flex bg-[#17101d9c] flex-col items-center justify-center p-4 relative overflow-hidden rounded-sm shadow-lg">
+      
       <div className="relative z-10 flex flex-col items-center w-full px-4 sm:px-6 max-w-2xl mx-auto">
+      <div className="flex items-center gap-2 w-full justify-between">
+      
+      </div>
         <h1
           className="text-4xl sm:text-5xl md:text-6xl font-bold mb-4 sm:mb-6 text-center leading-tight"
           style={{
@@ -911,7 +898,7 @@ const VoiceNavigationAssistant = () => {
           <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2">
             <div className="relative">
               {isActive ? (
-                <button
+                <Button
                   onClick={handleStopListening}
                   onTouchStart={handleTouchStart}
                   onTouchEnd={handleTouchEnd}
@@ -929,17 +916,17 @@ const VoiceNavigationAssistant = () => {
                   {touchActive && (
                     <span className="absolute inset-0 rounded-full bg-white/20"></span>
                   )}
-                </button>
+                </Button>
               ) : micPermission === 'denied' ? (
                 <div className="relative group">
-                  <button
+                  <Button
                     onClick={() => setShowPermissionError(true)}
                     className="flex items-center justify-center w-14 h-14 md:w-16 md:h-16 rounded-full bg-gray-700 cursor-not-allowed opacity-70"
                     aria-label="Microphone access denied"
                     disabled
                   >
                     <AlertCircle className="w-5 h-5 md:w-6 md:h-6 text-gray-300" />
-                  </button>
+                  </Button>
                   <div className="absolute left-1/2 -bottom-8 transform -translate-x-1/2 w-48 text-center text-sm text-red-400 opacity-0 group-hover:opacity-100 transition-opacity">
                     Microphone access denied
                   </div>

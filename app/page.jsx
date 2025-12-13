@@ -1,6 +1,7 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { useSession } from 'next-auth/react';
 import dynamic from "next/dynamic";
 import Image from "next/image";
 import Link from "next/link";
@@ -22,6 +23,8 @@ const PlanetQVideoCard = dynamic(
 // Import the improved stars component
 import StarsWrapper from "@/components/canvas/StarsWrapper";
 import VoiceNavigationAssistant from "@/components/common/QuaylaAssistants";
+import { Button } from "@/components/ui/button";
+import { LogIn } from "lucide-react";
 
 
 
@@ -38,10 +41,9 @@ const RootPage = () => {
   const [credits, setCredits] = useState(0);
   const [loading, setLoading] = useState(true);
   const [showScrollUp, setShowScrollUp] = useState(false);
-  const [initialVideoLink, setInitialVideoLink] = useState(
-    "https://youtu.be/I5uiP9ogijs?si=O33QCOnUKp-Y7eHG"
-  );
+
   const [showTime, setShowTime] = useState(true);
+   const { data: session, status: sessionStatus } = useSession();
 
   useEffect(() => {
     if (showIntroVideo) {
@@ -292,115 +294,41 @@ const RootPage = () => {
     </div>
   );
 
-  // const qWorldStudios = (
-  //   <div className="w-full card-content" onClick={preventPropagation}>
-  //     <div
-  //       className="flex items-center justify-between px-2 sm:px-4 py-4 sm:py-6 w-full rounded-t-lg"
-  //       style={{
-  //         backgroundColor: "rgb(31 41 55 / 0.9)",
-  //       }}
-  //     >
-  //       {/* Left Radio Circle */}
-  //       <div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
-  //         <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-  //           <video
-  //             autoPlay
-  //             loop
-  //             muted
-  //             className="w-[150%] h-auto object-cover rounded-full"
-  //           >
-  //             <source src="/images/anicircle.mp4" type="video/mp4" />
-  //           </video>
-  //           <Image
-  //             src="/images/radio1.jpeg"
-  //             alt="Radio Left"
-  //             width={100}
-  //             height={100}
-  //             className="absolute p-1 sm:p-2 rounded-full"
-  //           />
-  //         </div>
-  //       </div>
 
-  //       {/* Center Chat Link */}
-  //       <div className="flex justify-center items-center flex-col gap-4">
-  //         <Link
-  //           href={"/chat"}
-  //           className="rounded-full overflow-hidden aspect-square flex justify-center items-center w-24 h-24 sm:w-32 sm:h-32 md:w-40 md:h-40 hover:shadow-[0_0_15px_rgba(0,300,300,0.8)] hover:cursor-pointer mx-2"
-  //         >
-  //           <video
-  //             loop
-  //             autoPlay
-  //             muted
-  //             preload="true"
-  //             className="rounded-full w-full h-full object-cover"
-  //           >
-  //             <source src="/videos/Planet-q-Chatbox.mp4" type="video/mp4" />
-  //           </video>
-  //         </Link>
-  //         <p className="text-blue-500 text-lg font-bold animate-pulse">
-  //           Chat Bot
-  //         </p>
-  //       </div>
-
-  //       {/* Right Radio Circle */}
-  //       <div className="relative w-16 sm:w-20 md:w-24 aspect-square overflow-hidden">
-  //         <div className="absolute inset-0 flex items-center justify-center overflow-hidden rounded-full">
-  //           <video
-  //             autoPlay
-  //             loop
-  //             muted
-  //             className="w-[150%] h-auto object-cover rounded-full"
-  //           >
-  //             <source src="/images/anicircle.mp4" type="video/mp4" />
-  //           </video>
-  //           <Image
-  //             src="/images/radio1.jpeg"
-  //             alt="Radio Right"
-  //             width={100}
-  //             height={100}
-  //             className="absolute p-1 sm:p-2 rounded-full"
-  //           />
-  //         </div>
-  //       </div>
-  //     </div>
-
-  //     {/* Background Video */}
-  //     <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
-  //       <video
-  //         src="/images/bg-video-compressed.mp4"
-  //         className="absolute top-0 left-0 w-full h-full object-cover"
-  //         autoPlay
-  //         muted
-  //         loop
-  //       ></video>
-  //     </div>
-
-  //     {/* Replace the iframe with our custom player */}
-  //     <div className="bg-gray-800 w-full rounded-b-lg p-2! sm:p-3">
-  //       <iframe
-  //         src="https://radio.planetqproductions.com/public/planetq/embed?theme=dark&autoplay=true"
-  //         frameBorder="0"
-  //         allowtransparency="true"
-  //         style={{
-  //           width: "100%",
-  //           height: "130px",
-  //           border: "0",
-  //         }}
-  //         title="Radio Planet Q"
-  //         allow="autoplay; encrypted-media"
-  //       ></iframe>
-  //     </div>
-  //     {/* <CustomRadioPlayer /> */}
-  //   </div>
-  // );
 
   const qWorldStudios = (
-    <div
+    <div>
+      <div className="flex justify-center gap-2">
+        {session ? (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+            onClick={() => router.push('/my-songs')}
+            aria-label="Go to my songs"
+          >
+            <LogIn className="h-8 w-8"/>
+          </Button>
+        ) : (
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            className="bg-red-500 hover:bg-red-600 text-white rounded-full transition-colors"
+            onClick={() => signIn(undefined, { callbackUrl: '/my-songs' })}
+            aria-label="Login to view your songs"
+          >
+            <LogIn className="h-8 w-8"/>
+          </Button>
+        )}
+      </div>
+      <div
       className="p-2"
       onClick={preventPropagation}
       onTouchStart={preventPropagation}
     >
       <VoiceNavigationAssistant />
+    </div>
+     
     </div>
   );
 
