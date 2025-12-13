@@ -12,6 +12,8 @@ async function getUserByEmail(email) {
             profilePictureUrl:true,
             email: true,
             role: true,
+            state: true,
+            city: true,
             credits: true,
             radioCredits: true,
             totalCreditsUsed: true,
