@@ -72,6 +72,7 @@ const authConfig = {
 							email: true,
 							password: true,
 							fullName: true,
+							profilePictureUrl:true,
 							role: true,
 							isVerified: true,
 							isSuspended: true,

@@ -1,20 +1,36 @@
 'use client'
 
 import { useUser } from '@/context/UserContext'
-import { CreditCard, Plus } from 'lucide-react'
+import { ChevronDown, CreditCard, Plus, User } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import Image from 'next/image'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { FaMusic } from 'react-icons/fa'
 import { IoIosLogOut } from 'react-icons/io'
 import CreditPurchaseModal from '../credits/CreditPurchaseModal'
 
 export default function GlobalHeader({ session }) {
-	
 	const router = useRouter()
 	const [showCreditPurchaseModal, setShowCreditPurchaseModal] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false);
+  const dropdownRef = useRef(null);
+  const user = session?.user || {};
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsProfileOpen(false);
+      }
+    }
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
 	const {
 		credits: userCredits,
@@ -119,14 +135,48 @@ export default function GlobalHeader({ session }) {
 							</button>
 						</div>
 
-						{/* Logout Button */}
-						<button
-							className="text-white bg-red-600 hover:bg-red-700 rounded-lg p-2 transition-colors duration-200"
-							onClick={logoutHandler}
-							title="Logout"
-						>
-							<IoIosLogOut />
-						</button>
+						{/* User Profile Dropdown */}
+						<div className="relative" ref={dropdownRef}>
+							<button
+								onClick={() => setIsProfileOpen(!isProfileOpen)}
+								className="flex items-center space-x-2 focus:outline-none"
+							>
+								{user.image ? (
+									<Image
+										src={user.image}
+										alt={user.name || 'User'}
+										width={32}
+										height={32}
+										className="w-8 h-8 rounded-full object-cover border-2 border-purple-500"
+									/>
+								) : (
+									<div className="w-8 h-8 rounded-full bg-purple-600 flex items-center justify-center text-white font-medium">
+										{user.name ? user.name.charAt(0).toUpperCase() : 'U'}
+									</div>
+								)}
+								<ChevronDown className="w-4 h-4 text-gray-300" />
+							</button>
+
+							{isProfileOpen && (
+								<div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-md shadow-lg py-1 z-50">
+									<Link
+										href="/profile"
+										className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 flex items-center space-x-2"
+										onClick={() => setIsProfileOpen(false)}
+									>
+										<User className="w-4 h-4" />
+										<span>Profile</span>
+									</Link>
+									<button
+										onClick={logoutHandler}
+										className="w-full text-left px-4 py-2 text-sm text-red-400 hover:bg-gray-700 flex items-center space-x-2"
+									>
+										<IoIosLogOut className="w-4 h-4" />
+										<span>Logout</span>
+									</button>
+								</div>
+							)}
+						</div>
 					</div>
 				)}
 

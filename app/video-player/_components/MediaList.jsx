@@ -15,7 +15,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { formatDistanceToNow } from 'date-fns';
-import { Image as ImageIcon, Play, Share2, Trash2, Video } from 'lucide-react';
+import { Image as ImageIcon, Play, Share2, Trash2, User, Video } from 'lucide-react';
+import { useSession } from 'next-auth/react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
@@ -25,7 +26,9 @@ import ShareModal from './ShareModal';
 const MediaList = ({ type = 'video', onDelete, className = '' }) => {
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
+  const { data: session } = useSession();
   const [error, setError] = useState(null);
+  const [updatingProfilePic, setUpdatingProfilePic] = useState(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [mediaToDelete, setMediaToDelete] = useState(null);
   const [imageErrors, setImageErrors] = useState({});
@@ -46,13 +49,13 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
     try {
       // Use the first media ID directly for sharing
       const mediaId = mediaIds[0];
-      
+
       // Construct the shareable URL with the media ID and /media path
       const shareableLink = `${window.location.origin}/share/${mediaId}/media`;
-      
+
       setShareableLink(shareableLink);
       return shareableLink;
-      
+
     } catch (error) {
       console.error('Error generating share link:', error);
       toast.error('Failed to generate share link');
@@ -61,8 +64,8 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
   };
 
   const handleMediaStatusChange = (updatedMedia) => {
-    setMedia(prevMedia => 
-      prevMedia.map(item => 
+    setMedia(prevMedia =>
+      prevMedia.map(item =>
         item.id === updatedMedia.id ? { ...item, ...updatedMedia } : item
       )
     );
@@ -143,6 +146,55 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
     document.body.removeChild(link);
   };
 
+
+  const handleSetAsProfile = async (mediaItem, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!session?.user?.id) {
+      toast.error('You must be logged in to set a profile picture.');
+      return;
+    }
+    if (!mediaItem.fileUrl) {
+      toast.error('Media item does not have a valid URL.');
+      return;
+    }
+
+    setUpdatingProfilePic(mediaItem.id);
+    const toastId = toast.loading('Updating profile picture...');
+
+    try {
+      const response = await fetch(`/api/user/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profilePictureUrl: mediaItem.fileUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile picture');
+      }
+
+      toast.success('Profile picture updated successfully!', {
+        id: toastId,
+        duration: 3000,
+      });
+      
+      // Optionally, you might want to refresh user session or update local state
+    } catch (err) {
+      console.error('Error setting profile picture:', err);
+      toast.error(err.message || 'Failed to set profile picture.', {
+        id: toastId,
+        duration: 3000,
+      });
+    } finally {
+      setUpdatingProfilePic(null);
+    }
+  };
+
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
@@ -185,7 +237,7 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
   // Add sale price badge if item is for sale
   const renderSaleBadge = (item) => {
     if (!item.isForSale || !item.salePrice) return null;
-    
+
     return (
       <div className="absolute top-2 left-2 bg-green-500 text-white text-xs font-medium px-2 py-1 rounded-md z-10">
         ${parseFloat(item.salePrice).toFixed(2)}
@@ -253,16 +305,18 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
             <div className="flex items-center text-xs text-muted-foreground">
               <span>{formatDistanceToNow(new Date(item.createdAt), { addSuffix: true })}</span>
             </div>
-            <div className="flex space-x-1">
+            <div className="flex flex-col">
               {item.isOwner && (
                 <>
+                <div className='flex space-x-1"'>
+                
                   <MediaSaleToggleButton
                     mediaId={item.id}
                     isForSale={item.isForSale || false}
                     salePrice={item.salePrice}
                     onStatusChange={handleMediaStatusChange}
                   />
-                  
+
                   <Button
                     variant="ghost"
                     size="icon"
@@ -280,24 +334,44 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
                   >
                     <Trash2 className="h-4 w-4" />
                   </Button>
-                </>
+                </div>
+                  {type === 'image' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      disabled={updatingProfilePic === item.id}
+                      className={`h-8 px-2 text-purple-500 hover:bg-purple-500/10 hover:text-purple-600 flex items-center gap-1.5 ${updatingProfilePic === item.id ? 'opacity-50 cursor-not-allowed' : ''}`}
+                      onClick={(e) => handleSetAsProfile(item, e)}
+                      title="Set as Profile Picture"
+                    >
+                      {updatingProfilePic === item.id ? (
+                        <svg className="animate-spin h-3.5 w-3.5 text-purple-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                      ) : (
+                        <User className="h-3.5 w-3.5" />
+                      )}
+                      <span>{updatingProfilePic === item.id ? 'Updating...' : 'Set as Profile'}</span>
+                    </Button>
+                  )}</>
               )}
             </div>
           </CardFooter>
         </Card>
       ))}
       {previewMedia && (
-        <MediaPreviewModal 
-          media={previewMedia} 
-          onClose={() => setPreviewMedia(null)} 
+        <MediaPreviewModal
+          media={previewMedia}
+          onClose={() => setPreviewMedia(null)}
         />
       )}
-  {previewMedia && (
-    <MediaPreviewModal 
-      media={previewMedia} 
-      onClose={() => setPreviewMedia(null)} 
-    />
-  )}
+      {previewMedia && (
+        <MediaPreviewModal
+          media={previewMedia}
+          onClose={() => setPreviewMedia(null)}
+        />
+      )}
       {/* Delete Confirmation Dialog */}
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
@@ -319,38 +393,38 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
         </AlertDialogContent>
       </AlertDialog>
 
-        {showShareModal && (
-          <ShareModal
-            isOpen={showShareModal}
-            onClose={() => {
-              setShowShareModal(false);
-              setSelectedMediaIds([]);
-            }}
-            media={media.filter(m => selectedMediaIds.includes(m.id))}
-            onShare={async (selectedMedia, email) => {
-              const mediaIds = selectedMedia.map(m => m.id);
-              const link = await handleGenerateLink(mediaIds);
-              if (link) {
-                // If you want to send an email with the link
-                if (email) {
-                  // Add your email sending logic here
-                  console.log(`Sending share link to ${email}: ${link}`);
-                }
-                return link;
+      {showShareModal && (
+        <ShareModal
+          isOpen={showShareModal}
+          onClose={() => {
+            setShowShareModal(false);
+            setSelectedMediaIds([]);
+          }}
+          media={media.filter(m => selectedMediaIds.includes(m.id))}
+          onShare={async (selectedMedia, email) => {
+            const mediaIds = selectedMedia.map(m => m.id);
+            const link = await handleGenerateLink(mediaIds);
+            if (link) {
+              // If you want to send an email with the link
+              if (email) {
+                // Add your email sending logic here
+                console.log(`Sending share link to ${email}: ${link}`);
               }
-              return null;
-            }}
-            shareLink={shareableLink}
-            onCopyLink={() => {
-              if (shareableLink) {
-                navigator.clipboard.writeText(shareableLink);
-                setIsLinkCopied(true);
-                setTimeout(() => setIsLinkCopied(false), 2000);
-                toast.success('Link copied to clipboard!');
-              }
-            }}
-          />
-        )}
+              return link;
+            }
+            return null;
+          }}
+          shareLink={shareableLink}
+          onCopyLink={() => {
+            if (shareableLink) {
+              navigator.clipboard.writeText(shareableLink);
+              setIsLinkCopied(true);
+              setTimeout(() => setIsLinkCopied(false), 2000);
+              toast.success('Link copied to clipboard!');
+            }
+          }}
+        />
+      )}
     </div>
   );
 };

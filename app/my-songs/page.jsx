@@ -1,17 +1,17 @@
 'use client'
 
-import { useState, useEffect } from 'react';
-import { useSession } from "next-auth/react";
+import RootLoader from '@/app/loading';
 import FuturisticMusicPlayer from '@/components/FuturisticMusicPlayer';
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader';
-import RootLoader from '@/app/loading';
-import Image from 'next/image';
+import { useSession } from "next-auth/react";
+import { useEffect, useState } from 'react';
 
 
 const MySongsPage = () => {
   const { data: session } = useSession();
   const [songs, setSongs] = useState([]);
   const [loading, setLoading] = useState(true);
+  console.log("Songs",songs)
 
   useEffect(() => {
     const fetchSongs = async () => {

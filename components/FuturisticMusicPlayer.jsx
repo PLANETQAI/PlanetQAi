@@ -4,6 +4,7 @@ import { Facebook, Heart, MessageCircle, Pause, Play, Repeat, Share2, Shuffle, S
 import { useEffect, useRef, useState } from "react"
 import toast from "react-hot-toast"
 import SaleToggleButton from "./player/SaleToggleButton"
+import SongMediaSelectionDialog from "./player/SongMediaSelectionDialog"; // Import the new dialog
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "./ui/alert-dialog"
 
 const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showShareButton = true }) => {
@@ -25,7 +26,42 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
   const [currentSongs, setCurrentSongs] = useState(songs || [])
   const visualizerRef = useRef(null)
 
+  // State for SongMediaSelectionDialog
+  const [isSongMediaSelectionDialogOpen, setIsSongMediaSelectionDialogOpen] = useState(false);
+  const [currentSongIdForMediaSelection, setCurrentSongIdForMediaSelection] = useState(null);
+
   const currentTrack = currentSongs[currentSong]
+
+  // Handler to open the media selection dialog
+  const handleOpenSongMediaSelection = (songId) => {
+    setCurrentSongIdForMediaSelection(songId);
+    setIsSongMediaSelectionDialogOpen(true);
+  };
+
+  // Handler for when media is selected and updated for a song
+  const handleSongMediaUpdated = (updatedSong) => {
+    setCurrentSongs(prevSongs =>
+      prevSongs.map(song => (song.id === updatedSong.id ? {
+        ...song,
+        cover: updatedSong.thumbnailUrl || updatedSong.videoUrl, // Update cover based on new media
+        thumbnailUrl: updatedSong.thumbnailUrl,
+        videoUrl: updatedSong.videoUrl,
+      } : song))
+    );
+    // If the updated song is the current playing song, update its cover immediately
+    if (currentTrack.id === updatedSong.id) {
+      setCurrentSongs(prevSongs => {
+        const newCurrentSongs = [...prevSongs];
+        newCurrentSongs[currentSong] = {
+          ...newCurrentSongs[currentSong],
+          cover: updatedSong.thumbnailUrl || updatedSong.videoUrl,
+          thumbnailUrl: updatedSong.thumbnailUrl,
+          videoUrl: updatedSong.videoUrl,
+        };
+        return newCurrentSongs;
+      });
+    }
+  };
 
   // Audio Controls
   useEffect(() => {
@@ -79,7 +115,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
         if (currentSong >= updatedSongs.length) {
           setCurrentSong(Math.max(0, updatedSongs.length - 1))
         }
-     
+
       }
     } catch (error) {
       console.error('Failed to delete song:', error);
@@ -152,7 +188,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
 
- 
+
 
   const handleGenerateLink = async (songIds) => {
     console.log("handleGenerateLink called with songIds:", songIds);
@@ -202,9 +238,9 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           shareableLink: shareLink.split('/').pop(), // Extract the UUID from the full URL
-          emails: [email] 
+          emails: [email]
         }),
       });
       // Add some user feedback here, e.g., a toast notification
@@ -289,35 +325,50 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
           {/* Album Art with Highly Animated Rings */}
           <div className="relative mb-6 sm:mb-8">
             <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto rounded-full overflow-hidden relative group">
-              {/* Multiple Animated Rings */}
-              <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-spin-slow"></div>
-              <div className="absolute inset-1 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-spin-reverse"></div>
-              <div className="absolute inset-2 sm:inset-3 bg-gradient-to-br from-pink-400 via-blue-400 to-purple-400 animate-spin-slow-2"></div>
+              {(!currentTrack.thumbnailUrl && !currentTrack.videoUrl) ? (
+                <>
+                  {/* Show glowing ring effect only when no media is available */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-spin-slow"></div>
+                  <div className="absolute inset-1 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-spin-reverse"></div>
+                  <div className="absolute inset-2 sm:inset-3 bg-gradient-to-br from-pink-400 via-blue-400 to-purple-400 animate-spin-slow-2"></div>
 
-              {/* Pulsing Outer Rings */}
-              <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 bg-gradient-to-br from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-full animate-pulse-ring"></div>
-              <div className="absolute -inset-4 sm:-inset-6 md:-inset-8 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full animate-pulse-ring-delayed"></div>
+                  {/* Pulsing Outer Rings */}
+                  <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 bg-gradient-to-br from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-full animate-pulse-ring"></div>
+                  <div className="absolute -inset-4 sm:-inset-6 md:-inset-8 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full animate-pulse-ring-delayed"></div>
 
-              {/* Rotating Particles */}
-              <div className="absolute inset-0 animate-spin-particles">
-                <div className="absolute top-3 sm:top-4 left-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white rounded-full animate-ping"></div>
-                <div className="absolute bottom-3 sm:bottom-4 left-1/4 w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
-                <div className="absolute top-1/3 right-3 sm:right-4 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
-                <div className="absolute bottom-1/3 left-3 sm:left-4 w-1 h-1 bg-blue-400 rounded-full animate-ping"></div>
-              </div>
+                  {/* Rotating Particles */}
+                  <div className="absolute inset-0 animate-spin-particles">
+                    <div className="absolute top-3 sm:top-4 left-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white rounded-full animate-ping"></div>
+                    <div className="absolute bottom-3 sm:bottom-4 left-1/4 w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
+                    <div className="absolute top-1/3 right-3 sm:right-4 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
+                    <div className="absolute bottom-1/3 left-3 sm:left-4 w-1 h-1 bg-blue-400 rounded-full animate-ping"></div>
+                  </div>
 
-              <div className="absolute inset-2 sm:inset-3 md:inset-4 bg-black rounded-full overflow-hidden">
-                <img
-                  src={currentTrack.cover || "/placeholder.svg"}
-                  alt={currentTrack.title}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                />
-                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-transparent to-pink-500/20 animate-pulse"></div>
-              </div>
-
-              {/* Enhanced Glowing Ring Effects */}
-              <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-pulse-glow opacity-75 blur-sm"></div>
-              <div className="absolute inset-1 sm:inset-2 rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-pulse-glow-delayed opacity-50 blur-md"></div>
+                  {/* Enhanced Glowing Ring Effects */}
+                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-pulse-glow opacity-75 blur-sm"></div>
+                  <div className="absolute inset-1 sm:inset-2 rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-pulse-glow-delayed opacity-50 blur-md"></div>
+                </>
+              ) : (
+                /* Show media with full size and rounded shape */
+                <div className="absolute inset-0 bg-black rounded-full overflow-hidden">
+                  {currentTrack.videoUrl ? (
+                    <video
+                      src={currentTrack.videoUrl}
+                      className="w-full h-full object-cover"
+                      loop
+                      muted
+                      playsInline
+                    />
+                  ) : (
+                    <img
+                      src={currentTrack.thumbnailUrl}
+                      alt={currentTrack.title}
+                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                    />
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-transparent to-pink-500/20 animate-pulse"></div>
+                </div>
+              )}
 
               {/* Play Button Overlay */}
               <div className="absolute inset-0 flex items-center justify-center">
@@ -326,8 +377,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                   className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 bg-white/90 rounded-full flex items-center justify-center hover:bg-white hover:scale-110 transition-all duration-300 shadow-lg animate-bounce-subtle"
                   aria-label={isPlaying ? 'Pause' : 'Play'}
                 >
-                  {isPlaying ? 
-                    <Pause className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-black" /> : 
+                  {isPlaying ?
+                    <Pause className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-black" /> :
                     <Play className="w-5 h-5 sm:w-6 sm:h-6 md:w-7 md:h-7 text-black ml-0.5 sm:ml-1" />
                   }
                 </button>
@@ -337,10 +388,12 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
 
           {/* Song Info */}
           <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-glow">
+            <h2 className="text-2xl font-bold mb-1 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent animate-glow">
               {currentTrack.title}
             </h2>
-            <p className="text-gray-400 text-lg animate-fade-in">{currentTrack.artist}</p>
+            <p className="text-sm text-purple-300 animate-fade-in">
+              Created by <span className="font-medium">{currentTrack.User.fullName}</span>
+            </p>
           </div>
 
           {/* Visualizer */}
@@ -365,22 +418,19 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
             {/* Shuffle Control - Responsive */}
             <div className="relative">
               <div
-                className={`absolute -inset-2 sm:-inset-3 md:-inset-4 rounded-full ${
-                  isShuffling ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"
-                } blur-md sm:blur-xl opacity-40 animate-pulse`}
+                className={`absolute -inset-2 sm:-inset-3 md:-inset-4 rounded-full ${isShuffling ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"
+                  } blur-md sm:blur-xl opacity-40 animate-pulse`}
               ></div>
               <div
-                className={`absolute -inset-1 sm:-inset-2 rounded-full ${
-                  isShuffling ? "bg-gradient-to-r from-purple-400 to-pink-400" : "bg-gray-500"
-                } blur-sm sm:blur-lg opacity-60 animate-pulse-delayed`}
+                className={`absolute -inset-1 sm:-inset-2 rounded-full ${isShuffling ? "bg-gradient-to-r from-purple-400 to-pink-400" : "bg-gray-500"
+                  } blur-sm sm:blur-lg opacity-60 animate-pulse-delayed`}
               ></div>
               <button
                 onClick={() => setIsShuffling(!isShuffling)}
-                className={`relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full border-2 sm:border-3 md:border-4 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                  isShuffling
+                className={`relative w-10 h-10 sm:w-12 sm:h-12 md:w-14 md:h-14 lg:w-16 lg:h-16 rounded-full border-2 sm:border-3 md:border-4 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${isShuffling
                     ? "border-purple-400 bg-gradient-to-r from-purple-500/30 to-pink-500/30 text-white shadow-lg sm:shadow-2xl shadow-purple-500/50"
                     : "border-gray-500 bg-black/50 text-gray-400 hover:border-white hover:text-white hover:bg-white/10"
-                }`}
+                  }`}
                 aria-label={isShuffling ? "Disable shuffle" : "Enable shuffle"}
               >
                 <Shuffle className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 lg:w-7 lg:h-7" />
@@ -440,17 +490,15 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
             {/* Repeat Control - Responsive */}
             <div className="relative">
               <div
-                className={`absolute inset-0 rounded-full ${
-                  isLooping ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"
-                } blur-sm sm:blur-md opacity-50 animate-pulse`}
+                className={`absolute inset-0 rounded-full ${isLooping ? "bg-gradient-to-r from-purple-500 to-pink-500" : "bg-gray-600"
+                  } blur-sm sm:blur-md opacity-50 animate-pulse`}
               ></div>
               <button
                 onClick={() => setIsLooping(!isLooping)}
-                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-500 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${
-                  isLooping
+                className={`relative w-10 h-10 sm:w-12 sm:h-12 rounded-full border border-gray-500 flex items-center justify-center transition-all duration-300 transform hover:scale-110 active:scale-95 ${isLooping
                     ? "border-purple-400 bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-white shadow-lg shadow-purple-500/50"
                     : "bg-black/50 text-gray-400 hover:border-white hover:text-white"
-                }`}
+                  }`}
                 aria-label={isLooping ? "Disable repeat" : "Enable repeat"}
               >
                 <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -507,11 +555,10 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
           <div className="flex items-center justify-between">
             <button
               onClick={() => setIsLiked(!isLiked)}
-              className={`p-3 rounded-full transition-all duration-300 ${
-                isLiked
+              className={`p-3 rounded-full transition-all duration-300 ${isLiked
                   ? "text-red-500 bg-red-500/10 shadow-lg shadow-red-500/25"
                   : "text-gray-400 hover:text-white hover:bg-white/10"
-              }`}
+                }`}
             >
               <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
             </button>
@@ -534,17 +581,18 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
             {currentSongs.map((song, index) => (
               <div
                 key={song.id}
-                onClick={() => setCurrentSong(index)}
-                className={`group p-2 sm:p-3 md:p-4 rounded-xl cursor-pointer transition-all duration-300 transform hover:scale-[1.02] ${
-                  index === currentSong
+                className={`group p-2 sm:p-3 md:p-4 rounded-xl transition-all duration-300 transform hover:scale-[1.02] ${index === currentSong
                     ? "bg-gradient-to-r from-purple-500/30 to-pink-500/30 border border-purple-500/50 shadow-lg shadow-purple-500/25 animate-glow-border"
                     : "bg-white/5 hover:bg-white/10 hover:shadow-lg"
-                }`}
+                  }`}
               >
                 <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
-                  <div className="relative flex-shrink-0">
+                  <div
+                    className="relative flex-shrink-0 cursor-pointer"
+                    onClick={() => handleOpenSongMediaSelection(song.id)}
+                  >
                     <img
-                      src={song.cover || "/logo.png"}
+                      src={song.thumbnailUrl || "/logo.png"}
                       alt={song.title}
                       className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
                     />
@@ -557,25 +605,36 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                       </div>
                     )}
                   </div>
-
-                  <div className="flex-1 min-w-0">
+                  <div>  <div
+                    className="flex-1 min-w-0 cursor-pointer" // Add cursor-pointer here
+                    onClick={() => setCurrentSong(index)} // <--- New onClick location
+                  >
                     <p
-                      className={`font-semibold text-sm sm:text-base truncate mb-0.5 sm:mb-1 transition-colors duration-300 ${
-                        index === currentSong ? "text-white" : "text-gray-200 group-hover:text-white"
-                      }`}
+                      className={`font-semibold text-sm sm:text-base truncate mb-0.5 sm:mb-1 transition-colors duration-300 ${index === currentSong ? "text-white" : "text-gray-200 group-hover:text-white"
+                        }`}
                       title={song.title}
                     >
                       {song.title}
                     </p>
-                    <p
-                      className={`text-xs sm:text-sm truncate transition-colors duration-300 ${
-                        index === currentSong ? "text-purple-300" : "text-gray-400 group-hover:text-gray-300"
-                      }`}
-                      title={song.provider === 'suno' ? 'PlanetQ AI' : 'Q_world studio'}
-                    >
-                      {song.provider === 'suno' ? 'PlanetQ AI' : 'Q_world studio'}
-                    </p>
-                  </div>
+                    <div className="flex items-center justify-between w-full">
+                      <p
+                        className={`text-xs sm:text-sm truncate transition-colors duration-300 ${index === currentSong ? "text-purple-300" : "text-gray-400 group-hover:text-gray-300"
+                          }`}
+                        title={song.provider === 'suno' ? 'PlanetQ AI' : 'Q_world studio'}
+                      >
+                        {song.provider === 'suno' ? 'PlanetQ AI' : 'Q_world studio'}
+                      </p>
+
+
+                    </div>
+                    <div>
+                        <p className="text-xs text-purple-300/80 ml-2 truncate max-w-[100px]" title={`Created by ${song.User.fullName}`}>
+                          {song.User.fullName}
+                        </p> 
+                         <p className="text-xs text-gray-400">Click the image to change albuurm image</p>
+                      </div>
+                  </div></div>
+
 
                   <div className="flex items-center space-x-1 sm:space-x-2 md:space-x-3">
                     <span className="text-gray-400 text-xs sm:text-sm font-mono whitespace-nowrap">
@@ -586,7 +645,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                     <div className="flex items-center space-x-1 sm:space-x-2">
                       {showShareButton && (
                         <button
-                        onClick={() => setShowShareModal(true)}
+                          onClick={() => setShowShareModal(true)}
                           className="p-1.5 sm:p-2 rounded-full text-gray-400 hover:text-blue-400 hover:bg-blue-500/10 transition-all duration-300 opacity-100 sm:opacity-0 group-hover:opacity-100"
                           aria-label="Share song"
                         >
@@ -594,8 +653,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                         </button>
                       )}
 
-                      <SaleToggleButton 
-                        songId={song.id} 
+                      <SaleToggleButton
+                        songId={song.id}
                         isForSaleProp={song.isForSale}
                         salePriceProp={song.salePrice}
                         isLyricsPurchasedProp={song.isLyricsPurchased}
@@ -608,26 +667,26 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                       {!isPublic && (
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <button 
+                            <button
                               className="p-1.5 sm:p-2 rounded-full hover:bg-gray-700 transition-colors"
                               aria-label="Delete song"
                             >
-                          <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 hover:text-red-400" />
-                        </button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            This action cannot be undone. This will permanently delete your account and remove your data from our servers.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancel</AlertDialogCancel>
-                          <AlertDialogAction onClick={(e) => deleteSong(song.id, e)}>Continue</AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+                              <Trash2 className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-400 hover:text-red-400" />
+                            </button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will permanently delete your account and remove your data from our servers.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction onClick={(e) => deleteSong(song.id, e)}>Continue</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
                       )}
 
                       {index === currentSong && (
@@ -645,15 +704,15 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                       )}
                     </div>
                   </div>
+                 
                 </div>
 
                 {/* Current track indicator */}
                 <div
-                  className={`h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300 ${
-                    index === currentSong
+                  className={`h-0.5 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full transition-all duration-300 ${index === currentSong
                       ? "w-full opacity-100"
                       : "w-0 opacity-0 group-hover:w-full group-hover:opacity-50"
-                  } mt-2 sm:mt-3`}
+                    } mt-2 sm:mt-3`}
                 ></div>
               </div>
             ))}
@@ -725,70 +784,70 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                 </div>
 
                 {shareLink && (
-                <div className="mt-6 space-y-4">
-                  <div className="flex items-center space-x-2">
-                    <input
-                      type="text"
-                      value={shareLink}
-                      readOnly
-                      className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-                    <button
-                      onClick={handleCopyToClipboard}
-                      className="py-2 px-4 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-all duration-300 whitespace-nowrap"
-                    >
-                      {isLinkCopied ? "Copied!" : "Copy Link"}
-                    </button>
+                  <div className="mt-6 space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="text"
+                        value={shareLink}
+                        readOnly
+                        className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                      <button
+                        onClick={handleCopyToClipboard}
+                        className="py-2 px-4 rounded-lg bg-white/10 text-white font-medium hover:bg-white/20 transition-all duration-300 whitespace-nowrap"
+                      >
+                        {isLinkCopied ? "Copied!" : "Copy Link"}
+                      </button>
+                    </div>
+
+                    {/* Social Sharing Buttons */}
+                    <div className="flex justify-center space-x-4 py-2">
+                      <a
+                        href={`https://wa.me/?text=${encodeURIComponent(`Check out this playlist: ${shareLink}`)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors"
+                        title="Share on WhatsApp"
+                      >
+                        <MessageCircle className="w-5 h-5 text-green-400" />
+                      </a>
+                      <a
+                        href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors"
+                        title="Share on Facebook"
+                      >
+                        <Facebook className="w-5 h-5 text-blue-400" />
+                      </a>
+                      <a
+                        href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareLink)}&text=Check%20out%20this%20awesome%20playlist!`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="p-3 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 transition-colors"
+                        title="Share on Twitter"
+                      >
+                        <Twitter className="w-5 h-5 text-cyan-400" />
+                      </a>
+                    </div>
+
+                    <div className="flex items-center space-x-2 mt-2">
+                      <input
+                        type="email"
+                        placeholder="Enter email to share"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
+                      />
+                      <button
+                        onClick={handleSendEmail}
+                        className="py-2 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:scale-105 transition-all duration-300 whitespace-nowrap"
+                      >
+                        Send Email
+                      </button>
+                    </div>
                   </div>
-                  
-                  {/* Social Sharing Buttons */}
-                  <div className="flex justify-center space-x-4 py-2">
-                    <a
-                      href={`https://wa.me/?text=${encodeURIComponent(`Check out this playlist: ${shareLink}`)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 rounded-full bg-green-500/20 hover:bg-green-500/30 transition-colors"
-                      title="Share on WhatsApp"
-                    >
-                      <MessageCircle className="w-5 h-5 text-green-400" />
-                    </a>
-                    <a
-                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(shareLink)}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 rounded-full bg-blue-500/20 hover:bg-blue-500/30 transition-colors"
-                      title="Share on Facebook"
-                    >
-                      <Facebook className="w-5 h-5 text-blue-400" />
-                    </a>
-                    <a
-                      href={`https://twitter.com/intent/tweet?url=${encodeURIComponent(shareLink)}&text=Check%20out%20this%20awesome%20playlist!`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="p-3 rounded-full bg-cyan-500/20 hover:bg-cyan-500/30 transition-colors"
-                      title="Share on Twitter"
-                    >
-                      <Twitter className="w-5 h-5 text-cyan-400" />
-                    </a>
-                  </div>
-                  
-                  <div className="flex items-center space-x-2 mt-2">
-                    <input
-                      type="email"
-                      placeholder="Enter email to share"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      className="w-full bg-gray-800 border-gray-700 rounded-lg px-3 py-2 text-white text-sm"
-                    />
-                    <button
-                      onClick={handleSendEmail}
-                      className="py-2 px-4 rounded-lg bg-gradient-to-r from-purple-500 to-pink-500 text-white font-medium hover:scale-105 transition-all duration-300 whitespace-nowrap"
-                    >
-                      Send Email
-                    </button>
-                  </div>
-                </div>
-              )}
+                )}
 
                 <button
                   onClick={() => setShowShareModal(false)}
@@ -1012,6 +1071,14 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
           display: none;
         }
       `}</style>
+
+      {/* Song Media Selection Dialog */}
+      <SongMediaSelectionDialog
+        isOpen={isSongMediaSelectionDialogOpen}
+        onClose={() => setIsSongMediaSelectionDialogOpen(false)}
+        onSelectMedia={handleSongMediaUpdated}
+        songId={currentSongIdForMediaSelection}
+      />
     </div>
   )
 }

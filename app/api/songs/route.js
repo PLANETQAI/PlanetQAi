@@ -1,8 +1,8 @@
 import { auth } from "@/auth";
-import { PrismaClient } from "@prisma/client";
+import prisma from '@/lib/prisma';
 import { NextResponse } from "next/server";
 
-const prisma = new PrismaClient();
+
 
 // Helper function to format duration from seconds to "mm:ss"
 const formatDuration = (seconds) => {

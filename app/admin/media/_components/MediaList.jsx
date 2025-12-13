@@ -20,9 +20,10 @@ import { Image as ImageIcon, Play, Share2, Trash2, Video } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
-
+import { useSession } from 'next-auth/react'; // Import useSession
 
 const MediaList = ({ type = 'video', onDelete, className = '' }) => {
+  const { data: session } = useSession(); // Get session data
   const [media, setMedia] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -103,6 +104,41 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
     setShowShareModal(true);
     // Ensure preview doesn't open
     setPreviewMedia(null);
+  };
+
+  const handleSetAsProfile = async (mediaItem, e) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    if (!session?.user?.id) {
+      toast.error('You must be logged in to set a profile picture.');
+      return;
+    }
+    if (!mediaItem.fileUrl) {
+      toast.error('Media item does not have a valid URL.');
+      return;
+    }
+
+    try {
+      const response = await fetch(`/api/user/profile`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ profilePictureUrl: mediaItem.fileUrl }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to update profile picture');
+      }
+
+      toast.success('Profile picture updated successfully!');
+      // Optionally, you might want to refresh user session or update local state
+    } catch (err) {
+      console.error('Error setting profile picture:', err);
+      toast.error(err.message || 'Failed to set profile picture.');
+    }
   };
 
   const confirmDelete = async () => {
@@ -199,7 +235,7 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
         <Card
           key={item.id}
           onClick={() => setPreviewMedia(item)}
-          className="group cursor-pointer overflow-hidden hover:shadow-lg transition-shadow duration-200"
+          className="group cursor-pointer overflow:hidden hover:shadow-lg transition-shadow duration-200"
         >
           <div className="relative aspect-video bg-muted">
             {item.mediaType === 'video' ? (
@@ -256,6 +292,17 @@ const MediaList = ({ type = 'video', onDelete, className = '' }) => {
             <div className="flex space-x-1">
               {item.isOwner && (
                 <>
+                  {item.mediaType === 'image' && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="h-8 px-2 text-purple-500 hover:bg-purple-500/10 hover:text-purple-600"
+                      onClick={(e) => handleSetAsProfile(item, e)}
+                      title="Set as Profile Picture"
+                    >
+                      Set as Profile
+                    </Button>
+                  )}
                   <MediaSaleToggleButton
                     mediaId={item.id}
                     isForSale={item.isForSale || false}

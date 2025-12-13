@@ -831,6 +831,11 @@ const deleteSong = async (songId) => {
 							selectedSongIndex={selectedSongIndex} 
 							onSelectSong={selectSong} 
 							generator="diffrhym" 
+							onSongUpdated={(updatedSong) => {
+								setGeneratedSongs(prevSongs =>
+									prevSongs.map(song => (song.id === updatedSong.id ? updatedSong : song))
+								);
+							}}
 						/>
 					</div>
 					

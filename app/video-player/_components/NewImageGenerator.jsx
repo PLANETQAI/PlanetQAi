@@ -40,7 +40,7 @@ export default function NewImageGenerator() {
   }, [fetchUserCredits]);
 
   // Check if user has enough credits
-  const hasEnoughCredits = userCredits?.credits >= IMAGE_GENERATION_CREDITS;
+  const hasEnoughCredits = userCredits?.credits?.normal >= IMAGE_GENERATION_CREDITS;
 
   const handleGenerateImage = async (e) => {
     e.preventDefault();
@@ -171,7 +171,7 @@ export default function NewImageGenerator() {
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 bg-red-500/20 px-3 py-1 rounded-full">
                   <span className="text-red-300 text-sm font-medium">
-                    {userCredits.credits || 0} Planet_Q_Coins • {userCredits.error}
+                    {userCredits.credits?.normal || 0} Planet_Q_Coins • {userCredits.error}
                   </span>
                 </div>
                 <button 
@@ -181,14 +181,14 @@ export default function NewImageGenerator() {
                   <span>Upgrade</span>
                 </button>
               </div>
-            ) : userCredits.credits !== null ? (
+            ) : userCredits.credits?.normal !== null ? (
               <div className="flex items-center gap-2">
                 <div className="flex items-center gap-1 bg-slate-700/50 px-3 py-1 rounded-full">
                   <span className="text-white text-sm font-medium">
-                    {userCredits.credits.toLocaleString()} Planet_Q_Coins
+                    {userCredits.credits?.normal.toLocaleString()} Planet_Q_Coins
                   </span>
                 </div>
-                {userCredits.credits < 100 && (
+                {userCredits.credits?.normal < 100 && (
                   <button 
                     onClick={() => setShowCreditModal(true)}
                     className="flex items-center gap-1 bg-yellow-500/80 hover:bg-yellow-500/90 text-yellow-900 text-xs font-medium px-2 py-1 rounded-full transition-colors"

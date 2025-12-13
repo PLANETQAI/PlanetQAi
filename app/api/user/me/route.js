@@ -1,7 +1,7 @@
 import { auth } from "@/auth";
 import prisma from "@/lib/prisma";
-import { headers } from 'next/headers';
 import { jwtVerify } from 'jose';
+import { headers } from 'next/headers';
 
 async function getUserByEmail(email) {
     return prisma.user.findUnique({
@@ -9,6 +9,7 @@ async function getUserByEmail(email) {
         select: {
             id: true,
             fullName: true,
+            profilePictureUrl:true,
             email: true,
             role: true,
             credits: true,

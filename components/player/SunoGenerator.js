@@ -865,6 +865,11 @@ const SunoGenerator = ({
 							selectedSongIndex={selectedSongIndex} 
 							onSelectSong={selectSong} 
 							generator="suno" 
+							onSongUpdated={(updatedSong) => {
+								setGeneratedSongs(prevSongs =>
+									prevSongs.map(song => (song.id === updatedSong.id ? updatedSong : song))
+								);
+							}}
 						/>
 					</div>
 					
