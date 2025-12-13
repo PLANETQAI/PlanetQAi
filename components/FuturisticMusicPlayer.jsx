@@ -1,6 +1,8 @@
 'use client'
 
 import { Facebook, Heart, MessageCircle, Pause, Play, Repeat, Share2, Shuffle, SkipBack, SkipForward, Trash2, Twitter, Volume2, X } from "lucide-react"
+import { useSession } from 'next-auth/react'
+import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import toast from "react-hot-toast"
 import SaleToggleButton from "./player/SaleToggleButton"
@@ -10,6 +12,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showShareButton = true }) => {
   const [currentSong, setCurrentSong] = useState(0)
   const [isPlaying, setIsPlaying] = useState(false)
+  const { data: session } = useSession();
   const [currentTime, setCurrentTime] = useState(0)
   const [duration, setDuration] = useState(0)
   const [isLooping, setIsLooping] = useState(false)
@@ -33,8 +36,26 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
   const currentTrack = currentSongs[currentSong]
 
   // Handler to open the media selection dialog
-  const handleOpenSongMediaSelection = (songId) => {
-    setCurrentSongIdForMediaSelection(songId);
+  const handleOpenSongMediaSelection = (song) => {
+    // If the song doesn't belong to the current user and has a different user's profile picture
+    if (session?.user?.id !== song?.userId && song?.User?.profilePictureUrl) {
+      setCurrentSongs(prevSongs => {
+        const updatedSongs = [...prevSongs];
+        const currentSongIndex = updatedSongs.findIndex(s => s.id === song.id);
+        if (currentSongIndex !== -1) {
+          updatedSongs[currentSongIndex] = {
+            ...updatedSongs[currentSongIndex],
+            User: {
+              ...updatedSongs[currentSongIndex].User,
+              profilePictureUrl: song.User.profilePictureUrl
+            }
+          };
+        }
+        return updatedSongs;
+      });
+    }
+    
+    setCurrentSongIdForMediaSelection(song.id);
     setIsSongMediaSelectionDialogOpen(true);
   };
 
@@ -325,6 +346,22 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
           {/* Album Art with Highly Animated Rings */}
           <div className="relative mb-6 sm:mb-8">
             <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto rounded-full overflow-hidden relative group">
+              {currentTrack?.User?.profilePictureUrl ? (
+                <Image
+                  src={currentTrack.User.profilePictureUrl}
+                  alt={currentTrack.title || 'User profile'}
+                  width={320}
+                  height={320}
+                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  unoptimized={!currentTrack.User.profilePictureUrl.startsWith('/')}
+                />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
+                  <span className="text-4xl font-bold text-white">
+                    {currentTrack?.User?.fullName?.charAt(0) || '?'}
+                  </span>
+                </div>
+              )}
               {(!currentTrack.thumbnailUrl && !currentTrack.videoUrl) ? (
                 <>
                   {/* Show glowing ring effect only when no media is available */}
@@ -589,11 +626,13 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                 <div className="flex items-center space-x-2 sm:space-x-3 md:space-x-4">
                   <div
                     className="relative flex-shrink-0 cursor-pointer"
-                    onClick={() => handleOpenSongMediaSelection(song.id)}
+                    onClick={() => handleOpenSongMediaSelection(song)}
                   >
-                    <img
+                    <Image
                       src={song.thumbnailUrl || "/logo.png"}
                       alt={song.title}
+                      width="12"
+                      height="12"
                       className="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 rounded-lg sm:rounded-xl object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     {index === currentSong && (

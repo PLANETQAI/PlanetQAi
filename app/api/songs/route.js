@@ -42,7 +42,7 @@ export async function GET(request) {
       where: filters,
       orderBy: { createdAt: "desc" },
       include: {
-        User: { select: { id: true, fullName: true, email: true } },
+        User: { select: { id: true, fullName: true, email: true,profilePictureUrl:true } },
         purchases: true,
       },
       take: limit,
