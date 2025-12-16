@@ -255,10 +255,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
 
 
   const handleGenerateLink = async (songIds) => {
-    console.log("handleGenerateLink called with songIds:", songIds);
-    console.log("userId:", userId);
+
     if (!songIds || songIds.length === 0) {
-      console.log("No song IDs provided or songIds is empty.");
       return;
     }
 
@@ -272,12 +270,11 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
       });
 
       const data = await response.json();
-      console.log("API response for share link generation:", data);
-
+  
       if (response.ok) {
         const link = `${window.location.origin}/share/${data.shareableLink}`;
         setShareLink(link);
-        console.log("Share link set to:", link);
+
       } else {
         console.error("Failed to generate share link. Server response:", data);
       }
