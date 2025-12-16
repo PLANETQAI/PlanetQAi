@@ -242,6 +242,10 @@ model User {
   subscriptionPlans UserSubscription[]
   mediaPurchases    MediaPurchase[]
   rewards           Reward[]        @relation("UserRewards")
+
+  // Following relations
+  following         Follow[]        @relation("Following")
+  followers         Follow[]        @relation("FollowedBy")
 }
 
 model Reward {
@@ -377,6 +381,18 @@ model UsersOnShares {
     sharedAt DateTime @default(now())
 
     @@id([shareId, userId])
+}
+
+// Junction table for many-to-many self-relation for followers
+model Follow {
+  followerId  String
+  follower    User @relation("Following", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User @relation("FollowedBy", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@map("follows") // Optional: name the table 'follows' in the database
 }
 
 enum Role {

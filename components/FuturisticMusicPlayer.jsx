@@ -1,6 +1,7 @@
 'use client'
 
-import { Facebook, Heart, MessageCircle, Pause, Play, Repeat, Share2, Shuffle, SkipBack, SkipForward, Trash2, Twitter, Volume2, X } from "lucide-react"
+import useFollowing from '@/hooks/useFollowing'
+import { Facebook, Heart, MessageCircle, Pause, Play, Repeat, Share2, Shuffle, SkipBack, SkipForward, Trash2, Twitter, UserMinus, UserPlus, Volume2, X } from "lucide-react"
 import { useSession } from 'next-auth/react'
 import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
@@ -33,6 +34,52 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
   const [isSongMediaSelectionDialogOpen, setIsSongMediaSelectionDialogOpen] = useState(false);
   const [currentSongIdForMediaSelection, setCurrentSongIdForMediaSelection] = useState(null);
 
+  const [isFollowing, setIsFollowing] = useState(false);
+  const songCreatorId = currentSongs[currentSong]?.User?.id;
+  console.log(songCreatorId)
+
+  const { data: followingData, isLoading: isLoadingFollowing, error: followingError, refetch: refetchFollowing } = useFollowing(session?.user?.id, 'following');
+
+  useEffect(() => {
+    if (followingData && songCreatorId) {
+      setIsFollowing(followingData.some(user => user.id === songCreatorId));
+    }
+  }, [followingData, songCreatorId]);
+
+  const handleFollowToggle = async () => {
+    if (!session?.user?.id) {
+      toast.error("Please log in to follow users.");
+      return;
+    }
+    if (session.user.id === songCreatorId) {
+      toast.error("You cannot follow yourself.");
+      return;
+    }
+
+    try {
+      const response = await fetch('/api/user/follow', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ targetUserId: songCreatorId }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to toggle follow status');
+      }
+
+      const data = await response.json();
+      toast.success(data.message);
+      setIsFollowing(!isFollowing); // Optimistic UI update
+      refetchFollowing(); // Revalidate following data
+
+    } catch (error) {
+      console.error("Error toggling follow status:", error);
+      toast.error("Failed to update follow status.");
+    }
+  };
+
   const currentTrack = currentSongs[currentSong]
 
   // Handler to open the media selection dialog
@@ -54,7 +101,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
         return updatedSongs;
       });
     }
-    
+
     setCurrentSongIdForMediaSelection(song.id);
     setIsSongMediaSelectionDialogOpen(true);
   };
@@ -599,6 +646,29 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
             >
               <Heart className={`w-5 h-5 ${isLiked ? "fill-current" : ""}`} />
             </button>
+
+            {session?.user?.id && songCreatorId && session.user.id !== songCreatorId && (
+              <button
+                onClick={handleFollowToggle}
+                className={`px-4 py-2 border  rounded-full flex  items-center transition-all duration-300 ${isFollowing
+                    ? "text-white bg-blue-600 hover:bg-blue-700"
+                    : "text-white bg-blue-600 hover:bg-blue-700"
+                  }`}
+                disabled={isLoadingFollowing}
+              >
+                {isFollowing ? (
+                  <>
+                    <UserMinus className="w-5 h-5" />
+                    <span className="ml-4 text-lg">Unfollow</span>
+                  </>
+                ) : (
+                  <>
+                    <UserPlus className="w-5 h-5 " />
+                    <span className="ml-4 text-lg">Follow</span>
+                  </>
+                )}
+              </button>
+            )}
 
             <button
               onClick={() => setShowShareModal(true)}

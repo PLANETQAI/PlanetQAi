@@ -12,10 +12,14 @@ import { useEffect, useState } from 'react';
 import GlobalHeader from '@/components/planetqproductioncomp/GlobalHeader'; // Assuming this is the correct path
 import Image from 'next/image';
 import toast from 'react-hot-toast';
+import useFollowing from '@/hooks/useFollowing';
 
 export default function ProfilePage() {
   const { data: session, status, update } = useSession();
   const router = useRouter();
+
+  const { data: followersList, isLoading: isLoadingFollowers, error: followersError } = useFollowing(session?.user?.id, 'followers');
+  const { data: followingList, isLoading: isLoadingFollowing, error: followingError } = useFollowing(session?.user?.id, 'following');
 
 
   const [userProfile, setUserProfile] = useState(null);
@@ -437,6 +441,78 @@ export default function ProfilePage() {
                   <p className="font-semibold">{userProfile._count?.Media || 0}</p>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Followers Card */}
+          <Card className="bg-gray-800 border-gray-700 text-white">
+            <CardHeader>
+              <CardTitle className="text-2xl">Followers</CardTitle>
+              <CardDescription className="text-gray-400">
+                Users who are following you.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingFollowers ? (
+                <div className="flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                </div>
+              ) : followersError ? (
+                <p className="text-red-500">Error loading followers: {followersError.message}</p>
+              ) : followersList && followersList.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {followersList.map((follower) => (
+                    <div key={follower.id} className="flex items-center space-x-3 bg-gray-700 p-3 rounded-lg">
+                      <Image
+                        src={follower.profilePictureUrl || '/images/default-avatar.png'}
+                        alt={follower.fullName || 'Follower'}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                      />
+                      <p className="font-semibold">{follower.fullName}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400">No followers yet.</p>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Following Card */}
+          <Card className="bg-gray-800 border-gray-700 text-white">
+            <CardHeader>
+              <CardTitle className="text-2xl">Following</CardTitle>
+              <CardDescription className="text-gray-400">
+                Users you are following.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {isLoadingFollowing ? (
+                <div className="flex justify-center items-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-purple-500"></div>
+                </div>
+              ) : followingError ? (
+                <p className="text-red-500">Error loading following: {followingError.message}</p>
+              ) : followingList && followingList.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {followingList.map((followingUser) => (
+                    <div key={followingUser.id} className="flex items-center space-x-3 bg-gray-700 p-3 rounded-lg">
+                      <Image
+                        src={followingUser.profilePictureUrl || '/images/default-avatar.png'}
+                        alt={followingUser.fullName || 'Following'}
+                        width={40}
+                        height={40}
+                        className="rounded-full object-cover"
+                      />
+                      <p className="font-semibold">{followingUser.fullName}</p>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-gray-400">Not following anyone yet.</p>
+              )}
             </CardContent>
           </Card>
         </div>

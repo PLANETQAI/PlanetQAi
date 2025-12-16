@@ -32,7 +32,7 @@ export async function GET(request) {
 
     // Only filter by user ID, let the frontend handle provider filtering
     const filters = {
-      userId: session.user.id,
+      // userId: session.user.id,
     };
 
     console.log("Fetching all songs for user:", session.user.id);
