@@ -21,6 +21,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
   const [volume, setVolume] = useState(0.7)
   const [isLiked, setIsLiked] = useState(false)
   const [showShareModal, setShowShareModal] = useState(false)
+  const [showProfile, setShowProfile] = useState(true); // New state for showing profile
   const [selectedSongs, setSelectedSongs] = useState([])
   const [shareLink, setShareLink] = useState("")
   const [isLinkCopied, setIsLinkCopied] = useState(false)
@@ -36,7 +37,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
 
   const [isFollowing, setIsFollowing] = useState(false);
   const songCreatorId = currentSongs[currentSong]?.User?.id;
-  console.log(songCreatorId)
+
 
   const { data: followingData, isLoading: isLoadingFollowing, error: followingError, refetch: refetchFollowing } = useFollowing(session?.user?.id, 'following');
 
@@ -84,26 +85,21 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
 
   // Handler to open the media selection dialog
   const handleOpenSongMediaSelection = (song) => {
-    // If the song doesn't belong to the current user and has a different user's profile picture
-    if (session?.user?.id !== song?.userId && song?.User?.profilePictureUrl) {
-      setCurrentSongs(prevSongs => {
-        const updatedSongs = [...prevSongs];
-        const currentSongIndex = updatedSongs.findIndex(s => s.id === song.id);
-        if (currentSongIndex !== -1) {
-          updatedSongs[currentSongIndex] = {
-            ...updatedSongs[currentSongIndex],
-            User: {
-              ...updatedSongs[currentSongIndex].User,
-              profilePictureUrl: song.User.profilePictureUrl
-            }
-          };
-        }
-        return updatedSongs;
-      });
+    console.log(showProfile)
+    if (session?.user?.id === song?.User?.id) { // Check if the song belongs to the current user
+      setCurrentSongIdForMediaSelection(song.id);
+      setIsSongMediaSelectionDialogOpen(true);
+      setShowProfile(false); // Ensure profile view is hidden if media selection is opened
+    } else {
+      // If the song does not belong to the current user, show their profile
+      if (song?.User?.id) {
+        setShowProfile(true);
+        // Optionally, you might want to store the song creator's ID to fetch their full profile details if needed
+        // setViewingProfileOfUserId(song.User.id);
+      } else {
+        toast.error("Could not find the song creator's profile.");
+      }
     }
-
-    setCurrentSongIdForMediaSelection(song.id);
-    setIsSongMediaSelectionDialogOpen(true);
   };
 
   // Handler for when media is selected and updated for a song
@@ -393,65 +389,87 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
           {/* Album Art with Highly Animated Rings */}
           <div className="relative mb-6 sm:mb-8">
             <div className="w-48 h-48 sm:w-64 sm:h-64 md:w-72 md:h-72 lg:w-80 lg:h-80 mx-auto rounded-full overflow-hidden relative group">
-              {currentTrack?.User?.profilePictureUrl ? (
-                <Image
-                  src={currentTrack.User.profilePictureUrl}
-                  alt={currentTrack.title || 'User profile'}
-                  width={320}
-                  height={320}
-                  className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                  unoptimized={!currentTrack.User.profilePictureUrl.startsWith('/')}
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
-                  <span className="text-4xl font-bold text-white">
-                    {currentTrack?.User?.fullName?.charAt(0) || '?'}
-                  </span>
+
+              {showProfile && currentTrack?.User ? (
+                <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900 p-4">
+                  <Image
+                    src={currentTrack?.User?.profilePictureUrl || '/images/default-avatar.png'}
+                    alt={currentTrack?.User?.fullName || 'User profile'}
+                    width={320}
+                    height={320}
+                    className="w-full h-full rounded-full object-cover transition-transform duration-700 group-hover:scale-110"
+                  />
+                  <p className="text-xl font-bold text-white text-center">{currentTrack?.User?.fullName || 'Unknown User'}</p>
+                  {/* <button
+                    onClick={() => setShowProfile(false)}
+                    className="mt-4 px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-full text-white text-sm"
+                  >
+                   Check Profile
+                  </button> */}
                 </div>
-              )}
-              {(!currentTrack.thumbnailUrl && !currentTrack.videoUrl) ? (
-                <>
-                  {/* Show glowing ring effect only when no media is available */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-spin-slow"></div>
-                  <div className="absolute inset-1 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-spin-reverse"></div>
-                  <div className="absolute inset-2 sm:inset-3 bg-gradient-to-br from-pink-400 via-blue-400 to-purple-400 animate-spin-slow-2"></div>
-
-                  {/* Pulsing Outer Rings */}
-                  <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 bg-gradient-to-br from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-full animate-pulse-ring"></div>
-                  <div className="absolute -inset-4 sm:-inset-6 md:-inset-8 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full animate-pulse-ring-delayed"></div>
-
-                  {/* Rotating Particles */}
-                  <div className="absolute inset-0 animate-spin-particles">
-                    <div className="absolute top-3 sm:top-4 left-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white rounded-full animate-ping"></div>
-                    <div className="absolute bottom-3 sm:bottom-4 left-1/4 w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
-                    <div className="absolute top-1/3 right-3 sm:right-4 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
-                    <div className="absolute bottom-1/3 left-3 sm:left-4 w-1 h-1 bg-blue-400 rounded-full animate-ping"></div>
-                  </div>
-
-                  {/* Enhanced Glowing Ring Effects */}
-                  <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-pulse-glow opacity-75 blur-sm"></div>
-                  <div className="absolute inset-1 sm:inset-2 rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-pulse-glow-delayed opacity-50 blur-md"></div>
-                </>
               ) : (
-                /* Show media with full size and rounded shape */
-                <div className="absolute inset-0 bg-black rounded-full overflow-hidden">
-                  {currentTrack.videoUrl ? (
-                    <video
-                      src={currentTrack.videoUrl}
-                      className="w-full h-full object-cover"
-                      loop
-                      muted
-                      playsInline
+                <>
+                  {currentTrack?.User?.profilePictureUrl ? (
+                    <Image
+                      src={currentTrack.User.profilePictureUrl}
+                      alt={currentTrack.title || 'User profile'}
+                      width={320}
+                      height={320}
+                      className="w-full h-full rounded-full object-cover transition-transform duration-700 group-hover:scale-110"
+                      unoptimized={!currentTrack.User.profilePictureUrl.startsWith('/')}
                     />
                   ) : (
-                    <img
-                      src={currentTrack.thumbnailUrl}
-                      alt={currentTrack.title}
-                      className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                    />
+                    <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-purple-500 to-pink-500">
+                      <span className="text-4xl font-bold text-white">
+                        {currentTrack?.User?.fullName?.charAt(0) || '?'}
+                      </span>
+                    </div>
                   )}
-                  <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-transparent to-pink-500/20 animate-pulse"></div>
-                </div>
+                  {(!currentTrack.thumbnailUrl && !currentTrack.videoUrl) ? (
+                    <>
+                      {/* Show glowing ring effect only when no media is available */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-spin-slow"></div>
+                      <div className="absolute inset-1 bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-spin-reverse"></div>
+                      <div className="absolute inset-2 sm:inset-3 bg-gradient-to-br from-pink-400 via-blue-400 to-purple-400 animate-spin-slow-2"></div>
+
+                      {/* Pulsing Outer Rings */}
+                      <div className="absolute -inset-2 sm:-inset-3 md:-inset-4 bg-gradient-to-br from-purple-500/30 via-pink-500/30 to-blue-500/30 rounded-full animate-pulse-ring"></div>
+                      <div className="absolute -inset-4 sm:-inset-6 md:-inset-8 bg-gradient-to-br from-blue-500/20 via-purple-500/20 to-pink-500/20 rounded-full animate-pulse-ring-delayed"></div>
+
+                      {/* Rotating Particles */}
+                      <div className="absolute inset-0 animate-spin-particles">
+                        <div className="absolute top-3 sm:top-4 left-1/2 w-1.5 sm:w-2 h-1.5 sm:h-2 bg-white rounded-full animate-ping"></div>
+                        <div className="absolute bottom-3 sm:bottom-4 left-1/4 w-1 h-1 bg-purple-400 rounded-full animate-bounce"></div>
+                        <div className="absolute top-1/3 right-3 sm:right-4 w-1 h-1 sm:w-1.5 sm:h-1.5 bg-pink-400 rounded-full animate-pulse"></div>
+                        <div className="absolute bottom-1/3 left-3 sm:left-4 w-1 h-1 bg-blue-400 rounded-full animate-ping"></div>
+                      </div>
+
+                      {/* Enhanced Glowing Ring Effects */}
+                      <div className="absolute inset-0 rounded-full bg-gradient-to-br from-purple-400 via-pink-400 to-blue-400 animate-pulse-glow opacity-75 blur-sm"></div>
+                      <div className="absolute inset-1 sm:inset-2 rounded-full bg-gradient-to-br from-blue-400 via-purple-400 to-pink-400 animate-pulse-glow-delayed opacity-50 blur-md"></div>
+                    </>
+                  ) : (
+                    /* Show media with full size and rounded shape */
+                    <div className="absolute inset-0 bg-black rounded-full overflow-hidden">
+                      {currentTrack.videoUrl ? (
+                        <video
+                          src={currentTrack.videoUrl}
+                          className="w-full h-full object-cover"
+                          loop
+                          muted
+                          playsInline
+                        />
+                      ) : (
+                        <Image
+                          src={currentTrack.thumbnailUrl}
+                          alt={currentTrack.title}
+                          className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                        />
+                      )}
+                      <div className="absolute inset-0 bg-gradient-to-br from-purple-500/20 via-transparent to-pink-500/20 animate-pulse"></div>
+                    </div>
+                  )}
+                </>
               )}
 
               {/* Play Button Overlay */}
@@ -467,6 +485,7 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
                   }
                 </button>
               </div>
+
             </div>
           </div>
 
@@ -651,8 +670,8 @@ const FuturisticMusicPlayer = ({ songs, onShare, userId, isPublic = false, showS
               <button
                 onClick={handleFollowToggle}
                 className={`px-4 py-2 border  rounded-full flex  items-center transition-all duration-300 ${isFollowing
-                    ? "text-white bg-blue-600 hover:bg-blue-700"
-                    : "text-white bg-blue-600 hover:bg-blue-700"
+                  ? "text-white bg-blue-600 hover:bg-blue-700"
+                  : "text-white bg-blue-600 hover:bg-blue-700"
                   }`}
                 disabled={isLoadingFollowing}
               >
