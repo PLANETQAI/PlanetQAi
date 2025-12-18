@@ -11,14 +11,13 @@ import {
   Shuffle,
   SkipBack,
   SkipForward,
-  Volume2
+  Volume2,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { useCallback, useEffect, useRef, useState } from "react";
 import RewardGraphDialog from "./RewardGraphDialog";
-
 
 const API_BASE = process.env.NEXT_PUBLIC_AZURACAST_API;
 const STATION_ID = process.env.NEXT_PUBLIC_STATION_ID;
@@ -97,15 +96,13 @@ export default function AzurePlayerBot() {
   const [showGraph, setShowGraph] = useState(false);
   const [selectedQueueIndex, setSelectedQueueIndex] = useState(null);
 
-  const {
-    credits: userCredits,
-    fetchUserCredits,
-  } = useUser()
+  const { credits: userCredits, fetchUserCredits } = useUser();
 
-
-
-  const { points, rawPoints } = useListeningRewards(false, isPlaying, userCredits);
-
+  const { points, rawPoints } = useListeningRewards(
+    false,
+    isPlaying,
+    userCredits
+  );
 
   const fetchNowPlaying = useCallback(async () => {
     try {
@@ -173,7 +170,7 @@ export default function AzurePlayerBot() {
   useEffect(() => {
     if (videoRef.current) {
       if (isPlaying) {
-        videoRef.current.play().catch(() => { });
+        videoRef.current.play().catch(() => {});
       } else {
         videoRef.current.pause();
       }
@@ -323,7 +320,6 @@ export default function AzurePlayerBot() {
     setIsPlaying((p) => !p);
   }
 
-
   return (
     <div className="w-full sm:w-[80%] mx-auto">
       {/* Add custom CSS for animations */}
@@ -447,8 +443,9 @@ export default function AzurePlayerBot() {
           {/* YouTube Video Layer - shows when playing */}
           {youtubeEmbedUrl && (
             <div
-              className={`absolute inset-0 bg-black transition-opacity duration-500 ${isPlaying ? "opacity-100 z-10" : "opacity-0 z-0"
-                }`}
+              className={`absolute inset-0 bg-black transition-opacity duration-500 ${
+                isPlaying ? "opacity-100 z-10" : "opacity-0 z-0"
+              }`}
             >
               <div id="youtube-player-container" className="w-full h-full" />
             </div>
@@ -475,8 +472,9 @@ export default function AzurePlayerBot() {
                   src={coverSrc}
                   alt="Album Art"
                   fill
-                  className={`object-cover ${isPlaying ? "animate-spin-slow" : ""
-                    }`}
+                  className={`object-cover ${
+                    isPlaying ? "animate-spin-slow" : ""
+                  }`}
                   unoptimized
                 />
                 {/* Pulsing ring effect when playing */}
@@ -501,10 +499,11 @@ export default function AzurePlayerBot() {
                 </p>
                 <div className="flex items-center gap-2 mt-2">
                   <span
-                    className={`inline-block text-xs px-2 py-1 rounded transition-all ${isPlaying
-                      ? "bg-red-500/30 text-red-300 animate-pulse"
-                      : "bg-purple-500/30 text-purple-300"
-                      }`}
+                    className={`inline-block text-xs px-2 py-1 rounded transition-all ${
+                      isPlaying
+                        ? "bg-red-500/30 text-red-300 animate-pulse"
+                        : "bg-purple-500/30 text-purple-300"
+                    }`}
                   >
                     {isPlaying ? "● LIVE" : "LIVE"}
                   </span>
@@ -527,10 +526,11 @@ export default function AzurePlayerBot() {
             <div className="flex items-center justify-between w-full">
               <button
                 onClick={() => setIsShuffle((s) => !s)}
-                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${isShuffle
-                  ? "border-purple-500 bg-purple-500/20 text-purple-400"
-                  : "border-gray-500 bg-black/50 text-gray-400"
-                  } hover:border-white hover:text-white flex items-center justify-center transition-all`}
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${
+                  isShuffle
+                    ? "border-purple-500 bg-purple-500/20 text-purple-400"
+                    : "border-gray-500 bg-black/50 text-gray-400"
+                } hover:border-white hover:text-white flex items-center justify-center transition-all`}
               >
                 <Shuffle className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -546,13 +546,21 @@ export default function AzurePlayerBot() {
 
               <button
                 onClick={togglePlayPause}
-                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center ${(!userCredits || (userCredits.radio?.current <= 0 && !userCredits.isRadioSubscribed)) ? 'opacity-50 cursor-not-allowed' : 'hover:opacity-90'
-                  }`}
-                disabled={!userCredits || (userCredits.radio?.current <= 0 && !userCredits.isRadioSubscribed)}
+                className={`w-14 h-14 sm:w-16 sm:h-16 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 text-white flex items-center justify-center ${
+                  !userCredits ||
+                  (userCredits.radio?.current <= 0 &&
+                    !userCredits.isRadioSubscribed)
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:opacity-90"
+                }`}
+                disabled={
+                  !userCredits ||
+                  (userCredits.radio?.current <= 0 &&
+                    !userCredits.isRadioSubscribed)
+                }
               >
                 {isPlaying ? <Pause /> : <Play />}
               </button>
-
 
               <button
                 onClick={() => {
@@ -565,10 +573,11 @@ export default function AzurePlayerBot() {
 
               <button
                 onClick={() => setIsRepeat((r) => !r)}
-                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${isRepeat
-                  ? "border-purple-500 bg-purple-500/20 text-purple-400"
-                  : "border-gray-500 bg-black/50 text-gray-400"
-                  } hover:border-white hover:text-white flex items-center justify-center transition-all`}
+                className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full border ${
+                  isRepeat
+                    ? "border-purple-500 bg-purple-500/20 text-purple-400"
+                    : "border-gray-500 bg-black/50 text-gray-400"
+                } hover:border-white hover:text-white flex items-center justify-center transition-all`}
               >
                 <Repeat className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
@@ -601,7 +610,6 @@ export default function AzurePlayerBot() {
 
                   {showPoints && (
                     <div className="absolute bottom-full right-0 mb-2 w-32 p-2 bg-gray-900/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-700 z-50 relative">
-
                       {/* Close button */}
                       <button
                         onClick={() => setShowPoints(false)}
@@ -615,12 +623,12 @@ export default function AzurePlayerBot() {
 
                       {/* Rounded points */}
                       <div className="text-sm font-bold text-yellow-400">
-                        {Math.round(points ?? 0)}
+                        {(points ?? 0).toFixed(5)}
                       </div>
 
                       {/* Optional: raw points rounded or fixed */}
                       <div className="text-xxs text-gray-400">
-                        Raw: {(rawPoints ?? 0).toFixed(0)}
+                        Raw: {(rawPoints ?? 0).toFixed(5)}
                       </div>
 
                       <button
@@ -634,10 +642,7 @@ export default function AzurePlayerBot() {
                       <div className="absolute -bottom-1 right-3 w-3 h-3 bg-gray-900/90 transform rotate-45 border-r border-b border-gray-700"></div>
                     </div>
                   )}
-
                 </div>
-
-
 
                 <button
                   onClick={() => setShowPlaylist((s) => !s)}
@@ -646,7 +651,6 @@ export default function AzurePlayerBot() {
                   <List />
                 </button>
               </div>
-
             </div>
           </div>
         </div>
@@ -666,10 +670,11 @@ export default function AzurePlayerBot() {
                 <button
                   key={item.sh_id || `next-${idx}`}
                   onClick={() => onSelectQueueItem(idx)}
-                  className={`w-full text-left p-2 rounded-lg transition-all ${idx === selectedQueueIndex
-                    ? "bg-purple-500/30 border border-purple-500"
-                    : "bg-gray-800 hover:bg-gray-700"
-                    }`}
+                  className={`w-full text-left p-2 rounded-lg transition-all ${
+                    idx === selectedQueueIndex
+                      ? "bg-purple-500/30 border border-purple-500"
+                      : "bg-gray-800 hover:bg-gray-700"
+                  }`}
                 >
                   <div className="flex items-center gap-3">
                     <span className="text-gray-400 text-xs w-6">{idx + 1}</span>
@@ -699,8 +704,10 @@ export default function AzurePlayerBot() {
           </div>
         )}
 
-
-        <RewardGraphDialog isOpen={showGraph} onClose={() => setShowGraph(false)} />
+        <RewardGraphDialog
+          isOpen={showGraph}
+          onClose={() => setShowGraph(false)}
+        />
 
         {/* Credit Purchase Modal */}
         <CreditPurchaseModal
