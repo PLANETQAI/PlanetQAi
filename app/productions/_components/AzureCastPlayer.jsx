@@ -94,6 +94,7 @@ export default function AzurePlayerBot() {
   const [isRepeat, setIsRepeat] = useState(false);
   const [showPlaylist, setShowPlaylist] = useState(false);
   const [showPoints, setShowPoints] = useState(false);
+  const [showGraph, setShowGraph] = useState(false);
   const [selectedQueueIndex, setSelectedQueueIndex] = useState(null);
 
   const {
@@ -101,7 +102,7 @@ export default function AzurePlayerBot() {
     fetchUserCredits,
   } = useUser()
 
- 
+
 
   const { points, rawPoints } = useListeningRewards(false, isPlaying, userCredits);
 
@@ -111,7 +112,7 @@ export default function AzurePlayerBot() {
       const res = await fetch(NOW_PLAYING_URL, { cache: "no-store" });
       if (!res.ok) throw new Error("NowPlaying fetch failed");
       const data = await res.json();
-   
+
       const stationData = Array.isArray(data) ? data[0] : data;
       if (stationData) {
         setNowPlaying(stationData);
@@ -599,13 +600,41 @@ export default function AzurePlayerBot() {
                   </button>
 
                   {showPoints && (
-                    <div className="absolute bottom-full right-0 mb-2 w-32 p-2 bg-gray-900/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-700 z-50">
+                    <div className="absolute bottom-full right-0 mb-2 w-32 p-2 bg-gray-900/90 backdrop-blur-sm rounded-lg shadow-lg border border-gray-700 z-50 relative">
+
+                      {/* Close button */}
+                      <button
+                        onClick={() => setShowPoints(false)}
+                        className="absolute top-1 right-1 text-gray-400 hover:text-white text-xs"
+                        aria-label="Close"
+                      >
+                        ✕
+                      </button>
+
                       <div className="text-xs text-gray-300">Points Earned</div>
-                      <div className="text-sm font-bold text-yellow-400">{points || 0}</div>
-                      <div className="text-xxs text-gray-400">Raw: {rawPoints || 0}</div>
+
+                      {/* Rounded points */}
+                      <div className="text-sm font-bold text-yellow-400">
+                        {Math.round(points ?? 0)}
+                      </div>
+
+                      {/* Optional: raw points rounded or fixed */}
+                      <div className="text-xxs text-gray-400">
+                        Raw: {(rawPoints ?? 0).toFixed(0)}
+                      </div>
+
+                      <button
+                        onClick={() => setShowGraph((g) => !g)}
+                        className="text-xs text-gray-300 hover:text-white mt-1"
+                      >
+                        View Graph
+                      </button>
+
+                      {/* Arrow */}
                       <div className="absolute -bottom-1 right-3 w-3 h-3 bg-gray-900/90 transform rotate-45 border-r border-b border-gray-700"></div>
                     </div>
                   )}
+
                 </div>
 
 
@@ -670,8 +699,8 @@ export default function AzurePlayerBot() {
           </div>
         )}
 
-     
-          <RewardGraphDialog isOpen={showPoints} onClose={() => setShowPoints(false)}/>
+
+        <RewardGraphDialog isOpen={showGraph} onClose={() => setShowGraph(false)} />
 
         {/* Credit Purchase Modal */}
         <CreditPurchaseModal
