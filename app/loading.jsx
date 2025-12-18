@@ -1,7 +1,6 @@
-import React from 'react'
 import Image from 'next/image'
 
-const RootLoader = async () => {
+const RootLoader = () => {
 	return (
 		<div className="w-full flex h-screen justify-center items-center">
 			<Image

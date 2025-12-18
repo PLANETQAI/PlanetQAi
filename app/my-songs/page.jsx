@@ -18,6 +18,7 @@ const MySongsPage = () => {
       try {
         const response = await fetch('/api/songs');
         const data = await response.json();
+        console.log(data)
         setSongs(data.songs);
       } catch (error) {
         console.error('Failed to fetch songs:', error);
