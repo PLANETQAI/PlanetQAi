@@ -86,3 +86,7 @@ android-sdk/ -e
 *.env
 *.env.*
 planetqai_repo/.git/objects/pack/pack-046c9d32d5a5337f327a666294f83c916d030b7e.pack
+-e 
+# Environment files
+*.env
+*.env.*
