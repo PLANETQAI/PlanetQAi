@@ -40,7 +40,7 @@ const VoiceNavigationAssistant = () => {
   const interactionTimeoutRef = useRef(null);
   const abortControllerRef = useRef(new AbortController());
 
-  const videoUrl = "/videos/home.mp4";
+  const videoUrl = "https://customer-assets.emergentagent.com/job_0ea17f9b-036f-4647-b184-4c6088ba5c71/artifacts/bqhebzix_1770533452396_20260207224837328.mp4";
 
 
 
