@@ -21,18 +21,26 @@ const Home = () => {
   }, []);
 
   return (
-    <div>
-      <header className="App-header">
-        <a
-          className="App-link"
-          href="https://emergent.sh"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <img src="https://avatars.githubusercontent.com/in/1201222?s=120&u=2686cf91179bbafbc7a71bfbc43004cf9ae1acea&v=4" />
-        </a>
-        <p className="mt-5">Building something incredible ~!</p>
-      </header>
+    <div className="min-h-screen bg-[#050816] flex items-center justify-center p-4">
+      <div className="w-full max-w-4xl">
+        <div className="relative rounded-2xl overflow-hidden shadow-2xl" style={{ boxShadow: '0 0 60px rgba(0, 212, 255, 0.3)' }}>
+          <video
+            data-testid="hero-video"
+            className="w-full h-auto"
+            autoPlay
+            muted
+            loop
+            playsInline
+            controls
+          >
+            <source 
+              src="https://customer-assets.emergentagent.com/job_0ea17f9b-036f-4647-b184-4c6088ba5c71/artifacts/bqhebzix_1770533452396_20260207224837328.mp4" 
+              type="video/mp4" 
+            />
+            Your browser does not support the video tag.
+          </video>
+        </div>
+      </div>
     </div>
   );
 };
