@@ -11,7 +11,7 @@ import sys
 from typing import Dict, Any, Optional
 
 # Base URL from frontend environment
-BASE_URL = "https://game-gen-studio.preview.emergentagent.com"
+BASE_URL = "https://ai-game-builder-19.preview.emergentagent.com"
 API_BASE = f"{BASE_URL}/api"
 
 # Test configuration
