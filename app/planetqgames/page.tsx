@@ -30,6 +30,161 @@ const GENRE_PROMPTS: Record<string, string[]> = {
   rpg: ['A medieval knight quest to slay a dragon...', 'A mage academy learning magic...', 'A cyberpunk RPG in a megacity...'],
 };
 
+// Video Card Component with Play Once functionality
+const VideoCard = ({ 
+  videoUrl, 
+  title, 
+  description, 
+  icon: Icon, 
+  gradientFrom, 
+  gradientTo,
+  isSelected = false 
+}: { 
+  videoUrl: string; 
+  title: string; 
+  description: string; 
+  icon: any; 
+  gradientFrom: string; 
+  gradientTo: string;
+  isSelected?: boolean;
+}) => {
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [hasPlayed, setHasPlayed] = useState(false);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    // Auto-play once on mount
+    if (!hasPlayed) {
+      video.play().then(() => {
+        setIsPlaying(true);
+      }).catch(() => {
+        // Autoplay blocked, show play button
+        setIsPlaying(false);
+      });
+    }
+
+    const handleEnded = () => {
+      setIsPlaying(false);
+      setHasPlayed(true);
+    };
+
+    video.addEventListener('ended', handleEnded);
+    return () => video.removeEventListener('ended', handleEnded);
+  }, [hasPlayed]);
+
+  const handlePlayClick = () => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    if (isPlaying) {
+      video.pause();
+      setIsPlaying(false);
+    } else {
+      video.currentTime = 0;
+      video.play();
+      setIsPlaying(true);
+    }
+  };
+
+  return (
+    <div className={`relative cursor-pointer rounded-2xl overflow-hidden transition-all duration-500 group ${isSelected ? `ring-2 ring-offset-2 ring-offset-gray-900 ring-${gradientFrom.replace('from-', '')}` : 'opacity-70 hover:opacity-100'}`}>
+      <div className={`absolute -inset-1 bg-${gradientFrom.replace('from-', '')} rounded-2xl blur-lg ${isSelected ? 'opacity-40' : 'opacity-0'} group-hover:opacity-30 transition-opacity`}></div>
+      <div className="relative bg-gray-900/90 rounded-2xl overflow-hidden border border-gray-700/50">
+        <div className="aspect-video relative overflow-hidden" onClick={handlePlayClick}>
+          <video 
+            ref={videoRef}
+            src={videoUrl}
+            className="w-full h-full object-cover"
+            muted
+            playsInline
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-transparent to-transparent"></div>
+          
+          {/* Play button overlay - shows when not playing or after video ended */}
+          {!isPlaying && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30 transition-opacity">
+              <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${gradientFrom} ${gradientTo} flex items-center justify-center hover:scale-110 transition-transform shadow-lg`}>
+                <Play className="w-8 h-8 text-white fill-white ml-1" />
+              </div>
+            </div>
+          )}
+          
+          {/* Small play indicator in corner when playing */}
+          {isPlaying && (
+            <div className={`absolute top-3 right-3 w-8 h-8 rounded-full bg-gradient-to-r ${gradientFrom} ${gradientTo} flex items-center justify-center`}>
+              <div className="flex gap-0.5">
+                <div className="w-1 h-3 bg-white rounded-full animate-pulse"></div>
+                <div className="w-1 h-3 bg-white rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+              </div>
+            </div>
+          )}
+        </div>
+        <div className="p-4">
+          <div className="flex items-center gap-2 mb-2">
+            <div className={`w-8 h-8 rounded-lg bg-gradient-to-r ${gradientFrom} ${gradientTo} flex items-center justify-center`}>
+              <Icon className="w-4 h-4 text-white" />
+            </div>
+            <h3 className="text-lg font-bold text-white">{title}</h3>
+          </div>
+          <p className="text-sm text-gray-400">{description}</p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Video Section Component
+const VideoSection = () => {
+  const videos = [
+    {
+      videoUrl: 'https://customer-assets.emergentagent.com/job_voice-chat-link/artifacts/daashrra_652f88f5-1a93-49c6-b083-0f9bbba1b979.mp4',
+      title: '3D Open World',
+      description: 'Explore vast landscapes and endless possibilities',
+      icon: Globe,
+      gradientFrom: 'from-emerald-500',
+      gradientTo: 'to-cyan-500',
+      isSelected: true,
+    },
+    {
+      videoUrl: 'https://customer-assets.emergentagent.com/job_voice-chat-link/artifacts/9oqn4ok2_generated-video-7fe81dd4-1790-48e2-876a-3fc643c25469.mp4',
+      title: 'Shooter Game',
+      description: 'Fast-paced action and intense combat',
+      icon: Crosshair,
+      gradientFrom: 'from-red-500',
+      gradientTo: 'to-orange-500',
+      isSelected: false,
+    },
+    {
+      videoUrl: 'https://customer-assets.emergentagent.com/job_voice-chat-link/artifacts/3362kdch_generated-video-13e65f16-8497-4a44-8177-d5aed415acf1.mp4',
+      title: 'Racing Game',
+      description: 'High-speed thrills and competitive racing',
+      icon: Car,
+      gradientFrom: 'from-blue-500',
+      gradientTo: 'to-purple-500',
+      isSelected: false,
+    },
+  ];
+
+  return (
+    <div className="mb-10">
+      <div className="text-center mb-6">
+        <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
+          <span className="bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">What You Can Create</span>
+        </h2>
+        <p className="text-gray-400 text-sm">AI-generated game previews • Powered by next-gen technology</p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+        {videos.map((video, index) => (
+          <VideoCard key={index} {...video} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
 // Playable Preview Component
 const PlayablePreview = ({ genre, onClose }: { genre: string; onClose: () => void }) => {
   const [charX, setCharX] = useState(200);
