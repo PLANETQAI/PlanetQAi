@@ -203,7 +203,7 @@ export default function PlanetQGamesPreview() {
               <div className="absolute inset-0 bg-cyan-400 blur-xl opacity-50"></div>
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight" style={{ background: 'linear-gradient(135deg, #00d4ff 0%, #a855f7 50%, #ff00ff 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', textShadow: '0 0 40px rgba(168, 85, 247, 0.5)' }}>
-              Game Generator
+              AI Games Generator
             </h1>
           </div>
           <p className="text-lg sm:text-xl text-gray-400 max-w-2xl mx-auto">
