@@ -383,7 +383,7 @@ const FullGameEngine = ({
 
   // Spawn enemies based on AI Director
   const spawnEnemies = useCallback((count: number) => {
-    const newEnemies = [];
+    const newEnemies: {id: number; x: number; y: number; hp: number}[] = [];
     for (let i = 0; i < count; i++) {
       newEnemies.push({
         id: Date.now() + i,
