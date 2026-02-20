@@ -244,7 +244,7 @@ const FullGameEngine = ({ genre, prompt, controlScheme, onClose }: { genre: stri
   }, [isPlaying, isPaused, director.timeScale]);
 
   const spawnEnemies = useCallback((count: number) => {
-    const newEnemies = [];
+    const newEnemies: {id: number; x: number; y: number; hp: number}[] = [];
     for (let i = 0; i < count; i++) {
       newEnemies.push({ id: Date.now() + i, x: Math.random() * (GAME_W - 100) + 50, y: Math.random() * 100 + 30, hp: Math.ceil(director.difficulty) });
     }
