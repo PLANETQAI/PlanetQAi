@@ -81,3 +81,7 @@ android-sdk/ temp_repo/.git/objects/pack/pack-26d798942c4916fde43c71b6a53aefef3b
 temp_repo/.git/objects/pack/pack-26d798942c4916fde43c71b6a53aefef3b7b48e9.pack
 temp_repo/node_modules/@next/swc-linux-arm64-musl/next-swc.linux-arm64-musl.node
 temp_repo/node_modules/@next/swc-linux-arm64-gnu/next-swc.linux-arm64-gnu.node
+-e 
+# Environment files
+*.env
+*.env.*
